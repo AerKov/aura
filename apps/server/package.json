@@ -1,0 +1,25 @@
+{
+  "name": "@crew/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/app.ts"
+  },
+  "scripts": {
+    "dev": "CREW_DATA_DIR=../../.crew-dev bun run --watch src/index.ts",
+    "start": "bun run src/index.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@crew/shared": "workspace:*",
+    "@elysiajs/cors": "1.4.2",
+    "@surrealdb/node": "3.1.0",
+    "@surrealdb/node-native": "3.3.4",
+    "elysia": "1.4.30",
+    "surrealdb": "2.1.1"
+  },
+  "devDependencies": {
+    "@elysiajs/eden": "1.4.9"
+  }
+}

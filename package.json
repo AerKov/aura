@@ -1,0 +1,24 @@
+{
+  "name": "crew",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run scripts/dev.ts",
+    "dev:server": "bun run --cwd apps/server dev",
+    "dev:desktop": "bun run --cwd apps/desktop tauri dev",
+    "typecheck": "bun run --filter '*' typecheck",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "build:sidecar": "bun run scripts/build-sidecar.ts",
+    "build": "bun run build:sidecar && bun run --cwd apps/desktop tauri:build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/bun": "1.4.4",
+    "typescript": "6.0.3"
+  }
+}
