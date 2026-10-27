@@ -8,6 +8,14 @@ const inputClass =
 const SECRET_REF = /^\$\{secret:([A-Z_][A-Z0-9_]*)\}$/;
 const SECRET_LIKE = /KEY|TOKEN|SECRET|PASSW|PASS$|AUTH|CREDENTIAL|COOKIE|SESSION|PRIVATE/i;
 
+/**
+ * `${secret:NAME}`, built from parts: a template literal with an escaped `${` gets folded into an
+ * invalid one by the production bundler.
+ */
+function secretRef(name: string): string {
+  return ["$", "{secret:", name, "}"].join("");
+}
+
 export interface EnvRow {
   /** Stable key for the list while names are edited. */
   id: string;
@@ -49,7 +57,7 @@ export function envFromRows(rows: EnvRow[]): {
       const existing = SECRET_REF.exec(row.value)?.[1];
       const secretName = row.secretValue ? name : (existing ?? name);
       if (row.secretValue) secrets[secretName] = row.secretValue;
-      env[name] = `$${"{"}secret:${secretName}}`;
+      env[name] = secretRef(secretName);
     } else {
       env[name] = row.value;
     }

@@ -13,12 +13,13 @@ const MAX_VALUE = 2000;
 
 /** A reference to a value in Aura's secret store, as written in config files. */
 export function secretRef(name: string): string {
-  return `$${"{"}secret:${name}}`;
+  // Built from parts: bundlers fold an escaped `${` in a template literal into an invalid one.
+  return ["$", "{secret:", name, "}"].join("");
 }
 
 /** A reference to a variable of the server's own environment. */
 export function envRef(name: string): string {
-  return `$${"{"}env:${name}}`;
+  return ["$", "{env:", name, "}"].join("");
 }
 
 export function looksSecret(name: string): boolean {

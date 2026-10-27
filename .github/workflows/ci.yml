@@ -26,6 +26,8 @@ jobs:
       - run: bun run typecheck
       - run: bun run lint
       - run: bun test
+      # The production bundle, as the release builds it: catches what dev mode and typecheck miss.
+      - run: bun run --cwd apps/desktop build:vite
 
   sidecar:
     name: Compile server sidecar
