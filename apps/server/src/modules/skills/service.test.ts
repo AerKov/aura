@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { FakeProvider } from "../../providers/fake";
 import { createTestApp } from "../../testing";
 import { ORCHESTRATOR_DEFAULT } from "../agents/defaults";
 import { MemoryAgentDirectory } from "../agents/directory";
@@ -72,6 +73,25 @@ describe("skills", () => {
     const [after] = await t.skills.list();
     expect(after?.versions).toHaveLength(3);
     expect(after?.activeRef).toBe(head);
+  });
+
+  test("attached skills reach the agent's system prompt", async () => {
+    const provider = new FakeProvider();
+    t = await createTestApp({ provider });
+    const request = await t.skills.propose(
+      {
+        name: "brevity",
+        content: skill("Answer in at most three sentences."),
+        reason: "short answers",
+        attachTo: ["orchestrator"],
+      },
+      { requestedBy: "orchestrator", chatId: "direct" },
+    );
+    await t.approvals.decide(request.id, true, "owner");
+    await t.chat.post({ chatId: "direct", author: { kind: "user", id: "owner" }, body: "hi" });
+    await Bun.sleep(10);
+    await t.runtime.whenIdle();
+    expect(provider.calls.at(-1)?.systemPrompt).toContain("Answer in at most three sentences.");
   });
 
   test("rejects invalid proposals and rollbacks", async () => {

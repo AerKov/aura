@@ -293,6 +293,7 @@ export class AgentRuntime {
         runId,
         systemPrompt:
           systemPromptFor(profile, project !== null, team) +
+          (this.deps.promptExtras?.(profile) ?? "") +
           userNote(this.deps.ownerName, this.userLanguage),
         prompt,
         model: model ?? undefined,
