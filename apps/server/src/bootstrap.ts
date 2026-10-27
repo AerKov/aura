@@ -5,9 +5,11 @@ import type { AgentDirectory } from "./modules/agents/directory";
 import { RunRepo } from "./modules/agents/runs";
 import { AgentRuntime } from "./modules/agents/runtime";
 import { registerExecutors, toolsFor } from "./modules/agents/tools";
+import { AlertService, TriageLimiter } from "./modules/alerts/service";
 import { ApprovalService } from "./modules/approvals/service";
 import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
+import { JobService } from "./modules/jobs/service";
 import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
 import { SkillService } from "./modules/skills/service";
@@ -30,6 +32,7 @@ export async function createServices(deps: {
   dataDir: string;
   defaultModel?: string;
   maxChainDepth?: number;
+  triageDelayMs?: number;
 }) {
   const repo = new ChatRepo(deps.db);
   const chat = new ChatService(repo);
@@ -51,7 +54,15 @@ export async function createServices(deps: {
     approvals,
   });
   const tasks = new TaskService({ db: deps.db, repo, chat });
-  const toolDeps = { agents: deps.agents, projects, approvals, skills, tasks };
+  const jobs = new JobService({ db: deps.db, repo, chat });
+  const alerts = new AlertService({
+    db: deps.db,
+    repo,
+    chat,
+    limiter: new TriageLimiter(),
+    triageDelayMs: deps.triageDelayMs,
+  });
+  const toolDeps = { agents: deps.agents, projects, approvals, skills, tasks, jobs, repo, chat };
   registerExecutors(toolDeps);
   const runtime = new AgentRuntime({
     chat,
@@ -72,5 +83,18 @@ export async function createServices(deps: {
     .filter((m) => m.author.kind === "user")
     .at(-1);
   if (lastOwnMessage) runtime.primeLanguage(lastOwnMessage.body);
-  return { repo, chat, owner, runs, projects, runtime, approvals, skills, tasks, toolDeps };
+  return {
+    repo,
+    chat,
+    owner,
+    runs,
+    projects,
+    runtime,
+    approvals,
+    skills,
+    tasks,
+    jobs,
+    alerts,
+    toolDeps,
+  };
 }

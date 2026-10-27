@@ -5,6 +5,12 @@ export function displayName(
   me: { id: string; name: string } | null,
 ): string {
   if (participant.kind === "user") return participant.id === me?.id ? me.name : participant.id;
+  if (participant.kind === "bot") {
+    const [kind, source] = participant.id.split(":");
+    return source
+      ? `${source} ${kind}`
+      : participant.id.charAt(0).toUpperCase() + participant.id.slice(1);
+  }
   const name = participant.id.replace(/[-_]+/g, " ");
   return name.charAt(0).toUpperCase() + name.slice(1);
 }

@@ -9,6 +9,7 @@ import { ChatView } from "@/features/chat/chat-view";
 import { startRealtime } from "@/features/chat/realtime";
 import { Sidebar } from "@/features/chat/sidebar";
 import { useChatStore } from "@/features/chat/store";
+import { JobsView } from "@/features/jobs/jobs-view";
 import { SkillsView } from "@/features/skills/skills-view";
 import { SERVER_URL } from "@/lib/api";
 
@@ -35,6 +36,8 @@ export function App() {
       <Sidebar />
       {view === "skills" ? (
         <SkillsView />
+      ) : view === "jobs" ? (
+        <JobsView />
       ) : activeChatId ? (
         <ChatView key={activeChatId} chatId={activeChatId} />
       ) : (

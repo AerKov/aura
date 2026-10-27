@@ -17,8 +17,20 @@ export interface AgentProfile {
 
 export const SKILL_NAME_PATTERN = /^[a-z][a-z0-9-]{1,47}$/;
 
-/** Built-in tools an agent may be granted. File tools are confined to the project workspace. */
-export const BUILTIN_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "Bash"] as const;
+/**
+ * Built-in tools an agent may be granted. File tools are confined to the project workspace; web tools
+ * bring external content, which agents treat as data.
+ */
+export const BUILTIN_TOOLS = [
+  "Read",
+  "Write",
+  "Edit",
+  "Glob",
+  "Grep",
+  "Bash",
+  "WebSearch",
+  "WebFetch",
+] as const;
 export type BuiltinTool = (typeof BUILTIN_TOOLS)[number];
 
 export const ORCHESTRATOR_HANDLE = "orchestrator";

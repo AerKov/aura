@@ -97,3 +97,7 @@ export async function setTaskStatus(
 export function showSkills(): void {
   setState(() => ({ view: "skills" }));
 }
+
+export function showJobs(): void {
+  setState(() => ({ view: "jobs" }));
+}

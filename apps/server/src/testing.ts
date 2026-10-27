@@ -13,6 +13,7 @@ import { FakeProvider } from "./providers/fake";
 import type { LLMProvider } from "./providers/types";
 
 export const TEST_ORIGIN = "http://localhost:1420";
+export const TEST_WEBHOOK_TOKEN = "test-webhook-token";
 
 /** Full app on an in-memory database and a temporary data dir, for integration tests. */
 export async function createTestApp(
@@ -37,6 +38,7 @@ export async function createTestApp(
     agents,
     dataDir,
     maxChainDepth: opts.maxChainDepth,
+    triageDelayMs: 10,
   });
   const stopRuntime = services.runtime.start();
   const sessions = new LocalSessions();
@@ -45,6 +47,8 @@ export async function createTestApp(
     startedAt: Date.now(),
     corsOrigins: [TEST_ORIGIN],
     extraHosts: ["e.ly"],
+    webhookToken: TEST_WEBHOOK_TOKEN,
+    publicUrl: "http://127.0.0.1:4517",
     sessions,
     hub,
     provider,

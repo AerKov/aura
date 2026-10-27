@@ -3,6 +3,9 @@ import { z } from "zod";
 import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
 import type { ApprovalService } from "../approvals/service";
+import type { ChatRepo } from "../chat/repo";
+import type { ChatService } from "../chat/service";
+import type { JobInput, JobService } from "../jobs/service";
 import type { ProjectInput, ProjectService } from "../projects/service";
 import type { SkillService } from "../skills/service";
 import { TASK_STATUSES, type TaskService } from "../tasks/service";
@@ -15,6 +18,9 @@ export interface ToolDeps {
   approvals: ApprovalService;
   skills: SkillService;
   tasks: TaskService;
+  jobs: JobService;
+  repo: ChatRepo;
+  chat: ChatService;
 }
 
 export interface ToolContext {
@@ -62,6 +68,10 @@ export function registerExecutors(deps: ToolDeps): void {
     await deps.agents.create(profile);
     return `Created @${profile.handle}.`;
   });
+  deps.approvals.register("schedule_job", async (payload) => {
+    const job = await deps.jobs.create(payload as unknown as JobInput);
+    return `Scheduled "${job.name}" (${job.schedule}); next run ${job.nextRunAt ?? "never"}.`;
+  });
   deps.approvals.register("create_project", async (payload) => {
     const newAgents = ((payload.newAgents as Record<string, unknown>[] | undefined) ?? []).map(
       profileFrom,
@@ -84,7 +94,8 @@ export function registerExecutors(deps: ToolDeps): void {
 /** App tools for an agent run, by role and chat (exposed to the model over MCP). */
 export function toolsFor(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
   const tools: AgentTool[] = [skillTool(deps, ctx)];
-  if (ctx.handle === ORCHESTRATOR_HANDLE) tools.push(...orchestratorTools(deps, ctx));
+  if (ctx.handle === ORCHESTRATOR_HANDLE)
+    tools.push(...orchestratorTools(deps, ctx), ...operationsTools(deps, ctx));
   if (ctx.chat.projectId) tools.push(...taskTools(deps, ctx));
   return tools;
 }
@@ -342,6 +353,108 @@ function taskTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             projectId,
           );
           return ok(`Task ${task.id} is ${task.status}.`);
+        } catch (error) {
+          return fail(error);
+        }
+      },
+    },
+  ];
+}
+
+/** Orchestrator tools for operations: delegating into projects (e.g. alert triage) and schedules. */
+function operationsTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
+  const resolveChat = async (target: string) => {
+    if (target === "direct") return deps.repo.getChat("direct");
+    const project = await deps.projects.get(target);
+    if (!project) throw new Error(`unknown chat "${target}": use "direct" or a project id`);
+    return deps.repo.getChat(project.chatId);
+  };
+  return [
+    {
+      name: "message_project",
+      description:
+        "Post a message as yourself into a project chat, e.g. to hand an alert to the right agent. @mention the agent who should act; mentions wake agents.",
+      inputSchema: {
+        project: z.string().describe("project id (slug) from list_projects"),
+        message: z.string().describe("markdown; quote external content (alerts) as data"),
+      },
+      async handler(input) {
+        try {
+          const chat = await resolveChat(String(input.project ?? ""));
+          if (!chat.projectId) throw new Error("message_project only posts into project chats");
+          const body = String(input.message ?? "").trim();
+          if (!body || body.length > 8000) throw new Error("message is required (max 8000 chars)");
+          await deps.chat.post({
+            chatId: chat.id,
+            author: { kind: "agent", id: ctx.handle },
+            body,
+            chainDepth: ctx.depth,
+          });
+          return ok(`Posted to ${chat.title}.`);
+        } catch (error) {
+          return fail(error);
+        }
+      },
+    },
+    {
+      name: "list_jobs",
+      description: "List scheduled jobs.",
+      inputSchema: {},
+      async handler() {
+        const jobs = await deps.jobs.list();
+        return ok(
+          jobs
+            .map(
+              (j) =>
+                `${j.name} · ${j.schedule} · @${j.agent} · ${j.status} · next ${j.nextRunAt ?? "-"}`,
+            )
+            .join("\n") || "No jobs yet.",
+        );
+      },
+    },
+    {
+      name: "schedule_job",
+      description:
+        "Ask the user to approve a recurring job: on a cron schedule, the prompt is posted to a chat and wakes the agent. Each run costs budget, so keep schedules sparse (at most every 10 minutes).",
+      inputSchema: {
+        name: z.string(),
+        schedule: z
+          .string()
+          .describe("5-field cron in the user's local time, e.g. '0 8 * * *' for 08:00 daily"),
+        chat: z.string().describe('"direct" or a project id'),
+        agent: z.string().describe("handle of the agent to wake (must be a member of that chat)"),
+        prompt: z.string().describe("what the agent should do on each run"),
+        why: z.string().describe("for the user: what this job delivers"),
+      },
+      async handler(input) {
+        try {
+          const chat = await resolveChat(String(input.chat ?? ""));
+          const valid = await deps.jobs.validate({
+            name: String(input.name ?? ""),
+            schedule: String(input.schedule ?? ""),
+            chatId: chat.id,
+            agent: String(input.agent ?? ""),
+            prompt: String(input.prompt ?? ""),
+          });
+          const next = Bun.cron.parse(valid.schedule, new Date());
+          await deps.approvals.request({
+            kind: "schedule_job",
+            requestedBy: ctx.handle,
+            chatId: ctx.chat.id,
+            title: `Schedule "${valid.name}"`,
+            why: String(input.why ?? ""),
+            preview: [
+              `**When:** \`${valid.schedule}\`${next ? ` · first run ${next.toLocaleString()}` : ""}`,
+              `**Where:** ${chat.title} · **who:** @${valid.agent}`,
+              "",
+              valid.prompt
+                .split("\n")
+                .map((l) => `> ${l}`)
+                .join("\n"),
+            ].join("\n"),
+            payload: { ...valid },
+          });
+          return ok("Approval requested for the job.");
         } catch (error) {
           return fail(error);
         }

@@ -4,6 +4,7 @@ import { Markdown } from "@/components/markdown";
 import { highlightMentions } from "@/lib/mentions";
 import { cn } from "@/lib/utils";
 import { reportError, stopRun } from "./actions";
+import { AlertCard } from "./alert-card";
 import { ApprovalCard } from "./approval-card";
 import { Avatar } from "./avatar";
 import { displayName, formatTime, previewOf } from "./message-utils";
@@ -76,6 +77,7 @@ export function MessageBubble({
         {message.card?.type === "run" && <RunCard card={message.card} />}
         {message.card?.type === "approval" && <ApprovalCard card={message.card} />}
         {message.card?.type === "task" && <TaskCard card={message.card} />}
+        {message.card?.type === "alert" && <AlertCard card={message.card} />}
         {message.error && <p className="text-destructive mt-1 text-sm">{message.error}</p>}
         <div className="text-muted-foreground mt-0.5 flex items-center justify-end gap-2 text-[11px]">
           {message.status === "streaming" && message.runId && (

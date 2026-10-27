@@ -3,6 +3,8 @@ import { Elysia } from "elysia";
 import { agentsModule } from "./modules/agents";
 import type { AgentDirectory } from "./modules/agents/directory";
 import type { AgentRuntime } from "./modules/agents/runtime";
+import { opsModule } from "./modules/alerts";
+import type { AlertService } from "./modules/alerts/service";
 import { controlModule } from "./modules/approvals";
 import type { ApprovalService } from "./modules/approvals/service";
 import { authModule } from "./modules/auth";
@@ -11,6 +13,7 @@ import { chatModule } from "./modules/chat";
 import type { ChatRepo } from "./modules/chat/repo";
 import type { ChatService } from "./modules/chat/service";
 import { type HealthDeps, healthModule } from "./modules/health";
+import type { JobService } from "./modules/jobs/service";
 import { projectsModule } from "./modules/projects";
 import type { ProjectService } from "./modules/projects/service";
 import { realtimeModule } from "./modules/realtime";
@@ -34,6 +37,10 @@ export interface AppDeps extends HealthDeps {
   skills: SkillService;
   tasks: TaskService;
   repo: ChatRepo;
+  alerts: AlertService;
+  jobs: JobService;
+  webhookToken: string;
+  publicUrl: string;
 }
 
 export function createApp(deps: AppDeps) {
@@ -45,6 +52,7 @@ export function createApp(deps: AppDeps) {
     .use(agentsModule(deps))
     .use(projectsModule(deps))
     .use(controlModule(deps))
+    .use(opsModule(deps))
     .use(realtimeModule(deps));
 }
 

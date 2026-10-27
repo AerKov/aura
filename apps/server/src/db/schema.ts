@@ -86,6 +86,23 @@ DEFINE TABLE OVERWRITE skill_index SCHEMAFULL;
 DEFINE FIELD OVERWRITE active_ref ON skill_index TYPE string;
 DEFINE FIELD OVERWRITE updated_at ON skill_index TYPE datetime DEFAULT time::now();
 
+DEFINE TABLE OVERWRITE alert_state SCHEMAFULL;
+DEFINE FIELD OVERWRITE message ON alert_state TYPE record<message>;
+DEFINE FIELD OVERWRITE count ON alert_state TYPE int;
+DEFINE FIELD OVERWRITE last_ms ON alert_state TYPE number;
+
+DEFINE TABLE OVERWRITE job SCHEMAFULL;
+DEFINE FIELD OVERWRITE name ON job TYPE string;
+DEFINE FIELD OVERWRITE schedule ON job TYPE string;
+DEFINE FIELD OVERWRITE chat ON job TYPE record<chat>;
+DEFINE FIELD OVERWRITE agent ON job TYPE string;
+DEFINE FIELD OVERWRITE prompt ON job TYPE string;
+DEFINE FIELD OVERWRITE status ON job TYPE string ASSERT $value IN ["active", "paused"];
+DEFINE FIELD OVERWRITE next_run_at ON job TYPE option<datetime>;
+DEFINE FIELD OVERWRITE last_run_at ON job TYPE option<datetime>;
+DEFINE FIELD OVERWRITE last_error ON job TYPE option<string>;
+DEFINE FIELD OVERWRITE created_at ON job TYPE datetime DEFAULT time::now();
+
 DEFINE TABLE OVERWRITE run SCHEMAFULL;
 DEFINE FIELD OVERWRITE agent ON run TYPE string;
 DEFINE FIELD OVERWRITE chat ON run TYPE record<chat>;

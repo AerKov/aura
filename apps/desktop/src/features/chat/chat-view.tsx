@@ -11,6 +11,7 @@ import { chatSubtitle } from "./participants";
 import { SetupPanel } from "./setup-panel";
 import { useChatStore } from "./store";
 import { TasksPanel } from "./tasks-panel";
+import { WebhookInfo } from "./webhook-info";
 
 const EMPTY: Message[] = [];
 
@@ -77,6 +78,7 @@ export function ChatView({ chatId }: { chatId: string }) {
               )}
             </p>
           </div>
+          {chat.kind === "system" && <WebhookInfo />}
           {project && <BudgetMeter spent={project.spentUsd} budget={project.budgetUsd} />}
           {project && (
             <Button

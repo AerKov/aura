@@ -17,7 +17,7 @@ export interface ChatState {
   projects: Record<string, Project>;
   members: Record<string, Participant[]>;
   tasks: Record<string, Task[]>;
-  view: "chat" | "skills";
+  view: "chat" | "skills" | "jobs";
 }
 
 let state: ChatState = {

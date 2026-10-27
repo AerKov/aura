@@ -1,9 +1,11 @@
 import type { Message, Participant } from "@aura/shared";
+import { describeCardForPrompt } from "../alerts/service";
 
 export const CONTEXT_WINDOW = 30;
 
 function label(author: Participant, ownerName: string): string {
   if (author.kind === "user") return `${ownerName} (user)`;
+  if (author.kind === "bot") return `${author.id} (bot)`;
   return `@${author.id}`;
 }
 
@@ -20,7 +22,7 @@ export function buildPrompt(input: {
 }): string {
   const byId = new Map(input.history.map((m) => [m.id, m]));
   const lines = input.history
-    .filter((m) => m.id !== input.trigger.id && m.status !== "streaming" && m.kind !== "card")
+    .filter((m) => m.id !== input.trigger.id && m.status !== "streaming")
     .slice(-CONTEXT_WINDOW)
     .map((m) => formatMessage(m, byId, input.ownerName));
 
@@ -38,7 +40,8 @@ export function buildPrompt(input: {
 function formatMessage(m: Message, byId: Map<string, Message>, ownerName: string): string {
   const reply = m.replyTo ? byId.get(m.replyTo) : undefined;
   const replyNote = reply ? ` (replying to ${label(reply.author, ownerName)})` : "";
-  return `[${label(m.author, ownerName)}${replyNote}]\n${m.body}`;
+  const content = m.kind === "card" ? (describeCardForPrompt(m) ?? m.body) : m.body;
+  return `[${label(m.author, ownerName)}${replyNote}]\n${content}`;
 }
 
 /** System prompt addendum: who the user is and which language to address them in. */

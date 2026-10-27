@@ -13,6 +13,8 @@ export interface ServerConfig {
   dbUrl: string;
   /** Origins allowed to call the HTTP API (desktop webview, Vite dev server). */
   corsOrigins: string[];
+  /** Base URL shown for webhooks; set it to a tunnel URL to receive alerts from the internet. */
+  publicUrl: string;
   /** Model used when an agent profile does not name one. */
   defaultModel: string;
 }
@@ -56,5 +58,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     dbUrl,
     corsOrigins: [...DEFAULT_CORS_ORIGINS, ...extraOrigins],
     defaultModel: env.AURA_DEFAULT_MODEL || DEFAULT_MODEL,
+    publicUrl: (env.AURA_PUBLIC_URL || `http://127.0.0.1:${parsePort(env.AURA_PORT)}`).replace(
+      /\/$/,
+      "",
+    ),
   };
 }

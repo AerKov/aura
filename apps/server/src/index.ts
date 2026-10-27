@@ -5,6 +5,7 @@ import { connectDb } from "./db/client";
 import { errorMessage, log } from "./lib/log";
 import { isParentAlive, watchParent } from "./lib/parent-watch";
 import { FileAgentDirectory } from "./modules/agents/directory";
+import { loadWebhookToken } from "./modules/alerts/service";
 import { LocalSessions } from "./modules/auth/sessions";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
@@ -41,6 +42,7 @@ async function main(): Promise<void> {
   const interrupted = await services.runs.recoverInterrupted();
   if (interrupted > 0) log.warn("marked interrupted runs as stopped", { count: interrupted });
   const stopRuntime = services.runtime.start();
+  const stopScheduler = services.jobs.start();
 
   const app = createApp({
     dbHealth: db.health,
@@ -50,6 +52,8 @@ async function main(): Promise<void> {
     hub,
     provider,
     agents,
+    webhookToken: loadWebhookToken(config.dataDir),
+    publicUrl: config.publicUrl,
     ...services,
   }).listen({ hostname: config.host, port: config.port });
 
@@ -61,6 +65,7 @@ async function main(): Promise<void> {
     shuttingDown = true;
     log.info("shutting down", { signal });
     stopRuntime();
+    stopScheduler();
     services.runtime.stopAll();
     await Promise.race([services.runtime.whenIdle(), Bun.sleep(5_000)]);
     await app.stop();
