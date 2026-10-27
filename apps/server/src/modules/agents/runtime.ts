@@ -102,6 +102,8 @@ export class AgentRuntime {
   private readonly idleWaiters = new Set<() => void>();
   /** Chain-limit notices already posted, so a fan-out does not post one per agent. */
   private readonly limitNotices = new Set<string>();
+  /** Messages still being dispatched (who to wake is being decided); they count as work. */
+  private dispatching = 0;
   /** Language of the user's latest message, so agents address the user in it. */
   private userLanguage: string | null = null;
 
@@ -117,7 +119,13 @@ export class AgentRuntime {
   }
 
   isBusy(): boolean {
-    return this.active.size > 0;
+    return this.active.size > 0 || this.dispatching > 0;
+  }
+
+  private settleIfIdle(): void {
+    if (this.isBusy()) return;
+    for (const resolve of this.idleWaiters) resolve();
+    this.idleWaiters.clear();
   }
 
   /** Resolves when no run is active (for tests and shutdown). */
@@ -142,6 +150,16 @@ export class AgentRuntime {
   }
 
   private async onMessage(message: Message, chat: Chat): Promise<void> {
+    this.dispatching++;
+    try {
+      await this.dispatch(message, chat);
+    } finally {
+      this.dispatching--;
+      this.settleIfIdle();
+    }
+  }
+
+  private async dispatch(message: Message, chat: Chat): Promise<void> {
     if (message.author.kind === "user")
       this.userLanguage = detectLanguage(message.body) ?? this.userLanguage;
     const members = await this.deps.repo.members(chat.id);
@@ -195,9 +213,8 @@ export class AgentRuntime {
         const next = this.queues.get(lane)?.shift();
         if (next) {
           this.trigger(next.handle, next.chat, next.trigger, next.team, next.reason);
-        } else if (this.active.size === 0) {
-          for (const resolve of this.idleWaiters) resolve();
-          this.idleWaiters.clear();
+        } else {
+          this.settleIfIdle();
         }
       });
   }
