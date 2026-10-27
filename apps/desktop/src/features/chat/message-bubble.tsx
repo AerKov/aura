@@ -13,7 +13,7 @@ import { useChatStore } from "./store";
 import { TaskCard } from "./task-card";
 
 /**
- * One message in Aura's conversation layout: agents write full-width prose next to their orb; the
+ * One message in Aura's conversation layout: agents write full-width prose next to their mark; the
  * user's own messages are compact notes on the right; system events are quiet dividers.
  */
 export function MessageBubble({
