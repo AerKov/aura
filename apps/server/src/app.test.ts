@@ -83,7 +83,8 @@ describe("app", () => {
       expect((reply.data as Message).mentions).toEqual(["orchestrator"]);
 
       const { data } = await api.chats({ chatId: "direct" }).messages.get({ query: { limit: 10 } });
-      expect(data?.slice(-2).map((m) => m.body)).toEqual(["hello **world**", "ping @orchestrator"]);
+      const mine = data?.filter((m) => m.author.kind === "user").map((m) => m.body);
+      expect(mine).toEqual(["hello **world**", "ping @orchestrator"]);
     });
 
     test("rejects invalid posts", async () => {

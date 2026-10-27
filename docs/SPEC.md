@@ -243,7 +243,8 @@ Rules:
 
 - Better Auth adapter for SurrealDB: official or community? If missing, write one (ADR).
 - ~~SurrealDB: sidecar binary vs embedded under Bun.~~ Embedded, see ADR 0001.
-- Claude Agent SDK under Bun and inside a `bun build --compile` sidecar.
+- ~~Claude Agent SDK under Bun and inside a `bun build --compile` sidecar.~~ Works; the sidecar uses the
+  user's installed `claude` (ADR 0004).
 - Anthropic terms for third-party apps using a user's own subscription via the Agent SDK; programmatic
   usage draws from a separate monthly Agent SDK credit. Re-check the help center before release.
 - Tauri 2 mobile maturity; App Store rules on loading extension code on iOS.

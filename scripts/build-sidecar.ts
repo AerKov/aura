@@ -41,7 +41,17 @@ const outfile = join(tauriDir, "binaries", `crew-server-${triple}${ext}`);
 mkdirSync(dirname(outfile), { recursive: true });
 
 const build = Bun.spawnSync(
-  ["bun", "build", "--compile", "--minify", "src/index.ts", "--outfile", outfile],
+  // No identifier minification: Elysia inspects handler source to decide which context to pass.
+  [
+    "bun",
+    "build",
+    "--compile",
+    "--minify-whitespace",
+    "--minify-syntax",
+    "src/index.ts",
+    "--outfile",
+    outfile,
+  ],
   { cwd: join(root, "apps/server"), stdout: "inherit", stderr: "inherit" },
 );
 if (build.exitCode !== 0) process.exit(build.exitCode ?? 1);

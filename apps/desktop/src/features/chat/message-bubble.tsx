@@ -1,7 +1,8 @@
 import type { Message } from "@crew/shared";
-import { Reply } from "lucide-react";
+import { Reply, Square } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { cn } from "@/lib/utils";
+import { reportError, stopRun } from "./actions";
 import { Avatar } from "./avatar";
 import { displayName, formatTime, previewOf } from "./message-utils";
 import { useChatStore } from "./store";
@@ -69,7 +70,16 @@ export function MessageBubble({
           message.status === "streaming" && <TypingDots />
         )}
         {message.error && <p className="text-destructive mt-1 text-sm">{message.error}</p>}
-        <div className="text-muted-foreground mt-0.5 flex justify-end gap-2 text-[11px]">
+        <div className="text-muted-foreground mt-0.5 flex items-center justify-end gap-2 text-[11px]">
+          {message.status === "streaming" && message.runId && (
+            <button
+              type="button"
+              onClick={() => void stopRun(message.runId ?? "").catch(reportError)}
+              className="hover:text-foreground mr-auto inline-flex items-center gap-1"
+            >
+              <Square className="size-3 fill-current" /> Stop
+            </button>
+          )}
           {message.usage && (
             <span
               title={`${message.usage.inputTokens} in / ${message.usage.outputTokens} out tokens`}

@@ -45,6 +45,24 @@ DEFINE FIELD OVERWRITE error ON message TYPE option<string>;
 DEFINE FIELD OVERWRITE created_at ON message TYPE datetime DEFAULT time::now();
 DEFINE FIELD OVERWRITE updated_at ON message TYPE datetime DEFAULT time::now();
 DEFINE INDEX OVERWRITE message_chat ON message FIELDS chat;
+
+DEFINE TABLE OVERWRITE run SCHEMAFULL;
+DEFINE FIELD OVERWRITE agent ON run TYPE string;
+DEFINE FIELD OVERWRITE chat ON run TYPE record<chat>;
+DEFINE FIELD OVERWRITE project ON run TYPE option<string>;
+DEFINE FIELD OVERWRITE trigger_message ON run TYPE option<record<message>>;
+DEFINE FIELD OVERWRITE reply_message ON run TYPE option<record<message>>;
+DEFINE FIELD OVERWRITE provider ON run TYPE string;
+DEFINE FIELD OVERWRITE model ON run TYPE option<string>;
+DEFINE FIELD OVERWRITE status ON run TYPE string ASSERT $value IN ["running", "done", "error", "stopped"];
+DEFINE FIELD OVERWRITE tokens_in ON run TYPE int DEFAULT 0;
+DEFINE FIELD OVERWRITE tokens_out ON run TYPE int DEFAULT 0;
+DEFINE FIELD OVERWRITE cost_usd ON run TYPE float DEFAULT 0;
+DEFINE FIELD OVERWRITE tool_calls ON run TYPE array<object> FLEXIBLE DEFAULT [];
+DEFINE FIELD OVERWRITE started_at ON run TYPE datetime DEFAULT time::now();
+DEFINE FIELD OVERWRITE ended_at ON run TYPE option<datetime>;
+DEFINE FIELD OVERWRITE error ON run TYPE option<string>;
+DEFINE INDEX OVERWRITE run_agent ON run FIELDS agent;
 `;
 
 export async function applySchema(surreal: Surreal): Promise<void> {

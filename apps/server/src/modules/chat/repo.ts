@@ -73,6 +73,7 @@ export interface NewMessage {
 
 export interface MessagePatch {
   body?: string;
+  mentions?: string[];
   card?: Card | null;
   status?: MessageStatus;
   usage?: Usage | null;
@@ -226,6 +227,7 @@ export class ChatRepo {
   async updateMessage(messageId: string, patch: MessagePatch): Promise<Message> {
     const data: Row = { updated_at: new Date() };
     if (patch.body !== undefined) data.body = patch.body;
+    if (patch.mentions !== undefined) data.mentions = patch.mentions;
     if (patch.card !== undefined) data.card = patch.card ?? undefined;
     if (patch.status !== undefined) data.status = patch.status;
     if (patch.usage !== undefined) data.usage = patch.usage ?? undefined;

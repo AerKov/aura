@@ -21,6 +21,7 @@ export async function loadMessages(chatId: string): Promise<void> {
 /** After a reconnect: refresh chats and every chat whose messages are loaded. */
 export async function resync(): Promise<void> {
   await loadInitial();
+  void loadProviderStatus().catch(reportError);
   await Promise.all(Object.keys(getState().messages).map((chatId) => loadMessages(chatId)));
 }
 
@@ -42,4 +43,19 @@ export { upsertChat };
 
 export function reportError(error: unknown): void {
   console.error("crew:", error instanceof Error ? error.message : error);
+}
+
+export async function loadProviderStatus(): Promise<void> {
+  const { status } = await call(() => api.provider.get());
+  setState(() => ({ provider: status }));
+}
+
+export async function recheckProvider(): Promise<void> {
+  setState(() => ({ provider: null }));
+  const { status } = await call(() => api.provider.check.post());
+  setState(() => ({ provider: status }));
+}
+
+export async function stopRun(runId: string): Promise<void> {
+  await call(() => api.runs({ runId }).stop.post());
 }

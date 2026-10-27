@@ -5,6 +5,7 @@ import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
 import { isGrouped } from "./message-utils";
 import { chatSubtitle } from "./participants";
+import { SetupPanel } from "./setup-panel";
 import { useChatStore } from "./store";
 
 const EMPTY: Message[] = [];
@@ -17,6 +18,7 @@ export function ChatView({ chatId }: { chatId: string }) {
   const scroller = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
+  const typing = messages.some((m) => m.status === "streaming");
   const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
 
   // Keep the view pinned to the newest message unless the user scrolled up.
@@ -47,7 +49,13 @@ export function ChatView({ chatId }: { chatId: string }) {
         <ChatAvatar kind={chat.kind} title={chat.title} />
         <div>
           <h1 className="font-semibold">{chat.title}</h1>
-          <p className="text-muted-foreground text-xs">{chatSubtitle(chat)}</p>
+          <p className="text-muted-foreground text-xs">
+            {typing ? (
+              <span className="text-sky-600 dark:text-sky-400">typing…</span>
+            ) : (
+              chatSubtitle(chat)
+            )}
+          </p>
         </div>
       </header>
       <div ref={scroller} onScroll={onScroll} className="chat-bg flex-1 overflow-y-auto px-4 py-3">
@@ -69,6 +77,7 @@ export function ChatView({ chatId }: { chatId: string }) {
           ))}
         </div>
       </div>
+      {chat.kind === "direct" && <SetupPanel />}
       <Composer chatId={chatId} replyTo={replyTo} onCancelReply={() => setReplyTo(null)} />
     </section>
   );

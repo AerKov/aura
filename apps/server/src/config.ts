@@ -13,7 +13,11 @@ export interface ServerConfig {
   dbUrl: string;
   /** Origins allowed to call the HTTP API (desktop webview, Vite dev server). */
   corsOrigins: string[];
+  /** Model used when an agent profile does not name one. */
+  defaultModel: string;
 }
+
+export const DEFAULT_MODEL = "claude-opus-5-5";
 
 export const DEFAULT_PORT = 4517;
 
@@ -51,5 +55,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     dataDir,
     dbUrl,
     corsOrigins: [...DEFAULT_CORS_ORIGINS, ...extraOrigins],
+    defaultModel: env.CREW_DEFAULT_MODEL || DEFAULT_MODEL,
   };
 }

@@ -12,6 +12,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.311",
     "@crew/shared": "workspace:*",
     "@elysiajs/cors": "1.4.2",
     "@surrealdb/node": "3.1.0",

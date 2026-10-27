@@ -3,11 +3,15 @@ import { loadConfig } from "./config";
 import { connectDb } from "./db/client";
 import { errorMessage, log } from "./lib/log";
 import { isParentAlive, watchParent } from "./lib/parent-watch";
+import { RunRepo } from "./modules/agents/runs";
+import { AgentRuntime, builtinDirectory } from "./modules/agents/runtime";
 import { LocalSessions } from "./modules/auth/sessions";
 import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
+import { ClaudeAgentSdkProvider } from "./providers/claude-agent-sdk";
+import { isCompiled, locateClaude } from "./providers/claude-locate";
 
 async function main(): Promise<void> {
   const config = loadConfig();
@@ -16,8 +20,32 @@ async function main(): Promise<void> {
 
   const hub = new EventHub();
   const stopLive = await startLiveBridge(db.surreal, hub);
-  const chat = new ChatService(new ChatRepo(db.surreal));
+  const repo = new ChatRepo(db.surreal);
+  const chat = new ChatService(repo);
   const owner = await chat.bootstrap();
+
+  const runs = new RunRepo(db.surreal);
+  const interrupted = await runs.recoverInterrupted();
+  if (interrupted > 0) log.warn("marked interrupted runs as stopped", { count: interrupted });
+
+  // Prefer the user's own Claude Code; in dev the SDK's bundled copy is a fallback.
+  const claude = locateClaude();
+  log.info("claude code", { path: claude ?? (isCompiled() ? "not found" : "sdk bundled") });
+  const provider = new ClaudeAgentSdkProvider({
+    executablePath: claude ?? (isCompiled() ? null : undefined),
+    defaultModel: config.defaultModel,
+  });
+  const runtime = new AgentRuntime({
+    chat,
+    repo,
+    runs,
+    hub,
+    provider,
+    agents: builtinDirectory,
+    ownerName: owner.name,
+    defaultModel: config.defaultModel,
+  });
+  const stopRuntime = runtime.start();
 
   const app = createApp({
     dbHealth: db.health,
@@ -27,6 +55,8 @@ async function main(): Promise<void> {
     owner,
     hub,
     chat,
+    provider,
+    runtime,
   }).listen({ hostname: config.host, port: config.port });
 
   log.info("server listening", { url: `http://${config.host}:${config.port}` });
@@ -36,6 +66,9 @@ async function main(): Promise<void> {
     if (shuttingDown) return;
     shuttingDown = true;
     log.info("shutting down", { signal });
+    stopRuntime();
+    runtime.stopAll();
+    await Promise.race([runtime.whenIdle(), Bun.sleep(5_000)]);
     await app.stop();
     await stopLive().catch(() => {});
     await db.close();

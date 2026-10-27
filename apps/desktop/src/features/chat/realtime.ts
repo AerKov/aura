@@ -17,7 +17,10 @@ export function startRealtime(): () => void {
   const connect = async () => {
     setState(() => ({ connection: "connecting" }));
     try {
-      ws = new WebSocket(await wsUrl());
+      const url = await wsUrl();
+      // The effect may have been disposed while the session was being fetched.
+      if (disposed) return;
+      ws = new WebSocket(url);
     } catch (error) {
       reportError(error);
       scheduleReconnect();

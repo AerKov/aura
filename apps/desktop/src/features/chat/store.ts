@@ -13,6 +13,7 @@ export interface ChatState {
   connection: Connection;
   serverVersion: string | null;
   activeChatId: string | null;
+  provider: { ok: true; detail?: string } | { ok: false; reason: string } | null;
 }
 
 let state: ChatState = {
@@ -23,6 +24,7 @@ let state: ChatState = {
   connection: "connecting",
   serverVersion: null,
   activeChatId: null,
+  provider: null,
 };
 
 const listeners = new Set<() => void>();

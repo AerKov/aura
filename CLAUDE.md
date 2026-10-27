@@ -61,7 +61,8 @@ docs/
 - `bun run dev:server` / `bun run dev:desktop` (`tauri dev`, expects a running server)
 - `bun run typecheck`, `bun run lint` (`lint:fix` to apply), `bun test`
 - `bun run build`: compile the server sidecar (`build:sidecar`), then `tauri build`
-- Server env: `CREW_PORT` (4517), `CREW_HOST`, `CREW_DATA_DIR` (`~/.crew`), `CREW_DB_URL`.
+- Server env: `CREW_PORT` (4517), `CREW_HOST`, `CREW_DATA_DIR` (`~/.crew`), `CREW_DB_URL`,
+  `CREW_DEFAULT_MODEL`, `CREW_CLAUDE_EXECUTABLE`.
 
 ## Architecture rules (do not break these)
 

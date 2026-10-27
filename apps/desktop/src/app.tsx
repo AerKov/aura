@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { loadInitial, loadMessages, reportError } from "@/features/chat/actions";
+import {
+  loadInitial,
+  loadMessages,
+  loadProviderStatus,
+  reportError,
+} from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
 import { startRealtime } from "@/features/chat/realtime";
 import { Sidebar } from "@/features/chat/sidebar";
@@ -11,6 +16,7 @@ export function App() {
   const [startError, setStartError] = useState<string | null>(null);
 
   useEffect(() => {
+    loadProviderStatus().catch(reportError);
     loadInitial().catch((error: unknown) => {
       reportError(error);
       setStartError(error instanceof Error ? error.message : String(error));
