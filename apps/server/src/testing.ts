@@ -1,4 +1,4 @@
-import type { ComponentHealth } from "@crew/shared";
+import type { ComponentHealth } from "@aura/shared";
 import { createApp } from "./app";
 import { connectDb } from "./db/client";
 import { RunRepo } from "./modules/agents/runs";

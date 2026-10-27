@@ -1,5 +1,5 @@
 /**
- * `bun run dev`: starts the server (watch mode, dev data in `.crew-dev/`) and the Tauri desktop app.
+ * `bun run dev`: starts the server (watch mode, dev data in `.aura-dev/`) and the Tauri desktop app.
  * Stops both when either exits or on Ctrl+C.
  *
  * Each child runs in its own process group so the whole tree (bun --watch, vite, cargo, the app

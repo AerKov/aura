@@ -1,4 +1,4 @@
-import type { Message } from "@crew/shared";
+import type { Message } from "@aura/shared";
 import { Reply, Square } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { cn } from "@/lib/utils";

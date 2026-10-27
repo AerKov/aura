@@ -15,10 +15,10 @@ and it must work inside the `bun build --compile` sidecar.
 Embed SurrealDB in the server using the official `@surrealdb/node` engine (native Node-API addon, works
 under Bun) together with the `surrealdb` JS SDK. Storage engine: `surrealkv://` (file based).
 
-- Default location: `<CREW_DATA_DIR>/state/db` (`~/.crew/state/db`). `state/` will be git-ignored when the
-  user data dir becomes a git repo (Phase 6). `CREW_DB_URL` overrides it, e.g. `mem://` in tests or a
+- Default location: `<AURA_DATA_DIR>/state/db` (`~/.aura/state/db`). `state/` will be git-ignored when the
+  user data dir becomes a git repo (Phase 6). `AURA_DB_URL` overrides it, e.g. `mem://` in tests or a
   `ws://` URL for a standalone SurrealDB.
-- Namespace `crew`, database `main`.
+- Namespace `aura`, database `main`.
 - `bun build --compile` cannot embed the addon (it is loaded by a dynamic `require`). The build script
   (`scripts/build-sidecar.ts`) copies the platform `.node` file into the Tauri bundle as a resource, and the
   Tauri shell passes its path in `NAPI_RS_NATIVE_LIBRARY_PATH`, which the napi-rs loader honours. When the
@@ -34,7 +34,7 @@ Verified: queries and LIVE SELECT work under `bun run` and in the compiled sidec
 - LIVE SELECT requires the table to be defined first (`DEFINE TABLE`), so schemas must be applied at
   startup before subscribing.
 - The SDK supports remote engines too, so switching to a sidecar `surreal` binary later only changes
-  `CREW_DB_URL` and process management, not feature code.
+  `AURA_DB_URL` and process management, not feature code.
 
 ## Alternatives
 

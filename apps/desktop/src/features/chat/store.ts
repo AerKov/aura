@@ -1,4 +1,4 @@
-import type { Chat, Message } from "@crew/shared";
+import type { Chat, Message } from "@aura/shared";
 import { useSyncExternalStore } from "react";
 
 export type Connection = "connecting" | "open" | "closed";

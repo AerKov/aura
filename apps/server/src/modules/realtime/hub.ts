@@ -1,4 +1,4 @@
-import type { ServerEvent } from "@crew/shared";
+import type { ServerEvent } from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
 
 type Listener = (event: ServerEvent) => void;

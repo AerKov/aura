@@ -3,7 +3,7 @@
  * native addon next to it. See docs/decisions/0001-surrealdb-embedded.md.
  *
  * Output (both git-ignored):
- *   apps/desktop/src-tauri/binaries/crew-server-<target-triple>[.exe]
+ *   apps/desktop/src-tauri/binaries/aura-server-<target-triple>[.exe]
  *   apps/desktop/src-tauri/resources/surrealdb-node.node
  */
 import { copyFileSync, mkdirSync, readdirSync } from "node:fs";
@@ -37,7 +37,7 @@ function findNativeAddon(): string {
 
 const triple = targetTriple();
 const ext = process.platform === "win32" ? ".exe" : "";
-const outfile = join(tauriDir, "binaries", `crew-server-${triple}${ext}`);
+const outfile = join(tauriDir, "binaries", `aura-server-${triple}${ext}`);
 mkdirSync(dirname(outfile), { recursive: true });
 
 const build = Bun.spawnSync(

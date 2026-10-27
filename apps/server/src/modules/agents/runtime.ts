@@ -1,4 +1,4 @@
-import { type Chat, type Message, parseMentions, type Usage } from "@crew/shared";
+import { type Chat, type Message, parseMentions, type Usage } from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
 import type { AgentEvent, LLMProvider } from "../../providers/types";
 import type { ChatRepo } from "../chat/repo";

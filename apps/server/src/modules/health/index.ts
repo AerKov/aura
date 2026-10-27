@@ -1,4 +1,4 @@
-import type { ComponentHealth, HealthReport } from "@crew/shared";
+import type { ComponentHealth, HealthReport } from "@aura/shared";
 import { Elysia } from "elysia";
 import { SERVER_VERSION } from "../../config";
 

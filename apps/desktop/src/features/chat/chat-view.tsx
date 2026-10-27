@@ -1,4 +1,4 @@
-import type { Message } from "@crew/shared";
+import type { Message } from "@aura/shared";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { ChatAvatar } from "./avatar";
 import { Composer } from "./composer";

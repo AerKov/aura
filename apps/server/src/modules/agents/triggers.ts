@@ -1,4 +1,4 @@
-import type { Chat, Message } from "@crew/shared";
+import type { Chat, Message } from "@aura/shared";
 
 /**
  * Which agents a new message should wake up (docs/SPEC.md section 8, rule 1): agents reply only

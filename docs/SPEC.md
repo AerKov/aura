@@ -1,4 +1,4 @@
-# Spec: crew (working name)
+# Spec: aura (working name)
 
 ## 1. Vision
 
@@ -70,8 +70,8 @@ shows a preview or diff, applies on approval, commits to git.
 │   ├─ agent runtime + guards    ├─ scheduler / job queue (in DB)         │
 │   └─ LLMProvider ── Claude Agent SDK ── Claude Code (user's own login)  │
 │                │                                                        │
-│  SurrealDB (local, file storage)      ~/.crew/ (user data, git repo)    │
-│                                       ~/.crew/projects/* (git repos)    │
+│  SurrealDB (local, file storage)      ~/.aura/ (user data, git repo)    │
+│                                       ~/.aura/projects/* (git repos)    │
 └─────────────────────────────────────────────────────────────────────────┘
         ▲ mobile client (Phase 7) connects over LAN or a private network
 ```
@@ -85,7 +85,7 @@ Notes:
 
 ## 5. Data model (sketch, refine in Phase 1)
 
-**Files (user data dir `~/.crew`, git repo)**
+**Files (user data dir `~/.aura`, git repo)**
 ```
 agents/<handle>/agent.md          frontmatter (name, role, model, provider, permissions, budget, skills) + system prompt
 skills/<name>/SKILL.md            + scripts/, versions tracked by git
@@ -163,7 +163,7 @@ login ourselves.
 6. Mentions in the reply trigger other agents with `chain_depth + 1`.
 
 **Workspaces and sandboxing**
-- Each project is a git repo under `~/.crew/projects/<slug>`.
+- Each project is a git repo under `~/.aura/projects/<slug>`.
 - Parallel coding agents use a git worktree per task; the orchestrator or a reviewer agent merges.
 - Level 0 (MVP): Claude Code permission settings restrict the agent to the project directory.
 - Level 1 (later): a container per project.

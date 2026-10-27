@@ -8,11 +8,11 @@ export function isCompiled(): boolean {
 }
 
 /**
- * Finds the user's own Claude Code installation (ADR 0004). Order: `CREW_CLAUDE_EXECUTABLE`,
+ * Finds the user's own Claude Code installation (ADR 0004). Order: `AURA_CLAUDE_EXECUTABLE`,
  * `PATH`, then the usual install locations (GUI apps often start with a minimal PATH).
  */
 export function locateClaude(env: Record<string, string | undefined> = process.env): string | null {
-  if (env.CREW_CLAUDE_EXECUTABLE) return env.CREW_CLAUDE_EXECUTABLE;
+  if (env.AURA_CLAUDE_EXECUTABLE) return env.AURA_CLAUDE_EXECUTABLE;
   const exe = process.platform === "win32" ? "claude.exe" : "claude";
   const fromPath = Bun.which("claude");
   if (fromPath) return fromPath;

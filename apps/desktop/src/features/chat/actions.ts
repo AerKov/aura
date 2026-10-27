@@ -42,7 +42,7 @@ export function openChat(chatId: string): void {
 export { upsertChat };
 
 export function reportError(error: unknown): void {
-  console.error("crew:", error instanceof Error ? error.message : error);
+  console.error("aura:", error instanceof Error ? error.message : error);
 }
 
 export async function loadProviderStatus(): Promise<void> {

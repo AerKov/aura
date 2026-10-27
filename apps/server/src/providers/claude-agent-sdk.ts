@@ -15,7 +15,7 @@ import type {
   ProviderStatus,
 } from "./types";
 
-const APP_MCP_SERVER = "crew";
+const APP_MCP_SERVER = "aura";
 
 /** Assistant/auth errors that mean the user has to fix their Claude Code setup. */
 const AUTH_ERRORS = new Set([

@@ -1,4 +1,4 @@
-import { type ClientEvent, parseServerEvent } from "@crew/shared";
+import { type ClientEvent, parseServerEvent } from "@aura/shared";
 import { resetSession, wsUrl } from "@/lib/api";
 import { reportError, resync } from "./actions";
 import { appendDelta, setState, upsertChat, upsertMessage } from "./store";

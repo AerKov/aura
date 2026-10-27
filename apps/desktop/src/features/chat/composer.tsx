@@ -1,4 +1,4 @@
-import type { Message } from "@crew/shared";
+import type { Message } from "@aura/shared";
 import { SendHorizontal, X } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";

@@ -9,7 +9,7 @@ import {
   type Participant,
   previewText,
   type Usage,
-} from "@crew/shared";
+} from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 import { isoOf, keyOf, optionalIso, optionalKey } from "../../db/convert";
 

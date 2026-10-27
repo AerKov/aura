@@ -1,5 +1,5 @@
 {
-  "name": "@crew/desktop",
+  "name": "@aura/desktop",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -12,7 +12,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@crew/shared": "workspace:*",
+    "@aura/shared": "workspace:*",
     "@elysiajs/eden": "1.4.9",
     "@streamdown/code": "2.0.0",
     "@tauri-apps/api": "2.12.4",
@@ -25,7 +25,7 @@
     "tailwind-merge": "3.7.0"
   },
   "devDependencies": {
-    "@crew/server": "workspace:*",
+    "@aura/server": "workspace:*",
     "@tailwindcss/vite": "4.3.3",
     "@tauri-apps/cli": "2.12.4",
     "@types/node": "26.6.5",

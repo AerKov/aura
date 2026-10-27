@@ -1,4 +1,4 @@
-//! Starts the compiled Bun server (`crew-server`) bundled as a Tauri sidecar.
+//! Starts the compiled Bun server (`aura-server`) bundled as a Tauri sidecar.
 //! See docs/decisions/0001-surrealdb-embedded.md for why the native addon path is passed in.
 
 use tauri::path::BaseDirectory;
@@ -6,7 +6,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
-const SIDECAR: &str = "crew-server";
+const SIDECAR: &str = "aura-server";
 const NATIVE_ADDON: &str = "resources/surrealdb-node.node";
 
 pub fn spawn(app: &AppHandle) -> Result<CommandChild, Box<dyn std::error::Error>> {
@@ -17,7 +17,7 @@ pub fn spawn(app: &AppHandle) -> Result<CommandChild, Box<dyn std::error::Error>
         .sidecar(SIDECAR)?
         .env("NAPI_RS_NATIVE_LIBRARY_PATH", addon)
         // Lets the server exit if this process dies without running its exit hook.
-        .env("CREW_PARENT_PID", std::process::id().to_string())
+        .env("AURA_PARENT_PID", std::process::id().to_string())
         .spawn()?;
 
     tauri::async_runtime::spawn(async move {

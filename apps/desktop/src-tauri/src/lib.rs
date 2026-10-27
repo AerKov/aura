@@ -26,7 +26,7 @@ pub fn run() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        .expect("error while building the crew desktop app")
+        .expect("error while building the aura desktop app")
         .run(|app, event| {
             if let RunEvent::Exit = event {
                 let child = app

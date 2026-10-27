@@ -1,4 +1,4 @@
-import type { Chat, Participant } from "@crew/shared";
+import type { Chat, Participant } from "@aura/shared";
 
 export function displayName(
   participant: Participant,

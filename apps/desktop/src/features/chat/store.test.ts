@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { Message } from "@crew/shared";
+import type { Message } from "@aura/shared";
 import { mergeMessages } from "./store";
 
 const msg = (id: string, body = id): Message => ({

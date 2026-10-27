@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "bundle": {
-    "externalBin": ["binaries/crew-server"],
+    "externalBin": ["binaries/aura-server"],
     "resources": {
       "resources/surrealdb-node.node": "resources/surrealdb-node.node"
     }

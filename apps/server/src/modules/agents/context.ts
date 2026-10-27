@@ -1,4 +1,4 @@
-import type { Message, Participant } from "@crew/shared";
+import type { Message, Participant } from "@aura/shared";
 
 export const CONTEXT_WINDOW = 30;
 

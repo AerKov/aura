@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
-import { type Message, parseServerEvent, type ServerEvent } from "@crew/shared";
+import { type Message, parseServerEvent, type ServerEvent } from "@aura/shared";
 import { treaty } from "@elysiajs/eden";
 import { createTestApp, TEST_ORIGIN } from "./testing";
 

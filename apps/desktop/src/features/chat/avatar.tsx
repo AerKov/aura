@@ -1,4 +1,4 @@
-import type { ChatKind } from "@crew/shared";
+import type { ChatKind } from "@aura/shared";
 import { Bell, Bot, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { colorFor, initials } from "./participants";

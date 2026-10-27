@@ -10,7 +10,7 @@
   `@anthropic-ai/claude-agent-sdk`. It spawns Claude Code, which uses its own login. The app never reads,
   stores or forwards credentials.
 - **The executable is the user's own Claude Code installation** (`locateClaude()`:
-  `CREW_CLAUDE_EXECUTABLE`, `PATH`, then the usual install locations). The SDK ships its own
+  `AURA_CLAUDE_EXECUTABLE`, `PATH`, then the usual install locations). The SDK ships its own
   binary (~290 MB per platform); bundling it would blow up the installer, so it is used only as a
   fallback in dev. In the compiled sidecar, if no `claude` is found, the provider reports
   "not installed" and the UI shows the setup panel.
@@ -24,7 +24,7 @@
   rebuilt every run (no SDK session resume). Text streams to clients as `message.delta`; the final
   message is persisted once.
 - Usage and cost come from the SDK's result message (`usage`, `total_cost_usd`) and are stored per run.
-- Default model `claude-opus-5-5` (`CREW_DEFAULT_MODEL` overrides; agent profiles can set their own).
+- Default model `claude-opus-5-5` (`AURA_DEFAULT_MODEL` overrides; agent profiles can set their own).
 
 ## Notes
 

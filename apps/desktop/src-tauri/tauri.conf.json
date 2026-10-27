@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "crew",
+  "productName": "aura",
   "version": "0.0.0",
-  "identifier": "dev.crew.desktop",
+  "identifier": "dev.aura.desktop",
   "build": {
     "beforeDevCommand": "bun run dev:vite",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "crew",
+        "title": "aura",
         "width": 1100,
         "height": 760,
         "minWidth": 420,

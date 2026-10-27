@@ -4,7 +4,7 @@ import {
   type Message,
   type Participant,
   parseMentions,
-} from "@crew/shared";
+} from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
 import { type ChatRepo, DIRECT_CHAT_ID, ORCHESTRATOR, SYSTEM_CHAT_ID } from "./repo";
 

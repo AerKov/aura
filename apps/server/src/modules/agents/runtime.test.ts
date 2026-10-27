@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import type { ServerEvent } from "@crew/shared";
+import type { ServerEvent } from "@aura/shared";
 import { FakeProvider } from "../../providers/fake";
 import { createTestApp } from "../../testing";
 

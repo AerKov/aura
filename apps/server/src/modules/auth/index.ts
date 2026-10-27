@@ -1,4 +1,4 @@
-import type { LocalSession } from "@crew/shared";
+import type { LocalSession } from "@aura/shared";
 import { Elysia } from "elysia";
 import { bearerToken, isLoopbackHost, type LocalSessions, type SessionUser } from "./sessions";
 

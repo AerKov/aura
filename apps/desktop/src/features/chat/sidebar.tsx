@@ -10,7 +10,7 @@ export function Sidebar() {
   return (
     <aside className="bg-sidebar flex w-80 shrink-0 flex-col border-r max-md:w-64">
       <div className="flex items-center justify-between px-4 py-3">
-        <span className="text-lg font-semibold tracking-tight">crew</span>
+        <span className="text-lg font-semibold tracking-tight">aura</span>
         <span className="text-muted-foreground truncate text-xs">{me?.name}</span>
       </div>
       <ChatList />

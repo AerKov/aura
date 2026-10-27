@@ -5,7 +5,7 @@ works with an AI **orchestrator** and a team of AI **agents**. Agents talk to ea
 people, build projects, write code and files, handle monitoring alerts, and improve their own skills with
 approval. The user customizes the app itself by chatting with the orchestrator (Obsidian-style extensions).
 
-Working name: `crew` (placeholder, rename later).
+Working name: `aura` (placeholder; may be renamed later).
 
 Full product and architecture spec: `docs/SPEC.md`. Read the relevant section before starting a feature.
 
@@ -57,12 +57,12 @@ docs/
 ## Commands
 
 - `bun install`
-- `bun run dev`: server (watch, data in `.crew-dev/`) + desktop app together
+- `bun run dev`: server (watch, data in `.aura-dev/`) + desktop app together
 - `bun run dev:server` / `bun run dev:desktop` (`tauri dev`, expects a running server)
 - `bun run typecheck`, `bun run lint` (`lint:fix` to apply), `bun test`
 - `bun run build`: compile the server sidecar (`build:sidecar`), then `tauri build`
-- Server env: `CREW_PORT` (4517), `CREW_HOST`, `CREW_DATA_DIR` (`~/.crew`), `CREW_DB_URL`,
-  `CREW_DEFAULT_MODEL`, `CREW_CLAUDE_EXECUTABLE`.
+- Server env: `AURA_PORT` (4517), `AURA_HOST`, `AURA_DATA_DIR` (`~/.aura`), `AURA_DB_URL`,
+  `AURA_DEFAULT_MODEL`, `AURA_CLAUDE_EXECUTABLE`.
 
 ## Architecture rules (do not break these)
 

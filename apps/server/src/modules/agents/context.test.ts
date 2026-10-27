@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import type { Message } from "@crew/shared";
+import type { Message } from "@aura/shared";
 import { buildPrompt, CONTEXT_WINDOW } from "./context";
 
 const msg = (id: string, body: string, extra: Partial<Message> = {}): Message => ({

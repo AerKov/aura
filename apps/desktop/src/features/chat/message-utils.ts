@@ -1,4 +1,4 @@
-import { type Message, previewText } from "@crew/shared";
+import { type Message, previewText } from "@aura/shared";
 
 export { displayName, formatTime } from "./participants";
 

@@ -1,4 +1,4 @@
-import { parseClientEvent, type ServerEvent, WS_PATH } from "@crew/shared";
+import { parseClientEvent, type ServerEvent, WS_PATH } from "@aura/shared";
 import { Elysia, t } from "elysia";
 import { SERVER_VERSION } from "../../config";
 import { log } from "../../lib/log";

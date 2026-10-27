@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import type { Chat, Message } from "@crew/shared";
+import type { Chat, Message } from "@aura/shared";
 import { agentsToTrigger } from "./triggers";
 
 const chat = (kind: Chat["kind"]): Chat => ({

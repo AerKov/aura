@@ -1,9 +1,9 @@
-import type { App } from "@crew/server";
-import { WS_PATH } from "@crew/shared";
+import type { App } from "@aura/server";
+import { WS_PATH } from "@aura/shared";
 import { treaty } from "@elysiajs/eden";
 
-/** Base URL of the local crew server (the Bun sidecar). */
-export const SERVER_URL: string = import.meta.env.VITE_CREW_SERVER_URL ?? "http://127.0.0.1:4517";
+/** Base URL of the local aura server (the Bun sidecar). */
+export const SERVER_URL: string = import.meta.env.VITE_AURA_SERVER_URL ?? "http://127.0.0.1:4517";
 
 let token: string | null = null;
 let pending: Promise<string> | null = null;

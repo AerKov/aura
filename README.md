@@ -1,4 +1,4 @@
-# crew
+# aura
 
 A local-first desktop messenger where you work with an AI orchestrator and a team of AI agents.
 Working name; see [docs/SPEC.md](docs/SPEC.md) for the product and architecture spec.
@@ -25,8 +25,8 @@ bun test
 bun run build          # compile the server sidecar, then `tauri build`
 ```
 
-Dev data (SurrealDB files) goes to `.crew-dev/`. A release build stores data in `~/.crew`
-(override with `CREW_DATA_DIR`).
+Dev data (SurrealDB files) goes to `.aura-dev/`. A release build stores data in `~/.aura`
+(override with `AURA_DATA_DIR`).
 
 ## Layout
 

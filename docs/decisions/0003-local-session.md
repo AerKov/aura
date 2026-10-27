@@ -7,7 +7,7 @@
 ## Context
 
 v1 has one user per install and the server only listens on loopback. A login screen adds friction and
-no security against the owner's own processes, which can read `~/.crew` anyway. What must be stopped are
+no security against the owner's own processes, which can read `~/.aura` anyway. What must be stopped are
 **websites** in the user's browser talking to `127.0.0.1:4517` (CSRF, DNS rebinding).
 
 ## Decision
@@ -25,4 +25,4 @@ no security against the owner's own processes, which can read `~/.crew` anyway. 
 ## Consequences
 
 - No login UI in v1; the app opens straight into chats.
-- Any local process of the same OS user can call the API (same trust level as reading `~/.crew`).
+- Any local process of the same OS user can call the API (same trust level as reading `~/.aura`).

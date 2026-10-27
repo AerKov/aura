@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    crew_desktop_lib::run()
+    aura_desktop_lib::run()
 }

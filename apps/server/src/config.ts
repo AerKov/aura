@@ -36,25 +36,25 @@ function parsePort(raw: string | undefined): number {
   if (raw === undefined || raw === "") return DEFAULT_PORT;
   const port = Number(raw);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
-    throw new ConfigError(`CREW_PORT must be an integer between 1 and 65535, got "${raw}"`);
+    throw new ConfigError(`AURA_PORT must be an integer between 1 and 65535, got "${raw}"`);
   }
   return port;
 }
 
 export function loadConfig(env: Record<string, string | undefined> = process.env): ServerConfig {
-  const dataDir = resolve(env.CREW_DATA_DIR ?? join(homedir(), ".crew"));
-  const dbUrl = env.CREW_DB_URL ?? `surrealkv://${join(dataDir, "state", "db")}`;
-  const extraOrigins = (env.CREW_CORS_ORIGINS ?? "")
+  const dataDir = resolve(env.AURA_DATA_DIR ?? join(homedir(), ".aura"));
+  const dbUrl = env.AURA_DB_URL ?? `surrealkv://${join(dataDir, "state", "db")}`;
+  const extraOrigins = (env.AURA_CORS_ORIGINS ?? "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean);
 
   return {
-    host: env.CREW_HOST ?? "127.0.0.1",
-    port: parsePort(env.CREW_PORT),
+    host: env.AURA_HOST ?? "127.0.0.1",
+    port: parsePort(env.AURA_PORT),
     dataDir,
     dbUrl,
     corsOrigins: [...DEFAULT_CORS_ORIGINS, ...extraOrigins],
-    defaultModel: env.CREW_DEFAULT_MODEL || DEFAULT_MODEL,
+    defaultModel: env.AURA_DEFAULT_MODEL || DEFAULT_MODEL,
   };
 }

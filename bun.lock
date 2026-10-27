@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "crew",
+      "name": "aura",
       "devDependencies": {
         "@biomejs/biome": "2.6.3",
         "@types/bun": "1.4.4",
@@ -11,10 +11,10 @@
       },
     },
     "apps/desktop": {
-      "name": "@crew/desktop",
+      "name": "@aura/desktop",
       "version": "0.0.0",
       "dependencies": {
-        "@crew/shared": "workspace:*",
+        "@aura/shared": "workspace:*",
         "@elysiajs/eden": "1.4.9",
         "@streamdown/code": "2.0.0",
         "@tauri-apps/api": "2.12.4",
@@ -27,7 +27,7 @@
         "tailwind-merge": "3.7.0",
       },
       "devDependencies": {
-        "@crew/server": "workspace:*",
+        "@aura/server": "workspace:*",
         "@tailwindcss/vite": "4.3.3",
         "@tauri-apps/cli": "2.12.4",
         "@types/node": "26.6.5",
@@ -40,11 +40,11 @@
       },
     },
     "apps/server": {
-      "name": "@crew/server",
+      "name": "@aura/server",
       "version": "0.0.0",
       "dependencies": {
         "@anthropic-ai/claude-agent-sdk": "0.3.311",
-        "@crew/shared": "workspace:*",
+        "@aura/shared": "workspace:*",
         "@elysiajs/cors": "1.4.2",
         "@surrealdb/node": "3.1.0",
         "@surrealdb/node-native": "3.3.4",
@@ -56,7 +56,7 @@
       },
     },
     "packages/shared": {
-      "name": "@crew/shared",
+      "name": "@aura/shared",
       "version": "0.0.0",
     },
   },
@@ -80,6 +80,12 @@
     "@anthropic-ai/claude-agent-sdk-win32-x64": ["@anthropic-ai/claude-agent-sdk-win32-x64@0.3.311", "", { "os": "win32", "cpu": "x64" }, "sha512-I92TwBhMkpc9pLwu1SwLiz6wqXkcmMPAdz4LgpwKAeyB5rum2GyZgYPIDTRYEpo3cX0nEP2qmyxtKEO/tLFfoA=="],
 
     "@anthropic-ai/sdk": ["@anthropic-ai/sdk@1.3.0", "", { "dependencies": { "@opentelemetry/api": "^1.4.1", "json-schema-to-ts": "^3.1.1", "standardwebhooks": "^1.0.0" }, "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" }, "optionalPeers": ["zod"], "bin": { "anthropic-ai-sdk": "bin/cli" } }, "sha512-k7z9BlLLPxfZH+ov7dS6EnaN/wiZeV8YNT1LZfrpAHIy7oY7pHr4UzirF9f2OlHtFEnRBOX+AZQ91Y5fK+TPTw=="],
+
+    "@aura/desktop": ["@aura/desktop@workspace:apps/desktop"],
+
+    "@aura/server": ["@aura/server@workspace:apps/server"],
+
+    "@aura/shared": ["@aura/shared@workspace:packages/shared"],
 
     "@babel/runtime": ["@babel/runtime@7.29.10", "", {}, "sha512-NpugTzbKgGrNe45Ui32cN8vCFFMxVtP/9rtfwv0nP5FRDAjvYBxJcLVpYA9mr1jxP6cnIT7x9LUzuDTbWYYNRA=="],
 
@@ -106,12 +112,6 @@
     "@biomejs/cli-win32-x64": ["@biomejs/cli-win32-x64@2.6.3", "", { "os": "win32", "cpu": "x64" }, "sha512-GhtOPphBWlnCepqpNk/w5eGN5oGRCzL20EbAkL1XCIpyboeVC9R642noyT43l8LSenGS4qz9IL8sKPfwY37V/Q=="],
 
     "@borewit/text-codec": ["@borewit/text-codec@0.2.2", "", {}, "sha512-DDaRehssg1aNrH4+2hnj1B7vnUGEjU6OIlyRdkMd0aUdIUvKXrJfXsy8LVtXAy7DRvYVluWbMspsRhz2lcW0mQ=="],
-
-    "@crew/desktop": ["@crew/desktop@workspace:apps/desktop"],
-
-    "@crew/server": ["@crew/server@workspace:apps/server"],
-
-    "@crew/shared": ["@crew/shared@workspace:packages/shared"],
 
     "@elysiajs/cors": ["@elysiajs/cors@1.4.2", "", { "peerDependencies": { "elysia": ">= 1.4.0" } }, "sha512-FTCcbH35brTLigF1W7BYySRZomgI/dBEMK9BgK9RP9Nez7zmpGh4koL/Yr1BFv8nYz7CfhRvcM8d/c+XnwMaVQ=="],
 

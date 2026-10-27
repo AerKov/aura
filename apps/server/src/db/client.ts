@@ -1,10 +1,10 @@
-import type { ComponentHealth } from "@crew/shared";
+import type { ComponentHealth } from "@aura/shared";
 import { createRemoteEngines, Surreal } from "surrealdb";
 import { errorMessage, log } from "../lib/log";
 import { ensureNativeAddonPath } from "./native";
 import { applySchema } from "./schema";
 
-export const DB_NAMESPACE = "crew";
+export const DB_NAMESPACE = "aura";
 export const DB_DATABASE = "main";
 
 export class DbConnectError extends Error {

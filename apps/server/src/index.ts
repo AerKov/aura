@@ -77,7 +77,7 @@ async function main(): Promise<void> {
   process.on("SIGINT", () => void shutdown("SIGINT"));
   process.on("SIGTERM", () => void shutdown("SIGTERM"));
 
-  const parentPid = Number(process.env.CREW_PARENT_PID);
+  const parentPid = Number(process.env.AURA_PARENT_PID);
   if (Number.isInteger(parentPid) && parentPid > 0) {
     watchParent(
       () => isParentAlive(parentPid),
