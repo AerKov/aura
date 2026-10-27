@@ -2,7 +2,6 @@
 @import "tw-animate-css";
 @import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
-@import "@fontsource-variable/fraunces";
 
 @source "../node_modules/streamdown/dist/*.js";
 @source "../node_modules/@streamdown/code/dist/*.js";
@@ -10,72 +9,71 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Aura design tokens. Light is "paper" (warm neutrals), dark is "ink" (deep violet). The aura accent is
- * an iris → amber gradient. Themes (themes/<name>/theme.css) override these variables.
+ * Aura "Workbench" tokens (ADR 0010): warm paper and ink, hairline rules, one signal colour
+ * (vermilion). Dark is neutral graphite. Themes (themes/<name>/theme.css) override these variables.
  */
 :root {
-  --radius: 0.9rem;
-  --background: oklch(0.985 0.006 80);
-  --foreground: oklch(0.23 0.025 285);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.23 0.025 285);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.23 0.025 285);
-  --primary: oklch(0.52 0.2 288);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.955 0.012 285);
-  --secondary-foreground: oklch(0.3 0.04 285);
-  --muted: oklch(0.96 0.008 80);
-  --muted-foreground: oklch(0.52 0.02 285);
-  --accent: oklch(0.945 0.02 288);
-  --accent-foreground: oklch(0.3 0.06 288);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.01 80);
-  --input: oklch(0.9 0.012 80);
-  --ring: oklch(0.62 0.16 288);
-  --sidebar: oklch(0.972 0.008 80);
-  --rail: oklch(0.21 0.035 288);
-  --rail-foreground: oklch(0.86 0.03 288);
+  --radius: 0.5rem;
+  --background: oklch(0.975 0.006 85);
+  --foreground: oklch(0.2 0.006 70);
+  --card: oklch(0.993 0.003 85);
+  --card-foreground: oklch(0.2 0.006 70);
+  --popover: oklch(0.993 0.003 85);
+  --popover-foreground: oklch(0.2 0.006 70);
+  --primary: oklch(0.6 0.19 38);
+  --primary-foreground: oklch(0.99 0.005 85);
+  --secondary: oklch(0.945 0.007 85);
+  --secondary-foreground: oklch(0.25 0.006 70);
+  --muted: oklch(0.95 0.007 85);
+  --muted-foreground: oklch(0.5 0.01 70);
+  --accent: oklch(0.935 0.009 85);
+  --accent-foreground: oklch(0.2 0.006 70);
+  --destructive: oklch(0.55 0.21 27);
+  --border: oklch(0.885 0.009 85);
+  --input: oklch(0.86 0.01 85);
+  --ring: oklch(0.6 0.19 38);
+  --sidebar: oklch(0.962 0.007 85);
+  --rail: oklch(0.962 0.007 85);
+  --rail-foreground: oklch(0.42 0.01 70);
   --chat-bg: var(--background);
-  --bubble-own: oklch(0.94 0.035 288);
+  --grid-dot: oklch(0.86 0.01 85);
+  --bubble-own: oklch(0.93 0.01 85);
   --bubble-other: transparent;
-  --aura-1: oklch(0.6 0.21 292);
-  --aura-2: oklch(0.8 0.14 65);
+  --signal: oklch(0.6 0.19 38);
 }
 
 .dark {
-  --background: oklch(0.165 0.02 285);
-  --foreground: oklch(0.94 0.012 285);
-  --card: oklch(0.205 0.025 285);
-  --card-foreground: oklch(0.94 0.012 285);
-  --popover: oklch(0.22 0.028 285);
-  --popover-foreground: oklch(0.94 0.012 285);
-  --primary: oklch(0.72 0.16 292);
-  --primary-foreground: oklch(0.17 0.03 285);
-  --secondary: oklch(0.245 0.03 285);
-  --secondary-foreground: oklch(0.92 0.02 285);
-  --muted: oklch(0.225 0.025 285);
-  --muted-foreground: oklch(0.69 0.025 285);
-  --accent: oklch(0.27 0.04 288);
-  --accent-foreground: oklch(0.93 0.03 288);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 13%);
-  --ring: oklch(0.6 0.14 290);
-  --sidebar: oklch(0.185 0.022 285);
-  --rail: oklch(0.13 0.022 285);
-  --rail-foreground: oklch(0.8 0.03 288);
+  --background: oklch(0.175 0.002 70);
+  --foreground: oklch(0.93 0.004 85);
+  --card: oklch(0.205 0.002 70);
+  --card-foreground: oklch(0.93 0.004 85);
+  --popover: oklch(0.215 0.002 70);
+  --popover-foreground: oklch(0.93 0.004 85);
+  --primary: oklch(0.7 0.17 42);
+  --primary-foreground: oklch(0.17 0.01 40);
+  --secondary: oklch(0.24 0.002 70);
+  --secondary-foreground: oklch(0.9 0.004 85);
+  --muted: oklch(0.225 0.002 70);
+  --muted-foreground: oklch(0.66 0.006 80);
+  --accent: oklch(0.255 0.002 70);
+  --accent-foreground: oklch(0.93 0.004 85);
+  --destructive: oklch(0.68 0.19 25);
+  --border: oklch(0.3 0.003 70);
+  --input: oklch(0.33 0.003 70);
+  --ring: oklch(0.7 0.17 42);
+  --sidebar: oklch(0.19 0.002 70);
+  --rail: oklch(0.19 0.002 70);
+  --rail-foreground: oklch(0.7 0.005 80);
   --chat-bg: var(--background);
-  --bubble-own: oklch(0.29 0.06 290);
+  --grid-dot: oklch(0.27 0.003 70);
+  --bubble-own: oklch(0.25 0.003 70);
   --bubble-other: transparent;
-  --aura-1: oklch(0.68 0.2 292);
-  --aura-2: oklch(0.8 0.14 65);
+  --signal: oklch(0.7 0.17 42);
 }
 
 @theme inline {
   --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono Variable", ui-monospace, monospace;
-  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
   --radius-sm: calc(var(--radius) - 6px);
   --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
@@ -122,60 +120,57 @@
   background-color: var(--chat-bg);
 }
 
-/* The aura gradient as text, border or fill. */
-.aura-text {
-  background: linear-gradient(100deg, var(--aura-1), var(--aura-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.aura-fill {
-  background: linear-gradient(135deg, var(--aura-1), var(--aura-2));
-}
-.aura-ring {
-  position: relative;
-}
-.aura-ring::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    120deg,
-    color-mix(in oklch, var(--aura-1) 70%, transparent),
-    color-mix(in oklch, var(--aura-2) 60%, transparent)
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+/* A faint dot grid behind conversations: the workbench surface. */
+.dot-grid {
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: -11px -11px;
 }
 
-/* Agent orbs breathe while the agent works. */
-@keyframes orb-breathe {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 var(--orb-glow, transparent);
+/* Small monospaced uppercase labels: RUN, APPROVAL, author lines. */
+.kicker {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+/* Agent marks: square monogram tiles tinted by the agent's hue (--h). */
+.mark {
+  background: oklch(0.95 0.035 var(--h));
+  color: oklch(0.42 0.13 var(--h));
+  border: 1px solid oklch(0.86 0.06 var(--h));
+}
+.dark .mark {
+  background: oklch(0.27 0.045 var(--h));
+  color: oklch(0.86 0.1 var(--h));
+  border-color: oklch(0.38 0.06 var(--h));
+}
+
+/* A thin moving stripe under something that is working. */
+@keyframes working {
+  from {
+    background-position: 0 0;
   }
-  50% {
-    box-shadow: 0 0 0 6px color-mix(in oklch, var(--orb-glow, transparent) 35%, transparent);
+  to {
+    background-position: 24px 0;
   }
 }
-.orb-active {
-  animation: orb-breathe 1.6s ease-in-out infinite;
+.working-bar {
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--signal) 0 12px, transparent 12px 24px);
+  animation: working 0.8s linear infinite;
 }
 
 @keyframes message-in {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(3px);
   }
 }
 .message-in {
-  animation: message-in 0.22s ease-out;
+  animation: message-in 0.18s ease-out;
 }
 
 /* Markdown inside messages. */
@@ -193,19 +188,17 @@
 .markdown h1,
 .markdown h2,
 .markdown h3 {
-  font-family: var(--font-display);
-  font-weight: 560;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: -0.015em;
 }
 
 /* Highlight when jumping to a replied message. */
 .flash {
   animation: flash 1.2s ease-out;
-  border-radius: var(--radius);
 }
 @keyframes flash {
   0% {
-    background: color-mix(in oklch, var(--aura-1) 18%, transparent);
+    background: color-mix(in oklch, var(--signal) 14%, transparent);
   }
   100% {
     background: transparent;
@@ -213,7 +206,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .orb-active,
+  .working-bar,
   .message-in,
   .flash {
     animation: none;

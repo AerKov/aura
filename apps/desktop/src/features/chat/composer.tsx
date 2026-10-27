@@ -58,7 +58,7 @@ export function Composer({
     <div className="px-4 pt-2 pb-4 max-md:px-2 max-md:pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-3xl">
         {error && <p className="text-destructive mb-2 px-2 text-sm">{error}</p>}
-        <div className="aura-ring bg-card rounded-3xl shadow-[0_8px_30px_-12px_color-mix(in_oklch,var(--aura-1)_45%,transparent)]">
+        <div className="bg-card focus-within:border-primary/60 focus-within:ring-primary/15 rounded-lg border shadow-sm transition-shadow focus-within:ring-4">
           {replyTo && (
             <div className="flex items-center gap-2 border-b px-4 py-2 text-sm">
               <CornerDownRight className="text-muted-foreground size-4 shrink-0" />
@@ -92,15 +92,21 @@ export function Composer({
               disabled={!text.trim() || sending}
               onClick={() => void send()}
               className={cn(
-                "flex size-10 shrink-0 items-center justify-center rounded-full text-white transition-opacity",
+                "flex size-9 shrink-0 items-center justify-center rounded-md transition-colors",
                 text.trim()
-                  ? "aura-fill shadow-[0_4px_14px_-4px_var(--aura-1)]"
+                  ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground",
               )}
             >
-              <ArrowUp className="size-5" />
+              <ArrowUp className="size-4" />
             </button>
           </div>
+        </div>
+        <div className="kicker mt-1.5 flex gap-4 px-1 max-md:hidden">
+          <span>⏎ send</span>
+          <span>⇧⏎ new line</span>
+          <span>@ call an agent</span>
+          <span>markdown</span>
         </div>
       </div>
     </div>

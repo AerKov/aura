@@ -43,60 +43,65 @@ export function ApprovalCard({ card }: { card: ApprovalCardData }) {
   };
 
   return (
-    <div className="aura-ring bg-card mt-2 w-[min(36rem,100%)] rounded-2xl p-4 shadow-[0_10px_30px_-18px_var(--aura-1)]">
-      <div className="mb-2 flex items-center gap-2">
-        <ShieldQuestion className="size-4 text-amber-600" />
-        <span className="font-semibold">{card.title}</span>
-        <span
-          className={cn(
-            "ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium",
-            card.status === "pending" &&
-              "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200",
-            card.status === "approved" &&
-              "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200",
-            (card.status === "rejected" || card.status === "failed") &&
-              "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200",
-          )}
-        >
-          {STATUS_LABEL[card.status]}
-        </span>
+    <div className="bg-card border-primary/40 mt-2 w-[min(36rem,100%)] overflow-hidden rounded-lg border">
+      <div className="bg-primary/8 kicker text-primary! border-primary/30 border-b px-4 py-1.5">
+        Approval · @{card.requestedBy}
       </div>
-      {card.why && (
-        <div className="text-muted-foreground mb-2 text-sm">
-          <Markdown>{card.why}</Markdown>
+      <div className="p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <ShieldQuestion className="size-4 text-amber-600" />
+          <span className="font-semibold">{card.title}</span>
+          <span
+            className={cn(
+              "ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium",
+              card.status === "pending" &&
+                "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200",
+              card.status === "approved" &&
+                "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200",
+              (card.status === "rejected" || card.status === "failed") &&
+                "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-200",
+            )}
+          >
+            {STATUS_LABEL[card.status]}
+          </span>
         </div>
-      )}
-      <div className="bg-background/60 max-h-80 overflow-y-auto rounded-lg border px-3 py-2 text-sm">
-        <Markdown>{card.preview}</Markdown>
-      </div>
-      {card.result && (
-        <p className={cn("mt-2 text-sm", card.status === "failed" && "text-destructive")}>
-          {card.result}
-        </p>
-      )}
-      {error && <p className="text-destructive mt-2 text-sm">{error}</p>}
-      {card.status === "pending" && (
-        <div className="mt-3 flex gap-2">
-          <Button size="sm" disabled={busy} onClick={() => void decide(true)}>
-            <Check /> Approve
-          </Button>
-          <Button size="sm" variant="outline" disabled={busy} onClick={() => void decide(false)}>
-            <X /> Reject
-          </Button>
-          {card.tryCss && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                tryCss(trying ? null : (card.tryCss ?? null));
-                setTrying(!trying);
-              }}
-            >
-              {trying ? <EyeOff /> : <Eye />} {trying ? "Stop trying" : "Try it"}
+        {card.why && (
+          <div className="text-muted-foreground mb-2 text-sm">
+            <Markdown>{card.why}</Markdown>
+          </div>
+        )}
+        <div className="bg-background/60 max-h-80 overflow-y-auto rounded-lg border px-3 py-2 text-sm">
+          <Markdown>{card.preview}</Markdown>
+        </div>
+        {card.result && (
+          <p className={cn("mt-2 text-sm", card.status === "failed" && "text-destructive")}>
+            {card.result}
+          </p>
+        )}
+        {error && <p className="text-destructive mt-2 text-sm">{error}</p>}
+        {card.status === "pending" && (
+          <div className="mt-3 flex gap-2">
+            <Button size="sm" disabled={busy} onClick={() => void decide(true)}>
+              <Check /> Approve
             </Button>
-          )}
-        </div>
-      )}
+            <Button size="sm" variant="outline" disabled={busy} onClick={() => void decide(false)}>
+              <X /> Reject
+            </Button>
+            {card.tryCss && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  tryCss(trying ? null : (card.tryCss ?? null));
+                  setTrying(!trying);
+                }}
+              >
+                {trying ? <EyeOff /> : <Eye />} {trying ? "Stop trying" : "Try it"}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

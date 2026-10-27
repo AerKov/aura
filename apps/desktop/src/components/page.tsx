@@ -12,7 +12,7 @@ export function PageHeader({
 }) {
   return (
     <header className="mb-8">
-      <h1 className="font-display flex items-center gap-3 text-3xl font-semibold tracking-tight">
+      <h1 className="flex items-center gap-3 text-[28px] leading-tight font-semibold tracking-tight">
         {icon}
         {title}
       </h1>

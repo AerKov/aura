@@ -93,14 +93,16 @@ export function Rail() {
     <nav
       aria-label="Main"
       className={cn(
-        "bg-rail text-rail-foreground z-20 flex shrink-0 items-center gap-1",
-        "md:w-16 md:flex-col md:py-3",
+        "bg-rail text-rail-foreground z-20 flex shrink-0 items-center gap-1 md:border-r max-md:border-t",
+        "md:w-14 md:flex-col md:py-2",
         "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:h-16 max-md:justify-around max-md:px-2 max-md:pb-[env(safe-area-inset-bottom)]",
         hideOnPhone && "max-md:hidden",
       )}
     >
-      <div className="mb-3 hidden flex-col items-center md:flex" title="Aura">
-        <span className="aura-fill block size-8 rounded-full shadow-[0_0_18px_-2px_var(--aura-1)]" />
+      <div className="mb-2 hidden h-10 items-center justify-center md:flex" title="Aura">
+        <span className="bg-foreground text-primary flex size-7 items-center justify-center rounded-md text-sm leading-none">
+          ◆
+        </span>
       </div>
       {items.map((item) => (
         <button
@@ -111,22 +113,22 @@ export function Rail() {
           aria-current={item.active ? "page" : undefined}
           onClick={item.onClick}
           className={cn(
-            "group relative flex size-11 items-center justify-center rounded-xl transition-colors",
-            item.active ? "bg-white/12 text-white" : "hover:bg-white/8 hover:text-white",
+            "group relative flex size-10 items-center justify-center rounded-md transition-colors",
+            item.active ? "bg-accent text-foreground" : "hover:bg-accent/70 hover:text-foreground",
             item.key === "customize" && "md:mt-auto",
           )}
         >
           <item.icon className="size-5" />
           {item.active && (
-            <span className="aura-fill absolute top-1/2 -left-2.5 hidden h-6 w-1 -translate-y-1/2 rounded-full md:block" />
+            <span className="bg-primary absolute top-1/2 -left-2 hidden h-5 w-0.5 -translate-y-1/2 md:block" />
           )}
           {item.key === "chats" && pendingApprovals > 0 && (
             <span
-              className="absolute top-1.5 right-1.5 size-2 rounded-full bg-amber-400"
+              className="bg-primary absolute top-1.5 right-1.5 size-2 rounded-[2px]"
               title="Approvals waiting"
             />
           )}
-          <span className="pointer-events-none absolute left-14 z-30 hidden rounded-md bg-black/80 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100 md:block">
+          <span className="bg-foreground text-background pointer-events-none absolute left-12 z-30 hidden rounded px-2 py-1 font-mono text-[11px] whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100 md:block">
             {item.label}
           </span>
         </button>

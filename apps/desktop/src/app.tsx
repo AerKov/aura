@@ -75,7 +75,9 @@ export function App() {
             <ChatView key={activeChatId} chatId={activeChatId} />
           ) : (
             <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-              <span className="aura-fill orb-active block size-16 rounded-full [--orb-glow:var(--aura-1)]" />
+              <span className="bg-foreground text-primary flex size-12 animate-pulse items-center justify-center rounded-lg text-xl">
+                ◆
+              </span>
               <p className="text-muted-foreground max-w-sm text-sm">
                 {startError
                   ? `Cannot reach the Aura server at ${SERVER_URL}: ${startError}`

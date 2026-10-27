@@ -1,11 +1,11 @@
 import type { Message } from "@aura/shared";
 import { ChevronLeft, ListTodo } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Orb } from "@/components/orb";
+import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { loadMembers, reportError, showList } from "./actions";
-import { ChatOrb } from "./chat-orb";
+import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
 import { isGrouped } from "./message-utils";
@@ -79,8 +79,8 @@ export function ChatView({ chatId }: { chatId: string }) {
 
   return (
     <div className="relative flex min-w-0 flex-1">
-      <section className="chat-bg flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b px-5 py-3 max-md:px-2">
+      <section className="chat-bg dot-grid flex min-w-0 flex-1 flex-col">
+        <header className="bg-background flex h-14 items-center gap-3 border-b px-5 max-md:px-2">
           <button
             type="button"
             aria-label="Back to chats"
@@ -89,15 +89,15 @@ export function ChatView({ chatId }: { chatId: string }) {
           >
             <ChevronLeft className="size-5" />
           </button>
-          <ChatOrb chat={chat} size="md" active={working.length > 0} />
+          <ChatMark chat={chat} size="md" working={working.length > 0} />
           <div className="min-w-0">
-            <h1 className="font-display truncate text-xl leading-tight font-semibold tracking-tight">
+            <h1 className="truncate text-[17px] leading-tight font-semibold tracking-tight">
               {chat.title}
             </h1>
             <p className="text-muted-foreground truncate text-xs">
               {working.length > 0 ? (
-                <span className="aura-text font-medium">
-                  {working.map((h) => `@${h}`).join(", ")} working…
+                <span className="text-primary font-mono text-xs">
+                  ●{working.map((h) => `@${h}`).join(", ")} working…
                 </span>
               ) : chat.kind === "group" && agents.length > 0 ? (
                 `project · ${agents.filter((a) => a.id !== "orchestrator").length} agents`
@@ -113,12 +113,12 @@ export function ChatView({ chatId }: { chatId: string }) {
                 title={agents.map((a) => `@${a.id}`).join(", ")}
               >
                 {agents.map((a) => (
-                  <Orb
+                  <Mark
                     key={a.id}
                     name={a.id}
                     kind={a.id === "orchestrator" ? "orchestrator" : "agent"}
                     size="sm"
-                    active={working.includes(a.id)}
+                    working={working.includes(a.id)}
                     className="ring-background ring-2"
                   />
                 ))}
@@ -147,9 +147,9 @@ export function ChatView({ chatId }: { chatId: string }) {
             {messages.length === 0 && (
               <div className="mx-auto mt-[12vh] max-w-sm text-center">
                 <div className="mb-5 flex justify-center">
-                  <ChatOrb chat={chat} size="lg" />
+                  <ChatMark chat={chat} size="lg" />
                 </div>
-                <h2 className="font-display mb-2 text-2xl font-semibold">{greeting.title}</h2>
+                <h2 className="mb-2 text-2xl font-semibold tracking-tight">{greeting.title}</h2>
                 <p className="text-muted-foreground text-sm">{greeting.text}</p>
               </div>
             )}
