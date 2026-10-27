@@ -1,7 +1,7 @@
 [package]
 name = "aura-desktop"
-version = "0.0.0"
-description = "aura desktop shell"
+version = "0.9.0"
+description = "Aura desktop shell"
 edition = "2021"
 license = "MIT"
 publish = false

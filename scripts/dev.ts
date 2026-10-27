@@ -5,9 +5,10 @@
  * Each child runs in its own process group so the whole tree (bun --watch, vite, cargo, the app
  * window) can be stopped at once; killing only the direct child would leave orphans.
  */
+import { fileURLToPath } from "node:url";
 import type { Subprocess } from "bun";
 
-const root = new URL("..", import.meta.url).pathname;
+const root = fileURLToPath(new URL("..", import.meta.url));
 const isWindows = process.platform === "win32";
 
 function start(cmd: string[], cwd: string): Subprocess {

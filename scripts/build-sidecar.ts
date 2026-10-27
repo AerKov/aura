@@ -8,8 +8,10 @@
  */
 import { copyFileSync, mkdirSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = new URL("..", import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: on Windows the pathname is "/C:/...".
+const root = fileURLToPath(new URL("..", import.meta.url));
 const tauriDir = join(root, "apps/desktop/src-tauri");
 
 function targetTriple(): string {
