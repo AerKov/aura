@@ -127,6 +127,14 @@ export function showMemory(): void {
   setState(() => ({ view: "memory", pane: "main" }));
 }
 
+export function showAgents(): void {
+  setState(() => ({ view: "agents", pane: "main" }));
+}
+
+export function showIntegrations(): void {
+  setState(() => ({ view: "integrations", pane: "main" }));
+}
+
 export function showCatalog(): void {
   setState(() => ({ view: "catalog", pane: "main" }));
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AuraLogo } from "@/components/logo";
+import { AgentsView } from "@/features/agents/agents-view";
 import { CatalogView } from "@/features/catalog/catalog-view";
 import {
   loadInitial,
@@ -17,6 +18,7 @@ import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
 import { PairingScreen } from "@/features/devices/pairing-screen";
 import { EnginesView } from "@/features/engines/engines-view";
+import { IntegrationsView } from "@/features/integrations/integrations-view";
 import { JobsView } from "@/features/jobs/jobs-view";
 import { MemoryView } from "@/features/memory/memory-view";
 import { Rail } from "@/features/shell/rail";
@@ -69,6 +71,10 @@ export function App() {
             <SkillsView />
           ) : view === "memory" ? (
             <MemoryView />
+          ) : view === "agents" ? (
+            <AgentsView />
+          ) : view === "integrations" ? (
+            <IntegrationsView />
           ) : view === "catalog" ? (
             <CatalogView />
           ) : view === "jobs" ? (

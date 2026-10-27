@@ -1,5 +1,20 @@
 # Troubleshooting
 
+**An agent does not answer.** Open the **Agents** page and pick it: the card lists what stops it
+(engine not ready, a tool its engine lacks, a variable without a value, a host the sandbox blocks,
+no chat, the last error). Agents answer only in chats they belong to; Aura says so when you mention
+one elsewhere. You can also ask the orchestrator "why doesn't @name answer?".
+
+**A tool server (MCP) does not work.** Integrations → **Test** shows why and the server's log.
+Servers set up in Claude Code are not used by Aura; add them on the Integrations page.
+
+**A script needs keys or settings.** Set them as variables on the agent's card (keys as secrets),
+not in `~/.profile`. See [Integrations](Integrations).
+
+**"Error: claude native binary not installed".** Claude Code itself was installed without its
+platform part. Reinstall it: `curl -fsSL https://claude.ai/install.sh | bash` (or
+`npm install -g @anthropic-ai/claude-code` without `--ignore-scripts`), then run `claude` once.
+
 **"Connect Claude Code" panel in the chat.** Claude Code is missing or not logged in. Install it, run
 `claude` in a terminal and log in, then press **Check again**. Or pick another engine with **Use
 another engine**.

@@ -52,6 +52,7 @@ The reasons behind the design are recorded as ADRs in
 | 0017 | Rolling chat summaries for long chats                    |
 | 0018 | A container per project (sandbox level 2)                |
 | 0019 | MCP servers in project containers                        |
+| 0020 | Integrations, secrets, agent variables and status        |
 
 The full product and architecture spec, including the roadmap, is
 [docs/SPEC.md](https://github.com/AerKov/aura/blob/HEAD/docs/SPEC.md).

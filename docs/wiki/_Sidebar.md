@@ -8,6 +8,7 @@
 - [Skills](Skills)
 - [Memory](Memory)
 - [Catalog](Catalog)
+- [Integrations](Integrations)
 - [Alerts and schedules](Alerts-and-Schedules)
 - [Customization](Customization)
 - [Phone](Phone)

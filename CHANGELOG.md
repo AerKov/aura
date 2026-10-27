@@ -5,6 +5,21 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+From the first alpha feedback:
+
+- Agents never stay silent without a reason: mentioning an agent outside the chat says where it is,
+  and an empty model answer shows as an error.
+- Integrations page: add, edit, test and remove MCP servers, bind them to agents, and see why a
+  server fails (plain-language error and its log).
+- Secrets stored by Aura (outside git, never shown again) and used as `${secret:NAME}`; no more
+  `~/.profile` for keys.
+- Variables for an agent's commands, on every engine and in containers; secret values are hidden in
+  chat.
+- Agents page: engine readiness, tools the engine lacks, variables, tool servers, chats, last error
+  and what stops the agent; tools and variables editable there.
+- Host check (reachable? may commands reach it?), proxy settings passed to commands and servers.
+- The orchestrator can inspect the setup (read-only, no secrets) and test a server.
+
 ## [0.16.0] - 2026-10-27: First alpha
 
 The first public build: phases 10 to 16 on top of 0.9.0. Unsigned installers; see the

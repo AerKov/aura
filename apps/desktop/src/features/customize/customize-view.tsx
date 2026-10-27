@@ -3,7 +3,7 @@ import { Blocks, Palette, Plug, ShieldAlert } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
-import { reportError } from "@/features/chat/actions";
+import { reportError, showIntegrations } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -146,9 +146,17 @@ export function CustomizeView() {
           <Plug className="size-4" /> MCP servers
         </h2>
         <div className="space-y-2">
-          {state?.mcpServers.length === 0 && (
-            <p className="text-muted-foreground text-sm">No MCP servers yet.</p>
-          )}
+          <p className="text-muted-foreground text-sm">
+            Add, test and assign them on the{" "}
+            <button
+              type="button"
+              className="text-primary hover:underline"
+              onClick={showIntegrations}
+            >
+              Integrations
+            </button>{" "}
+            page.
+          </p>
           {state?.mcpServers.map((s) => (
             <div key={s.name} className="rounded-xl border p-4 text-sm">
               <span className="font-medium">{s.name}</span>

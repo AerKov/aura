@@ -18,6 +18,14 @@ read and run tests), an optional lifetime budget, its [skills](Skills), and its 
 You usually do not write these files. Ask the orchestrator ("I need someone who writes good
 documentation"); it proposes the agent and you approve it.
 
+The **Agents** page shows each agent's engine and model, its tools (and the ones its engine does
+not provide), the variables its commands get, its tool servers, its chats and its last error,
+with a list of what stops it from working. You can change its tools and variables there. The file
+is read on every reply, so changes need no restart.
+
+Built-in tools are `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`, `WebSearch` and `WebFetch`. Tools
+from MCP servers are granted on the [Integrations](Integrations) page, not in this list.
+
 ## Who answers when
 
 Every message you write gets an answer, from the agent you address:
@@ -29,6 +37,11 @@ Every message you write gets an answer, from the agent you address:
    the request and passes it to the right agent (or answers itself, for questions about status).
 
 The line under the message box shows who will answer before you send.
+
+Agents answer only in chats they belong to. Your direct chat has just the orchestrator; other
+agents work in project chats. If you mention an agent that is not in the chat, Aura says so and
+tells you where it is. If a model returns an empty answer, the reply shows that as an error instead
+of staying blank.
 
 Agents work the same way among themselves, but stricter: they wake each other only with an
 @mention, so they do not talk over each other or spend money on chatter. A chain of agent-to-agent

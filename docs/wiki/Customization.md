@@ -19,11 +19,12 @@ Themes change CSS variables such as `--background`, `--foreground`, `--primary` 
 
 > Connect a GitHub MCP server for @coder.
 
-MCP servers give agents new tools. They are listed in `mcp/servers.json` and granted per agent. The
-approval card shows the exact command that will run. Secrets are never written to the file: use
-`${env:NAME}` references and set the variable in the environment that starts Aura.
+MCP servers give agents new tools. Add them yourself on the [Integrations](Integrations) page, or
+ask the orchestrator and approve its card, which shows the exact command that will run. They are
+listed in `mcp/servers.json` and granted per agent. Secrets are never written to the file.
 
-MCP servers work with every engine.
+MCP servers work with every engine. Aura does not use the servers you set up in Claude Code itself
+(`claude mcp list`): agents get exactly the servers listed here.
 
 ## Panels: extensions
 

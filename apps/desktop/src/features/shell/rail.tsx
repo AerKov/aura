@@ -1,22 +1,26 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Blocks,
+  Bot,
   Brain,
   CalendarClock,
   Cpu,
   MessagesSquare,
   Package,
   Palette,
+  Plug,
   Smartphone,
   Sparkles,
 } from "lucide-react";
 import { AuraLogo } from "@/components/logo";
 import {
+  showAgents,
   showCatalog,
   showCustomize,
   showDevices,
   showEngines,
   showExtension,
+  showIntegrations,
   showJobs,
   showList,
   showMemory,
@@ -32,6 +36,9 @@ interface Item {
   active: boolean;
   onClick: () => void;
 }
+
+/** Setup pages stay on the desktop; the phone's tab bar keeps the daily ones. */
+const DESKTOP_ONLY = new Set(["integrations", "catalog", "engines", "customize", "devices"]);
 
 /**
  * Aura's navigation: a slim rail on the left on desktop, a tab bar at the bottom on phones.
@@ -76,6 +83,20 @@ export function Rail() {
       icon: Brain,
       active: view === "memory",
       onClick: showMemory,
+    },
+    {
+      key: "agents",
+      label: "Agents",
+      icon: Bot,
+      active: view === "agents",
+      onClick: showAgents,
+    },
+    {
+      key: "integrations",
+      label: "Integrations",
+      icon: Plug,
+      active: view === "integrations",
+      onClick: showIntegrations,
     },
     {
       key: "catalog",
@@ -149,6 +170,7 @@ export function Rail() {
             "group relative flex size-10 items-center justify-center rounded-xl transition-colors",
             item.active ? "bg-accent text-foreground" : "hover:bg-accent/70 hover:text-foreground",
             item.key === "customize" && "md:mt-auto",
+            DESKTOP_ONLY.has(item.key) && "max-md:hidden",
           )}
         >
           <item.icon className="size-5" />

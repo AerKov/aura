@@ -352,5 +352,10 @@ In container projects, stdio MCP servers start inside the project's container, w
 as environment; they never fall back to the host. Agent apps stay on the host because of their
 logins (ADR 0019).
 
+**Phase 17: Integrations and diagnostics**
+From the alpha feedback: an Integrations page for MCP servers with a connection test, secrets kept
+by Aura, variables for agents' commands, an Agents page that shows what stops an agent, a host
+check, no silent agents, read-only setup inspection for the orchestrator (ADR 0020).
+
 **Later**
-Pack signatures and a reviewed community index, multi-user.
+Per-agent network rules, pack signatures and a reviewed community index, multi-user.
