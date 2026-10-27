@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
 import { ToolBridge } from "../modules/engines/tool-bridge";
-import { OpenAICompatProvider } from "./openai-compat";
+import { OpenAICompatProvider, ThinkFilter } from "./openai-compat";
 import type { AgentEvent, AgentRunInput } from "./types";
 
 /** A chat completions server script: one SSE body (list of chunks) per request. */
@@ -317,5 +317,20 @@ describe("OpenAICompatProvider (Aura's own agent loop)", () => {
       endpoint.close();
       server.stop(true);
     }
+  });
+  test("hides <think> reasoning, also when tags are split across chunks", async () => {
+    const filter = new ThinkFilter();
+    const parts = ["<thi", "nk>plan the ", "answer</th", "ink>\n\nHello", " <", "b>world</b>"];
+    expect(parts.map((p) => filter.push(p)).join("") + filter.flush()).toBe(
+      "\n\nHello <b>world</b>",
+    );
+
+    const { fetchFn } = scripted([
+      sseResponse([textChunk("<think>hmm"), textChunk("</think>\n\nAnswer"), textChunk(" here")]),
+    ]);
+    const events = await collect(provider(fetchFn).run(input(), new AbortController().signal));
+    expect(events.flatMap((e) => (e.type === "text-delta" ? [e.text] : [])).join("")).toBe(
+      "Answer here",
+    );
   });
 });

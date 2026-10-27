@@ -75,7 +75,7 @@ const DESCRIPTIONS: Record<
     label: "Ollama",
     kind: "aura",
     free: true,
-    text: "Local open models on your machine: free and private. Needs a model with tool calling, e.g. qwen3.",
+    text: "Local open models on your machine: free and private. Use a model with tool calling (e.g. qwen3) and a long context: start Ollama with `OLLAMA_CONTEXT_LENGTH=32768`.",
   },
   "openai-compatible": {
     label: "OpenAI-compatible",

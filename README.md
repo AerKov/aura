@@ -14,15 +14,15 @@ Status: **proof of concept**, roadmap phases 0-9 implemented (see `docs/SPEC.md`
 
 Open **Engines** in the left rail. Any one of these is enough:
 
-| Engine                       | What you need                                                            | Cost                  |
-| ---------------------------- | ------------------------------------------------------------------------ | --------------------- |
-| Claude Code                  | `npm i -g @anthropic-ai/claude-code`, then run `claude` and log in       | Claude plan or API    |
-| Gemini CLI                   | `npm i -g @google/gemini-cli`, then run `gemini` and sign in with Google | free tier             |
-| Codex                        | `npm i -g @openai/codex @zed-industries/codex-acp`, then `codex login`   | ChatGPT plan or API   |
-| OpenCode                     | `npm i -g opencode-ai`, then `opencode auth login`                       | depends on provider   |
-| Ollama                       | [ollama.com](https://ollama.com), then `ollama pull qwen3:8b`            | free, local           |
-| OpenRouter                   | a key from openrouter.ai/keys, pasted in Engines; pick a `:free` model   | free models available |
-| LM Studio / llama.cpp / vLLM | an OpenAI-compatible server URL                                          | free, local           |
+| Engine                       | What you need                                                                                                                                                          | Cost                  |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| Claude Code                  | `npm i -g @anthropic-ai/claude-code`, then run `claude` and log in                                                                                                     | Claude plan or API    |
+| Gemini CLI                   | `npm i -g @google/gemini-cli`, then run `gemini` and sign in with Google                                                                                               | free tier             |
+| Codex                        | `npm i -g @openai/codex @zed-industries/codex-acp`, then `codex login`                                                                                                 | ChatGPT plan or API   |
+| OpenCode                     | `npm i -g opencode-ai`, then `opencode auth login`                                                                                                                     | depends on provider   |
+| Ollama                       | [ollama.com](https://ollama.com), `ollama pull qwen3:8b`, then start it with `OLLAMA_CONTEXT_LENGTH=32768 ollama serve` (agents need more than the default 4K context) | free, local           |
+| OpenRouter                   | a key from openrouter.ai/keys, pasted in Engines; pick a `:free` model                                                                                                 | free models available |
+| LM Studio / llama.cpp / vLLM | an OpenAI-compatible server URL                                                                                                                                        | free, local           |
 
 Press **Use for all agents** on a ready engine, or choose an engine per agent at the bottom of the
 page. Logins stay with each agent app; API keys you paste are kept in `~/.aura/state/secrets.json`

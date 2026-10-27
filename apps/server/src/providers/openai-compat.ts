@@ -214,6 +214,7 @@ export class OpenAICompatProvider implements LLMProvider {
       }
 
       let text = "";
+      const think = new ThinkFilter();
       const calls = new Map<number, { id: string; name: string; args: string }>();
       try {
         for await (const chunk of sseJson(res.body)) {
@@ -227,10 +228,14 @@ export class OpenAICompatProvider implements LLMProvider {
           const delta = firstDelta(chunk);
           if (!delta) continue;
           if (typeof delta.content === "string" && delta.content) {
-            if (!text && sawText) yield { type: "text-delta", text: "\n\n" };
-            text += delta.content;
-            sawText = true;
-            yield { type: "text-delta", text: delta.content };
+            let visible = think.push(delta.content);
+            if (!text) visible = visible.trimStart();
+            if (visible) {
+              if (!text && sawText) yield { type: "text-delta", text: "\n\n" };
+              text += visible;
+              sawText = true;
+              yield { type: "text-delta", text: visible };
+            }
           }
           for (const part of toolCallParts(delta)) {
             const call = calls.get(part.index) ?? { id: "", name: "", args: "" };
@@ -250,6 +255,12 @@ export class OpenAICompatProvider implements LLMProvider {
               code: "other",
             };
         return;
+      }
+
+      const rest = think.flush();
+      if (rest) {
+        text += rest;
+        yield { type: "text-delta", text: rest };
       }
 
       if (calls.size === 0) {
@@ -285,7 +296,7 @@ export class OpenAICompatProvider implements LLMProvider {
           output: result.text,
           isError: result.isError ?? false,
         };
-        messages.push({ role: "tool", tool_call_id: call.id, content: result.text });
+        messages.push({ role: "tool", tool_call_id: call.id, content: forModel(result.text) });
       }
 
       if (
@@ -335,6 +346,51 @@ export class OpenAICompatProvider implements LLMProvider {
       return { text: errorMessage(error), isError: true };
     }
   }
+}
+
+/**
+ * Hides `<think>…</think>` reasoning that some local models (qwen3, deepseek-r1) put in their answer,
+ * even when a tag is split across stream chunks.
+ */
+export class ThinkFilter {
+  private buffer = "";
+  private thinking = false;
+
+  push(chunk: string): string {
+    this.buffer += chunk;
+    let out = "";
+    while (this.buffer) {
+      const tag = this.thinking ? "</think>" : "<think>";
+      const at = this.buffer.indexOf(tag);
+      if (at >= 0) {
+        if (!this.thinking) out += this.buffer.slice(0, at);
+        this.buffer = this.buffer.slice(at + tag.length);
+        this.thinking = !this.thinking;
+        continue;
+      }
+      // Keep a possible start of the tag for the next chunk.
+      let keep = Math.min(tag.length - 1, this.buffer.length);
+      while (keep > 0 && !this.buffer.endsWith(tag.slice(0, keep))) keep--;
+      if (!this.thinking) out += this.buffer.slice(0, this.buffer.length - keep);
+      this.buffer = this.buffer.slice(this.buffer.length - keep);
+      break;
+    }
+    return out;
+  }
+
+  flush(): string {
+    const rest = this.thinking ? "" : this.buffer;
+    this.buffer = "";
+    return rest;
+  }
+}
+
+/** Tool output kept in the conversation; long output would crowd out the context window. */
+const MAX_TOOL_OUTPUT = 20_000;
+
+function forModel(text: string): string {
+  if (text.length <= MAX_TOOL_OUTPUT) return text;
+  return `${text.slice(0, MAX_TOOL_OUTPUT)}\n… [${text.length - MAX_TOOL_OUTPUT} more characters cut; narrow the request]`;
 }
 
 function jsonSchema(schema: z.ZodObject): Record<string, unknown> {

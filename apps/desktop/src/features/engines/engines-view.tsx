@@ -280,7 +280,9 @@ function EngineCard({
           )}
         </div>
       </header>
-      <p className="text-muted-foreground text-[13px] leading-relaxed">{engine.description}</p>
+      <p className="text-muted-foreground text-[13px] leading-relaxed">
+        {withCode(engine.description)}
+      </p>
       <StatusLine engine={engine} />
 
       {engine.id === "openai-compatible" && (
