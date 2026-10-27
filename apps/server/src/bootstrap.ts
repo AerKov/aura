@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import type { EngineId } from "@aura/shared";
 import type { Surreal } from "surrealdb";
 import { SERVER_VERSION } from "./config";
 import { ensureRepo } from "./lib/git";
@@ -20,6 +21,10 @@ import type { SafeMode } from "./modules/customize/safe-mode";
 import { customizeTools } from "./modules/customize/tools";
 import { DeviceService } from "./modules/devices/service";
 import type { EngineSelector } from "./modules/engines/registry";
+import { redact, resolveEnv } from "./modules/integrations/env";
+import { SecretStore } from "./modules/integrations/secrets";
+import { IntegrationsService } from "./modules/integrations/service";
+import { integrationTools } from "./modules/integrations/tools";
 import { JobService } from "./modules/jobs/service";
 import { MemoryService } from "./modules/memory/service";
 import { ProjectService } from "./modules/projects/service";
@@ -29,6 +34,7 @@ import { SkillService } from "./modules/skills/service";
 import { ChatSummaryService } from "./modules/summaries/service";
 import { TaskService } from "./modules/tasks/service";
 import type { Embedder } from "./providers/embeddings";
+import type { ProviderStatus } from "./providers/types";
 
 /** The user data directory is a git repo; DB state and project repos are kept out of it. */
 export const DATA_GITIGNORE = "state/\nprojects/\n";
@@ -50,6 +56,8 @@ export async function createServices(deps: {
   fetch?: typeof fetch;
   /** Embedding model for semantic memory search; keyword search when absent. */
   embedder?: () => Embedder | null;
+  /** Whether an engine is ready, for agents' status cards (ADR 0020). */
+  engineStatus?: (engine: EngineId) => Promise<ProviderStatus>;
   /** Whether long chats are summarized for agents (engine settings, ADR 0017). */
   summaries?: () => boolean;
   agents: AgentDirectory;
@@ -113,11 +121,13 @@ export async function createServices(deps: {
     approvals,
     hub: deps.hub,
   });
+  const secrets = new SecretStore(deps.dataDir);
   const mcp = new McpService({
     dataDir: deps.dataDir,
     agents: deps.agents,
     approvals,
     safeMode: () => safeMode.on,
+    secrets,
   });
   const extensions = new ExtensionService({
     db: deps.db,
@@ -136,6 +146,17 @@ export async function createServices(deps: {
     fetch: deps.fetch,
   });
   const devices = new DeviceService({ db: deps.db, owner });
+  const integrations = new IntegrationsService({
+    dataDir: deps.dataDir,
+    mcp,
+    secrets,
+    agents: deps.agents,
+    engines: deps.engines,
+    engineStatus: deps.engineStatus,
+    runs,
+    repo,
+    sandbox,
+  });
   const scratchDir = join(deps.dataDir, "state", "scratch");
   const summaries = new ChatSummaryService({
     db: deps.db,
@@ -159,6 +180,7 @@ export async function createServices(deps: {
     projects,
     appTools: (ctx) => [
       ...toolsFor(toolDeps, ctx),
+      ...(ctx.handle === "orchestrator" ? integrationTools(integrations) : []),
       ...(ctx.handle === "orchestrator" && ctx.chat.kind === "direct"
         ? [
             ...customizeTools(customize, { handle: ctx.handle, chatId: ctx.chat.id }),
@@ -174,10 +196,13 @@ export async function createServices(deps: {
     promptExtras: (profile) => skills.promptFor(profile),
     memoryPrompt: (input) => memory.promptFor(input),
     sandboxPolicy: () => sandbox.policy(),
-    projectShell: (project, handle, signal) =>
+    agentEnv: (profile) =>
+      resolveEnv(profile.env ?? {}, { secret: (n) => secrets.get(n), env: process.env }),
+    redact: (text) => redact(text, secrets.values()),
+    projectShell: (project, handle, signal, env) =>
       project.isolation === "container"
         ? {
-            tool: containers.bashTool(project, handle, signal),
+            tool: containers.bashTool(project, handle, signal, env),
             note: containerNote(sandbox.store.get().container),
           }
         : null,
@@ -208,6 +233,8 @@ export async function createServices(deps: {
     summaries,
     sandbox,
     containers,
+    secrets,
+    integrations,
     appearance,
     mcp,
     extensions,

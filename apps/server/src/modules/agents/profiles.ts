@@ -21,7 +21,11 @@ export interface AgentProfile {
   budgetUsd: number | null;
   /** Names of skills (folders in `skills/`) attached to this agent. */
   skills: string[];
+  /** Environment for the agent's commands: values or `${secret:…}` / `${env:…}` refs (ADR 0020). */
+  env?: Record<string, string>;
 }
+
+import { validateEnvMap } from "../integrations/env";
 
 export const SKILL_NAME_PATTERN = /^[a-z][a-z0-9-]{1,47}$/;
 
@@ -64,8 +68,10 @@ export function validateProfile(input: {
   tools?: unknown;
   budgetUsd?: unknown;
   skills?: unknown;
+  env?: unknown;
 }): AgentProfile {
   const { handle, name, role, engine, model, systemPrompt, tools, budgetUsd, skills } = input;
+  const env = validateEnvMap(input.env, (message) => new ProfileError(message));
   if (typeof handle !== "string" || !HANDLE_PATTERN.test(handle)) {
     throw new ProfileError(
       "handle must be 2-32 chars: lowercase letters, digits, - or _, starting with a letter",
@@ -128,6 +134,7 @@ export function validateProfile(input: {
     builtinTools: [...new Set(toolList as BuiltinTool[])],
     budgetUsd: typeof budgetUsd === "number" ? budgetUsd : null,
     skills: [...new Set(skillList as string[])],
+    ...(Object.keys(env).length > 0 ? { env } : {}),
   };
 }
 
@@ -155,6 +162,7 @@ export function parseAgentFile(handle: string, text: string): AgentProfile {
     tools: meta.tools,
     budgetUsd: meta.budget_usd,
     skills: meta.skills,
+    env: meta.env,
   });
 }
 
@@ -169,6 +177,9 @@ export function serializeAgentFile(profile: AgentProfile): string {
     `tools: ${JSON.stringify(profile.builtinTools)}`,
     ...(profile.budgetUsd !== null ? [`budget_usd: ${profile.budgetUsd}`] : []),
     ...(profile.skills.length > 0 ? [`skills: ${JSON.stringify(profile.skills)}`] : []),
+    ...(profile.env && Object.keys(profile.env).length > 0
+      ? [`env: ${JSON.stringify(profile.env)}`]
+      : []),
     "---",
     "",
     profile.systemPrompt,

@@ -53,6 +53,8 @@ export interface AgentRunInput {
   maxBudgetUsd?: number;
   /** Run shell commands in an OS sandbox: writes only in `cwd`, network only to allowed hosts. */
   sandbox?: SandboxPolicy;
+  /** Extra environment for the agent's shell commands (its own variables, ADR 0020). */
+  env?: Record<string, string>;
 }
 
 export type AgentEvent =

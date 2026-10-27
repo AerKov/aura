@@ -27,6 +27,8 @@ import { enginesModule } from "./modules/engines";
 import type { EngineRegistry } from "./modules/engines/registry";
 import type { ToolBridge } from "./modules/engines/tool-bridge";
 import { type HealthDeps, healthModule } from "./modules/health";
+import { integrationsModule } from "./modules/integrations";
+import type { IntegrationsService } from "./modules/integrations/service";
 import type { JobService } from "./modules/jobs/service";
 import { memoryModule } from "./modules/memory";
 import type { MemoryService } from "./modules/memory/service";
@@ -54,6 +56,7 @@ export interface AppDeps extends HealthDeps {
   catalog: CatalogService;
   summaries: ChatSummaryService;
   containers: ContainerService;
+  integrations: IntegrationsService;
   sandbox: SandboxService;
   dataDir: string;
   runtime: AgentRuntime;
@@ -92,6 +95,7 @@ export function createApp(deps: AppDeps) {
     .use(catalogModule(deps))
     .use(summariesModule(deps))
     .use(containersModule(deps))
+    .use(integrationsModule(deps))
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))

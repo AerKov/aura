@@ -133,6 +133,10 @@ const ACP_MODELS: Partial<Record<EngineId, string[]>> = {
 
 const descriptionOf = (engine: EngineId) => DESCRIPTIONS[engine];
 
+/** How an engine runs agents: Claude Code, another vendor's CLI over ACP, or Aura's own loop. */
+export const engineKind = (engine: EngineId): EngineInfo["kind"] => DESCRIPTIONS[engine].kind;
+export const engineLabel = (engine: EngineId): string => DESCRIPTIONS[engine].label;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

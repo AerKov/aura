@@ -54,6 +54,7 @@ async function main(): Promise<void> {
     hub,
     engines,
     embedder: () => engines.embedder(),
+    engineStatus: (id) => engines.provider(id).isAvailable(),
     summaries: () => engines.store.get().summaries,
     agents,
     dataDir: config.dataDir,

@@ -239,7 +239,10 @@ export class AcpProvider implements LLMProvider {
       ...command.args,
       ...(input.model && this.spec.modelArgs ? this.spec.modelArgs(input.model) : []),
     ];
-    const proc = (this.deps.spawn ?? defaultSpawn)([command.command, ...args], cwd, agentEnv());
+    const proc = (this.deps.spawn ?? defaultSpawn)([command.command, ...args], cwd, {
+      ...agentEnv(),
+      ...(input.env ?? {}),
+    });
     const endpoint =
       input.tools.length > 0 ? this.deps.toolBridge?.open(input.runId, input.tools) : undefined;
     const queue = new EventQueue();

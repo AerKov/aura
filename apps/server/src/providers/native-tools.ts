@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, statSyn
 import { dirname, relative, resolve } from "node:path";
 import { z } from "zod";
 import { errorMessage } from "../lib/log";
+import { proxyEnv } from "../lib/proxy";
 import { isInside } from "./confine";
 import { SandboxUnavailableError, sandboxedShell } from "./shell-sandbox";
 import type { SandboxPolicy } from "./types";
@@ -124,6 +125,7 @@ export function nativeTools(
   granted: readonly string[],
   cwd: string,
   sandbox?: SandboxPolicy,
+  extraEnv: Record<string, string> = {},
 ): NativeTool[] {
   const all: NativeTool[] = [
     {
@@ -253,7 +255,8 @@ export function nativeTools(
       }),
       async run(args, signal) {
         let cmd = ["bash", "-c", String(args.command)];
-        const env = shellEnv();
+        // The agent's own variables and proxies; the sandbox's settings below take precedence.
+        const env = { ...shellEnv(), ...proxyEnv(), ...extraEnv };
         if (sandbox) {
           try {
             const wrapped = await sandboxedShell(sandbox, String(args.command), cwd, signal);

@@ -9,7 +9,7 @@ export interface CliResult {
 /** Runs the container CLI (docker or podman) with arguments, never through a shell. */
 export type CliRunner = (
   args: string[],
-  opts?: { timeoutMs?: number; signal?: AbortSignal },
+  opts?: { timeoutMs?: number; signal?: AbortSignal; env?: Record<string, string> },
 ) => Promise<CliResult>;
 
 export type ContainerEngine = "docker" | "podman";
@@ -36,6 +36,8 @@ export function spawnRunner(binary: string): CliRunner {
       const value = process.env[key];
       if (value) env[key] = value;
     }
+    // Values for `--env NAME` flags travel here, never in the argument list.
+    Object.assign(env, opts.env ?? {});
     const proc = Bun.spawn([binary, ...args], {
       env,
       stdin: "ignore",

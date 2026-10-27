@@ -135,6 +135,10 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
         maxTurns: input.maxTurns,
         maxBudgetUsd: input.maxBudgetUsd,
         ...(input.sandbox ? { sandbox: claudeSandbox(input.sandbox) } : {}),
+        // Claude Code's Bash inherits its environment: the agent's own variables join it.
+        ...(input.env && Object.keys(input.env).length > 0
+          ? { env: { ...process.env, ...input.env } }
+          : {}),
         includePartialMessages: true,
         // Nothing is pre-approved except app tools; canUseTool decides the rest.
         permissionMode: "default",

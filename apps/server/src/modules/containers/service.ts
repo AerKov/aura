@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { z } from "zod";
 import { errorMessage, log } from "../../lib/log";
+import { proxyEnv } from "../../lib/proxy";
 import type { AgentTool, McpServerSpec } from "../../providers/types";
 import type { ContainerSettings } from "../sandbox/settings";
 import {
@@ -214,7 +215,13 @@ export class ContainerService {
   async exec(
     project: ContainerProject,
     command: string,
-    opts: { timeoutSeconds: number; signal: AbortSignal; author: string },
+    opts: {
+      timeoutSeconds: number;
+      signal: AbortSignal;
+      author: string;
+      /** The agent's own variables (ADR 0020). */
+      env?: Record<string, string>;
+    },
   ): Promise<{ text: string; isError: boolean }> {
     let name: string;
     try {
@@ -224,6 +231,7 @@ export class ContainerService {
     }
     const run = await this.cli();
     const marker = `aura-cmd-${Bun.randomUUIDv7()}`;
+    const passEnv = { ...proxyEnv(), ...(opts.env ?? {}) };
     this.busy.set(name, (this.busy.get(name) ?? 0) + 1);
     this.lastUsed.set(name, Date.now());
     const onAbort = () => {
@@ -239,6 +247,7 @@ export class ContainerService {
           "-w",
           WORKSPACE,
           ...gitEnv(opts.author),
+          ...Object.keys(passEnv).flatMap((key) => ["--env", key]),
           name,
           "sh",
           "-c",
@@ -248,7 +257,7 @@ export class ContainerService {
           String(opts.timeoutSeconds),
         ],
         // A margin over the in-container timeout, in case the CLI itself hangs.
-        { timeoutMs: (opts.timeoutSeconds + 30) * 1000 },
+        { timeoutMs: (opts.timeoutSeconds + 30) * 1000, env: passEnv },
       );
       const output = clip([res.stdout.trimEnd(), res.stderr.trimEnd()].filter(Boolean).join("\n"));
       if (opts.signal.aborted) return { text: `${output}\n(stopped)`, isError: true };
@@ -356,7 +365,12 @@ export class ContainerService {
   }
 
   /** The `Bash` tool an agent gets instead of the host shell in a container project. */
-  bashTool(project: ContainerProject, author: string, signal: AbortSignal): AgentTool {
+  bashTool(
+    project: ContainerProject,
+    author: string,
+    signal: AbortSignal,
+    env: Record<string, string> = {},
+  ): AgentTool {
     const s = this.deps.settings();
     return {
       name: "Bash",
@@ -373,6 +387,7 @@ export class ContainerService {
           timeoutSeconds: Math.min(1800, Math.max(1, Math.round(timeout))),
           signal,
           author,
+          env,
         });
       },
     };

@@ -3,9 +3,12 @@ import { join } from "node:path";
 import type { McpServerInfo } from "@aura/shared";
 import { commitAll } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
+import { proxyEnv } from "../../lib/proxy";
 import type { McpServerSpec } from "../../providers/types";
 import type { AgentDirectory } from "../agents/directory";
 import type { ApprovalRecord, ApprovalService } from "../approvals/service";
+import { resolveEnv, validateEnvMap } from "../integrations/env";
+import type { SecretStore } from "../integrations/secrets";
 
 export class McpError extends Error {
   override name = "McpError";
@@ -21,7 +24,6 @@ export interface McpServerConfig {
 }
 
 const NAME = /^[a-z][a-z0-9_-]{1,31}$/;
-const ENV_REF = /^\$\{env:([A-Z_][A-Z0-9_]*)\}$/;
 
 export function validateServer(name: string, value: unknown): McpServerConfig {
   if (!NAME.test(name))
@@ -43,15 +45,8 @@ export function validateServer(name: string, value: unknown): McpServerConfig {
   const args = v.args ?? [];
   if (!Array.isArray(args) || !args.every((a) => typeof a === "string"))
     throw new McpError(`${name}: args must be strings`);
-  const env = (v.env ?? {}) as Record<string, unknown>;
-  for (const [key, val] of Object.entries(env)) {
-    if (typeof val !== "string" || !ENV_REF.test(val)) {
-      throw new McpError(
-        `${name}: env.${key} must be a reference like \${env:${key}}; secrets are not stored in files`,
-      );
-    }
-  }
-  return { command: v.command, args: args as string[], env: env as Record<string, string>, agents };
+  const env = validateEnvMap(v.env, (message) => new McpError(`${name}: ${message}`));
+  return { command: v.command, args: args as string[], env, agents };
 }
 
 /** Tier 2 customization: MCP servers in `mcp/servers.json`, each granted to specific agents. */
@@ -63,6 +58,8 @@ export class McpService {
       approvals: ApprovalService;
       safeMode: () => boolean;
       env?: Record<string, string | undefined>;
+      /** Values for `${secret:…}` references (ADR 0020). */
+      secrets?: SecretStore;
     },
   ) {
     deps.approvals.register("mcp_server", async (payload, ctx) =>
@@ -117,13 +114,18 @@ export class McpService {
       if (s.url) {
         out[name] = { type: "http", url: s.url };
       } else if (s.command) {
-        const resolved: Record<string, string> = {};
-        for (const [key, ref] of Object.entries(s.env ?? {})) {
-          const varName = ENV_REF.exec(ref)?.[1];
-          const value = varName ? env[varName] : undefined;
-          if (value !== undefined) resolved[key] = value;
-        }
-        out[name] = { type: "stdio", command: s.command, args: s.args ?? [], env: resolved };
+        const { values, missing } = resolveEnv(s.env ?? {}, {
+          secret: (n) => this.deps.secrets?.get(n) ?? null,
+          env,
+        });
+        if (missing.length > 0)
+          log.warn("mcp server starts without some variables", { server: name, missing });
+        out[name] = {
+          type: "stdio",
+          command: s.command,
+          args: s.args ?? [],
+          env: { ...proxyEnv(env), ...values },
+        };
       }
     }
     return out;
@@ -163,8 +165,15 @@ export class McpService {
   }
 
   private async apply(payload: Record<string, unknown>, author: string): Promise<string> {
-    const name = String(payload.name);
-    const config = validateServer(name, payload.config);
+    return this.save(String(payload.name), payload.config, author);
+  }
+
+  /** Writes a server (a user action on the Integrations page, or an approved proposal). */
+  async save(name: string, raw: unknown, author = "owner"): Promise<string> {
+    const config = validateServer(name, raw);
+    for (const handle of config.agents) {
+      if (!(await this.deps.agents.get(handle))) throw new McpError(`@${handle} does not exist`);
+    }
     const servers = this.readRaw();
     servers[name] = config;
     mkdirSync(join(this.deps.dataDir, "mcp"), { recursive: true });
@@ -175,5 +184,35 @@ export class McpService {
       author,
     );
     return `MCP server "${name}" is available to ${config.agents.map((a) => `@${a}`).join(", ")} from their next run.`;
+  }
+
+  /** Removes a server; agents lose its tools from their next run. */
+  async remove(name: string, author = "owner"): Promise<void> {
+    const servers = this.readRaw();
+    if (!(name in servers)) throw new McpError(`No MCP server "${name}"`);
+    delete servers[name];
+    writeFileSync(this.file, `${JSON.stringify({ servers }, null, 2)}\n`);
+    await commitAll(this.deps.dataDir, `mcp(${name}): remove`, author);
+  }
+
+  /** The launch spec of one server, with its variables resolved (for a connection test). */
+  specOf(name: string): { spec: McpServerSpec; missing: string[] } | null {
+    const s = this.servers()[name];
+    if (!s) return null;
+    if (s.url) return { spec: { type: "http", url: s.url }, missing: [] };
+    const env = this.deps.env ?? process.env;
+    const { values, missing } = resolveEnv(s.env ?? {}, {
+      secret: (n) => this.deps.secrets?.get(n) ?? null,
+      env,
+    });
+    return {
+      spec: {
+        type: "stdio",
+        command: s.command ?? "",
+        args: s.args ?? [],
+        env: { ...proxyEnv(env), ...values },
+      },
+      missing,
+    };
   }
 }

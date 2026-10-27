@@ -65,7 +65,12 @@ export interface RuntimeDeps {
     project: ProjectInfo,
     handle: string,
     signal: AbortSignal,
+    env: Record<string, string>,
   ) => { tool: AgentTool; note: string } | null;
+  /** The agent's own variables for its commands, resolved, and the ones with no value (ADR 0020). */
+  agentEnv?: (profile: AgentProfile) => { values: Record<string, string>; missing: string[] };
+  /** Hides secret values in text shown in chat. */
+  redact?: (text: string) => string;
   /** Called after each run, e.g. to fold old messages into the summary. */
   afterRun?: (chat: Chat) => void;
   ownerName: string;
@@ -366,9 +371,12 @@ export class AgentRuntime {
       }) + wakeNote(reason, handle, team, this.deps.ownerName);
 
     const granted = toolsFor(profile, project !== null);
+    const ownEnv = granted.includes("Bash")
+      ? (this.deps.agentEnv?.(profile) ?? { values: {}, missing: [] })
+      : { values: {}, missing: [] };
     const shell =
       project && granted.includes("Bash")
-        ? (this.deps.projectShell?.(project, handle, abort.signal) ?? null)
+        ? (this.deps.projectShell?.(project, handle, abort.signal, ownEnv.values) ?? null)
         : null;
     // In a container project the host shell is replaced, never offered alongside.
     const builtinTools = shell ? granted.filter((t) => t !== "Bash") : granted;
@@ -386,6 +394,7 @@ export class AgentRuntime {
         ? await this.deps.projectMcp(project, ownServers)
         : ownServers;
 
+    const hide = (t: string) => this.deps.redact?.(t) ?? t;
     let text = "";
     let usage: Usage | null = null;
     let error: Extract<AgentEvent, { type: "error" }> | null = null;
@@ -419,6 +428,7 @@ export class AgentRuntime {
           (this.deps.promptExtras?.(profile) ?? "") +
           (sandbox && builtinTools.includes("Bash") ? sandboxNote(sandbox) : "") +
           (shell?.note ?? "") +
+          envNote(ownEnv) +
           memoryNotes +
           userNote(this.deps.ownerName, this.userLanguage),
         prompt,
@@ -431,6 +441,7 @@ export class AgentRuntime {
         mcpServers,
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,
+        env: ownEnv.values,
       },
       abort.signal,
     )) {
@@ -448,7 +459,7 @@ export class AgentRuntime {
           toolCalls.push({
             id: event.id,
             name: event.name,
-            summary: summarize(event.input),
+            summary: hide(summarize(event.input)),
             isError: false,
           });
           scheduleCardFlush();
@@ -475,7 +486,7 @@ export class AgentRuntime {
     }
     if (flushTimer) clearTimeout(flushTimer);
 
-    const rawBody = text.trim();
+    const rawBody = hide(text.trim());
     const silent = isNoReply(rawBody) && !error;
     const body = silent ? "" : rawBody;
     let commit: string | null = null;
@@ -540,6 +551,16 @@ export class AgentRuntime {
     // Mentions in a completed reply may wake other agents, one level deeper in the chain.
     if (final?.status === "final" && !stopped && body) this.deps.chat.notify(final, chat);
   }
+}
+
+/** What an agent with a shell is told about its own variables; values are never in the prompt. */
+function envNote(env: { values: Record<string, string>; missing: string[] }): string {
+  const names = Object.keys(env.values);
+  if (names.length === 0 && env.missing.length === 0) return "";
+  return `
+
+## Your environment
+${names.length > 0 ? `Your shell commands get these variables: ${names.join(", ")}. Use them by name (for example $${names[0]}); never print their values.` : ""}${env.missing.length > 0 ? ` These variables are configured but have no value: ${env.missing.join(", ")}. If you need them, ask the user to set them on the Integrations page.` : ""}`;
 }
 
 function systemPromptFor(profile: AgentProfile, inProject: boolean, team: string[]): string {

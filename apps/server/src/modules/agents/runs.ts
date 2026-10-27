@@ -92,6 +92,25 @@ export class RunRepo {
     return rows?.length ?? 0;
   }
 
+  /** The agent's most recent run, for its status card. */
+  async latest(
+    agent: string,
+  ): Promise<{ status: RunStatus; error: string | null; at: string } | null> {
+    const [rows] = await this.db
+      .query<[Record<string, unknown>[]]>(
+        "SELECT status, error, started_at FROM run WHERE agent = $agent ORDER BY started_at DESC LIMIT 1",
+        { agent },
+      )
+      .collect();
+    const row = rows?.[0];
+    if (!row) return null;
+    return {
+      status: row.status as RunStatus,
+      error: typeof row.error === "string" ? row.error : null,
+      at: row.started_at instanceof Date ? row.started_at.toISOString() : String(row.started_at),
+    };
+  }
+
   async spentByAgent(agent: string): Promise<{ usd: number; tokens: number }> {
     return this.spent("agent = $value", agent);
   }
