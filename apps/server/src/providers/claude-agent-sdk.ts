@@ -1,11 +1,14 @@
 import {
+  type CanUseTool,
   createSdkMcpServer,
   type Options,
   query,
   type SDKMessage,
   type SDKUserMessage,
+  tool,
 } from "@anthropic-ai/claude-agent-sdk";
 import { errorMessage, log } from "../lib/log";
+import { decideToolUse } from "./confine";
 import type {
   AgentEvent,
   AgentRunInput,
@@ -86,15 +89,28 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
     signal.addEventListener("abort", onAbort, { once: true });
 
     const mcpServers: Options["mcpServers"] = {};
-    const allowedTools = [...input.builtinTools];
+    const appTools = input.tools.map((t) => `mcp__${APP_MCP_SERVER}__${t.name}`);
     if (input.tools.length > 0) {
       mcpServers[APP_MCP_SERVER] = createSdkMcpServer({
         name: APP_MCP_SERVER,
         version: "0.0.0",
         tools: input.tools.map(toSdkTool),
       });
-      for (const tool of input.tools) allowedTools.push(`mcp__${APP_MCP_SERVER}__${tool.name}`);
     }
+    // Every tool call outside the app's own tools goes through this check.
+    const canUseTool: CanUseTool = async (toolName, args, { blockedPath }) => {
+      const decision = decideToolUse({
+        tool: toolName,
+        args,
+        granted: input.builtinTools,
+        appTools,
+        cwd: input.confineToCwd ? input.cwd : undefined,
+        blockedPath,
+      });
+      if (decision.allow) return { behavior: "allow", updatedInput: args };
+      log.warn("tool use denied", { run: input.runId, tool: toolName, reason: decision.reason });
+      return { behavior: "deny", message: decision.reason };
+    };
 
     const q = query({
       prompt: input.prompt,
@@ -104,13 +120,14 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
         model: input.model ?? this.opts.defaultModel,
         cwd: input.cwd,
         tools: input.builtinTools,
-        allowedTools,
+        allowedTools: appTools,
+        canUseTool,
         mcpServers,
         maxTurns: input.maxTurns,
         maxBudgetUsd: input.maxBudgetUsd,
         includePartialMessages: true,
-        // Anything not explicitly allowed is denied instead of prompting.
-        permissionMode: "dontAsk",
+        // Nothing is pre-approved except app tools; canUseTool decides the rest.
+        permissionMode: "default",
       }),
     });
 
@@ -242,20 +259,14 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
   }
 }
 
-function toSdkTool(tool: AgentTool) {
-  // The SDK accepts raw JSON-schema tools through createSdkMcpServer's `tools` entries.
-  return {
-    name: tool.name,
-    description: tool.description,
-    inputSchema: tool.inputSchema,
-    handler: async (args: Record<string, unknown>) => {
-      const result = await tool.handler(args);
-      return {
-        content: [{ type: "text" as const, text: result.text }],
-        isError: result.isError ?? false,
-      };
-    },
-  };
+function toSdkTool(appTool: AgentTool) {
+  return tool(appTool.name, appTool.description, appTool.inputSchema, async (args) => {
+    const result = await appTool.handler(args as Record<string, unknown>);
+    return {
+      content: [{ type: "text" as const, text: result.text }],
+      isError: result.isError ?? false,
+    };
+  });
 }
 
 function shortToolName(name: string): string {

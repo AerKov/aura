@@ -40,3 +40,10 @@ function formatMessage(m: Message, byId: Map<string, Message>, ownerName: string
   const replyNote = reply ? ` (replying to ${label(reply.author, ownerName)})` : "";
   return `[${label(m.author, ownerName)}${replyNote}]\n${m.body}`;
 }
+
+/** System prompt addendum: who the user is and which language to address them in. */
+export function userNote(ownerName: string, language: string | null): string {
+  if (!language) return "";
+  const avoid = language === "Ukrainian" ? " Never answer the user in Russian." : "";
+  return `\n\n## The user\n${ownerName} writes in ${language}. Anything you write for the user (answers, questions, summaries) must be in ${language}, even when the rest of the chat is in English.${avoid}`;
+}

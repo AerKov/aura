@@ -22,6 +22,7 @@ export async function loadMessages(chatId: string): Promise<void> {
 export async function resync(): Promise<void> {
   await loadInitial();
   void loadProviderStatus().catch(reportError);
+  void loadProjects().catch(reportError);
   await Promise.all(Object.keys(getState().messages).map((chatId) => loadMessages(chatId)));
 }
 
@@ -37,6 +38,23 @@ export async function sendMessage(
 export function openChat(chatId: string): void {
   setState(() => ({ activeChatId: chatId }));
   if (!getState().messages[chatId]) void loadMessages(chatId).catch(reportError);
+}
+
+export async function loadMembers(chatId: string): Promise<void> {
+  const members = await call(() => api.chats({ chatId }).members.get());
+  setState((s) => ({ members: { ...s.members, [chatId]: members.map((m) => m.participant) } }));
+}
+
+export async function loadProjects(): Promise<void> {
+  const projects = await call(() => api.projects.get());
+  setState(() => ({ projects: Object.fromEntries(projects.map((p) => [p.id, p])) }));
+}
+
+let projectsTimer: ReturnType<typeof setTimeout> | undefined;
+/** Debounced refresh of project spend after runs finish. */
+export function refreshProjectsSoon(): void {
+  clearTimeout(projectsTimer);
+  projectsTimer = setTimeout(() => void loadProjects().catch(reportError), 500);
 }
 
 export { upsertChat };

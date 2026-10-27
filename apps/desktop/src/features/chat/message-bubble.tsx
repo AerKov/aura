@@ -1,10 +1,12 @@
 import type { Message } from "@aura/shared";
 import { Reply, Square } from "lucide-react";
 import { Markdown } from "@/components/markdown";
+import { highlightMentions } from "@/lib/mentions";
 import { cn } from "@/lib/utils";
 import { reportError, stopRun } from "./actions";
 import { Avatar } from "./avatar";
 import { displayName, formatTime, previewOf } from "./message-utils";
+import { RunCard } from "./run-card";
 import { useChatStore } from "./store";
 
 export function MessageBubble({
@@ -65,10 +67,11 @@ export function MessageBubble({
           </button>
         )}
         {body ? (
-          <Markdown streaming={message.status === "streaming"}>{body}</Markdown>
+          <Markdown streaming={message.status === "streaming"}>{highlightMentions(body)}</Markdown>
         ) : (
           message.status === "streaming" && <TypingDots />
         )}
+        {message.card?.type === "run" && <RunCard card={message.card} />}
         {message.error && <p className="text-destructive mt-1 text-sm">{message.error}</p>}
         <div className="text-muted-foreground mt-0.5 flex items-center justify-end gap-2 text-[11px]">
           {message.status === "streaming" && message.runId && (

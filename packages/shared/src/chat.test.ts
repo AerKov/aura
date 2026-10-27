@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseMentions, previewText } from "./chat";
+import { parseMentions, previewText, SLUG_PATTERN, slugify } from "./chat";
 
 describe("parseMentions", () => {
   test("finds handles in order, unique and lowercase", () => {
@@ -31,5 +31,14 @@ describe("previewText", () => {
   test("replaces code blocks and truncates", () => {
     expect(previewText("see\n```ts\nconst a = 1;\n```")).toBe("see [code]");
     expect(previewText("a".repeat(200), 10)).toBe(`${"a".repeat(9)}…`);
+  });
+});
+
+describe("slugify", () => {
+  test("makes folder-safe slugs", () => {
+    expect(slugify("Word Counter CLI!")).toBe("word-counter-cli");
+    expect(slugify("  Café --- déjà vu ")).toBe("cafe-deja-vu");
+    expect(slugify("Лічильник слів")).toBe("");
+    expect(SLUG_PATTERN.test(slugify("x".repeat(80)))).toBe(true);
   });
 });

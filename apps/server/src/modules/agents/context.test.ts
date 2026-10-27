@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import type { Message } from "@aura/shared";
-import { buildPrompt, CONTEXT_WINDOW } from "./context";
+import { buildPrompt, CONTEXT_WINDOW, userNote } from "./context";
 
 const msg = (id: string, body: string, extra: Partial<Message> = {}): Message => ({
   id,
@@ -54,4 +54,11 @@ test("buildPrompt skips streaming messages and limits the window", () => {
   expect(prompt).not.toContain("partial");
   expect(prompt).not.toContain("\nn0\n");
   expect(prompt).toContain(`n${CONTEXT_WINDOW + 9}`);
+});
+
+test("userNote names the user's language", () => {
+  expect(userNote("Ann", null)).toBe("");
+  expect(userNote("Ann", "Ukrainian")).toContain("must be in Ukrainian");
+  expect(userNote("Ann", "Ukrainian")).toContain("Never answer the user in Russian");
+  expect(userNote("Ann", "English")).not.toContain("Russian");
 });

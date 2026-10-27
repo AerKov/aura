@@ -42,6 +42,8 @@ export type Card = {
   tools: { name: string; summary: string; isError: boolean }[];
   usage: Usage | null;
   error: string | null;
+  /** Short hash of the workspace commit made after the run, if files changed. */
+  commit: string | null;
 };
 
 export interface Message {
@@ -91,4 +93,31 @@ export function previewText(markdown: string, max = 120): string {
     .replace(/\s+/g, " ")
     .trim();
   return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
+
+export type ProjectStatus = "active" | "done";
+
+export interface Project {
+  /** The slug, also the workspace folder name. */
+  id: string;
+  name: string;
+  status: ProjectStatus;
+  chatId: string;
+  budgetUsd: number | null;
+  spentUsd: number;
+  createdAt: string;
+}
+
+export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,47}$/;
+
+/** URL- and folder-safe slug from a project name. */
+export function slugify(name: string): string {
+  return name
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48)
+    .replace(/-+$/, "");
 }

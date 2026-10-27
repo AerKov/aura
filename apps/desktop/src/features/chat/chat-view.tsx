@@ -1,5 +1,6 @@
 import type { Message } from "@aura/shared";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { loadMembers, reportError } from "./actions";
 import { ChatAvatar } from "./avatar";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
@@ -14,6 +15,12 @@ export function ChatView({ chatId }: { chatId: string }) {
   const chat = useChatStore((s) => s.chats[chatId]);
   const messages = useChatStore((s) => s.messages[chatId] ?? EMPTY);
   const streaming = useChatStore((s) => s.streaming);
+  const members = useChatStore((s) => s.members[chatId]);
+  const project = useChatStore((s) => (chat?.projectId ? s.projects[chat.projectId] : undefined));
+
+  useEffect(() => {
+    void loadMembers(chatId).catch(reportError);
+  }, [chatId]);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -52,11 +59,17 @@ export function ChatView({ chatId }: { chatId: string }) {
           <p className="text-muted-foreground text-xs">
             {typing ? (
               <span className="text-sky-600 dark:text-sky-400">typing…</span>
+            ) : chat.kind === "group" && members ? (
+              members
+                .filter((m) => m.kind === "agent")
+                .map((m) => `@${m.id}`)
+                .join(", ")
             ) : (
               chatSubtitle(chat)
             )}
           </p>
         </div>
+        {project && <BudgetMeter spent={project.spentUsd} budget={project.budgetUsd} />}
       </header>
       <div ref={scroller} onScroll={onScroll} className="chat-bg flex-1 overflow-y-auto px-4 py-3">
         <div className="mx-auto max-w-4xl">
@@ -80,5 +93,30 @@ export function ChatView({ chatId }: { chatId: string }) {
       {chat.kind === "direct" && <SetupPanel />}
       <Composer chatId={chatId} replyTo={replyTo} onCancelReply={() => setReplyTo(null)} />
     </section>
+  );
+}
+
+function BudgetMeter({ spent, budget }: { spent: number; budget: number | null }) {
+  const ratio = budget ? Math.min(1, spent / budget) : 0;
+  return (
+    <div className="ml-auto w-36 text-right text-xs" title="Project budget">
+      <div className="text-muted-foreground">
+        ${spent.toFixed(2)} / {budget ? `$${budget.toFixed(2)}` : "∞"}
+      </div>
+      {budget && (
+        <div className="bg-muted mt-1 h-1.5 overflow-hidden rounded-full">
+          <div
+            className={
+              ratio >= 1
+                ? "h-full bg-rose-500"
+                : ratio >= 0.8
+                  ? "h-full bg-amber-500"
+                  : "h-full bg-emerald-500"
+            }
+            style={{ width: `${ratio * 100}%` }}
+          />
+        </div>
+      )}
+    </div>
   );
 }

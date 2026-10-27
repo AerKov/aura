@@ -46,6 +46,14 @@ DEFINE FIELD OVERWRITE created_at ON message TYPE datetime DEFAULT time::now();
 DEFINE FIELD OVERWRITE updated_at ON message TYPE datetime DEFAULT time::now();
 DEFINE INDEX OVERWRITE message_chat ON message FIELDS chat;
 
+DEFINE TABLE OVERWRITE project SCHEMAFULL;
+DEFINE FIELD OVERWRITE name ON project TYPE string;
+DEFINE FIELD OVERWRITE status ON project TYPE string ASSERT $value IN ["active", "done"];
+DEFINE FIELD OVERWRITE chat ON project TYPE record<chat>;
+DEFINE FIELD OVERWRITE repo_path ON project TYPE string;
+DEFINE FIELD OVERWRITE budget_usd ON project TYPE option<float>;
+DEFINE FIELD OVERWRITE created_at ON project TYPE datetime DEFAULT time::now();
+
 DEFINE TABLE OVERWRITE run SCHEMAFULL;
 DEFINE FIELD OVERWRITE agent ON run TYPE string;
 DEFINE FIELD OVERWRITE chat ON run TYPE record<chat>;

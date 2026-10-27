@@ -50,6 +50,7 @@
         "@surrealdb/node-native": "3.3.4",
         "elysia": "1.4.30",
         "surrealdb": "2.1.1",
+        "zod": "4.6.7",
       },
       "devDependencies": {
         "@elysiajs/eden": "1.4.9",

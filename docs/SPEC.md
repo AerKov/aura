@@ -164,8 +164,10 @@ login ourselves.
 
 **Workspaces and sandboxing**
 - Each project is a git repo under `~/.aura/projects/<slug>`.
-- Parallel coding agents use a git worktree per task; the orchestrator or a reviewer agent merges.
-- Level 0 (MVP): Claude Code permission settings restrict the agent to the project directory.
+- Runs in one project are serialized (ADR 0005). Later, parallel coding agents use a git worktree per task;
+  the orchestrator or a reviewer agent merges.
+- Level 0 (now): the app's `canUseTool` check allows only granted tools and only paths inside the project
+  directory (ADR 0005).
 - Level 1 (later): a container per project.
 
 ## 8. Conversation rules
@@ -289,6 +291,10 @@ UI extensions, permissions, safe mode.
 
 **Phase 7: Mobile**
 Tauri mobile thin client connecting to the desktop server, Better Auth login, push notifications.
+
+**Phase 8: Own visual identity**
+A distinct look and feel instead of a Telegram clone: Aura's own design language (layout, typography,
+color, motion, agent presence), light and dark themes.
 
 **Later**
 BYOK API key provider, other and local models, agent memory with vector search, container sandbox,

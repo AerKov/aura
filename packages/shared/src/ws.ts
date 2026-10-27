@@ -13,6 +13,7 @@ export type ServerEvent =
   | { type: "message.updated"; message: Message }
   /** Streaming text appended to a `streaming` message. Not persisted per delta. */
   | { type: "message.delta"; chatId: string; messageId: string; text: string }
+  | { type: "message.deleted"; chatId: string; messageId: string }
   | { type: "chat.updated"; chat: Chat };
 
 export type ClientEvent = { type: "ping"; nonce: string };
@@ -26,6 +27,7 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "message.created",
   "message.updated",
   "message.delta",
+  "message.deleted",
   "chat.updated",
 ]);
 

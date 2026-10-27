@@ -1,7 +1,7 @@
 import { type ClientEvent, parseServerEvent } from "@aura/shared";
 import { resetSession, wsUrl } from "@/lib/api";
-import { reportError, resync } from "./actions";
-import { appendDelta, setState, upsertChat, upsertMessage } from "./store";
+import { refreshProjectsSoon, reportError, resync } from "./actions";
+import { appendDelta, removeMessage, setState, upsertChat, upsertMessage } from "./store";
 
 const PING_MS = 15_000;
 const RECONNECT_MS = 2_000;
@@ -43,12 +43,17 @@ export function startRealtime(): () => void {
         case "message.created":
         case "message.updated":
           upsertMessage(event.message);
+          if (event.message.usage) refreshProjectsSoon();
+          break;
+        case "message.deleted":
+          removeMessage(event.chatId, event.messageId);
           break;
         case "message.delta":
           appendDelta(event.messageId, event.text);
           break;
         case "chat.updated":
           upsertChat(event.chat);
+          if (event.chat.projectId) refreshProjectsSoon();
           break;
         case "pong":
           break;

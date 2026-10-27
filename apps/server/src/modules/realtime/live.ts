@@ -1,4 +1,5 @@
 import { type Surreal, Table } from "surrealdb";
+import { keyOf } from "../../db/convert";
 import { errorMessage, log } from "../../lib/log";
 import { rowToChat, rowToMessage } from "../chat/repo";
 import type { EventHub } from "./hub";
@@ -10,6 +11,17 @@ import type { EventHub } from "./hub";
 export async function startLiveBridge(db: Surreal, hub: EventHub): Promise<() => Promise<void>> {
   const messages = await db.live(new Table("message"));
   messages.subscribe((change) => {
+    if (change.action === "DELETE") {
+      const value = change.value as Record<string, unknown> | undefined;
+      if (value?.chat) {
+        hub.publish({
+          type: "message.deleted",
+          chatId: keyOf(value.chat),
+          messageId: keyOf(change.recordId),
+        });
+      }
+      return;
+    }
     if (change.action !== "CREATE" && change.action !== "UPDATE") return;
     try {
       const message = rowToMessage(change.value);

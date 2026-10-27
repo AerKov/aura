@@ -243,6 +243,10 @@ export class ChatRepo {
     return message;
   }
 
+  async deleteMessage(messageId: string): Promise<void> {
+    await this.db.query("DELETE $id", { id: new RecordId("message", messageId) }).collect();
+  }
+
   private async touchChat(chatId: string, message: Message): Promise<void> {
     const preview = message.body
       ? previewText(message.body)

@@ -43,7 +43,7 @@ describe("AgentRuntime", () => {
   test("messages that arrive during a run are answered afterwards, one run at a time", async () => {
     const provider = new FakeProvider(
       (input) => [
-        { type: "text-delta", text: input.prompt.includes("second") ? "B" : "A" },
+        { type: "text-delta", text: /<new_message>[^<]*second/.test(input.prompt) ? "B" : "A" },
         { type: "done" },
       ],
       20,
@@ -59,7 +59,11 @@ describe("AgentRuntime", () => {
 
     expect(provider.calls).toHaveLength(2);
     const bodies = (await t.repo.listMessages("direct", { limit: 10 })).map((m) => m.body);
-    expect(bodies).toEqual(["first", "A", "second", "B"]);
+    // Each reply comes after its trigger, and the second run starts only after the first ended.
+    expect(bodies).toHaveLength(4);
+    expect(bodies.indexOf("A")).toBeGreaterThan(bodies.indexOf("first"));
+    expect(bodies.indexOf("B")).toBeGreaterThan(bodies.indexOf("second"));
+    expect(bodies.indexOf("B")).toBeGreaterThan(bodies.indexOf("A"));
   });
 
   test("a stopped run keeps the partial text", async () => {

@@ -4,12 +4,14 @@
 
 export type ProviderStatus = { ok: true; detail?: string } | { ok: false; reason: string };
 
+import type { ZodRawShape } from "zod";
+
 /** A custom tool exposed to the agent (implemented by the app, e.g. "create_project"). */
 export interface AgentTool {
   name: string;
   description: string;
-  /** JSON-schema-like description of the input, validated by the handler. */
-  inputSchema: Record<string, unknown>;
+  /** Zod shape of the input. Handlers still validate values (models can send anything). */
+  inputSchema: ZodRawShape;
   handler: (input: Record<string, unknown>) => Promise<{ text: string; isError?: boolean }>;
 }
 
@@ -23,6 +25,8 @@ export interface AgentRunInput {
   cwd?: string;
   /** Built-in tools the agent may use, e.g. ["Read", "Write", "Edit", "Bash"]. Empty means none. */
   builtinTools: string[];
+  /** File tools may only touch paths inside `cwd` (sandbox level 0, docs/SPEC.md section 7). */
+  confineToCwd?: boolean;
   /** App tools exposed to the agent. */
   tools: AgentTool[];
   maxTurns?: number;

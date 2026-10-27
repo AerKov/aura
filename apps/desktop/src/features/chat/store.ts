@@ -1,4 +1,4 @@
-import type { Chat, Message } from "@aura/shared";
+import type { Chat, Message, Participant, Project } from "@aura/shared";
 import { useSyncExternalStore } from "react";
 
 export type Connection = "connecting" | "open" | "closed";
@@ -14,6 +14,8 @@ export interface ChatState {
   serverVersion: string | null;
   activeChatId: string | null;
   provider: { ok: true; detail?: string } | { ok: false; reason: string } | null;
+  projects: Record<string, Project>;
+  members: Record<string, Participant[]>;
 }
 
 let state: ChatState = {
@@ -25,6 +27,8 @@ let state: ChatState = {
   serverVersion: null,
   activeChatId: null,
   provider: null,
+  projects: {},
+  members: {},
 };
 
 const listeners = new Set<() => void>();
@@ -77,4 +81,18 @@ export function appendDelta(messageId: string, text: string): void {
   setState((s) => ({
     streaming: { ...s.streaming, [messageId]: (s.streaming[messageId] ?? "") + text },
   }));
+}
+
+export function removeMessage(chatId: string, messageId: string): void {
+  setState((s) => {
+    const streaming = { ...s.streaming };
+    delete streaming[messageId];
+    return {
+      messages: {
+        ...s.messages,
+        [chatId]: (s.messages[chatId] ?? []).filter((m) => m.id !== messageId),
+      },
+      streaming,
+    };
+  });
 }
