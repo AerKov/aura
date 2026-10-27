@@ -45,7 +45,7 @@ The reasons behind the design are recorded as ADRs in
 | 0010 | Visual identity                                      |
 | 0011 | Engines and Aura's own agent loop                    |
 | 0012 | Agent apps over the Agent Client Protocol            |
-| 0013 | Agent memory: notes, hybrid search |
+| 0013 | Agent memory: notes, hybrid search                   |
 
 The full product and architecture spec, including the roadmap, is
 [docs/SPEC.md](https://github.com/AerKov/aura/blob/HEAD/docs/SPEC.md).
