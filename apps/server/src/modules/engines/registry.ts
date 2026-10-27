@@ -1,8 +1,11 @@
 import { ENGINE_IDS, type EngineId, type EngineModel } from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
+import { type AcpAgentSpec, AcpProvider, type AgentProcess } from "../../providers/acp";
+import { locateExecutable } from "../../providers/claude-locate";
 import { OpenAICompatProvider } from "../../providers/openai-compat";
 import type { LLMProvider, ProviderStatus } from "../../providers/types";
 import { EngineStore, KEYED_ENGINES, type KeyedEngine } from "./settings";
+import type { ToolBridgeLike } from "./tool-bridge";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1";
 
@@ -18,8 +21,11 @@ export interface EngineSelector {
 export interface EngineInfo {
   id: EngineId;
   label: string;
-  /** "official": the vendor's own agent (its own login); "aura": Aura's own agent loop. */
-  kind: "official" | "aura";
+  /**
+   * "official": Claude Code through its SDK; "acp": another vendor's agent CLI over the Agent
+   * Client Protocol (its own login); "aura": Aura's own agent loop.
+   */
+  kind: "official" | "acp" | "aura";
   description: string;
   /** There is a way to use it without paying (local models, free router models). */
   free: boolean;
@@ -43,6 +49,24 @@ const DESCRIPTIONS: Record<
     free: false,
     text: "Anthropic's agent under your own Claude login (subscription or API). The strongest coder.",
   },
+  "gemini-cli": {
+    label: "Gemini CLI",
+    kind: "acp",
+    free: true,
+    text: "Google's open-source agent under your Google login. Its free tier is generous for personal use.",
+  },
+  codex: {
+    label: "Codex",
+    kind: "acp",
+    free: false,
+    text: "OpenAI's coding agent under your ChatGPT plan or OpenAI API key, through the codex-acp adapter.",
+  },
+  opencode: {
+    label: "OpenCode",
+    kind: "acp",
+    free: true,
+    text: "Open-source coding agent that brings its own providers, local models included.",
+  },
   openrouter: {
     label: "OpenRouter",
     kind: "aura",
@@ -62,6 +86,53 @@ const DESCRIPTIONS: Record<
     text: "Any OpenAI-compatible server: LM Studio, llama.cpp, vLLM, or a cloud API.",
   },
 };
+
+/** Agent CLIs that speak ACP (ADR 0012). Each uses its own login; Aura never sees it. */
+export const ACP_AGENTS: Record<"gemini-cli" | "codex" | "opencode", AcpAgentSpec> = {
+  "gemini-cli": {
+    id: "gemini-cli",
+    label: "Gemini CLI",
+    command: () => {
+      const exe = locateExecutable("gemini");
+      return exe ? { command: exe, args: ["--acp"] } : null;
+    },
+    modelArgs: (model) => ["--model", model],
+    installHint: "Install it with `npm install -g @google/gemini-cli`.",
+    loginHint: "Run `gemini` in a terminal once and sign in with Google, then check again.",
+  },
+  codex: {
+    id: "codex",
+    label: "Codex",
+    command: () => {
+      const exe = locateExecutable("codex-acp");
+      return exe ? { command: exe, args: [] } : null;
+    },
+    installHint:
+      "Install Codex (`npm install -g @openai/codex`) and its ACP adapter (`npm install -g @zed-industries/codex-acp`).",
+    loginHint: "Run `codex login` in a terminal, then check again.",
+  },
+  opencode: {
+    id: "opencode",
+    label: "OpenCode",
+    command: () => {
+      const exe = locateExecutable("opencode");
+      return exe ? { command: exe, args: ["acp"] } : null;
+    },
+    installHint: "Install it with `npm install -g opencode-ai`.",
+    loginHint: "Run `opencode auth login` in a terminal to connect a provider, then check again.",
+  },
+};
+
+const ACP_MODELS: Partial<Record<EngineId, string[]>> = {
+  "gemini-cli": [
+    "gemini-2.5-pro",
+    "gemini-2.5-flash",
+    "gemini-3-pro-preview",
+    "gemini-3-flash-preview",
+  ],
+};
+
+const descriptionOf = (engine: EngineId) => DESCRIPTIONS[engine];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -83,13 +154,28 @@ export class EngineRegistry implements EngineSelector {
       /** Claude model when neither the agent nor the settings name one (AURA_DEFAULT_MODEL). */
       defaultModel?: string;
       fetch?: typeof fetch;
+      /** Serves app tools to ACP agents over MCP. */
+      toolBridge?: ToolBridgeLike;
+      appVersion?: string;
+      /** Replaces agent CLIs in tests. */
+      acpSpawn?: (cmd: string[], cwd: string, env: Record<string, string>) => AgentProcess;
+      acpAgents?: Partial<Record<keyof typeof ACP_AGENTS, AcpAgentSpec>>;
     },
   ) {
     this.store = new EngineStore(opts.dataDir);
     this.fetch = opts.fetch ?? fetch;
     const settings = () => this.store.get();
+    const acp = (id: keyof typeof ACP_AGENTS) =>
+      new AcpProvider(opts.acpAgents?.[id] ?? ACP_AGENTS[id], {
+        appVersion: opts.appVersion ?? "0.0.0",
+        toolBridge: opts.toolBridge,
+        spawn: opts.acpSpawn,
+      });
     this.providers = {
       "claude-code": opts.claude,
+      "gemini-cli": acp("gemini-cli"),
+      codex: acp("codex"),
+      opencode: acp("opencode"),
       openrouter: new OpenAICompatProvider({
         id: "openrouter",
         label: "OpenRouter",
@@ -177,7 +263,7 @@ export class EngineRegistry implements EngineSelector {
                 : id === "openrouter"
                   ? OPENROUTER_URL
                   : null,
-          mcp: id === "claude-code",
+          mcp: d.kind !== "aura",
         };
       }),
     );
@@ -192,6 +278,9 @@ export class EngineRegistry implements EngineSelector {
         (id) => ({ id, label: id, free: false }),
       );
     }
+    const known = ACP_MODELS[engine];
+    if (known) return known.map((id) => ({ id, label: id, free: engine === "gemini-cli" }));
+    if (descriptionOf(engine).kind === "acp") return [];
     if (engine === "ollama") {
       const body = await this.getJson(`${settings.ollama.baseUrl}/api/tags`);
       const models = isRecord(body) && Array.isArray(body.models) ? body.models : [];

@@ -1,4 +1,10 @@
-import { type EngineId, HANDLE_PATTERN, isEngineId, MODEL_ID_PATTERN } from "@aura/shared";
+import {
+  ENGINE_IDS,
+  type EngineId,
+  HANDLE_PATTERN,
+  isEngineId,
+  MODEL_ID_PATTERN,
+} from "@aura/shared";
 
 /** An agent profile, stored as `<dataDir>/agents/<handle>/agent.md` (docs/SPEC.md section 5). */
 export interface AgentProfile {
@@ -77,7 +83,7 @@ export function validateProfile(input: {
     throw new ProfileError("model must be a model id like claude-sonnet-5-5 or qwen3:8b");
   }
   if (engine !== undefined && engine !== null && !isEngineId(engine)) {
-    throw new ProfileError("engine must be claude-code, openrouter, ollama or openai-compatible");
+    throw new ProfileError(`engine must be one of ${ENGINE_IDS.join(", ")}`);
   }
   if (
     typeof systemPrompt !== "string" ||

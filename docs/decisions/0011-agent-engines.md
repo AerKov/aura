@@ -59,7 +59,6 @@ OpenRouter or Ollama.
 
 ## Later
 
-- Gemini CLI and Codex CLI as official engines, with app tools served to them over a per-run MCP
-  endpoint.
+- Gemini CLI, Codex and OpenCode: done in ADR 0012 (ACP).
 - MCP servers in the own loop.
 - WebSearch through a search API.

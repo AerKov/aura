@@ -9,6 +9,7 @@ import { type AgentDirectory, MemoryAgentDirectory } from "./modules/agents/dire
 import { LocalSessions } from "./modules/auth/sessions";
 import type { SafeMode } from "./modules/customize/safe-mode";
 import { EngineRegistry } from "./modules/engines/registry";
+import { ToolBridge } from "./modules/engines/tool-bridge";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
 import { FakeProvider } from "./providers/fake";
@@ -27,6 +28,9 @@ export async function createTestApp(
     safeMode?: SafeMode;
     /** Network for the OpenAI-compatible engines. */
     fetch?: typeof fetch;
+    /** Fake agent CLIs for the ACP engines. */
+    acpAgents?: ConstructorParameters<typeof EngineRegistry>[0]["acpAgents"];
+    acpSpawn?: ConstructorParameters<typeof EngineRegistry>[0]["acpSpawn"];
   } = {},
 ) {
   const dataDir = mkdtempSync(join(tmpdir(), "aura-test-"));
@@ -36,7 +40,15 @@ export async function createTestApp(
   const stopLive = await startLiveBridge(db.surreal, hub);
   const provider = opts.provider ?? new FakeProvider();
   // The default engine is Claude Code; tests run it on the fake provider.
-  const engines = new EngineRegistry({ dataDir, claude: provider, fetch: opts.fetch });
+  const toolBridge = new ToolBridge(() => "http://127.0.0.1:4517", "test");
+  const engines = new EngineRegistry({
+    dataDir,
+    claude: provider,
+    fetch: opts.fetch,
+    toolBridge,
+    acpAgents: opts.acpAgents,
+    acpSpawn: opts.acpSpawn,
+  });
   const agents = opts.agents ?? new MemoryAgentDirectory();
   const services = await createServices({
     db: db.surreal,
@@ -63,6 +75,7 @@ export async function createTestApp(
     sessions,
     hub,
     engines,
+    toolBridge,
     dataDir,
     agents,
     ...services,
@@ -75,6 +88,7 @@ export async function createTestApp(
     hub,
     provider,
     engines,
+    toolBridge,
     agents,
     sessions,
     token,

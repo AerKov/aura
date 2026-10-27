@@ -69,6 +69,7 @@ shows a preview or diff, applies on approval, commits to git.
 │   ├─ orchestrator              ├─ alert ingest (webhooks)               │
 │   ├─ agent runtime + guards    ├─ scheduler / job queue (in DB)         │
 │   └─ LLMProvider ─┬ Claude Agent SDK ── Claude Code (user's own login) │
+│                   ├ ACP ── Gemini CLI / Codex / OpenCode (own logins)  │
 │                   └ Aura loop ── OpenRouter / Ollama / OpenAI-compatible│
 │                │                                                        │
 │  SurrealDB (local, file storage)      ~/.aura/ (user data, git repo)    │
@@ -150,9 +151,11 @@ type AgentEvent =
   | { type: "done" }
   | { type: "error"; message: string };
 ```
-Engines (ADR 0011): Claude Agent SDK (user's Claude Code login), and Aura's own agent loop over
-OpenAI-compatible APIs: OpenRouter (free models available), Ollama (local, free) and any compatible
-server. The default engine and a per-agent engine are chosen on the Engines page.
+Engines (ADR 0011, 0012): Claude Agent SDK (user's Claude Code login); other agent apps over the
+Agent Client Protocol: Gemini CLI, Codex, OpenCode (each under its own login, app tools served to
+them over a per-run MCP endpoint); and Aura's own agent loop over OpenAI-compatible APIs: OpenRouter
+(free models available), Ollama (local, free) and any compatible server. The default engine and a
+per-agent engine are chosen on the Engines page.
 
 If Claude Code is not installed or not logged in, show a setup screen with instructions. Never handle the
 login ourselves.
@@ -301,9 +304,10 @@ A distinct look and feel instead of a Telegram clone: Aura's own design language
 color, motion, agent presence), light and dark themes.
 
 **Phase 9: Agent engines**
-A choice of engines per agent: Claude Code, or Aura's own agent loop on OpenRouter, Ollama or any
-OpenAI-compatible server, with built-in file, shell and web tools (ADR 0011).
+A choice of engines per agent: Claude Code; Gemini CLI, Codex and OpenCode over ACP (ADR 0012); or
+Aura's own agent loop on OpenRouter, Ollama or any OpenAI-compatible server, with built-in file,
+shell and web tools (ADR 0011).
 
 **Later**
-Gemini CLI and Codex CLI engines, MCP servers in Aura's loop, agent memory with vector search, container sandbox,
+MCP servers in Aura's loop, agent memory with vector search, container sandbox,
 community catalog with review and signatures, multi-user.

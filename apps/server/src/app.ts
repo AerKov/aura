@@ -21,6 +21,7 @@ import { devicesModule } from "./modules/devices";
 import type { DeviceService } from "./modules/devices/service";
 import { enginesModule } from "./modules/engines";
 import type { EngineRegistry } from "./modules/engines/registry";
+import type { ToolBridge } from "./modules/engines/tool-bridge";
 import { type HealthDeps, healthModule } from "./modules/health";
 import type { JobService } from "./modules/jobs/service";
 import { projectsModule } from "./modules/projects";
@@ -38,6 +39,7 @@ export interface AppDeps extends HealthDeps {
   chat: ChatService;
   extraHosts?: string[];
   engines: EngineRegistry;
+  toolBridge: ToolBridge;
   dataDir: string;
   runtime: AgentRuntime;
   projects: ProjectService;

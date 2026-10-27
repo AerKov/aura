@@ -1,7 +1,7 @@
 import { networkInterfaces } from "node:os";
 import { createApp } from "./app";
 import { createServices, prepareDataDir } from "./bootstrap";
-import { loadConfig } from "./config";
+import { loadConfig, SERVER_VERSION } from "./config";
 import { connectDb } from "./db/client";
 import { errorMessage, log } from "./lib/log";
 import { isParentAlive, watchParent } from "./lib/parent-watch";
@@ -12,6 +12,7 @@ import { DIRECT_CHAT_ID } from "./modules/chat/repo";
 import { detectSafeMode } from "./modules/customize/safe-mode";
 import { NotificationService, WebPushSender } from "./modules/devices/notifications";
 import { EngineRegistry } from "./modules/engines/registry";
+import { ToolBridge } from "./modules/engines/tool-bridge";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
 import { ClaudeAgentSdkProvider } from "./providers/claude-agent-sdk";
@@ -34,10 +35,15 @@ async function main(): Promise<void> {
     executablePath: claude ?? (isCompiled() ? null : undefined),
     defaultModel: config.defaultModel,
   });
+  // ACP agents run on this machine and reach the app's tools over loopback.
+  const loopbackHost = ["0.0.0.0", "::"].includes(config.host) ? "127.0.0.1" : config.host;
+  const toolBridge = new ToolBridge(() => `http://${loopbackHost}:${config.port}`, SERVER_VERSION);
   const engines = new EngineRegistry({
     dataDir: config.dataDir,
     claude: claudeProvider,
     defaultModel: config.defaultModel,
+    toolBridge,
+    appVersion: SERVER_VERSION,
   });
   log.info("default engine", { engine: engines.store.get().default });
 
@@ -88,6 +94,7 @@ async function main(): Promise<void> {
     remote: config.remote,
     hub,
     engines,
+    toolBridge,
     dataDir: config.dataDir,
     agents,
     webhookToken: loadWebhookToken(config.dataDir),

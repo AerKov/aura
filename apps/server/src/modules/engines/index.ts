@@ -7,20 +7,37 @@ import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import type { EngineRegistry } from "./registry";
 import { EngineSettingsError, KEYED_ENGINES } from "./settings";
+import type { ToolBridge } from "./tool-bridge";
 
 export interface EnginesDeps {
   sessions: LocalSessions;
   engines: EngineRegistry;
   agents: AgentDirectory;
   dataDir: string;
+  toolBridge: ToolBridge;
 }
+
+const LOOPBACK = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
 
 const engineId = t.UnionEnum(ENGINE_IDS);
 const modelId = t.String({ pattern: MODEL_ID_PATTERN.source });
 
 /** Agent engines (ADR 0011): status, settings, API keys, models, and the engine of each agent. */
-export const enginesModule = ({ sessions, engines, agents, dataDir }: EnginesDeps) =>
+export const enginesModule = ({ sessions, engines, agents, dataDir, toolBridge }: EnginesDeps) =>
   new Elysia({ name: "engines" })
+    // App tools for a running ACP agent (ADR 0012). The per-run token is the credential; the
+    // agent runs on this machine, so only loopback connections are accepted.
+    .all(
+      "/mcp/runs/:token",
+      ({ params, request, server, status }) => {
+        const address = server?.requestIP(request)?.address;
+        if (address !== undefined && !LOOPBACK.has(address)) {
+          return status(403, { error: "Local agents only" });
+        }
+        return toolBridge.handle(params.token, request);
+      },
+      { parse: "none" },
+    )
     .use(authGuard(sessions))
     .get("/engines", () => engines.list(), { auth: true })
     .get(

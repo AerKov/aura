@@ -14,6 +14,25 @@ type Agent = Awaited<ReturnType<typeof loadAgents>>[number];
 const loadEngines = () => call(() => api.engines.get());
 const loadAgents = () => call(() => api.agents.get());
 
+const GROUPS: { title: string; text: string; kinds: Engine["kind"][] }[] = [
+  {
+    title: "Agent apps",
+    text: "Complete coding agents you install and log in to yourself. Aura drives them and decides what they may touch; your login stays with them.",
+    kinds: ["official", "acp"],
+  },
+  {
+    title: "Aura's own agent",
+    text: "Aura's built-in agent loop on any model: cloud models through an API key, or local models for free.",
+    kinds: ["aura"],
+  },
+];
+
+const KIND_LABEL: Record<Engine["kind"], string> = {
+  official: "Agent SDK",
+  acp: "Agent app · ACP",
+  aura: "Aura loop",
+};
+
 const inputClass =
   "bg-background focus:border-primary/60 focus:ring-primary/15 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-4";
 
@@ -55,13 +74,12 @@ export function EnginesView() {
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-4xl">
         <PageHeader title="Engines" icon={<Cpu className="text-primary size-7" />}>
-          What runs your agents. Claude Code uses your own Claude login. The others run on Aura's
-          own agent loop: free with local models in Ollama or free models on OpenRouter. Each agent
-          can use a different engine.
+          What runs your agents: an agent app you already use (Claude Code, Gemini CLI, Codex,
+          OpenCode) under your own login, or Aura's own agent on any model, free with local models.
+          Each agent can use a different engine.
         </PageHeader>
 
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="kicker">Engines</h2>
+        <div className="mb-2 flex justify-end">
           <Button size="sm" variant="ghost" disabled={refreshing} onClick={() => void refresh()}>
             <RefreshCw className={refreshing ? "animate-spin" : ""} /> Check again
           </Button>
@@ -69,25 +87,33 @@ export function EnginesView() {
         {!data ? (
           <p className="text-muted-foreground text-sm">Checking engines…</p>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {data.engines.map((engine) => (
-              <EngineCard
-                key={engine.id}
-                engine={engine}
-                onSave={saveSettings}
-                onKey={async (key) => {
-                  if (engine.id !== "openrouter" && engine.id !== "openai-compatible") return;
-                  try {
-                    await call(() => api.engines({ engine: engine.id }).key.put({ key }));
-                    await refresh();
-                    await loadProviderStatus();
-                  } catch (error) {
-                    reportError(error);
-                  }
-                }}
-              />
-            ))}
-          </div>
+          GROUPS.map((group) => (
+            <section key={group.title} className="mb-8">
+              <h2 className="kicker">{group.title}</h2>
+              <p className="text-muted-foreground mt-1 mb-4 text-sm">{group.text}</p>
+              <div className="grid gap-4 md:grid-cols-2">
+                {data.engines
+                  .filter((engine) => group.kinds.includes(engine.kind))
+                  .map((engine) => (
+                    <EngineCard
+                      key={engine.id}
+                      engine={engine}
+                      onSave={saveSettings}
+                      onKey={async (key) => {
+                        if (engine.id !== "openrouter" && engine.id !== "openai-compatible") return;
+                        try {
+                          await call(() => api.engines({ engine: engine.id }).key.put({ key }));
+                          await refresh();
+                          await loadProviderStatus();
+                        } catch (error) {
+                          reportError(error);
+                        }
+                      }}
+                    />
+                  ))}
+              </div>
+            </section>
+          ))
         )}
 
         {data && (
@@ -107,6 +133,20 @@ export function EnginesView() {
   );
 }
 
+/** Renders `command` spans in server hints as code. */
+function withCode(text: string): ReactNode[] {
+  return text.split(/(`[^`]+`)/).map((part, i) =>
+    part.startsWith("`") && part.endsWith("`") ? (
+      // biome-ignore lint/suspicious/noArrayIndexKey: static split of one string
+      <code key={i} className="bg-muted rounded px-1 font-mono text-[12px]">
+        {part.slice(1, -1)}
+      </code>
+    ) : (
+      part
+    ),
+  );
+}
+
 function StatusLine({ engine }: { engine: Engine }) {
   const { status } = engine;
   return (
@@ -118,7 +158,7 @@ function StatusLine({ engine }: { engine: Engine }) {
         )}
       />
       <span className={status.ok ? "" : "text-muted-foreground"}>
-        {status.ok ? `Ready${status.detail ? ` · ${status.detail}` : ""}` : status.reason}
+        {status.ok ? `Ready${status.detail ? ` · ${status.detail}` : ""}` : withCode(status.reason)}
       </span>
     </p>
   );
@@ -203,7 +243,7 @@ function EngineCard({
   const [key, setKey] = useState("");
   const [freeOnly, setFreeOnly] = useState(true);
   const keyed = engine.id === "openrouter" || engine.id === "openai-compatible";
-  const models = useModels(engine.id, engine.status.ok || engine.id === "claude-code").filter(
+  const models = useModels(engine.id, engine.status.ok || engine.kind !== "aura").filter(
     (m) => !(engine.id === "openrouter" && freeOnly) || m.free,
   );
 
@@ -224,9 +264,7 @@ function EngineCard({
     >
       <header className="flex items-start justify-between gap-3">
         <div>
-          <span className="kicker">
-            {engine.kind === "official" ? "Official agent" : "Aura loop"}
-          </span>
+          <span className="kicker">{KIND_LABEL[engine.kind]}</span>
           <h3 className="text-[17px] font-semibold tracking-tight">{engine.label}</h3>
         </div>
         <div className="flex shrink-0 gap-1.5">
@@ -310,7 +348,13 @@ function EngineCard({
           models={models}
           value={model}
           onChange={setModel}
-          placeholder={engine.id === "ollama" && models.length === 0 ? "qwen3:8b" : undefined}
+          placeholder={
+            engine.id === "ollama" && models.length === 0
+              ? "qwen3:8b"
+              : engine.kind === "acp" && models.length === 0
+                ? "the agent's own default"
+                : undefined
+          }
         />
       </Field>
       {engine.id === "openrouter" && (
@@ -334,7 +378,7 @@ function EngineCard({
         <Button size="sm" variant="outline" className="rounded-full" onClick={() => void save()}>
           <Check /> Save
         </Button>
-        {!engine.isDefault && (
+        {!engine.isDefault && engine.status.ok && (
           <Button
             size="sm"
             className="rounded-full"
@@ -399,7 +443,7 @@ function AgentRow({
   const chosen = engines.find((e) => e.id === engine);
   const models = useModels(
     engine || "claude-code",
-    engine !== "" && (chosen?.status.ok === true || engine === "claude-code"),
+    engine !== "" && (chosen?.status.ok === true || chosen?.kind !== "aura"),
   );
 
   const save = async () => {

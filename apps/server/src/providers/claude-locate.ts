@@ -28,3 +28,29 @@ export function locateClaude(env: Record<string, string | undefined> = process.e
   ];
   return candidates.find((path) => path && existsSync(path)) ?? null;
 }
+
+/**
+ * Finds another agent CLI (Gemini CLI, Codex, OpenCode) the same way: an `AURA_<NAME>_EXECUTABLE`
+ * override, `PATH`, then the usual global install locations.
+ */
+export function locateExecutable(
+  name: string,
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  const override = env[`AURA_${name.toUpperCase().replace(/[^A-Z0-9]/g, "_")}_EXECUTABLE`];
+  if (override) return override;
+  const fromPath = Bun.which(name);
+  if (fromPath) return fromPath;
+  const home = homedir();
+  const exe = process.platform === "win32" ? `${name}.cmd` : name;
+  const candidates = [
+    join(home, ".local", "bin", exe),
+    join(home, ".npm-global", "bin", exe),
+    join(home, ".bun", "bin", exe),
+    join(home, `.${name}`, "bin", exe),
+    `/opt/homebrew/bin/${name}`,
+    `/usr/local/bin/${name}`,
+    join(env.APPDATA ?? "", "npm", exe),
+  ];
+  return candidates.find((path) => path && existsSync(path)) ?? null;
+}
