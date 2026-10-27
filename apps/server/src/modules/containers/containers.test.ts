@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { treaty } from "@elysiajs/eden";
 import { FakeProvider } from "../../providers/fake";
+import { connectMcpTools } from "../../providers/mcp-client";
 import { createTestApp } from "../../testing";
 import { ORCHESTRATOR_DEFAULT } from "../agents/defaults";
 import { MemoryAgentDirectory } from "../agents/directory";
@@ -247,10 +248,10 @@ describe("project containers", () => {
 const real = await detectRuntime();
 const IMAGE = "alpine:3.20";
 /** Downloads the test image up front; a registry rate limit is not a failure of this code. */
-async function pulled(): Promise<boolean> {
+async function pulled(image = IMAGE): Promise<boolean> {
   if (!real.run) return false;
-  if ((await real.run(["image", "inspect", IMAGE], { timeoutMs: 30_000 })).code === 0) return true;
-  const res = await real.run(["pull", IMAGE], { timeoutMs: 300_000 });
+  if ((await real.run(["image", "inspect", image], { timeoutMs: 30_000 })).code === 0) return true;
+  const res = await real.run(["pull", image], { timeoutMs: 300_000 });
   if (res.code !== 0) console.warn(`skipping real container checks: ${errorLine(res.stderr)}`);
   return res.code === 0;
 }
@@ -295,5 +296,161 @@ describe.if(real.status.ok)("project containers with a real runtime", () => {
       rmSync(dataDir, { recursive: true, force: true });
     }
     expect(existsSync(workspace)).toBe(false);
+  });
+});
+
+/** A minimal stdio MCP server (newline-delimited JSON-RPC) with one tool that reports where it runs. */
+const MCP_SERVER = `
+const rl = require("node:readline").createInterface({ input: process.stdin });
+const send = (m) => process.stdout.write(JSON.stringify(m) + "\\n");
+rl.on("line", (line) => {
+  const m = JSON.parse(line);
+  if (m.method === "initialize")
+    send({ jsonrpc: "2.0", id: m.id, result: { protocolVersion: m.params.protocolVersion, capabilities: { tools: {} }, serverInfo: { name: "where", version: "1" } } });
+  else if (m.method === "tools/list")
+    send({ jsonrpc: "2.0", id: m.id, result: { tools: [{ name: "where", description: "where am I", inputSchema: { type: "object", properties: {} } }] } });
+  else if (m.method === "tools/call") {
+    const os = require("node:fs").readFileSync("/etc/os-release", "utf8").split("\\n")[0];
+    send({ jsonrpc: "2.0", id: m.id, result: { content: [{ type: "text", text: [os, process.cwd(), process.env.WHERE_TOKEN, require("node:fs").existsSync(process.argv[2]) ? "host visible" : "host hidden"].join("|") }] } });
+  } else if (m.id !== undefined) send({ jsonrpc: "2.0", id: m.id, result: {} });
+});
+`;
+
+describe("MCP servers in project containers", () => {
+  const fakeDetect = (cli: ReturnType<typeof fakeCli>) => async () => ({
+    status: { ok: true as const, engine: "docker" as const, version: "29" },
+    run: cli.run,
+    binary: "/usr/bin/docker",
+  });
+
+  test("stdio servers start inside the container; secrets travel as environment, not arguments", async () => {
+    const cli = fakeCli();
+    const service = new ContainerService({
+      dataDir: "/data",
+      settings: () => DEFAULT_CONTAINER,
+      detect: fakeDetect(cli),
+    });
+    const project = { id: "site", workspace: mkdtempSync(join(tmpdir(), "aura-ws-")) };
+    try {
+      const wrapped = await service.wrapMcp(project, {
+        github: {
+          type: "stdio",
+          command: "npx",
+          args: ["-y", "gh-mcp"],
+          env: { GH_TOKEN: "s3cret" },
+        },
+        docs: { type: "http", url: "https://example.com/mcp" },
+      });
+      expect(wrapped.docs).toEqual({ type: "http", url: "https://example.com/mcp" });
+      const gh = wrapped.github;
+      if (gh?.type !== "stdio") throw new Error("expected stdio");
+      expect(gh.command).toBe("/usr/bin/docker");
+      expect(gh.args).toEqual([
+        "exec",
+        "-i",
+        "-w",
+        "/workspace",
+        "--env",
+        "GH_TOKEN",
+        service.nameOf("site"),
+        "npx",
+        "-y",
+        "gh-mcp",
+      ]);
+      expect(gh.args.join(" ")).not.toContain("s3cret");
+      expect(gh.env.GH_TOKEN).toBe("s3cret");
+      expect(cli.calls.filter((c) => c[0] === "run")).toHaveLength(1);
+    } finally {
+      rmSync(project.workspace, { recursive: true, force: true });
+    }
+
+    const down = new ContainerService({
+      dataDir: "/data",
+      settings: () => DEFAULT_CONTAINER,
+      detect: async () => ({ status: { ok: false, reason: "Docker is not running." }, run: null }),
+    });
+    expect(
+      await down.wrapMcp(project, {
+        github: { type: "stdio", command: "npx", args: [], env: {} },
+        docs: { type: "http", url: "https://example.com/mcp" },
+      }),
+    ).toEqual({ docs: { type: "http", url: "https://example.com/mcp" } });
+  });
+
+  test("agents in a container project get their MCP servers through the container", async () => {
+    const cli = fakeCli();
+    const provider = new FakeProvider();
+    t = await createTestApp({
+      provider,
+      agents: new MemoryAgentDirectory([
+        ORCHESTRATOR_DEFAULT,
+        { ...coder, builtinTools: ["Read"] },
+      ]),
+      containers: (dataDir, sandbox) =>
+        new ContainerService({
+          dataDir,
+          settings: () => sandbox.store.get().container,
+          detect: fakeDetect(cli),
+        }),
+    });
+    mkdirSync(join(t.dataDir, "mcp"), { recursive: true });
+    writeFileSync(
+      join(t.dataDir, "mcp", "servers.json"),
+      JSON.stringify({
+        servers: { files: { command: "npx", args: ["files-mcp"], agents: ["coder"] } },
+      }),
+    );
+    await t.sandbox.update({ container: { newProjects: true } });
+    await t.projects.create({ name: "Site", brief: "@coder go", agents: ["coder"], budgetUsd: 5 });
+    for (let i = 0; i < 100 && provider.calls.length === 0; i++) await Bun.sleep(10);
+    await t.runtime.whenIdle();
+    const files = provider.calls[0]?.mcpServers?.files;
+    expect(files?.type === "stdio" && files.args.slice(0, 2)).toEqual(["exec", "-i"]);
+    // An agent without Bash still gets no shell tool.
+    expect(provider.calls[0]?.tools.some((tool) => tool.name === "Bash")).toBe(false);
+  });
+
+  let t: TestApp | undefined;
+  afterEach(async () => {
+    await t?.close();
+    t = undefined;
+  });
+});
+
+describe.if(real.status.ok)("MCP servers with a real runtime", () => {
+  test("a stdio MCP server runs in the project container with its secret", async () => {
+    const image = "node:22-bookworm-slim";
+    if (!(await pulled(image))) return;
+    const dataDir = mkdtempSync(join(tmpdir(), "aura-mcp-"));
+    const workspace = join(dataDir, "projects", "demo");
+    mkdirSync(workspace, { recursive: true });
+    writeFileSync(join(workspace, "server.cjs"), MCP_SERVER);
+    const service = new ContainerService({
+      dataDir,
+      settings: () => ({ ...DEFAULT_CONTAINER, image, network: false }),
+    });
+    const project = { id: "demo", workspace };
+    try {
+      const servers = await service.wrapMcp(project, {
+        where: {
+          type: "stdio",
+          command: "node",
+          args: ["server.cjs", dataDir],
+          env: { WHERE_TOKEN: "token-123" },
+        },
+      });
+      const mcp = await connectMcpTools(servers, "test");
+      try {
+        const tool = mcp.tools.find((x) => x.name === "mcp__where__where");
+        const out = await tool?.run({}, new AbortController().signal);
+        expect(out?.text).toContain("Debian");
+        expect(out?.text).toContain("|/workspace|token-123|host hidden");
+      } finally {
+        await mcp.close();
+      }
+    } finally {
+      await service.remove("demo").catch(() => {});
+      rmSync(dataDir, { recursive: true, force: true });
+    }
   });
 });

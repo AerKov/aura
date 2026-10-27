@@ -40,6 +40,11 @@ export interface RuntimeDeps {
   appTools: (ctx: { handle: string; chat: Chat; depth: number }) => AgentTool[];
   /** External MCP servers an agent may use (tier 2 customization). */
   mcpServers?: (handle: string) => Record<string, McpServerSpec>;
+  /** Where a project's MCP servers run: moved into its container when it has one (ADR 0019). */
+  projectMcp?: (
+    project: ProjectInfo,
+    servers: Record<string, McpServerSpec>,
+  ) => Promise<Record<string, McpServerSpec>>;
   /** Extra system prompt sections for an agent (its skills). */
   promptExtras?: (profile: AgentProfile) => string;
   /** OS sandbox for shell commands, or null to run them without it (ADR 0015). */
@@ -340,6 +345,12 @@ export class AgentRuntime {
         query: trigger.body,
       })) ?? "";
 
+    const ownServers = this.deps.mcpServers?.(handle) ?? {};
+    const mcpServers =
+      project && this.deps.projectMcp
+        ? await this.deps.projectMcp(project, ownServers)
+        : ownServers;
+
     let text = "";
     let usage: Usage | null = null;
     let error: Extract<AgentEvent, { type: "error" }> | null = null;
@@ -382,7 +393,7 @@ export class AgentRuntime {
         builtinTools,
         sandbox: sandbox ?? undefined,
         tools: [...this.deps.appTools({ handle, chat, depth }), ...(shell ? [shell.tool] : [])],
-        mcpServers: this.deps.mcpServers?.(handle),
+        mcpServers,
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,
       },

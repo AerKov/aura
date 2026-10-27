@@ -14,6 +14,16 @@ export type CliRunner = (
 
 export type ContainerEngine = "docker" | "podman";
 
+export interface DetectedRuntime {
+  status: RuntimeStatus;
+  run: CliRunner | null;
+  /** Path of the CLI, for processes that others spawn (MCP servers). */
+  binary?: string;
+}
+
+/** What the container CLI needs from the server's environment, and nothing else. */
+export const CLI_ENV_KEYS = ["PATH", "HOME", "DOCKER_HOST", "DOCKER_CONTEXT", "XDG_RUNTIME_DIR"];
+
 export type RuntimeStatus =
   | { ok: true; engine: ContainerEngine; version: string }
   | { ok: false; reason: string };
@@ -22,7 +32,7 @@ export type RuntimeStatus =
 export function spawnRunner(binary: string): CliRunner {
   return async (args, opts = {}) => {
     const env: Record<string, string> = {};
-    for (const key of ["PATH", "HOME", "DOCKER_HOST", "DOCKER_CONTEXT", "XDG_RUNTIME_DIR"]) {
+    for (const key of CLI_ENV_KEYS) {
       const value = process.env[key];
       if (value) env[key] = value;
     }
@@ -55,7 +65,7 @@ export function spawnRunner(binary: string): CliRunner {
  */
 export async function detectRuntime(
   runnerFor: (binary: string) => CliRunner = spawnRunner,
-): Promise<{ status: RuntimeStatus; run: CliRunner | null }> {
+): Promise<DetectedRuntime> {
   const forced = process.env.AURA_CONTAINER_CLI;
   const candidates: ContainerEngine[] =
     forced === "docker" || forced === "podman" ? [forced] : ["docker", "podman"];
@@ -69,7 +79,7 @@ export async function detectRuntime(
       const field = engine === "docker" ? "{{.Server.Version}}" : "{{.Client.Version}}";
       const res = await run(["version", "--format", field], { timeoutMs: 10_000 });
       const version = res.stdout.trim();
-      if (res.code === 0 && version) return { status: { ok: true, engine, version }, run };
+      if (res.code === 0 && version) return { status: { ok: true, engine, version }, run, binary };
       problems.push(`${engine} is installed but not running (${firstLine(res.stderr)})`);
     } catch (error) {
       problems.push(`${engine}: ${errorMessage(error)}`);

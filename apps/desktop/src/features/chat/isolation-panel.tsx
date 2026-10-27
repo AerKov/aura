@@ -13,7 +13,7 @@ const OPTIONS: { value: ProjectIsolation; label: string; text: string; icon: typ
   {
     value: "container",
     label: "Container",
-    text: "Commands run in this project's own Linux container. It sees only the project folder.",
+    text: "Commands and MCP tool servers run in this project's own Linux container. It sees only the project folder.",
     icon: Box,
   },
   {

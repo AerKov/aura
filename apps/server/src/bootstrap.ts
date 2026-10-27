@@ -167,6 +167,10 @@ export async function createServices(deps: {
         : []),
     ],
     mcpServers: (handle) => mcp.forAgent(handle),
+    projectMcp: (project, servers) =>
+      project.isolation === "container"
+        ? containers.wrapMcp(project, servers)
+        : Promise.resolve(servers),
     promptExtras: (profile) => skills.promptFor(profile),
     memoryPrompt: (input) => memory.promptFor(input),
     sandboxPolicy: () => sandbox.policy(),

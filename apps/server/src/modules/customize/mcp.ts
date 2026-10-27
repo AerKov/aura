@@ -147,7 +147,7 @@ export class McpService {
       preview: [
         config.url
           ? `**Connects to:** \`${config.url}\``
-          : "**Runs this command on your computer:**",
+          : "**Runs this command on your computer** (inside the project's container in container projects):",
         config.url ? "" : `\`\`\`sh\n${target}\n\`\`\``,
         `**For:** ${config.agents.map((a) => `@${a}`).join(", ") || "no agents"}`,
         Object.keys(config.env ?? {}).length

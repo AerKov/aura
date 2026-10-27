@@ -61,7 +61,11 @@ process limit, and optionally without network.
 - The container starts with the first command; the first start downloads the image. It stops after
   30 minutes without commands. **Reset container** removes it and anything installed outside the
   project folder; project files stay.
-- Agents edit files directly in the project folder; only their commands run inside the container.
+- Agents edit files directly in the project folder; their commands and their MCP tool servers
+  (the ones started as a command) run inside the container. Secrets for MCP servers reach them as
+  environment variables.
+- Gemini CLI, Codex and OpenCode themselves stay on your computer, because they need their own
+  logins, which Aura never touches. In a container project they get no shell on your computer.
 - If Docker is not running, commands in a container project fail. They never fall back to your
   computer.
 

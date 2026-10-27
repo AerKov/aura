@@ -180,7 +180,8 @@ login ourselves.
   network only to allowed hosts. Modes `auto`, `required`, `off` in `sandbox.json`.
 - Level 2 (ADR 0018): per project, shell commands run in the project's own container (Docker or
   Podman) that mounts only the project folder; no capabilities, limited memory, CPU and processes,
-  optional network. Later: external agent apps and MCP servers in containers too.
+  optional network. Stdio MCP servers of such projects run in the container too (ADR 0019);
+  agent apps stay on the host because they need their own logins.
 
 ## 8. Conversation rules
 
@@ -346,6 +347,10 @@ Memory page (ADR 0017).
 Sandbox level 2: a project can run its agents' shell commands in its own container that sees only
 the project folder; set per project in its chat, defaults on the Engines page (ADR 0018).
 
+**Phase 16: MCP servers in containers**
+In container projects, stdio MCP servers start inside the project's container, with secrets passed
+as environment; they never fall back to the host. Agent apps stay on the host because of their
+logins (ADR 0019).
+
 **Later**
-Agent apps and MCP servers in containers,
-pack signatures and a reviewed community index, multi-user.
+Pack signatures and a reviewed community index, multi-user.

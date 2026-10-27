@@ -2,9 +2,16 @@ import { createHash } from "node:crypto";
 import { mkdirSync } from "node:fs";
 import { z } from "zod";
 import { errorMessage, log } from "../../lib/log";
-import type { AgentTool } from "../../providers/types";
+import type { AgentTool, McpServerSpec } from "../../providers/types";
 import type { ContainerSettings } from "../sandbox/settings";
-import { type CliRunner, detectRuntime, errorLine, type RuntimeStatus } from "./cli";
+import {
+  CLI_ENV_KEYS,
+  type CliRunner,
+  type DetectedRuntime,
+  detectRuntime,
+  errorLine,
+  type RuntimeStatus,
+} from "./cli";
 
 /** What the service needs to know about a project. */
 export interface ContainerProject {
@@ -61,7 +68,7 @@ function clip(text: string): string {
  * created on the first command, stopped when idle and recreated when their settings change.
  */
 export class ContainerService {
-  private detected: { at: number; status: RuntimeStatus; run: CliRunner | null } | null = null;
+  private detected: (DetectedRuntime & { at: number }) | null = null;
   private readonly creating = new Map<string, Promise<void>>();
   private readonly busy = new Map<string, number>();
   private readonly lastUsed = new Map<string, number>();
@@ -72,7 +79,7 @@ export class ContainerService {
       dataDir: string;
       settings: () => ContainerSettings;
       /** Replaced in tests. */
-      detect?: () => Promise<{ status: RuntimeStatus; run: CliRunner | null }>;
+      detect?: () => Promise<DetectedRuntime>;
       /** User and group the commands run as, so files keep the user's ownership. */
       user?: string | null;
     },
@@ -81,7 +88,7 @@ export class ContainerService {
     this.dataKey = createHash("sha256").update(deps.dataDir).digest("hex").slice(0, 8);
   }
 
-  private async runtime(): Promise<{ status: RuntimeStatus; run: CliRunner | null }> {
+  private async runtime(): Promise<DetectedRuntime> {
     if (this.detected && Date.now() - this.detected.at < STATUS_TTL_MS) return this.detected;
     const found = await (this.deps.detect ?? (() => detectRuntime()))();
     this.detected = { at: Date.now(), ...found };
@@ -259,6 +266,62 @@ export class ContainerService {
       this.busy.set(name, (this.busy.get(name) ?? 1) - 1);
       this.lastUsed.set(name, Date.now());
     }
+  }
+
+  /**
+   * MCP servers for a run in this project: stdio servers start inside the project's container
+   * (`exec -i`), so they see only the project folder too. Secrets reach them as environment of the
+   * CLI (`--env NAME` without a value), never as arguments. When the container cannot run, stdio
+   * servers are left out rather than started on the host. HTTP servers are unchanged.
+   */
+  async wrapMcp(
+    project: ContainerProject,
+    servers: Record<string, McpServerSpec>,
+  ): Promise<Record<string, McpServerSpec>> {
+    const stdio = Object.entries(servers).filter(([, s]) => s.type === "stdio");
+    if (stdio.length === 0) return servers;
+    const out: Record<string, McpServerSpec> = Object.fromEntries(
+      Object.entries(servers).filter(([, s]) => s.type !== "stdio"),
+    );
+    let name: string;
+    let binary: string | undefined;
+    try {
+      name = await this.ensure(project);
+      binary = (await this.runtime()).binary;
+      if (!binary) throw new ContainerError("The container CLI was not found");
+    } catch (error) {
+      log.warn("MCP servers left out: the project container is not available", {
+        project: project.id,
+        servers: stdio.map(([n]) => n),
+        error: errorMessage(error),
+      });
+      return out;
+    }
+    const cliEnv: Record<string, string> = {};
+    for (const key of CLI_ENV_KEYS) {
+      const value = process.env[key];
+      if (value) cliEnv[key] = value;
+    }
+    for (const [server, spec] of stdio) {
+      if (spec.type !== "stdio") continue;
+      out[server] = {
+        type: "stdio",
+        command: binary,
+        args: [
+          "exec",
+          "-i",
+          "-w",
+          WORKSPACE,
+          ...Object.keys(spec.env).flatMap((key) => ["--env", key]),
+          name,
+          spec.command,
+          ...spec.args,
+        ],
+        env: { ...cliEnv, ...spec.env },
+      };
+    }
+    this.lastUsed.set(name, Date.now());
+    return out;
   }
 
   /** Removes the project's container; the project folder stays. */
