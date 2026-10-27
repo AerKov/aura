@@ -11,7 +11,11 @@ export interface AgentProfile {
   builtinTools: BuiltinTool[];
   /** Spend limit across all runs of this agent, in USD. null means no agent-level limit. */
   budgetUsd: number | null;
+  /** Names of skills (folders in `skills/`) attached to this agent. */
+  skills: string[];
 }
+
+export const SKILL_NAME_PATTERN = /^[a-z][a-z0-9-]{1,47}$/;
 
 /** Built-in tools an agent may be granted. File tools are confined to the project workspace. */
 export const BUILTIN_TOOLS = ["Read", "Write", "Edit", "Glob", "Grep", "Bash"] as const;
@@ -38,8 +42,9 @@ export function validateProfile(input: {
   systemPrompt: unknown;
   tools?: unknown;
   budgetUsd?: unknown;
+  skills?: unknown;
 }): AgentProfile {
-  const { handle, name, role, model, systemPrompt, tools, budgetUsd } = input;
+  const { handle, name, role, model, systemPrompt, tools, budgetUsd, skills } = input;
   if (typeof handle !== "string" || !HANDLE_PATTERN.test(handle)) {
     throw new ProfileError(
       "handle must be 2-32 chars: lowercase letters, digits, - or _, starting with a letter",
@@ -80,6 +85,15 @@ export function validateProfile(input: {
   ) {
     throw new ProfileError("budget must be a positive number of USD (max 1000)");
   }
+  const skillList = skills ?? [];
+  if (
+    !Array.isArray(skillList) ||
+    !skillList.every((x) => typeof x === "string" && SKILL_NAME_PATTERN.test(x))
+  ) {
+    throw new ProfileError(
+      "skills must be a list of skill names (lowercase letters, digits, dashes)",
+    );
+  }
   return {
     handle,
     name: name.trim(),
@@ -88,6 +102,7 @@ export function validateProfile(input: {
     systemPrompt: systemPrompt.trim(),
     builtinTools: [...new Set(toolList as BuiltinTool[])],
     budgetUsd: typeof budgetUsd === "number" ? budgetUsd : null,
+    skills: [...new Set(skillList as string[])],
   };
 }
 
@@ -113,6 +128,7 @@ export function parseAgentFile(handle: string, text: string): AgentProfile {
     systemPrompt: match[2] ?? "",
     tools: meta.tools,
     budgetUsd: meta.budget_usd,
+    skills: meta.skills,
   });
 }
 
@@ -125,6 +141,7 @@ export function serializeAgentFile(profile: AgentProfile): string {
     ...(profile.model ? [`model: ${JSON.stringify(profile.model)}`] : []),
     `tools: ${JSON.stringify(profile.builtinTools)}`,
     ...(profile.budgetUsd !== null ? [`budget_usd: ${profile.budgetUsd}`] : []),
+    ...(profile.skills.length > 0 ? [`skills: ${JSON.stringify(profile.skills)}`] : []),
     "---",
     "",
     profile.systemPrompt,

@@ -24,6 +24,7 @@ test("seeds the orchestrator, creates agents as committed files", async () => {
     systemPrompt: "Write code.",
     builtinTools: ["Read", "Write"],
     budgetUsd: 1,
+    skills: [],
   });
   expect((await dir.list()).map((p) => p.handle)).toEqual(["coder", "orchestrator"]);
   const existing = await dir.get("coder");

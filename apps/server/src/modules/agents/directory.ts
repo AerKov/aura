@@ -9,6 +9,8 @@ export interface AgentDirectory {
   get(handle: string): Promise<AgentProfile | null>;
   list(): Promise<AgentProfile[]>;
   create(profile: AgentProfile): Promise<AgentProfile>;
+  /** Overwrites an existing profile (callers commit as part of a larger change). */
+  update(profile: AgentProfile): Promise<void>;
 }
 
 /**
@@ -63,6 +65,12 @@ export class FileAgentDirectory implements AgentDirectory {
     return profile;
   }
 
+  async update(profile: AgentProfile): Promise<void> {
+    if (!existsSync(this.fileOf(profile.handle)))
+      throw new ProfileError(`@${profile.handle} does not exist`);
+    this.write(profile);
+  }
+
   private write(profile: AgentProfile): void {
     mkdirSync(join(this.root, profile.handle), { recursive: true });
     writeFileSync(this.fileOf(profile.handle), serializeAgentFile(profile));
@@ -94,5 +102,11 @@ export class MemoryAgentDirectory implements AgentDirectory {
       throw new ProfileError(`@${profile.handle} already exists`);
     this.profiles.set(profile.handle, profile);
     return profile;
+  }
+
+  async update(profile: AgentProfile) {
+    if (!this.profiles.has(profile.handle))
+      throw new ProfileError(`@${profile.handle} does not exist`);
+    this.profiles.set(profile.handle, profile);
   }
 }

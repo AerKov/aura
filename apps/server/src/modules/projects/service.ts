@@ -18,6 +18,25 @@ export interface ProjectInfo extends Project {
   workspace: string;
 }
 
+export interface ProjectInput {
+  name: string;
+  slug?: string;
+  brief: string;
+  agents: string[];
+  budgetUsd: number;
+  /** The agent the kickoff wakes; defaults to the first agent mentioned in the brief. */
+  startWith?: string;
+}
+
+export interface ValidProject {
+  name: string;
+  slug: string;
+  brief: string;
+  agents: string[];
+  startWith: string;
+  budgetUsd: number;
+}
+
 type Row = Record<string, unknown>;
 
 /** Projects: a group chat, a git workspace and a budget (docs/SPEC.md section 2). */
@@ -52,15 +71,11 @@ export class ProjectService {
     return Promise.all((rows ?? []).map((row) => this.toProject(row)));
   }
 
-  async create(input: {
-    name: string;
-    slug?: string;
-    brief: string;
-    agents: string[];
-    budgetUsd: number;
-    /** The agent the kickoff wakes; defaults to the first agent mentioned in the brief. */
-    startWith?: string;
-  }): Promise<{ project: ProjectInfo; chat: Chat }> {
+  /**
+   * Validates a project request without side effects. `pendingAgents` are agents that will be
+   * created together with the project (one approval for the whole plan).
+   */
+  async validate(input: ProjectInput, pendingAgents: string[] = []): Promise<ValidProject> {
     const name = input.name.trim();
     if (!name || name.length > 80) throw new ProjectError("name is required (max 80 chars)");
     const slug = input.slug?.trim() || slugify(name);
@@ -75,23 +90,31 @@ export class ProjectService {
     const brief = input.brief.trim();
     if (!brief || brief.length > 8000) throw new ProjectError("brief is required (max 8000 chars)");
 
-    const agents = [...new Set(input.agents)].filter((h) => h !== ORCHESTRATOR_HANDLE);
+    const agents = [...new Set(input.agents.map((a) => a.replace(/^@/, "")))].filter(
+      (h) => h !== ORCHESTRATOR_HANDLE,
+    );
     if (agents.length === 0) throw new ProjectError("a project needs at least one agent");
     for (const handle of agents) {
-      if (!(await this.deps.agents.get(handle)))
+      if (!pendingAgents.includes(handle) && !(await this.deps.agents.get(handle))) {
         throw new ProjectError(`@${handle} does not exist; create it first`);
+      }
     }
     const mentioned = parseMentions(brief).filter((h) => agents.includes(h));
     if (mentioned.length === 0) {
       throw new ProjectError("the brief must @mention the agent who starts the work");
     }
-    const startWith = input.startWith ?? mentioned[0];
+    const startWith = input.startWith?.replace(/^@/, "") ?? mentioned[0];
     if (!startWith || !agents.includes(startWith)) {
       throw new ProjectError("start_with must be one of the project's agents");
     }
     if ((await this.get(slug)) || existsSync(this.workspaceOf(slug))) {
       throw new ProjectError(`a project "${slug}" already exists`);
     }
+    return { name, slug, brief, agents, startWith, budgetUsd: input.budgetUsd };
+  }
+
+  async create(input: ProjectInput): Promise<{ project: ProjectInfo; chat: Chat }> {
+    const { name, slug, brief, agents, startWith } = await this.validate(input);
 
     // Workspace first: a git repo with the brief, so every agent change is a reversible commit.
     const workspace = this.workspaceOf(slug);

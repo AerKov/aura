@@ -11,7 +11,10 @@ export function agentsToTrigger(input: {
   orchestrator: string;
 }): string[] {
   const { message, chat, agentMembers, orchestrator } = input;
-  if (message.status !== "final" || message.kind !== "text") return [];
+  // Task cards wake their assignee like a mention does.
+  const wakes =
+    message.kind === "text" || (message.kind === "card" && message.card?.type === "task");
+  if (message.status !== "final" || !wakes) return [];
 
   const targets = new Set<string>();
   if (chat.kind === "direct" && message.author.kind === "user") targets.add(orchestrator);

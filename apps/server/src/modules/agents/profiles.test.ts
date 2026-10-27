@@ -15,12 +15,13 @@ const coder: AgentProfile = {
   systemPrompt: "You write code.\n\n---\nSeparators in the body are fine.",
   builtinTools: ["Read", "Write", "Bash"],
   budgetUsd: 2.5,
+  skills: ["tdd"],
 };
 
 describe("agent files", () => {
   test("round-trips through serialize and parse", () => {
     expect(parseAgentFile("coder", serializeAgentFile(coder))).toEqual(coder);
-    const minimal = { ...coder, model: null, builtinTools: [], budgetUsd: null };
+    const minimal = { ...coder, model: null, builtinTools: [], budgetUsd: null, skills: [] };
     expect(parseAgentFile("coder", serializeAgentFile(minimal))).toEqual(minimal);
   });
 

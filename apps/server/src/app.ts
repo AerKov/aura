@@ -3,15 +3,20 @@ import { Elysia } from "elysia";
 import { agentsModule } from "./modules/agents";
 import type { AgentDirectory } from "./modules/agents/directory";
 import type { AgentRuntime } from "./modules/agents/runtime";
+import { controlModule } from "./modules/approvals";
+import type { ApprovalService } from "./modules/approvals/service";
 import { authModule } from "./modules/auth";
 import type { LocalSessions, SessionUser } from "./modules/auth/sessions";
 import { chatModule } from "./modules/chat";
+import type { ChatRepo } from "./modules/chat/repo";
 import type { ChatService } from "./modules/chat/service";
 import { type HealthDeps, healthModule } from "./modules/health";
 import { projectsModule } from "./modules/projects";
 import type { ProjectService } from "./modules/projects/service";
 import { realtimeModule } from "./modules/realtime";
 import type { EventHub } from "./modules/realtime/hub";
+import type { SkillService } from "./modules/skills/service";
+import type { TaskService } from "./modules/tasks/service";
 import type { LLMProvider } from "./providers/types";
 
 export interface AppDeps extends HealthDeps {
@@ -25,6 +30,10 @@ export interface AppDeps extends HealthDeps {
   runtime: AgentRuntime;
   projects: ProjectService;
   agents: AgentDirectory;
+  approvals: ApprovalService;
+  skills: SkillService;
+  tasks: TaskService;
+  repo: ChatRepo;
 }
 
 export function createApp(deps: AppDeps) {
@@ -35,6 +44,7 @@ export function createApp(deps: AppDeps) {
     .use(chatModule(deps))
     .use(agentsModule(deps))
     .use(projectsModule(deps))
+    .use(controlModule(deps))
     .use(realtimeModule(deps));
 }
 

@@ -34,8 +34,10 @@ export interface Usage {
   costUsd: number | null;
 }
 
-/** Structured message payloads. More card types arrive with later phases. */
-export type Card = {
+/** Structured message payloads (docs/SPEC.md section 6). */
+export type Card = RunCard | ApprovalCard | TaskCard;
+
+export interface RunCard {
   type: "run";
   agent: string;
   status: "running" | "done" | "error" | "stopped";
@@ -44,7 +46,62 @@ export type Card = {
   error: string | null;
   /** Short hash of the workspace commit made after the run, if files changed. */
   commit: string | null;
-};
+}
+
+export type ApprovalKind = "create_project" | "create_agent" | "skill_change";
+export type ApprovalStatus = "pending" | "approved" | "rejected" | "failed";
+
+export interface ApprovalCard {
+  type: "approval";
+  approvalId: string;
+  kind: ApprovalKind;
+  requestedBy: string;
+  title: string;
+  /** Markdown: why this is needed. */
+  why: string;
+  /** Markdown preview of the effect (a plan or a diff). */
+  preview: string;
+  status: ApprovalStatus;
+  /** Outcome text after the decision (e.g. what was created, or the error). */
+  result: string | null;
+}
+
+export type TaskStatus = "todo" | "doing" | "done" | "blocked";
+
+export interface TaskCard {
+  type: "task";
+  taskId: string;
+  title: string;
+  assignee: string;
+  status: TaskStatus;
+}
+
+export interface Task {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string;
+  assignee: string;
+  status: TaskStatus;
+  createdBy: string;
+  note: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SkillVersion {
+  ref: string;
+  subject: string;
+  date: string;
+}
+
+export interface Skill {
+  name: string;
+  description: string;
+  agents: string[];
+  activeRef: string | null;
+  versions: SkillVersion[];
+}
 
 export interface Message {
   id: string;

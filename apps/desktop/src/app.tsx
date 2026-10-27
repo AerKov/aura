@@ -9,10 +9,12 @@ import { ChatView } from "@/features/chat/chat-view";
 import { startRealtime } from "@/features/chat/realtime";
 import { Sidebar } from "@/features/chat/sidebar";
 import { useChatStore } from "@/features/chat/store";
+import { SkillsView } from "@/features/skills/skills-view";
 import { SERVER_URL } from "@/lib/api";
 
 export function App() {
   const activeChatId = useChatStore((s) => s.activeChatId);
+  const view = useChatStore((s) => s.view);
   const [startError, setStartError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,7 +33,9 @@ export function App() {
   return (
     <div className="flex h-screen overflow-hidden">
       <Sidebar />
-      {activeChatId ? (
+      {view === "skills" ? (
+        <SkillsView />
+      ) : activeChatId ? (
         <ChatView key={activeChatId} chatId={activeChatId} />
       ) : (
         <main className="text-muted-foreground flex flex-1 items-center justify-center p-6 text-center text-sm">

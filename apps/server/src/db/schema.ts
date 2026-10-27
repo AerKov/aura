@@ -54,6 +54,38 @@ DEFINE FIELD OVERWRITE repo_path ON project TYPE string;
 DEFINE FIELD OVERWRITE budget_usd ON project TYPE option<float>;
 DEFINE FIELD OVERWRITE created_at ON project TYPE datetime DEFAULT time::now();
 
+DEFINE TABLE OVERWRITE approval SCHEMAFULL;
+DEFINE FIELD OVERWRITE kind ON approval TYPE string;
+DEFINE FIELD OVERWRITE requested_by ON approval TYPE string;
+DEFINE FIELD OVERWRITE chat ON approval TYPE record<chat>;
+DEFINE FIELD OVERWRITE message ON approval TYPE option<record<message>>;
+DEFINE FIELD OVERWRITE title ON approval TYPE string;
+DEFINE FIELD OVERWRITE why ON approval TYPE string;
+DEFINE FIELD OVERWRITE preview ON approval TYPE string;
+DEFINE FIELD OVERWRITE payload ON approval TYPE object FLEXIBLE;
+DEFINE FIELD OVERWRITE status ON approval TYPE string ASSERT $value IN ["pending", "approved", "rejected", "failed"];
+DEFINE FIELD OVERWRITE result ON approval TYPE option<string>;
+DEFINE FIELD OVERWRITE decided_by ON approval TYPE option<string>;
+DEFINE FIELD OVERWRITE decided_at ON approval TYPE option<datetime>;
+DEFINE FIELD OVERWRITE created_at ON approval TYPE datetime DEFAULT time::now();
+
+DEFINE TABLE OVERWRITE task SCHEMAFULL;
+DEFINE FIELD OVERWRITE project ON task TYPE string;
+DEFINE FIELD OVERWRITE title ON task TYPE string;
+DEFINE FIELD OVERWRITE description ON task TYPE string;
+DEFINE FIELD OVERWRITE assignee ON task TYPE string;
+DEFINE FIELD OVERWRITE status ON task TYPE string ASSERT $value IN ["todo", "doing", "done", "blocked"];
+DEFINE FIELD OVERWRITE created_by ON task TYPE string;
+DEFINE FIELD OVERWRITE note ON task TYPE option<string>;
+DEFINE FIELD OVERWRITE message ON task TYPE option<record<message>>;
+DEFINE FIELD OVERWRITE created_at ON task TYPE datetime DEFAULT time::now();
+DEFINE FIELD OVERWRITE updated_at ON task TYPE datetime DEFAULT time::now();
+DEFINE INDEX OVERWRITE task_project ON task FIELDS project;
+
+DEFINE TABLE OVERWRITE skill_index SCHEMAFULL;
+DEFINE FIELD OVERWRITE active_ref ON skill_index TYPE string;
+DEFINE FIELD OVERWRITE updated_at ON skill_index TYPE datetime DEFAULT time::now();
+
 DEFINE TABLE OVERWRITE run SCHEMAFULL;
 DEFINE FIELD OVERWRITE agent ON run TYPE string;
 DEFINE FIELD OVERWRITE chat ON run TYPE record<chat>;

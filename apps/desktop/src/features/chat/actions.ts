@@ -36,7 +36,7 @@ export async function sendMessage(
 }
 
 export function openChat(chatId: string): void {
-  setState(() => ({ activeChatId: chatId }));
+  setState(() => ({ activeChatId: chatId, view: "chat" }));
   if (!getState().messages[chatId]) void loadMessages(chatId).catch(reportError);
 }
 
@@ -76,4 +76,24 @@ export async function recheckProvider(): Promise<void> {
 
 export async function stopRun(runId: string): Promise<void> {
   await call(() => api.runs({ runId }).stop.post());
+}
+
+export async function decideApproval(approvalId: string, approve: boolean): Promise<void> {
+  await call(() => api.approvals({ approvalId }).decide.post({ approve }));
+}
+
+export async function loadTasks(projectId: string): Promise<void> {
+  const tasks = await call(() => api.projects({ projectId }).tasks.get());
+  setState((s) => ({ tasks: { ...s.tasks, [projectId]: tasks } }));
+}
+
+export async function setTaskStatus(
+  taskId: string,
+  status: "todo" | "doing" | "done" | "blocked",
+): Promise<void> {
+  await call(() => api.tasks({ taskId }).patch({ status }));
+}
+
+export function showSkills(): void {
+  setState(() => ({ view: "skills" }));
 }

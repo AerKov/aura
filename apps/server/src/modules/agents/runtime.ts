@@ -1,5 +1,5 @@
 import { mkdirSync } from "node:fs";
-import { type Card, type Chat, type Message, parseMentions, type Usage } from "@aura/shared";
+import { type Chat, type Message, parseMentions, type RunCard, type Usage } from "@aura/shared";
 import { commitAll, git } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
 import type { AgentEvent, AgentTool, LLMProvider } from "../../providers/types";
@@ -33,8 +33,10 @@ export interface RuntimeDeps {
   provider: LLMProvider;
   agents: AgentDirectory;
   projects: ProjectLookup;
-  /** App tools for an agent (the orchestrator gets project and agent management). */
-  appTools: (handle: string) => AgentTool[];
+  /** App tools for a run (the orchestrator gets project and agent management). */
+  appTools: (ctx: { handle: string; chat: Chat; depth: number }) => AgentTool[];
+  /** Extra system prompt sections for an agent (its skills). */
+  promptExtras?: (profile: AgentProfile) => string;
   ownerName: string;
   /** Working directory for runs outside a project. */
   scratchDir: string;
@@ -262,7 +264,7 @@ export class AgentRuntime {
     let usage: Usage | null = null;
     let error: Extract<AgentEvent, { type: "error" }> | null = null;
     const toolCalls: ToolCall[] = [];
-    const card = (status: Card["status"], commit: string | null = null): Card => ({
+    const card = (status: RunCard["status"], commit: string | null = null): RunCard => ({
       type: "run",
       agent: handle,
       status,
@@ -294,7 +296,7 @@ export class AgentRuntime {
         cwd,
         confineToCwd: true,
         builtinTools: toolsFor(profile, project !== null),
-        tools: this.deps.appTools(handle),
+        tools: this.deps.appTools({ handle, chat, depth }),
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,
       },

@@ -1,10 +1,10 @@
-import type { Card } from "@aura/shared";
+import type { RunCard as RunCardData } from "@aura/shared";
 import { ChevronRight, GitCommitHorizontal, Wrench } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 /** Agent activity attached to a reply: tool calls (collapsed by default) and the workspace commit. */
-export function RunCard({ card }: { card: Card }) {
+export function RunCard({ card }: { card: RunCardData }) {
   const [open, setOpen] = useState(false);
   const failed = card.tools.filter((t) => t.isError).length;
 
