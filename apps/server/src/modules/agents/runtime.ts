@@ -9,7 +9,7 @@ import type { EngineSelector } from "../engines/registry";
 import type { ProjectInfo } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
 import { buildPrompt, CONTEXT_WINDOW, userNote } from "./context";
-import { teamRules } from "./defaults";
+import { teamRules, wakeNote } from "./defaults";
 import type { AgentDirectory } from "./directory";
 import {
   budgetLevel,
@@ -20,7 +20,7 @@ import {
 } from "./guards";
 import { type AgentProfile, ORCHESTRATOR_HANDLE } from "./profiles";
 import type { RunRepo } from "./runs";
-import { agentsToTrigger } from "./triggers";
+import { agentsToTrigger, type WakeReason } from "./triggers";
 
 export interface ProjectLookup {
   get(slug: string): Promise<ProjectInfo | null>;
@@ -64,6 +64,7 @@ interface Pending {
   chat: Chat;
   trigger: Message;
   team: string[];
+  reason: WakeReason;
 }
 
 type ToolCall = { id: string; name: string; summary: string; isError: boolean };
@@ -131,28 +132,40 @@ export class AgentRuntime {
     const agentMembers = members
       .filter((m) => m.participant.kind === "agent")
       .map((m) => m.participant.id);
-    const targets = agentsToTrigger({
+    const replied = message.replyTo
+      ? await this.deps.repo.getMessage(message.replyTo).catch(() => null)
+      : null;
+    const wakes = agentsToTrigger({
       message,
       chat,
       agentMembers,
       orchestrator: ORCHESTRATOR_HANDLE,
+      replyTarget: replied?.author ?? null,
     });
-    for (const handle of targets) this.trigger(handle, chat, message, agentMembers);
+    for (const { handle, reason } of wakes) {
+      this.trigger(handle, chat, message, agentMembers, reason);
+    }
   }
 
-  private trigger(handle: string, chat: Chat, trigger: Message, team: string[]): void {
+  private trigger(
+    handle: string,
+    chat: Chat,
+    trigger: Message,
+    team: string[],
+    reason: WakeReason = "mention",
+  ): void {
     const lane = chat.projectId ? `project:${chat.projectId}` : `${handle}@${chat.id}`;
     if (this.active.has(lane)) {
       const queue = (this.queues.get(lane) ?? []).filter(
         (p) => !(p.handle === handle && p.chat.id === chat.id),
       );
-      queue.push({ handle, chat, trigger, team });
+      queue.push({ handle, chat, trigger, team, reason });
       this.queues.set(lane, queue);
       return;
     }
     const run: ActiveRun = { runId: "", abort: new AbortController() };
     this.active.set(lane, run);
-    void this.execute(handle, chat, trigger, team, run)
+    void this.execute(handle, chat, trigger, team, run, reason)
       .catch((error: unknown) => {
         log.error("agent run crashed", {
           agent: handle,
@@ -164,7 +177,7 @@ export class AgentRuntime {
         this.active.delete(lane);
         const next = this.queues.get(lane)?.shift();
         if (next) {
-          this.trigger(next.handle, next.chat, next.trigger, next.team);
+          this.trigger(next.handle, next.chat, next.trigger, next.team, next.reason);
         } else if (this.active.size === 0) {
           for (const resolve of this.idleWaiters) resolve();
           this.idleWaiters.clear();
@@ -187,6 +200,7 @@ export class AgentRuntime {
     trigger: Message,
     team: string[],
     run: ActiveRun,
+    reason: WakeReason = "mention",
   ): Promise<void> {
     const abort = run.abort;
     const { repo, runs, hub } = this.deps;
@@ -261,13 +275,14 @@ export class AgentRuntime {
     mkdirSync(cwd, { recursive: true });
     const headBefore = project ? await headOf(project.workspace) : null;
     const history = await repo.listMessages(chat.id, { limit: CONTEXT_WINDOW + 5 });
-    const prompt = buildPrompt({
-      agentHandle: handle,
-      chatTitle: chat.title,
-      history,
-      trigger,
-      ownerName: this.deps.ownerName,
-    });
+    const prompt =
+      buildPrompt({
+        agentHandle: handle,
+        chatTitle: chat.title,
+        history,
+        trigger,
+        ownerName: this.deps.ownerName,
+      }) + wakeNote(reason, handle, team, this.deps.ownerName);
 
     const memoryNotes =
       (await this.deps.memoryPrompt?.({

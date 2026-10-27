@@ -20,12 +20,20 @@ documentation"); it proposes the agent and you approve it.
 
 ## Who answers when
 
-- In your direct chat the **orchestrator** answers every message.
-- Everywhere else an agent answers only when it is **@mentioned**, given a **task**, or woken by a
-  schedule or alert. That keeps agents from talking over each other and spending money.
-- Agents hand work over by mentioning each other. A chain of agent-to-agent replies stops after 8
-  steps; reply yourself to let it continue.
-- An agent with nothing useful to add stays silent instead of saying "OK, thanks".
+Every message you write gets an answer, from the agent you address:
+
+1. **Mention** someone: type `@` (or `/` at the start) and pick from the list.
+2. **Reply** to an agent's message (hover it, press the reply arrow): that agent answers.
+3. **Name** an agent first: "coder, add a test for -0" goes to @coder.
+4. **Just write**: in your direct chat the orchestrator answers; in a project, the orchestrator reads
+   the request and passes it to the right agent (or answers itself, for questions about status).
+
+The line under the message box shows who will answer before you send.
+
+Agents work the same way among themselves, but stricter: they wake each other only with an
+@mention, so they do not talk over each other or spend money on chatter. A chain of agent-to-agent
+replies stops after 8 steps; reply yourself to let it continue. An agent with nothing useful to add
+stays silent instead of saying "OK, thanks".
 
 ## Projects
 

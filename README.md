@@ -40,7 +40,9 @@ files in a git repository you own.
   or Aura's built-in agent on OpenRouter, Ollama or LM Studio, free options included.
 - **Approvals for side effects.** New projects and agents, skill changes, schedules, CSS, MCP servers
   and extensions all show a card with exactly what will change.
-- **Safe by default.** Agents stay inside their project folder, answer only when mentioned, stop at
+- **Talk like in a messenger.** Type `@` to pick an agent, reply to a message to answer its author,
+  or just write: the orchestrator passes it to the right agent.
+- **Safe by default.** Agents stay inside their project folder, wake each other only by mention, stop at
   their budget and treat web pages, alerts and files as data, never as instructions.
 - **Alerts and schedules.** Monitoring webhooks wake the orchestrator for triage; recurring jobs run
   agents on a schedule.

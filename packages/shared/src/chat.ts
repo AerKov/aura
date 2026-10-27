@@ -180,6 +180,43 @@ export function parseMentions(markdown: string): string[] {
   return [...found];
 }
 
+/** An agent addressed by its handle at the start of a message, like "coder, …" or "Reviewer: …". */
+export function namedFirst(body: string, handles: readonly string[]): string | null {
+  const match = /^\s*([\p{L}\p{N}_-]+)\s*[,:]/u.exec(body);
+  const word = match?.[1]?.toLowerCase();
+  return word && handles.includes(word) ? word : null;
+}
+
+/**
+ * Who a message from the user goes to (ADR 0014): the agents it mentions, else the agent it replies
+ * to, else an agent it names first, else the orchestrator (which routes it in project chats). The
+ * server wakes exactly these agents; the composer shows them before sending.
+ */
+export function addresseesOf(input: {
+  body: string;
+  chatKind: ChatKind;
+  agentMembers: readonly string[];
+  orchestrator: string;
+  replyTarget?: Participant | null;
+  /** Mentions already parsed from the body (the server stores them on the message). */
+  mentions?: readonly string[];
+}): { handles: string[]; via: "direct" | "mention" | "reply" | "named" | "routed" } {
+  const { body, chatKind, agentMembers, orchestrator } = input;
+  const mentioned = (input.mentions ?? parseMentions(body)).filter((h) => agentMembers.includes(h));
+  if (chatKind === "direct") {
+    return { handles: [...new Set([orchestrator, ...mentioned])], via: "direct" };
+  }
+  if (mentioned.length > 0) return { handles: mentioned, via: "mention" };
+  const replied = input.replyTarget;
+  if (replied?.kind === "agent" && agentMembers.includes(replied.id)) {
+    return { handles: [replied.id], via: "reply" };
+  }
+  const named = namedFirst(body, agentMembers);
+  if (named) return { handles: [named], via: "named" };
+  if (!agentMembers.includes(orchestrator)) return { handles: [], via: "routed" };
+  return { handles: [orchestrator], via: chatKind === "system" ? "direct" : "routed" };
+}
+
 /** Plain-text one-line preview of a markdown message for chat lists. */
 export function previewText(markdown: string, max = 120): string {
   const text = markdown

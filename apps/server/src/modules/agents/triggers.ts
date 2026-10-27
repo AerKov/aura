@@ -1,15 +1,28 @@
-import type { Chat, Message } from "@aura/shared";
+import { addresseesOf, type Chat, type Message, type Participant } from "@aura/shared";
+
+/** Why an agent was woken; the runtime words the agent's prompt accordingly. */
+export type WakeReason = "direct" | "mention" | "reply" | "named" | "routed";
+
+export interface Wake {
+  handle: string;
+  reason: WakeReason;
+}
 
 /**
- * Which agents a new message should wake up (docs/SPEC.md section 8, rule 1): agents reply only
- * when @mentioned, except the orchestrator, which answers every user message in the direct chat.
+ * Which agents a new message should wake up (docs/SPEC.md section 8, rule 1; ADR 0014).
+ *
+ * Agents wake each other only with @mentions (and task or alert cards). A message from the user is
+ * always addressed to someone (`addresseesOf`): the agents it mentions, else the agent it replies
+ * to, else an agent it names first, else the orchestrator, which answers or routes it.
  */
 export function agentsToTrigger(input: {
   message: Message;
   chat: Chat;
   agentMembers: string[];
   orchestrator: string;
-}): string[] {
+  /** Author of the message this one replies to, if any. */
+  replyTarget?: Participant | null;
+}): Wake[] {
   const { message, chat, agentMembers, orchestrator } = input;
   // Task and alert cards wake the agents they mention (assignee, or the orchestrator for triage).
   const wakes =
@@ -17,12 +30,25 @@ export function agentsToTrigger(input: {
     (message.kind === "card" && (message.card?.type === "task" || message.card?.type === "alert"));
   if (message.status !== "final" || !wakes) return [];
 
-  const targets = new Set<string>();
-  if (chat.kind === "direct" && message.author.kind === "user") targets.add(orchestrator);
-  for (const handle of message.mentions) {
-    if (agentMembers.includes(handle)) targets.add(handle);
+  const author = message.author;
+  if (author.kind !== "user") {
+    // Agents and bots: mentions only, never themselves (loop guard, rule 8).
+    return message.mentions
+      .filter((h) => agentMembers.includes(h))
+      .filter((h) => !(author.kind === "agent" && h === author.id))
+      .map((handle) => ({ handle, reason: "mention" as const }));
   }
-  // An agent never triggers itself.
-  if (message.author.kind === "agent") targets.delete(message.author.id);
-  return [...targets];
+
+  const { handles, via } = addresseesOf({
+    body: message.body,
+    chatKind: chat.kind,
+    agentMembers,
+    orchestrator,
+    replyTarget: input.replyTarget,
+    mentions: message.mentions,
+  });
+  return handles.map((handle) => ({
+    handle,
+    reason: via === "direct" && handle !== orchestrator ? "mention" : via,
+  }));
 }

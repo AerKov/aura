@@ -372,4 +372,59 @@ describe("team discipline", () => {
     const notices = (await messagesOf(t, chat.id)).filter((m) => m.body.startsWith("⛔"));
     expect(notices).toHaveLength(1);
   });
+  test("the user's unaddressed messages are routed: reply, name, or the orchestrator hands over", async () => {
+    const provider = new FakeProvider(
+      byAgent({
+        coder: () => "Started.",
+        reviewer: () => "Reviewed.",
+        orchestrator: () => "@reviewer please review the latest change.",
+      }),
+    );
+    const agents = new MemoryAgentDirectory([
+      ORCHESTRATOR_DEFAULT,
+      worker("coder"),
+      worker("reviewer"),
+    ]);
+    t = await createTestApp({ provider, agents });
+    const { project } = await t.projects.create({
+      name: "Routing",
+      brief: "Build it. @coder starts.",
+      agents: ["coder", "reviewer"],
+      budgetUsd: 1,
+      startWith: "coder",
+    });
+    await settle(t);
+    const chatId = project.chatId;
+    const owner = { kind: "user" as const, id: "owner" };
+    const coderMessage = (await messagesOf(t, chatId)).find((m) => m.author.id === "coder");
+    const callsBefore = provider.calls.length;
+
+    // A reply to the coder's message goes to the coder.
+    await t.chat.post({
+      chatId,
+      author: owner,
+      body: "also handle negative zero",
+      replyTo: coderMessage?.id,
+    });
+    await settle(t);
+    const replyCall = provider.calls[callsBefore];
+    expect(replyCall?.prompt).toContain("You are @coder");
+    expect(replyCall?.prompt).toContain("replied to your message");
+
+    // A message that starts with an agent's name goes to that agent.
+    await t.chat.post({ chatId, author: owner, body: "Reviewer, is it ready?" });
+    await settle(t);
+    expect(provider.calls.at(-1)?.prompt).toContain("You are @reviewer");
+
+    // Anything else goes to the orchestrator, which hands it over with a mention.
+    const before = provider.calls.length;
+    await t.chat.post({ chatId, author: owner, body: "can someone double-check the tests?" });
+    await settle(t);
+    const routed = provider.calls.slice(before);
+    expect(routed.map((c) => /You are @([a-z]+)/.exec(c.prompt)?.[1])).toEqual([
+      "orchestrator",
+      "reviewer",
+    ]);
+    expect(routed[0]?.prompt).toContain("came to you to route");
+  });
 });

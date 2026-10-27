@@ -42,6 +42,28 @@ export const ORCHESTRATOR_DEFAULT: AgentProfile = {
   skills: [],
 };
 
+/**
+ * Why the agent is answering, when the trigger message does not say it (ADR 0014). A user message in
+ * a project chat that addresses nobody comes to the orchestrator, which routes it.
+ */
+export function wakeNote(
+  reason: "direct" | "mention" | "reply" | "named" | "routed",
+  handle: string,
+  team: string[],
+  ownerName: string,
+): string {
+  if (reason === "reply") {
+    return `\n\n${ownerName} replied to your message, so this is for you. Answer them.`;
+  }
+  if (reason === "named") return `\n\n${ownerName} addressed this message to you by name.`;
+  if (reason !== "routed") return "";
+  const others = team.filter((t) => t !== handle).map((t) => `@${t}`);
+  return `\n\n${ownerName} wrote this without mentioning anyone, so it came to you to route. Decide who should handle it:
+- If it is for one teammate (${others.join(", ") || "none here"}), judging by the request and the recent conversation, hand it over: one short line that @mentions exactly that agent and restates what ${ownerName} wants. Do not do their work.
+- If it is a question for you (status, plan, summary) or needs nobody, answer ${ownerName} briefly yourself.
+- Never reply \`[no reply]\` to ${ownerName}.`;
+}
+
 /** Rules appended to every non-orchestrator agent's prompt, so orchestrator-written prompts stay short. */
 export function teamRules(handle: string, teammates: string[]): string {
   const others = teammates.filter((t) => t !== handle).map((t) => `@${t}`);

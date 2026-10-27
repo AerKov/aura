@@ -5,6 +5,11 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- Conversation flow: typing `@` (or `/` at the start) suggests the chat's agents; replying to an
+  agent's message wakes that agent; a message that starts with an agent's name goes to it; anything
+  else in a project goes to the orchestrator, which passes it to the right agent. The composer shows
+  who will answer before you send. Messages in the alerts chat are answered by the orchestrator.
+
 - Agent memory: agents remember notes across runs (their own, and shared per project) and get the
   relevant ones in every run; keyword search in any language, optional semantic search with a local
   embedding model; Memory screen to review and delete notes.

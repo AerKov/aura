@@ -46,8 +46,17 @@ export async function loadMembers(chatId: string): Promise<void> {
 }
 
 export async function loadProjects(): Promise<void> {
-  const projects = await call(() => api.projects.get());
-  setState(() => ({ projects: Object.fromEntries(projects.map((p) => [p.id, p])) }));
+  // Agents change together with projects (a project's plan creates them).
+  const [projects, agents] = await Promise.all([
+    call(() => api.projects.get()),
+    call(() => api.agents.get()),
+  ]);
+  setState(() => ({
+    projects: Object.fromEntries(projects.map((p) => [p.id, p])),
+    agents: Object.fromEntries(
+      agents.map((a) => [a.handle, { handle: a.handle, name: a.name, role: a.role }]),
+    ),
+  }));
 }
 
 let projectsTimer: ReturnType<typeof setTimeout> | undefined;

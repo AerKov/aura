@@ -11,6 +11,13 @@ import { useSyncExternalStore } from "react";
 
 export type Connection = "connecting" | "open" | "closed";
 
+/** An agent as the composer shows it in @mention suggestions. */
+export interface AgentInfo {
+  handle: string;
+  name: string;
+  role: string;
+}
+
 export interface ChatState {
   me: { id: string; name: string } | null;
   chats: Record<string, Chat>;
@@ -27,6 +34,7 @@ export interface ChatState {
     | null;
   projects: Record<string, Project>;
   members: Record<string, Participant[]>;
+  agents: Record<string, AgentInfo>;
   tasks: Record<string, Task[]>;
   /** "ext:<id>" shows an extension panel. */
   view:
@@ -56,6 +64,7 @@ let state: ChatState = {
   provider: null,
   projects: {},
   members: {},
+  agents: {},
   tasks: {},
   view: "chat",
   appearance: null,

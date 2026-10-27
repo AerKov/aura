@@ -168,6 +168,7 @@ export function ChatView({ chatId }: { chatId: string }) {
         {chat.kind === "direct" && <SetupPanel />}
         <Composer
           chatId={chatId}
+          chatKind={chat.kind}
           replyTo={replyTo}
           onCancelReply={() => setReplyTo(null)}
           placeholder={chat.kind === "direct" ? "What do you have in mind?" : undefined}

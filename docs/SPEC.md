@@ -179,7 +179,10 @@ login ourselves.
 
 ## 8. Conversation rules
 
-1. Agents reply only when @mentioned or assigned. No reacting to every message.
+1. Agents reply only when addressed: @mentioned or assigned a task by anyone, or addressed by the user.
+   A user's message always has one addressee (ADR 0014): the agents it mentions, else the agent it
+   replies to, else an agent named first ("coder, …"), else the orchestrator, which routes it.
+   Agents wake each other only by @mention. No reacting to every message.
 2. Max chain depth for agent-to-agent exchanges (default 8). On reaching it: stop and escalate to the
    orchestrator, then to the user.
 3. Budgets per agent and per project (tokens and USD). Warning at 80%, hard stop at 100%.
@@ -313,6 +316,11 @@ shell and web tools (ADR 0011).
 Agents remember notes across runs (`remember`, `recall`, `forget`), per agent and per project;
 relevant notes are added to each run. Keyword search everywhere, semantic search with a local
 embedding model; a Memory screen to review and delete (ADR 0013).
+
+**Phase 11: Conversation flow**
+@mention suggestions in the composer (also `/name`), a reply wakes the agent replied to, a message
+that names an agent goes to it, and the orchestrator routes the rest; the composer shows who will
+answer before sending (ADR 0014).
 
 **Later**
 Memory summaries with vector search, container sandbox,

@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { parseMentions, previewText, SLUG_PATTERN, slugify } from "./chat";
+import {
+  addresseesOf,
+  namedFirst,
+  parseMentions,
+  previewText,
+  SLUG_PATTERN,
+  slugify,
+} from "./chat";
 
 describe("parseMentions", () => {
   test("finds handles in order, unique and lowercase", () => {
@@ -40,5 +47,45 @@ describe("slugify", () => {
     expect(slugify("  Café --- déjà vu ")).toBe("cafe-deja-vu");
     expect(slugify("Лічильник слів")).toBe("");
     expect(SLUG_PATTERN.test(slugify("x".repeat(80)))).toBe(true);
+  });
+});
+
+describe("addresseesOf", () => {
+  const base = {
+    agentMembers: ["orchestrator", "coder", "reviewer"],
+    orchestrator: "orchestrator",
+  };
+  test("mentions, then the replied agent, then a name, then the orchestrator routes", () => {
+    expect(addresseesOf({ ...base, body: "@coder and @reviewer go", chatKind: "group" })).toEqual({
+      handles: ["coder", "reviewer"],
+      via: "mention",
+    });
+    expect(
+      addresseesOf({
+        ...base,
+        body: "why?",
+        chatKind: "group",
+        replyTarget: { kind: "agent", id: "coder" },
+      }),
+    ).toEqual({ handles: ["coder"], via: "reply" });
+    expect(addresseesOf({ ...base, body: "reviewer: look", chatKind: "group" })).toEqual({
+      handles: ["reviewer"],
+      via: "named",
+    });
+    expect(addresseesOf({ ...base, body: "who can help?", chatKind: "group" })).toEqual({
+      handles: ["orchestrator"],
+      via: "routed",
+    });
+    expect(addresseesOf({ ...base, body: "hi", chatKind: "direct" })).toEqual({
+      handles: ["orchestrator"],
+      via: "direct",
+    });
+    expect(addresseesOf({ ...base, body: "what is this alert?", chatKind: "system" }).via).toBe(
+      "direct",
+    );
+    expect(
+      addresseesOf({ ...base, agentMembers: ["coder"], body: "x", chatKind: "group" }).handles,
+    ).toEqual([]);
+    expect(namedFirst("Coder, hi", ["coder"])).toBe("coder");
   });
 });

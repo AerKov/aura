@@ -46,8 +46,9 @@ The project gets its own chat and its own folder (a git repository). Agents ment
 hand work over, every run shows a card with the tools it used and what it cost, and the files are
 committed after each run. The budget ring in the chat header shows how much is left.
 
-You can step in at any time: reply to a message, mention an agent (`@coder please also handle
-negative zero`), or press **Stop** on a running reply.
+You can step in at any time: just write in the project chat and the orchestrator passes it to the
+right agent, reply to an agent's message to answer it, or type `@` to pick an agent yourself. Press
+**Stop** on a running reply to end it.
 
 ## Next
 
