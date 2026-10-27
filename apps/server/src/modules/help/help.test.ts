@@ -46,7 +46,7 @@ describe("the orchestrator knows Aura", () => {
     expect(integrations).toContain("## Secrets");
     // Wiki links become topic hints.
     expect(integrations).toContain('(topic "approvals-and-safety")');
-    expect(await run(docs, { search: "allowed hosts" })).toContain("[integrations]");
+    expect(await run(docs, { search: "proxy settings" })).toContain("[integrations]");
     expect(await run(docs, { topic: "nope" })).toContain("No topic");
   });
 

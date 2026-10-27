@@ -7,7 +7,7 @@ import { proxyEnv } from "../../lib/proxy";
 import type { McpServerSpec } from "../../providers/types";
 import type { AgentDirectory } from "../agents/directory";
 import type { ApprovalRecord, ApprovalService } from "../approvals/service";
-import { resolveEnv, validateEnvMap } from "../integrations/env";
+import { resolveEnv, resolveTemplates, validateEnvMap, validateHeaders } from "../integrations/env";
 import type { SecretStore } from "../integrations/secrets";
 
 export class McpError extends Error {
@@ -20,6 +20,8 @@ export interface McpServerConfig {
   /** Values must be `${env:NAME}` references: secrets never go into the git repo. */
   env?: Record<string, string>;
   url?: string;
+  /** Headers for a server at a URL; credentials only as `${secret:…}` references. */
+  headers?: Record<string, string>;
   agents: string[];
 }
 
@@ -38,7 +40,8 @@ export function validateServer(name: string, value: unknown): McpServerConfig {
     throw new McpError(`${name}: agents must be a list of handles`);
   if (typeof v.url === "string") {
     if (!/^https?:\/\/[^\s]+$/.test(v.url)) throw new McpError(`${name}: url must be http(s)`);
-    return { url: v.url, agents };
+    const headers = validateHeaders(v.headers, (message) => new McpError(`${name}: ${message}`));
+    return { url: v.url, ...(Object.keys(headers).length > 0 ? { headers } : {}), agents };
   }
   if (typeof v.command !== "string" || !v.command.trim())
     throw new McpError(`${name}: command or url is required`);
@@ -112,7 +115,13 @@ export class McpService {
     for (const [name, s] of Object.entries(this.servers())) {
       if (!s.agents.includes(handle)) continue;
       if (s.url) {
-        out[name] = { type: "http", url: s.url };
+        const { values, missing } = resolveTemplates(s.headers ?? {}, {
+          secret: (n) => this.deps.secrets?.get(n) ?? null,
+          env,
+        });
+        if (missing.length > 0)
+          log.warn("mcp server connects without some headers", { server: name, missing });
+        out[name] = { type: "http", url: s.url, headers: values };
       } else if (s.command) {
         const { values, missing } = resolveEnv(s.env ?? {}, {
           secret: (n) => this.deps.secrets?.get(n) ?? null,
@@ -199,8 +208,14 @@ export class McpService {
   specOf(name: string): { spec: McpServerSpec; missing: string[] } | null {
     const s = this.servers()[name];
     if (!s) return null;
-    if (s.url) return { spec: { type: "http", url: s.url }, missing: [] };
     const env = this.deps.env ?? process.env;
+    if (s.url) {
+      const { values, missing } = resolveTemplates(s.headers ?? {}, {
+        secret: (n) => this.deps.secrets?.get(n) ?? null,
+        env,
+      });
+      return { spec: { type: "http", url: s.url, headers: values }, missing };
+    }
     const { values, missing } = resolveEnv(s.env ?? {}, {
       secret: (n) => this.deps.secrets?.get(n) ?? null,
       env,

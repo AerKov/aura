@@ -106,12 +106,18 @@ export function IntegrationsView() {
                   server={server}
                   onEdit={() => setEditing(server)}
                   onRemoved={() => void load()}
+                  onChanged={() => void load()}
                 />
               ),
             )}
           </ul>
         )}
 
+        <VariableSets
+          sets={data?.variableSets ?? []}
+          secrets={data?.secrets ?? []}
+          onChanged={() => void load()}
+        />
         <Secrets names={data?.secrets ?? []} onChanged={() => void load()} />
         <HostCheck />
       </div>
@@ -123,10 +129,12 @@ function ServerCard({
   server,
   onEdit,
   onRemoved,
+  onChanged,
 }: {
   server: Server;
   onEdit: () => void;
   onRemoved: () => void;
+  onChanged: () => void;
 }) {
   const [probe, setProbe] = useState<Probe | null>(null);
   const [busy, setBusy] = useState(false);
@@ -136,6 +144,29 @@ function ServerCard({
     setBusy(true);
     setProbe(null);
     try {
+      setProbe(await testServer(server.name));
+    } catch (error) {
+      reportError(error);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Gives the server the stored secrets it asked for, then tests again.
+  const give = async (names: string[]) => {
+    setBusy(true);
+    try {
+      const env = Object.fromEntries(server.env.map((e) => [e.name, e.value]));
+      for (const n of names) env[n] = ["$", "{secret:", n, "}"].join("");
+      await call(() =>
+        api.integrations.mcp({ name: server.name }).put({
+          command: server.command ?? undefined,
+          args: server.args,
+          env,
+          agents: server.agents,
+        }),
+      );
+      onChanged();
       setProbe(await testServer(server.name));
     } catch (error) {
       reportError(error);
@@ -206,12 +237,20 @@ function ServerCard({
           </Button>
         </div>
       </div>
-      {probe && <ProbeResult probe={probe} />}
+      {probe && <ProbeResult probe={probe} busy={busy} onGive={(names) => void give(names)} />}
     </li>
   );
 }
 
-function ProbeResult({ probe }: { probe: Probe }) {
+function ProbeResult({
+  probe,
+  busy,
+  onGive,
+}: {
+  probe: Probe;
+  busy: boolean;
+  onGive: (names: string[]) => void;
+}) {
   return (
     <div className="bg-background mt-3 rounded-xl border p-3 text-[13px]">
       <p
@@ -231,6 +270,16 @@ function ProbeResult({ probe }: { probe: Probe }) {
       </p>
       {probe.ok && probe.error && (
         <p className="mt-1 text-amber-600 dark:text-amber-400">{probe.error}</p>
+      )}
+      {probe.unpassed.length > 0 && (
+        <Button
+          size="sm"
+          className="mt-2 rounded-full"
+          disabled={busy}
+          onClick={() => onGive(probe.unpassed)}
+        >
+          <KeyRound /> Give {probe.unpassed.join(", ")} to this server
+        </Button>
       )}
       {probe.tools.length > 0 && (
         <ul className="mt-2 space-y-0.5">
@@ -273,6 +322,9 @@ function ServerForm({
   const [args, setArgs] = useState((server?.args ?? []).join("\n"));
   const [url, setUrl] = useState(server?.url ?? "");
   const [env, setEnv] = useState<EnvRow[]>(rowsFromEnv(server?.env ?? []));
+  const [headers, setHeaders] = useState<HeaderRow[]>(
+    (server?.headers ?? []).map((h) => ({ id: crypto.randomUUID(), name: h.name, value: h.value })),
+  );
   const [agents, setAgents] = useState<string[]>(server?.agents ?? []);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -288,7 +340,13 @@ function ServerForm({
       await call(() =>
         api.integrations.mcp({ name: name.trim() }).put(
           kind === "http"
-            ? { url: url.trim(), agents }
+            ? {
+                url: url.trim(),
+                headers: Object.fromEntries(
+                  headers.filter((h) => h.name.trim()).map((h) => [h.name.trim(), h.value]),
+                ),
+                agents,
+              }
             : {
                 command: command.trim(),
                 args: args
@@ -315,7 +373,7 @@ function ServerForm({
           <span className="kicker mb-1 block">Name</span>
           <input
             className={cn(inputClass, "w-full font-mono text-[13px]")}
-            placeholder="redmine"
+            placeholder="tracker"
             value={name}
             disabled={Boolean(server)}
             onChange={(e) => setName(e.target.value.toLowerCase())}
@@ -354,7 +412,7 @@ function ServerForm({
               <span className="kicker mb-1 block">Arguments, one per line</span>
               <textarea
                 className={cn(inputClass, "h-20 w-full font-mono text-[13px]")}
-                placeholder="/home/me/redmine-mcp/server.py"
+                placeholder="/path/to/server.py"
                 value={args}
                 onChange={(e) => setArgs(e.target.value)}
               />
@@ -374,6 +432,12 @@ function ServerForm({
               onChange={(e) => setUrl(e.target.value)}
             />
           </label>
+        )}
+        {kind === "http" && (
+          <div>
+            <span className="kicker mb-1 block">Headers</span>
+            <HeadersEditor rows={headers} secrets={secrets} onChange={setHeaders} />
+          </div>
         )}
         <div>
           <span className="kicker mb-1 block">Agents that get its tools</span>
@@ -441,8 +505,10 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
     <section className="mb-8">
       <h2 className="kicker mb-1">Secrets</h2>
       <p className="text-muted-foreground mb-3 text-[13px]">
-        Keys and passwords for integrations and agents' commands. They stay on this computer,
-        outside your data folder's history, and are never shown again: use them as{" "}
+        Keys and passwords, kept on this computer, outside your data folder's history, and never
+        shown again. A secret does nothing on its own: give it to an agent as a variable on the
+        Agents page (or to a server above), where stored secrets are one click away. In files it
+        appears as{" "}
         <code className="font-mono">
           {"$"}
           {"{secret:NAME}"}
@@ -480,7 +546,7 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
         >
           <input
             className={cn(inputClass, "min-w-40 flex-1 font-mono text-[13px]")}
-            placeholder="REDMINE_API_KEY"
+            placeholder="SERVICE_API_KEY"
             value={name}
             onChange={(e) => setName(e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "_"))}
           />
@@ -544,7 +610,7 @@ function HostCheck() {
             <Globe className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
             <input
               className={cn(inputClass, "w-full pl-9 font-mono text-[13px]")}
-              placeholder="https://redmine.example.com"
+              placeholder="https://service.example.com"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
             />
@@ -590,5 +656,305 @@ function HostCheck() {
         )}
       </div>
     </section>
+  );
+}
+
+interface HeaderRow {
+  id: string;
+  name: string;
+  value: string;
+}
+
+/** Headers for a server at a URL; credentials come from stored secrets, never typed in here. */
+function HeadersEditor({
+  rows,
+  secrets,
+  onChange,
+}: {
+  rows: HeaderRow[];
+  secrets: string[];
+  onChange: (rows: HeaderRow[]) => void;
+}) {
+  const ref = (name: string) => ["$", "{secret:", name, "}"].join("");
+  const update = (id: string, patch: Partial<HeaderRow>) =>
+    onChange(rows.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  return (
+    <div className="space-y-2">
+      {rows.map((row) => (
+        <div key={row.id} className="flex flex-wrap items-center gap-2">
+          <input
+            className={cn(inputClass, "w-44 font-mono text-[13px]")}
+            placeholder="Authorization"
+            value={row.name}
+            onChange={(e) => update(row.id, { name: e.target.value.replace(/[^A-Za-z0-9-]/g, "") })}
+          />
+          <input
+            className={cn(inputClass, "min-w-48 flex-1 font-mono text-[13px]")}
+            placeholder={`Bearer ${ref("SERVICE_TOKEN")}`}
+            value={row.value}
+            onChange={(e) => update(row.id, { value: e.target.value })}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`Remove ${row.name || "header"}`}
+            onClick={() => onChange(rows.filter((r) => r.id !== row.id))}
+          >
+            <Trash2 />
+          </Button>
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="rounded-full"
+          onClick={() => onChange([...rows, { id: crypto.randomUUID(), name: "", value: "" }])}
+        >
+          <Plus /> Add header
+        </Button>
+        {secrets.map((s) => (
+          <button
+            key={s}
+            type="button"
+            title={`Authorization: Bearer ${ref(s)}`}
+            onClick={() =>
+              onChange([
+                ...rows.filter((r) => r.name.toLowerCase() !== "authorization"),
+                { id: crypto.randomUUID(), name: "Authorization", value: `Bearer ${ref(s)}` },
+              ])
+            }
+            className="hover:bg-accent/60 flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px]"
+          >
+            <KeyRound className="size-3" /> Bearer {s}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type VariableSet = Overview["variableSets"][number];
+
+/** Agents to give something to, as toggles. */
+function AgentPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const agentMap = useChatStore((s) => s.agents);
+  const agents = useMemo(
+    () => Object.values(agentMap).filter((a) => a.handle !== "orchestrator"),
+    [agentMap],
+  );
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {agents.map((a) => {
+        const on = value.includes(a.handle);
+        return (
+          <button
+            key={a.handle}
+            type="button"
+            aria-pressed={on}
+            onClick={() =>
+              onChange(on ? value.filter((x) => x !== a.handle) : [...value, a.handle])
+            }
+            className={cn(
+              "rounded-full border px-2.5 py-1 font-mono text-[12px] transition-colors",
+              on ? "border-primary bg-primary/10 text-primary" : "hover:bg-accent/60",
+            )}
+          >
+            @{a.handle}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Variables for command-line tools and scripts (ADR 0020): a service's address and token, given to
+ * the agents that use it. Each agent's own variables, on the Agents page, win on a clash.
+ */
+function VariableSets({
+  sets,
+  secrets,
+  onChanged,
+}: {
+  sets: VariableSet[];
+  secrets: string[];
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState<VariableSet | "new" | null>(null);
+
+  const remove = async (name: string) => {
+    if (!window.confirm(`Remove the variables "${name}"?`)) return;
+    try {
+      await call(() => api.integrations.variables({ name }).delete());
+      onChanged();
+    } catch (error) {
+      reportError(error);
+    }
+  };
+
+  return (
+    <section className="mb-8">
+      <div className="mb-1 flex items-center justify-between">
+        <h2 className="kicker">Variables for commands</h2>
+        {editing === null && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => setEditing("new")}
+          >
+            <Plus /> Add variables
+          </Button>
+        )}
+      </div>
+      <p className="text-muted-foreground mb-3 text-[13px]">
+        For command-line tools and scripts agents run with Bash (git hosts, trackers, databases,
+        your own scripts): a service's address and token, given to the agents that use it.
+      </p>
+      {editing === "new" && (
+        <VariableSetForm
+          secrets={secrets}
+          onDone={() => {
+            setEditing(null);
+            onChanged();
+          }}
+        />
+      )}
+      <ul className="grid gap-3">
+        {sets.map((set) =>
+          editing !== "new" && editing?.name === set.name ? (
+            <VariableSetForm
+              key={set.name}
+              set={set}
+              secrets={secrets}
+              onDone={() => {
+                setEditing(null);
+                onChanged();
+              }}
+            />
+          ) : (
+            <li key={set.name} className="bg-card flex items-start gap-3 rounded-2xl border p-4">
+              <div className="min-w-0 flex-1">
+                <div className="font-medium">{set.name}</div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {set.env.map((e) => (
+                    <span
+                      key={e.name}
+                      title={e.set ? "Has a value" : "No value: set it under Secrets"}
+                      className={cn(
+                        "rounded-full border px-2 py-0.5 font-mono text-[11px]",
+                        !e.set && "border-amber-500/50 text-amber-600 dark:text-amber-400",
+                      )}
+                    >
+                      {e.name}
+                    </span>
+                  ))}
+                  {set.agents.length === 0 ? (
+                    <span className="text-xs text-amber-600 dark:text-amber-400">
+                      No agent has it yet
+                    </span>
+                  ) : (
+                    set.agents.map((a) => (
+                      <span
+                        key={a}
+                        className="bg-muted rounded-full px-2 py-0.5 font-mono text-[11px]"
+                      >
+                        @{a}
+                      </span>
+                    ))
+                  )}
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => setEditing(set)}>
+                <Pencil />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Remove"
+                onClick={() => void remove(set.name)}
+              >
+                <Trash2 />
+              </Button>
+            </li>
+          ),
+        )}
+      </ul>
+    </section>
+  );
+}
+
+function VariableSetForm({
+  set,
+  secrets,
+  onDone,
+}: {
+  set?: VariableSet;
+  secrets: string[];
+  onDone: () => void;
+}) {
+  const [name, setName] = useState(set?.name ?? "");
+  const [env, setEnv] = useState<EnvRow[]>(rowsFromEnv(set?.env ?? []));
+  const [agents, setAgents] = useState<string[]>(set?.agents ?? []);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const save = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const { env: envMap, secrets: newSecrets } = envFromRows(env);
+      for (const [secret, value] of Object.entries(newSecrets)) {
+        await call(() => api.integrations.secrets({ name: secret }).put({ value }));
+      }
+      await call(() =>
+        api.integrations.variables({ name: name.trim() }).put({ env: envMap, agents }),
+      );
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="bg-card mb-3 rounded-2xl border p-4">
+      <div className="grid gap-3">
+        <label className="block">
+          <span className="kicker mb-1 block">Name</span>
+          <input
+            className={cn(inputClass, "w-full font-mono text-[13px]")}
+            placeholder="git-host"
+            value={name}
+            disabled={Boolean(set)}
+            onChange={(e) => setName(e.target.value.toLowerCase())}
+          />
+        </label>
+        <div>
+          <span className="kicker mb-1 block">Variables</span>
+          <EnvEditor rows={env} secrets={secrets} onChange={setEnv} />
+        </div>
+        <div>
+          <span className="kicker mb-1 block">Agents whose commands get them</span>
+          <AgentPicker value={agents} onChange={setAgents} />
+        </div>
+      </div>
+      {error && <p className="text-destructive mt-3 text-xs">{error}</p>}
+      <div className="mt-4 flex gap-2">
+        <Button
+          size="sm"
+          className="rounded-full"
+          disabled={busy || !name.trim()}
+          onClick={() => void save()}
+        >
+          {busy ? <RefreshCw className="animate-spin" /> : <Check />} Save
+        </Button>
+        <Button variant="ghost" size="sm" className="rounded-full" onClick={onDone}>
+          <X /> Cancel
+        </Button>
+      </div>
+    </div>
   );
 }

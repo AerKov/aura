@@ -216,6 +216,29 @@ function AgentCard({ handle }: { handle: string }) {
           secrets: kept out of files and hidden in chat.
         </p>
         <EnvEditor rows={env} secrets={secrets} onChange={setEnv} />
+        {status.sharedEnv.length > 0 && (
+          <div className="mt-3">
+            <p className="text-muted-foreground mb-1 text-xs">
+              Also from variables on the Integrations page:
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {status.sharedEnv.map((e) => (
+                <span
+                  key={e.name}
+                  title={
+                    e.set ? `From "${e.from}"` : `From "${e.from}", no value: set it under Secrets`
+                  }
+                  className={cn(
+                    "rounded-full border px-2 py-0.5 font-mono text-[11px]",
+                    !e.set && "border-amber-500/50 text-amber-600 dark:text-amber-400",
+                  )}
+                >
+                  {e.name} <span className="text-muted-foreground">· {e.from}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {error && <p className="text-destructive mt-3 text-xs">{error}</p>}
         <div className="mt-4">

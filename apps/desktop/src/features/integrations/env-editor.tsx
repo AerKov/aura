@@ -77,6 +77,9 @@ export function EnvEditor({
 }) {
   const update = (i: number, patch: Partial<EnvRow>) =>
     onChange(rows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  // Secrets do nothing until a variable refers to them; offer the ones not used here yet.
+  const used = new Set(rows.map((r) => SECRET_REF.exec(r.value)?.[1] ?? r.name));
+  const unused = secrets.filter((s) => !used.has(s));
 
   return (
     <div className="space-y-2">
@@ -84,7 +87,7 @@ export function EnvEditor({
         <div key={row.id} className="flex flex-wrap items-center gap-2">
           <input
             className={cn(inputClass, "w-48 font-mono text-[13px]")}
-            placeholder="REDMINE_URL"
+            placeholder="SERVICE_URL"
             value={row.name}
             onChange={(e) => {
               const name = e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "_");
@@ -109,7 +112,7 @@ export function EnvEditor({
           ) : (
             <input
               className={cn(inputClass, "min-w-40 flex-1 font-mono text-[13px]")}
-              placeholder="https://redmine.example.com"
+              placeholder="https://service.example.com"
               value={row.value}
               onChange={(e) => update(i, { value: e.target.value })}
             />
@@ -156,6 +159,34 @@ export function EnvEditor({
       >
         <Plus /> Add variable
       </Button>
+      {unused.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+          <span className="text-muted-foreground text-xs">Stored secrets:</span>
+          {unused.map((name) => (
+            <button
+              key={name}
+              type="button"
+              title={`Give ${name} to these commands`}
+              onClick={() =>
+                onChange([
+                  ...rows,
+                  {
+                    id: crypto.randomUUID(),
+                    name,
+                    value: secretRef(name),
+                    secret: true,
+                    secretValue: "",
+                    set: true,
+                  },
+                ])
+              }
+              className="hover:bg-accent/60 flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px]"
+            >
+              <Plus className="size-3" /> {name}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import type { LocalSessions } from "../auth/sessions";
 import { McpError } from "../customize/mcp";
 import { SecretError } from "./secrets";
 import { IntegrationError, type IntegrationsService } from "./service";
+import { VariableSetError } from "./variables";
 
 export interface IntegrationsDeps {
   sessions: LocalSessions;
@@ -19,7 +20,8 @@ function userError(error: unknown): string | null {
   return error instanceof IntegrationError ||
     error instanceof McpError ||
     error instanceof SecretError ||
-    error instanceof ProfileError
+    error instanceof ProfileError ||
+    error instanceof VariableSetError
     ? error.message
     : null;
 }
@@ -47,6 +49,7 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
           command: t.Optional(t.String({ maxLength: 500 })),
           args: t.Optional(t.Array(t.String({ maxLength: 500 }), { maxItems: 50 })),
           url: t.Optional(t.String({ maxLength: 500 })),
+          headers: t.Optional(t.Record(t.String({ maxLength: 64 }), t.String({ maxLength: 2000 }))),
           env: t.Optional(ENV),
           agents: t.Array(HANDLE, { maxItems: 50 }),
         }),
@@ -57,6 +60,38 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
       async ({ params, status }) => {
         try {
           await integrations.removeServer(params.name);
+          return { ok: true };
+        } catch (error) {
+          const message = userError(error);
+          if (message !== null) return status(400, { error: message });
+          throw error;
+        }
+      },
+      { auth: true, params: t.Object({ name: NAME }) },
+    )
+    .put(
+      "/integrations/variables/:name",
+      async ({ params, body, status }) => {
+        try {
+          await integrations.saveVariables(params.name, body);
+          return { ok: true };
+        } catch (error) {
+          const message = userError(error);
+          if (message !== null) return status(400, { error: message });
+          throw error;
+        }
+      },
+      {
+        auth: true,
+        params: t.Object({ name: NAME }),
+        body: t.Object({ env: ENV, agents: t.Array(HANDLE, { maxItems: 50 }) }),
+      },
+    )
+    .delete(
+      "/integrations/variables/:name",
+      async ({ params, status }) => {
+        try {
+          await integrations.removeVariables(params.name);
           return { ok: true };
         } catch (error) {
           const message = userError(error);

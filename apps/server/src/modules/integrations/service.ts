@@ -11,8 +11,9 @@ import type { ChatRepo } from "../chat/repo";
 import type { McpService } from "../customize/mcp";
 import { type EngineSelector, engineKind, engineLabel } from "../engines/registry";
 import type { SandboxService } from "../sandbox/service";
-import { looksSecret, redact } from "./env";
+import { looksSecret, redact, resolveTemplates } from "./env";
 import type { SecretStore } from "./secrets";
+import type { VariableSets } from "./variables";
 
 export class IntegrationError extends Error {
   override name = "IntegrationError";
@@ -35,7 +36,10 @@ export interface AgentStatus {
   tools: string[];
   /** Granted tools this engine does not provide. */
   unsupported: string[];
+  /** The agent's own variables. */
   env: EnvEntry[];
+  /** Variables from shared sets on the Integrations page; the agent's own win on a clash. */
+  sharedEnv: (EnvEntry & { from: string })[];
   mcpServers: { name: string; target: string }[];
   chats: { id: string; title: string }[];
   lastRun: { status: string; error: string | null; at: string } | null;
@@ -80,6 +84,7 @@ export class IntegrationsService {
       runs: RunRepo;
       repo: ChatRepo;
       sandbox: SandboxService;
+      variables: VariableSets;
       env?: Record<string, string | undefined>;
     },
   ) {}
@@ -97,9 +102,28 @@ export class IntegrationsService {
     });
   }
 
+  /** Headers as configured (references, never values), with whether each resolves now. */
+  private headerEntries(map: Record<string, string>): EnvEntry[] {
+    const env = this.deps.env ?? process.env;
+    const { missing } = resolveTemplates(map, {
+      secret: (n) => this.deps.secrets.get(n),
+      env,
+    });
+    return Object.entries(map).map(([name, value]) => ({
+      name,
+      value,
+      set: !missing.includes(name),
+    }));
+  }
+
   overview() {
     const servers = this.deps.mcp.servers();
     return {
+      variableSets: Object.entries(this.deps.variables.list()).map(([name, set]) => ({
+        name,
+        env: this.envEntries(set.env),
+        agents: set.agents,
+      })),
       servers: Object.entries(servers).map(([name, s]) => ({
         name,
         kind: s.url ? ("http" as const) : ("stdio" as const),
@@ -107,6 +131,7 @@ export class IntegrationsService {
         args: s.args ?? [],
         url: s.url ?? null,
         env: this.envEntries(s.env ?? {}),
+        headers: this.headerEntries(s.headers ?? {}),
         agents: s.agents,
       })),
       secrets: this.deps.secrets.names(),
@@ -119,12 +144,13 @@ export class IntegrationsService {
       command?: string;
       args?: string[];
       url?: string;
+      headers?: Record<string, string>;
       env?: Record<string, string>;
       agents: string[];
     },
   ): Promise<string> {
     const config = input.url
-      ? { url: input.url, agents: input.agents }
+      ? { url: input.url, headers: input.headers ?? {}, agents: input.agents }
       : {
           command: input.command,
           args: input.args ?? [],
@@ -134,29 +160,46 @@ export class IntegrationsService {
     return this.deps.mcp.save(name, config, "owner");
   }
 
+  saveVariables(name: string, input: { env: Record<string, string>; agents: string[] }) {
+    return this.deps.variables.save(name, input, "owner");
+  }
+
+  removeVariables(name: string): Promise<void> {
+    return this.deps.variables.remove(name, "owner");
+  }
+
   removeServer(name: string): Promise<void> {
     return this.deps.mcp.remove(name, "owner");
   }
 
   /** Starts the server once, as an agent's run would, and reports its tools or what failed. */
-  async testServer(name: string): Promise<McpProbe & { missing: string[] }> {
+  async testServer(name: string): Promise<McpProbe & { missing: string[]; unpassed: string[] }> {
     const found = this.deps.mcp.specOf(name);
     if (!found) throw new IntegrationError(`No MCP server "${name}"`);
     const probe = await probeMcpServer(found.spec);
     const secrets = this.deps.secrets.values();
-    const hint =
+    // Stored secrets the server talks about (in its log or error) but was not given: the usual
+    // reason a server "works" yet complains about missing configuration.
+    const given = new Set(Object.keys(this.deps.mcp.servers()[name]?.env ?? {}));
+    const said = `${probe.log}\n${probe.error ?? ""}`;
+    const unpassed = this.deps.secrets
+      .names()
+      .filter((n) => !given.has(n) && new RegExp(`\\b${n}\\b`).test(said));
+    const hints = [
       found.missing.length > 0
-        ? ` These variables have no value: ${found.missing.join(", ")}. Set them under Secrets.`
-        : "";
+        ? `These variables have no value: ${found.missing.join(", ")}. Set them under Secrets.`
+        : "",
+      unpassed.length > 0
+        ? `The server asks for ${unpassed.join(", ")}, which you stored as secrets but did not give to this server.`
+        : "",
+    ].filter(Boolean);
+    const errors = [probe.error ? redact(probe.error, secrets) : "", ...hints].filter(Boolean);
     return {
       ...probe,
-      error: probe.error
-        ? redact(probe.error, secrets) + hint
-        : found.missing.length
-          ? hint.trim()
-          : null,
+      error: errors.length > 0 ? errors.join(" ") : null,
       log: redact(probe.log, secrets),
       missing: found.missing,
+      unpassed,
     };
   }
 
@@ -174,7 +217,7 @@ export class IntegrationsService {
     try {
       url = new URL(raw.trim());
     } catch {
-      throw new IntegrationError(`"${raw}" is not a URL like https://redmine.example.com`);
+      throw new IntegrationError(`"${raw}" is not a URL like https://service.example.com`);
     }
     if (url.protocol !== "http:" && url.protocol !== "https:")
       throw new IntegrationError("Only http(s) addresses can be checked");
@@ -242,7 +285,12 @@ export class IntegrationsService {
     const supported: readonly string[] =
       kind === "aura" ? NATIVE_BUILTINS : kind === "official" ? BUILTIN_TOOLS : BUILTIN_TOOLS;
     const unsupported = profile.builtinTools.filter((t) => !supported.includes(t));
-    const env = this.envEntries(profile.env ?? {});
+    const own = this.envEntries(profile.env ?? {});
+    const shared = this.deps.variables.forAgent(handle);
+    const sharedEnv = this.envEntries(shared.env)
+      .filter((e) => !(e.name in (profile.env ?? {})))
+      .map((e) => ({ ...e, from: shared.from[e.name] ?? "" }));
+    const env = [...own, ...sharedEnv];
     const servers = Object.entries(this.deps.mcp.servers())
       .filter(([, s]) => s.agents.includes(handle))
       .map(([name, s]) => ({
@@ -301,7 +349,8 @@ export class IntegrationsService {
       model,
       tools: profile.builtinTools,
       unsupported,
-      env,
+      env: own,
+      sharedEnv,
       mcpServers: servers,
       chats,
       lastRun: lastRun

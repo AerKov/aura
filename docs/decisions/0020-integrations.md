@@ -6,13 +6,13 @@
 
 ## Context
 
-The first alpha user connected Redmine through an agent and got stuck at every step:
+The first alpha user connected an issue tracker through an agent and got stuck at every step:
 
 - MCP servers could only be added through the orchestrator, with no test.
 - Keys had to be in `~/.profile`, which an app started from the menu does not see.
 - Aura's own Bash stripped the environment, so scripts got no settings at all.
 - The sandbox silently blocked the internal host.
-- `@redmine` mentioned in the direct chat woke nobody, and nothing said so.
+- The tracker agent, mentioned in the direct chat, woke nobody, and nothing said so.
 - Empty model answers showed as blank bubbles.
 - Agents could not see the setup to help.
 
@@ -62,6 +62,13 @@ The first alpha user connected Redmine through an agent and got stuck at every s
   for it, and the chat shows it) and propose changes to an agent's tools, variables, role or
   instructions (`propose_agent_change`, approved on a card with the diff of `agent.md`). Other
   agents are told they cannot change their own setup and must say what they miss.
+- **More than one kind of service.** MCP servers at a URL take headers, with credentials only as
+  references inside the value (`Authorization: Bearer ${secret:TOKEN}`). **Variable sets**
+  (`integrations/variables.json`) give a service's address and token to several agents' commands
+  for CLIs and scripts; an agent's own variables win on a clash.
+- **A secret does nothing until it is given.** Every variable editor offers the stored secrets as
+  one-click buttons. A server test that finds stored secret names in the server's log or error,
+  not given to it, says so and offers to give them.
 - **Network.** A host check from the server reports reachability with a plain reason, and whether
   the sandbox allows the host. Proxy variables of the server's environment are passed to commands,
   MCP servers and containers.

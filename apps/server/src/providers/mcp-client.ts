@@ -49,7 +49,9 @@ export async function connectMcpTools(
       try {
         const transport =
           spec.type === "http"
-            ? new StreamableHTTPClientTransport(new URL(spec.url))
+            ? new StreamableHTTPClientTransport(new URL(spec.url), {
+                requestInit: { headers: spec.headers ?? {} },
+              })
             : new StdioClientTransport({
                 command: spec.command,
                 args: spec.args,
@@ -143,7 +145,9 @@ export async function probeMcpServer(spec: McpServerSpec, timeoutMs = 20_000): P
   try {
     const transport =
       spec.type === "http"
-        ? new StreamableHTTPClientTransport(new URL(spec.url))
+        ? new StreamableHTTPClientTransport(new URL(spec.url), {
+            requestInit: { headers: spec.headers ?? {} },
+          })
         : new StdioClientTransport({
             command: spec.command,
             args: spec.args,

@@ -12,6 +12,10 @@ The first public build: phases 10 to 17 on top of 0.9.0. Unsigned installers; se
 
 From the first test of the alpha:
 
+- More kinds of integrations: MCP servers at a URL with headers (keys as secrets), and variable
+  sets that give a service's address and token to several agents' commands (CLIs and scripts).
+- A stored secret is offered wherever variables are edited, and a server test that sees the
+  server ask for a stored secret it did not get says so and offers to give it.
 - The orchestrator knows Aura: the user guide is built in (`aura_docs`), its instructions describe
   the app's pages, chats and settings, and it can add an agent to a project and propose changes to
   an agent's tools, variables or instructions (with approval). Agents say what they miss instead

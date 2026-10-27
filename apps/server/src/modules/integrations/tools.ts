@@ -29,6 +29,7 @@ export function integrationTools(integrations: IntegrationsService): AgentTool[]
                 `engine: ${s.engine.label}${s.model ? ` (${s.model})` : ""}, ${s.engine.status.ok ? "ready" : `not ready: ${s.engine.status.reason}`}`,
                 `tools: ${s.tools.join(", ") || "none"}${s.unsupported.length ? ` (not on this engine: ${s.unsupported.join(", ")})` : ""}`,
                 `variables: ${s.env.map((e) => `${e.name}${e.set ? "" : " (no value)"}`).join(", ") || "none"}`,
+                `shared variables: ${s.sharedEnv.map((e) => `${e.name} from ${e.from}${e.set ? "" : " (no value)"}`).join(", ") || "none"}`,
                 `MCP servers: ${s.mcpServers.map((m) => m.name).join(", ") || "none"}`,
                 `chats: ${s.chats.map((c) => c.title).join(", ") || "none"}`,
                 `last run: ${s.lastRun ? `${s.lastRun.status}${s.lastRun.error ? `: ${s.lastRun.error}` : ""}` : "never"}`,
@@ -50,6 +51,11 @@ export function integrationTools(integrations: IntegrationsService): AgentTool[]
                           .join(", ")})`
                       : ""
                   }`,
+              ),
+              `Variable sets: ${o.variableSets.length === 0 ? "none" : ""}`,
+              ...o.variableSets.map(
+                (v) =>
+                  `- ${v.name}: ${v.env.map((e) => `${e.name}${e.set ? "" : " (no value)"}`).join(", ")} for ${v.agents.map((a) => `@${a}`).join(", ") || "no agent"}`,
               ),
               `Secrets set: ${o.secrets.join(", ") || "none"}`,
               "The user manages these on the Integrations page.",

@@ -54,7 +54,7 @@ export class SecretStore {
   }
 
   set(name: string, value: string | null): void {
-    if (!ENV_NAME.test(name)) throw new SecretError(`${name} is not a name like REDMINE_API_KEY`);
+    if (!ENV_NAME.test(name)) throw new SecretError(`${name} is not a name like SERVICE_API_KEY`);
     if (value !== null && (value.length === 0 || value.length > 8000))
       throw new SecretError("A secret must be 1 to 8000 characters");
     const next = { ...this.read() };

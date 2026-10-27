@@ -101,7 +101,7 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
     for (const [name, spec] of Object.entries(input.mcpServers ?? {})) {
       mcpServers[name] =
         spec.type === "http"
-          ? { type: "http", url: spec.url }
+          ? { type: "http", url: spec.url, headers: spec.headers ?? {} }
           : { type: "stdio", command: spec.command, args: spec.args, env: spec.env };
     }
     const allowedPrefixes = Object.keys(input.mcpServers ?? {}).map((name) => `mcp__${name}__`);

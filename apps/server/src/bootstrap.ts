@@ -26,6 +26,7 @@ import { redact, resolveEnv } from "./modules/integrations/env";
 import { SecretStore } from "./modules/integrations/secrets";
 import { IntegrationsService } from "./modules/integrations/service";
 import { integrationTools } from "./modules/integrations/tools";
+import { VariableSets } from "./modules/integrations/variables";
 import { JobService } from "./modules/jobs/service";
 import { MemoryService } from "./modules/memory/service";
 import { ProjectService } from "./modules/projects/service";
@@ -124,6 +125,7 @@ export async function createServices(deps: {
     hub: deps.hub,
   });
   const secrets = new SecretStore(deps.dataDir);
+  const variables = new VariableSets({ dataDir: deps.dataDir, agents: deps.agents });
   const mcp = new McpService({
     dataDir: deps.dataDir,
     agents: deps.agents,
@@ -158,6 +160,7 @@ export async function createServices(deps: {
     runs,
     repo,
     sandbox,
+    variables,
   });
   const scratchDir = join(deps.dataDir, "state", "scratch");
   const summaries = new ChatSummaryService({
@@ -199,8 +202,12 @@ export async function createServices(deps: {
       skills.promptFor(profile) + (profile.handle === "orchestrator" ? AURA_GUIDE : ""),
     memoryPrompt: (input) => memory.promptFor(input),
     sandboxPolicy: () => sandbox.policy(),
+    // Shared variable sets first; the agent's own variables win on a clash.
     agentEnv: (profile) =>
-      resolveEnv(profile.env ?? {}, { secret: (n) => secrets.get(n), env: process.env }),
+      resolveEnv(
+        { ...variables.forAgent(profile.handle).env, ...(profile.env ?? {}) },
+        { secret: (n) => secrets.get(n), env: process.env },
+      ),
     redact: (text) => redact(text, secrets.values()),
     projectShell: (project, handle, signal, env) =>
       project.isolation === "container"

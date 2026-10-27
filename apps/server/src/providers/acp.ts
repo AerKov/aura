@@ -503,7 +503,12 @@ function toAcpServers(servers: Record<string, McpServerSpec>): AcpServer[] {
   return Object.entries(servers).map(
     ([name, spec]): AcpServer =>
       spec.type === "http"
-        ? { type: "http", name, url: spec.url, headers: [] }
+        ? {
+            type: "http",
+            name,
+            url: spec.url,
+            headers: Object.entries(spec.headers ?? {}).map(([n, value]) => ({ name: n, value })),
+          }
         : {
             name,
             command: spec.command,

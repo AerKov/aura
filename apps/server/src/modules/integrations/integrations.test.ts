@@ -40,7 +40,7 @@ const redmine: AgentProfile = {
 const MCP_SERVER = `
 const rl = require("node:readline").createInterface({ input: process.stdin });
 const send = (m) => process.stdout.write(JSON.stringify(m) + "\\n");
-console.error("tracker server starting, key " + process.env.TRACKER_KEY);
+console.error(process.env.TRACKER_KEY ? "tracker server starting, key " + process.env.TRACKER_KEY : "warning: missing environment variable TRACKER_KEY");
 rl.on("line", (line) => {
   const m = JSON.parse(line);
   if (m.method === "initialize")
@@ -233,6 +233,103 @@ describe("integrations", () => {
     } finally {
       server.stop(true);
     }
+  });
+
+  test("a server that asks for stored secrets it did not get says so", async () => {
+    t = await createTestApp({ agents: new MemoryAgentDirectory([ORCHESTRATOR_DEFAULT, redmine]) });
+    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
+    const script = join(t.dataDir, "tracker.cjs");
+    writeFileSync(script, MCP_SERVER);
+    t.secrets.set("TRACKER_KEY", KEY);
+    await api.integrations.mcp({ name: "tracker" }).put({
+      command: process.execPath,
+      args: [script],
+      agents: ["redmine"],
+    });
+    const probe = (await api.integrations.mcp({ name: "tracker" }).test.post()).data;
+    expect(probe?.ok).toBe(true);
+    expect(probe?.unpassed).toEqual(["TRACKER_KEY"]);
+    expect(probe?.error).toContain("you stored as secrets but did not give to this server");
+  });
+
+  test("servers at a URL take headers with secrets; plain credentials are refused", async () => {
+    t = await createTestApp({ agents: new MemoryAgentDirectory([ORCHESTRATOR_DEFAULT, redmine]) });
+    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
+    const plain = await api.integrations.mcp({ name: "remote" }).put({
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: "Bearer abc123" },
+      agents: ["redmine"],
+    });
+    expect(plain.status).toBe(400);
+    await api.integrations.mcp({ name: "remote" }).put({
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: `Bearer ${secretRef("REMOTE_TOKEN")}`, "X-Team": "core" },
+      agents: ["redmine"],
+    });
+    let headers = (await api.integrations.get()).data?.servers[0]?.headers;
+    expect(headers).toEqual([
+      { name: "Authorization", value: `Bearer ${secretRef("REMOTE_TOKEN")}`, set: false },
+      { name: "X-Team", value: "core", set: true },
+    ]);
+    t.secrets.set("REMOTE_TOKEN", KEY);
+    headers = (await api.integrations.get()).data?.servers[0]?.headers;
+    expect(headers?.[0]?.set).toBe(true);
+    expect(t.mcp.forAgent("redmine").remote).toEqual({
+      type: "http",
+      url: "https://mcp.example.com/mcp",
+      headers: { Authorization: `Bearer ${KEY}`, "X-Team": "core" },
+    });
+    expect(readFileSync(join(t.dataDir, "mcp", "servers.json"), "utf8")).not.toContain(KEY);
+  });
+
+  test("variable sets give shared variables to several agents; an agent's own win", async () => {
+    const provider = new FakeProvider();
+    const coder: AgentProfile = {
+      ...redmine,
+      handle: "coder",
+      env: { GIT_URL: "https://own.example" },
+    };
+    t = await createTestApp({
+      provider,
+      agents: new MemoryAgentDirectory([
+        ORCHESTRATOR_DEFAULT,
+        coder,
+        { ...redmine, env: undefined },
+      ]),
+    });
+    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
+    t.secrets.set("GIT_TOKEN", KEY);
+    expect(
+      (
+        await api.integrations.variables({ name: "git-host" }).put({
+          env: { GIT_URL: "https://git.example", GIT_TOKEN: "plain" },
+          agents: ["coder"],
+        })
+      ).status,
+    ).toBe(400);
+    await api.integrations.variables({ name: "git-host" }).put({
+      env: { GIT_URL: "https://git.example", GIT_TOKEN: secretRef("GIT_TOKEN") },
+      agents: ["coder", "redmine"],
+    });
+    const status = (await api.agents({ handle: "coder" }).status.get()).data;
+    expect(status?.sharedEnv).toEqual([
+      { name: "GIT_TOKEN", value: secretRef("GIT_TOKEN"), set: true, from: "git-host" },
+    ]);
+    await t.projects.create({
+      name: "Git",
+      brief: "@coder go",
+      agents: ["coder", "redmine"],
+      budgetUsd: 5,
+    });
+    for (let i = 0; i < 100 && provider.calls.length === 0; i++) await Bun.sleep(10);
+    await t.runtime.whenIdle();
+    expect(provider.calls[0]?.env).toEqual({ GIT_URL: "https://own.example", GIT_TOKEN: KEY });
+    expect((await api.integrations.get()).data?.variableSets[0]?.agents).toEqual([
+      "coder",
+      "redmine",
+    ]);
+    await api.integrations.variables({ name: "git-host" }).delete();
+    expect((await api.integrations.get()).data?.variableSets).toEqual([]);
   });
 
   test("the orchestrator can inspect the setup, never secret values", async () => {
