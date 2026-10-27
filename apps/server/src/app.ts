@@ -30,6 +30,8 @@ import { projectsModule } from "./modules/projects";
 import type { ProjectService } from "./modules/projects/service";
 import { realtimeModule } from "./modules/realtime";
 import type { EventHub } from "./modules/realtime/hub";
+import { sandboxModule } from "./modules/sandbox";
+import type { SandboxService } from "./modules/sandbox/service";
 import type { SkillService } from "./modules/skills/service";
 import type { TaskService } from "./modules/tasks/service";
 
@@ -43,6 +45,7 @@ export interface AppDeps extends HealthDeps {
   engines: EngineRegistry;
   toolBridge: ToolBridge;
   memory: MemoryService;
+  sandbox: SandboxService;
   dataDir: string;
   runtime: AgentRuntime;
   projects: ProjectService;
@@ -76,6 +79,7 @@ export function createApp(deps: AppDeps) {
     .use(agentsModule(deps))
     .use(enginesModule(deps))
     .use(memoryModule(deps))
+    .use(sandboxModule(deps))
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))

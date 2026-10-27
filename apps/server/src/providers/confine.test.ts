@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { decideToolUse, isInside } from "./confine";
+import { mkdtempSync, rmSync, symlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { decideToolUse, isInside, isInsideReal } from "./confine";
 
 describe("isInside", () => {
   test("accepts paths in the root, rejects escapes", () => {
@@ -49,5 +52,24 @@ describe("decideToolUse", () => {
       decideToolUse({ ...base, tool: "Bash", args: { command: "cat x" }, blockedPath: "/etc" })
         .allow,
     ).toBe(false);
+  });
+});
+
+describe("blockedPath from Claude Code", () => {
+  test("is allowed inside the workspace (the sandbox reports those too), denied outside", () => {
+    const root = mkdtempSync(join(tmpdir(), "aura-confine-"));
+    const cwd = join(root, "ws");
+    const base = { granted: ["Bash"], appTools: [], cwd, tool: "Bash", args: { command: "x" } };
+    try {
+      expect(decideToolUse({ ...base, blockedPath: join(cwd, "ok.txt") }).allow).toBe(true);
+      expect(decideToolUse({ ...base, blockedPath: join(root, "other.txt") }).allow).toBe(false);
+      // A symlinked spelling of the workspace counts as inside.
+      symlinkSync(root, join(tmpdir(), `aura-link-${process.pid}`));
+      const linked = join(tmpdir(), `aura-link-${process.pid}`, "ws", "new.txt");
+      expect(isInsideReal(cwd, linked)).toBe(true);
+    } finally {
+      rmSync(join(tmpdir(), `aura-link-${process.pid}`), { force: true });
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

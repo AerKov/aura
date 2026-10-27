@@ -1,4 +1,5 @@
-import { isAbsolute, relative, resolve } from "node:path";
+import { realpathSync } from "node:fs";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 
 /** Input fields that carry file paths in Claude Code's built-in tools. */
 const PATH_FIELDS = ["file_path", "path", "notebook_path"] as const;
@@ -6,6 +7,27 @@ const PATH_FIELDS = ["file_path", "path", "notebook_path"] as const;
 export function isInside(root: string, target: string): boolean {
   const rel = relative(resolve(root), resolve(root, target));
   return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+}
+
+/** Resolves symlinks of the nearest existing ancestor (`/tmp` is `/private/tmp` on macOS). */
+function real(path: string): string {
+  let existing = resolve(path);
+  const rest: string[] = [];
+  while (true) {
+    try {
+      return resolve(realpathSync(existing), ...rest.reverse());
+    } catch {
+      const parent = dirname(existing);
+      if (parent === existing) return resolve(path);
+      rest.push(basename(existing));
+      existing = parent;
+    }
+  }
+}
+
+/** Like `isInside`, after resolving symlinks on both sides. */
+export function isInsideReal(root: string, target: string): boolean {
+  return isInside(root, target) || isInside(real(root), real(resolve(root, target)));
 }
 
 export type Decision = { allow: true } | { allow: false; reason: string };
@@ -31,7 +53,8 @@ export function decideToolUse(input: {
   if (!granted.includes(tool))
     return { allow: false, reason: `${tool} is not granted to this agent` };
   if (!cwd) return { allow: true };
-  if (blockedPath)
+  // Claude Code names the path that made it ask (with the sandbox on, also paths inside cwd).
+  if (blockedPath && !isInsideReal(cwd, blockedPath))
     return { allow: false, reason: `${blockedPath} is outside the project workspace` };
   for (const field of PATH_FIELDS) {
     const value = args[field];

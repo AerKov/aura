@@ -41,7 +41,7 @@ export function Sidebar() {
     >
       <header className="flex h-14 items-center justify-between border-b px-4">
         <h1 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
-          <AuraGlyph className="text-foreground size-5" />
+          <AuraGlyph className="size-5" />
           aura
         </h1>
         <span className="kicker">

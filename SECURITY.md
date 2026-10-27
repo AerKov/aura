@@ -26,5 +26,6 @@ the ADRs, especially [0005](docs/decisions/0005-agents-and-projects.md),
 [0008](docs/decisions/0008-customization.md), [0009](docs/decisions/0009-mobile-pairing.md),
 [0011](docs/decisions/0011-agent-engines.md) and [0012](docs/decisions/0012-acp-agents.md).
 
-Aura is a proof of concept. Agents run at sandbox level 0 (checks in the app, no container yet), so
-run agents with tools like Bash only in projects you are comfortable with.
+Aura is a proof of concept. Shell commands of Claude Code and Aura's own agent run in an OS sandbox
+when the machine supports it (ADR 0015); Gemini CLI, Codex, OpenCode and MCP servers are not wrapped
+by Aura yet. Check the sandbox status on the Engines page.

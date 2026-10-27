@@ -24,8 +24,8 @@ const SIZES = {
 };
 
 /**
- * A participant's mark: a rounded monogram tile tinted by its name. The orchestrator is a solid signal
- * tile with Aura's glyph; `working` shows a small pulsing signal square in the corner.
+ * A participant's mark: a rounded monogram tile tinted by its name. The orchestrator carries Aura's
+ * mark; `working` shows a small pulsing signal dot in the corner.
  */
 export function Mark({
   name,
@@ -44,7 +44,7 @@ export function Mark({
 }) {
   const look =
     kind === "orchestrator"
-      ? "bg-primary text-primary-foreground border border-primary"
+      ? "border border-white/10 bg-[#121720]"
       : kind === "user"
         ? "bg-secondary text-secondary-foreground border"
         : kind === "alert"
@@ -64,7 +64,7 @@ export function Mark({
       {Icon ? (
         <Icon className="size-[50%]" />
       ) : kind === "orchestrator" ? (
-        <AuraGlyph className="size-[72%]" coreClassName="fill-primary-foreground" />
+        <AuraGlyph className="size-[86%]" />
       ) : (
         initialsOf(name)
       )}

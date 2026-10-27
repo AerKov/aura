@@ -42,6 +42,8 @@ files in a git repository you own.
   and extensions all show a card with exactly what will change.
 - **Talk like in a messenger.** Type `@` to pick an agent, reply to a message to answer its author,
   or just write: the orchestrator passes it to the right agent.
+- **Sandboxed shell.** Agents' commands write only in the project, cannot read your credentials, and
+  reach only the hosts you allow.
 - **Safe by default.** Agents stay inside their project folder, wake each other only by mention, stop at
   their budget and treat web pages, alerts and files as data, never as instructions.
 - **Alerts and schedules.** Monitoring webhooks wake the orchestrator for triage; recurring jobs run
@@ -107,8 +109,9 @@ models). Agent apps keep their own logins; Aura never reads them. API keys you p
 
 ## Status
 
-Proof of concept (0.9): the full loop works and is tested, with rough edges. Agents are confined by
-checks in the app, not yet by containers, so grant shell access with care. See the roadmap in
+Proof of concept: the full loop works and is tested, with rough edges. Shell commands run in an OS
+sandbox where available (macOS; Linux with bubblewrap and socat); check its status on the Engines
+page. See the roadmap in
 [docs/SPEC.md](docs/SPEC.md) and what changed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Development

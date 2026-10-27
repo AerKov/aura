@@ -175,7 +175,10 @@ login ourselves.
   the orchestrator or a reviewer agent merges.
 - Level 0 (now): the app's `canUseTool` check allows only granted tools and only paths inside the project
   directory (ADR 0005).
-- Level 1 (later): a container per project.
+- Level 1 (ADR 0015): shell commands of Claude Code and Aura's own agent run in an OS sandbox
+  (bubblewrap on Linux, Seatbelt on macOS): writes only in the project folder, no credentials,
+  network only to allowed hosts. Modes `auto`, `required`, `off` in `sandbox.json`.
+- Level 2 (later): a container per project, also for external agent apps and MCP servers.
 
 ## 8. Conversation rules
 
@@ -322,6 +325,11 @@ embedding model; a Memory screen to review and delete (ADR 0013).
 that names an agent goes to it, and the orchestrator routes the rest; the composer shows who will
 answer before sending (ADR 0014).
 
+**Phase 12: Command sandbox**
+Agents' shell commands run in an OS sandbox (Claude Code's own, and the same runtime for Aura's
+agent): writes only in the project, no credentials, network only to allowed hosts; a card on the
+Engines page; new Aura mark (ADR 0015, 0010).
+
 **Later**
-Memory summaries with vector search, container sandbox,
+Memory summaries, a container per project (sandbox level 2),
 community catalog with review and signatures, multi-user.

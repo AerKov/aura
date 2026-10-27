@@ -5,6 +5,12 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- Command sandbox: shell commands of Claude Code and Aura's own agent run in an OS sandbox
+  (bubblewrap on Linux, Seatbelt on macOS): writes only in the project, no credentials, network only
+  to allowed hosts; modes Auto / Required / Off on the Engines page.
+- Fix: with the sandbox on, writes inside the project were refused as "outside the workspace".
+- New logo: an aura drawn as layers around a light core.
+
 - Conversation flow: typing `@` (or `/` at the start) suggests the chat's agents; replying to an
   agent's message wakes that agent; a message that starts with an agent's name goes to it; anything
   else in a project goes to the orchestrator, which passes it to the right agent. The composer shows

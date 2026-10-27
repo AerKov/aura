@@ -2,12 +2,13 @@ import { mkdirSync } from "node:fs";
 import { type Chat, type Message, parseMentions, type RunCard, type Usage } from "@aura/shared";
 import { commitAll, git } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
-import type { AgentEvent, AgentTool, McpServerSpec } from "../../providers/types";
+import type { AgentEvent, AgentTool, McpServerSpec, SandboxPolicy } from "../../providers/types";
 import type { ChatRepo } from "../chat/repo";
 import type { ChatService } from "../chat/service";
 import type { EngineSelector } from "../engines/registry";
 import type { ProjectInfo } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
+import { sandboxNote } from "../sandbox/service";
 import { buildPrompt, CONTEXT_WINDOW, userNote } from "./context";
 import { teamRules, wakeNote } from "./defaults";
 import type { AgentDirectory } from "./directory";
@@ -41,6 +42,8 @@ export interface RuntimeDeps {
   mcpServers?: (handle: string) => Record<string, McpServerSpec>;
   /** Extra system prompt sections for an agent (its skills). */
   promptExtras?: (profile: AgentProfile) => string;
+  /** OS sandbox for shell commands, or null to run them without it (ADR 0015). */
+  sandboxPolicy?: () => SandboxPolicy | null;
   /** Notes the agent saved earlier that match this message (agent memory, ADR 0013). */
   memoryPrompt?: (input: {
     handle: string;
@@ -284,6 +287,8 @@ export class AgentRuntime {
         ownerName: this.deps.ownerName,
       }) + wakeNote(reason, handle, team, this.deps.ownerName);
 
+    const builtinTools = toolsFor(profile, project !== null);
+    const sandbox = this.deps.sandboxPolicy?.() ?? null;
     const memoryNotes =
       (await this.deps.memoryPrompt?.({
         handle,
@@ -322,13 +327,15 @@ export class AgentRuntime {
         systemPrompt:
           systemPromptFor(profile, project !== null, team) +
           (this.deps.promptExtras?.(profile) ?? "") +
+          (sandbox && builtinTools.includes("Bash") ? sandboxNote(sandbox) : "") +
           memoryNotes +
           userNote(this.deps.ownerName, this.userLanguage),
         prompt,
         model: model ?? undefined,
         cwd,
         confineToCwd: true,
-        builtinTools: toolsFor(profile, project !== null),
+        builtinTools,
+        sandbox: sandbox ?? undefined,
         tools: this.deps.appTools({ handle, chat, depth }),
         mcpServers: this.deps.mcpServers?.(handle),
         maxTurns: this.deps.maxTurns ?? 50,

@@ -12,6 +12,7 @@ import { EngineRegistry } from "./modules/engines/registry";
 import { ToolBridge } from "./modules/engines/tool-bridge";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
+import { SandboxService } from "./modules/sandbox/service";
 import { FakeProvider } from "./providers/fake";
 import type { LLMProvider } from "./providers/types";
 
@@ -28,6 +29,8 @@ export async function createTestApp(
     safeMode?: SafeMode;
     /** Network for the OpenAI-compatible engines. */
     fetch?: typeof fetch;
+    /** Whether the OS sandbox counts as available (default: not, so tests do not depend on it). */
+    sandboxSupport?: () => { ok: true } | { ok: false; reason: string };
     /** Fake agent CLIs for the ACP engines. */
     acpAgents?: ConstructorParameters<typeof EngineRegistry>[0]["acpAgents"];
     acpSpawn?: ConstructorParameters<typeof EngineRegistry>[0]["acpSpawn"];
@@ -55,6 +58,10 @@ export async function createTestApp(
     hub,
     engines,
     embedder: () => engines.embedder(),
+    sandbox: new SandboxService({
+      dataDir,
+      support: opts.sandboxSupport ?? (() => ({ ok: false, reason: "not in tests" })),
+    }),
     agents,
     dataDir,
     maxChainDepth: opts.maxChainDepth,

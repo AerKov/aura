@@ -20,6 +20,18 @@ export type McpServerSpec =
   | { type: "stdio"; command: string; args: string[]; env: Record<string, string> }
   | { type: "http"; url: string };
 
+/**
+ * OS sandbox for an agent's shell commands (ADR 0015). Present when the sandbox is on for the run.
+ */
+export interface SandboxPolicy {
+  /** Fail instead of running a command unsandboxed when the sandbox cannot start. */
+  required: boolean;
+  /** Hosts shell commands may reach. Everything else is blocked. */
+  allowedDomains: string[];
+  /** Paths shell commands may not read (credentials, the app's own state). */
+  denyRead: string[];
+}
+
 export interface AgentRunInput {
   /** Stable id of the run, for logs. */
   runId: string;
@@ -39,6 +51,8 @@ export interface AgentRunInput {
   maxTurns?: number;
   /** Hard stop for this run, in USD. */
   maxBudgetUsd?: number;
+  /** Run shell commands in an OS sandbox: writes only in `cwd`, network only to allowed hosts. */
+  sandbox?: SandboxPolicy;
 }
 
 export type AgentEvent =

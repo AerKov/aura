@@ -21,6 +21,7 @@ import { JobService } from "./modules/jobs/service";
 import { MemoryService } from "./modules/memory/service";
 import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
+import { SandboxService } from "./modules/sandbox/service";
 import { SkillService } from "./modules/skills/service";
 import { TaskService } from "./modules/tasks/service";
 import type { Embedder } from "./providers/embeddings";
@@ -37,6 +38,8 @@ export async function createServices(deps: {
   db: Surreal;
   hub: EventHub;
   engines: EngineSelector;
+  /** OS sandbox for agents' shell commands; created from the data dir when absent. */
+  sandbox?: SandboxService;
   /** Embedding model for semantic memory search; keyword search when absent. */
   embedder?: () => Embedder | null;
   agents: AgentDirectory;
@@ -74,6 +77,7 @@ export async function createServices(deps: {
     limiter: new TriageLimiter(),
     triageDelayMs: deps.triageDelayMs,
   });
+  const sandbox = deps.sandbox ?? new SandboxService({ dataDir: deps.dataDir });
   const memory = new MemoryService({ db: deps.db, embedder: deps.embedder ?? (() => null) });
   const toolDeps = {
     agents: deps.agents,
@@ -126,6 +130,7 @@ export async function createServices(deps: {
     mcpServers: (handle) => mcp.forAgent(handle),
     promptExtras: (profile) => skills.promptFor(profile),
     memoryPrompt: (input) => memory.promptFor(input),
+    sandboxPolicy: () => sandbox.policy(),
     ownerName: owner.name,
     scratchDir: join(deps.dataDir, "state", "scratch"),
     maxChainDepth: deps.maxChainDepth,
@@ -148,6 +153,7 @@ export async function createServices(deps: {
     alerts,
     toolDeps,
     memory,
+    sandbox,
     appearance,
     mcp,
     extensions,

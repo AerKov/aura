@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { loadProviderStatus, reportError } from "@/features/chat/actions";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { SandboxCard } from "./sandbox-card";
 
 type EnginesData = Awaited<ReturnType<typeof loadEngines>>;
 type Engine = EnginesData["engines"][number];
@@ -115,6 +116,8 @@ export function EnginesView() {
             </section>
           ))
         )}
+
+        <SandboxCard />
 
         {data && (
           <AgentEngines

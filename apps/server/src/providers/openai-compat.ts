@@ -125,7 +125,7 @@ export class OpenAICompatProvider implements LLMProvider {
     }
 
     const cwd = input.cwd ?? process.cwd();
-    const builtins = nativeTools(input.builtinTools, cwd);
+    const builtins = nativeTools(input.builtinTools, cwd, input.sandbox);
     const appToolNames = input.tools.map((t) => t.name);
     const tools = new Map<string, NativeTool>();
     for (const tool of builtins) tools.set(tool.name, tool);

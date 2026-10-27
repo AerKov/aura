@@ -3,6 +3,8 @@ import { dirname, relative, resolve } from "node:path";
 import { z } from "zod";
 import { errorMessage } from "../lib/log";
 import { isInside } from "./confine";
+import { SandboxUnavailableError, sandboxedShell } from "./shell-sandbox";
+import type { SandboxPolicy } from "./types";
 
 /** A tool run in-process by Aura's own agent loop. */
 export interface NativeTool {
@@ -118,7 +120,11 @@ function* walk(root: string, pattern: string): Generator<string> {
 }
 
 /** The built-in tools granted to a run, implemented against `cwd`. */
-export function nativeTools(granted: readonly string[], cwd: string): NativeTool[] {
+export function nativeTools(
+  granted: readonly string[],
+  cwd: string,
+  sandbox?: SandboxPolicy,
+): NativeTool[] {
   const all: NativeTool[] = [
     {
       name: "Read",
@@ -246,9 +252,28 @@ export function nativeTools(granted: readonly string[], cwd: string): NativeTool
         timeout_seconds: z.number().int().min(1).max(600).optional(),
       }),
       async run(args, signal) {
-        const proc = Bun.spawn(["bash", "-c", String(args.command)], {
+        let cmd = ["bash", "-c", String(args.command)];
+        const env = shellEnv();
+        if (sandbox) {
+          try {
+            const wrapped = await sandboxedShell(sandbox, String(args.command), cwd, signal);
+            cmd = wrapped.argv;
+            // Only what the sandbox adds (proxies), never the server's own environment.
+            for (const [key, value] of Object.entries(wrapped.env)) {
+              if (process.env[key] !== value) env[key] = value;
+            }
+          } catch (error) {
+            if (sandbox.required || !(error instanceof SandboxUnavailableError)) {
+              return {
+                text: `The command sandbox could not start: ${errorMessage(error)}`,
+                isError: true,
+              };
+            }
+          }
+        }
+        const proc = Bun.spawn(cmd, {
           cwd,
-          env: shellEnv(),
+          env,
           stdin: "ignore",
           stdout: "pipe",
           stderr: "pipe",

@@ -16,6 +16,7 @@ import type {
   LLMProvider,
   ProviderErrorCode,
   ProviderStatus,
+  SandboxPolicy,
 } from "./types";
 
 const APP_MCP_SERVER = "aura";
@@ -133,6 +134,7 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
         mcpServers,
         maxTurns: input.maxTurns,
         maxBudgetUsd: input.maxBudgetUsd,
+        ...(input.sandbox ? { sandbox: claudeSandbox(input.sandbox) } : {}),
         includePartialMessages: true,
         // Nothing is pre-approved except app tools; canUseTool decides the rest.
         permissionMode: "default",
@@ -265,6 +267,19 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
       ...extra,
     };
   }
+}
+
+/** Claude Code's own OS sandbox for Bash (ADR 0015), with no way to run a command outside it. */
+export function claudeSandbox(policy: SandboxPolicy): NonNullable<Options["sandbox"]> {
+  return {
+    enabled: true,
+    failIfUnavailable: policy.required,
+    // Every command still goes through canUseTool (grants); the sandbox is an extra layer.
+    autoAllowBashIfSandboxed: false,
+    allowUnsandboxedCommands: false,
+    network: { allowedDomains: policy.allowedDomains },
+    filesystem: { denyRead: policy.denyRead },
+  };
 }
 
 function toSdkTool(appTool: AgentTool) {

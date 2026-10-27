@@ -35,8 +35,16 @@ commands, search. That is their job. Every change is committed with git, so it c
 
 ## Limits to know
 
-This is a proof of concept. Agents run with checks inside the app (no container yet). An agent with
-**Bash** can run any command your user can, starting in the project folder. Give Bash only to agents
-that need it, and only in projects you are comfortable with. Container isolation is on the roadmap.
+This is a proof of concept. Shell commands of Claude Code and Aura's own agent run in an **OS
+sandbox** when your computer supports it: they write only in the project folder (and the temp
+folder), cannot read credentials such as `~/.ssh` or your agent apps' logins, and reach only the
+hosts you allow (package registries and code hosts by default).
+
+- See and change it on the **Engines** page, card **Command sandbox**: `Auto` (sandbox when
+  available), `Required` (refuse commands without it) or `Off`.
+- macOS works out of the box. On Linux install `bubblewrap` and `socat`
+  (`sudo apt install bubblewrap socat`). On Windows the sandbox is not available yet.
+- Gemini CLI, Codex and OpenCode run their own tools; Aura answers their permission requests, and
+  they have sandboxes of their own. MCP servers are not sandboxed by Aura yet.
 
 Found a hole? Please [report it privately](https://github.com/AerKov/aura/security/advisories/new).
