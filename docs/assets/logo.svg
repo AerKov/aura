@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img">
+  <title>Aura</title>
+  <!-- Aura: a lowercase "a" whose bowl is a ring (an aura) around a glowing core. -->
+  <rect x="31" y="31" width="450" height="450" rx="113" fill="#151b24"/>
+  <circle cx="230" cy="256" r="120" fill="none" stroke="#ffffff" stroke-width="41"/>
+  <circle cx="230" cy="256" r="43.5" fill="#1899ec"/>
+  <rect x="330" y="115" width="41" height="282" rx="20.5" fill="#ffffff"/>
+</svg>

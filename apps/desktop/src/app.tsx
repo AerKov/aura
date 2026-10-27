@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AuraLogo } from "@/components/logo";
 import {
   loadInitial,
   loadMessages,
@@ -81,9 +82,7 @@ export function App() {
             <ChatView key={activeChatId} chatId={activeChatId} />
           ) : (
             <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-              <span className="bg-primary text-primary-foreground flex size-12 animate-pulse items-center justify-center rounded-[34%] text-xl">
-                ◆
-              </span>
+              <AuraLogo className="size-12 animate-pulse" />
               <p className="text-muted-foreground max-w-sm text-sm">
                 {startError
                   ? `Cannot reach the Aura server at ${SERVER_URL}: ${startError}`

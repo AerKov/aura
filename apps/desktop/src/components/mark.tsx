@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
+import { AuraGlyph } from "./logo";
 
 /** Stable hue (0-359) for a name, so every agent keeps its colour everywhere. */
 export function hueOf(key: string): number {
@@ -24,7 +25,7 @@ const SIZES = {
 
 /**
  * A participant's mark: a rounded monogram tile tinted by its name. The orchestrator is a solid signal
- * tile; `working` shows a small pulsing signal square in the corner.
+ * tile with Aura's glyph; `working` shows a small pulsing signal square in the corner.
  */
 export function Mark({
   name,
@@ -63,7 +64,7 @@ export function Mark({
       {Icon ? (
         <Icon className="size-[50%]" />
       ) : kind === "orchestrator" ? (
-        <span className="text-[1.15em] leading-none">◆</span>
+        <AuraGlyph className="size-[72%]" coreClassName="fill-primary-foreground" />
       ) : (
         initialsOf(name)
       )}

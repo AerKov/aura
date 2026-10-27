@@ -1,4 +1,5 @@
 import type { Chat } from "@aura/shared";
+import { AuraGlyph } from "@/components/logo";
 import { cn } from "@/lib/utils";
 import { openChat } from "./actions";
 import { ChatMark } from "./chat-mark";
@@ -40,7 +41,7 @@ export function Sidebar() {
     >
       <header className="flex h-14 items-center justify-between border-b px-4">
         <h1 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
-          <span className="bg-primary inline-block size-2.5 rounded-full" />
+          <AuraGlyph className="text-foreground size-5" />
           aura
         </h1>
         <span className="kicker">

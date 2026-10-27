@@ -9,6 +9,7 @@ import {
   Smartphone,
   Sparkles,
 } from "lucide-react";
+import { AuraLogo } from "@/components/logo";
 import {
   showCustomize,
   showDevices,
@@ -125,9 +126,7 @@ export function Rail() {
       )}
     >
       <div className="mb-2 hidden h-10 items-center justify-center md:flex" title="Aura">
-        <span className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-[34%] text-sm leading-none">
-          ◆
-        </span>
+        <AuraLogo className="size-8" />
       </div>
       {items.map((item) => (
         <button

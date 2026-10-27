@@ -19,8 +19,11 @@ a copy of it.
   instead of shadows and gradients. A faint dot grid sits behind conversations.
 - **Monospace labels.** Section names, authors' handles, times, keyboard hints and card headers
   (`APPROVAL · @ORCHESTRATOR`) are small uppercase Geist Mono. Text is Geist.
+- **Logo.** A lowercase "a" whose bowl is a ring (an aura) around a glowing blue core, white on an
+  ink tile (`docs/assets/logo.svg`, `components/logo.tsx`). It replaced a white diamond on a blue
+  gradient, which looked too much like Gemini's spark.
 - **Agents are marks.** Rounded (squircle) monogram tiles tinted by the agent's name (stable hue); the
-  orchestrator is a solid blue tile with a diamond ◆. A working agent gets a small pulsing dot and a
+  orchestrator is a solid blue tile with the Aura glyph. A working agent gets a small pulsing dot and a
   `● working` label, nothing glows.
 - **Conversation as a document.** Agents write full-width prose next to their mark; the user's
   messages are soft blue notes on the right; system events are thin dividers.
