@@ -30,8 +30,9 @@ CI runs the same on every push, and compiles and smoke-tests the server sidecar.
 bun run build       # compiles the server sidecar, then tauri build
 ```
 
-Releases: pushing a tag like `v0.9.0` runs the Release workflow, which builds macOS, Windows and Linux
-installers into a draft GitHub release.
+Releases: pushing a tag like `v0.16.0-alpha.1` runs the Release workflow, which builds macOS, Windows
+and Linux installers into a draft GitHub pre-release. Running the workflow by hand is a dry run:
+the installers are kept as workflow artifacts for a week.
 
 ## Server settings
 

@@ -5,6 +5,11 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.16.0] - 2026-10-27: First alpha
+
+The first public build: phases 10 to 16 on top of 0.9.0. Unsigned installers; see the
+[alpha notes](docs/ALPHA.md) for requirements and known limits.
+
 - MCP servers in project containers: in a container project, agents' MCP tool servers that run
   as a command start inside the project's container, with secrets passed as environment.
 - Fix: the agent runtime no longer reports idle while it is still deciding who answers a message.

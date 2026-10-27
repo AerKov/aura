@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://github.com/AerKov/aura/actions/workflows/ci.yml"><img src="https://github.com/AerKov/aura/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
-  <img src="https://img.shields.io/badge/status-proof%20of%20concept-orange" alt="Status: proof of concept">
+  <img src="https://img.shields.io/badge/status-alpha-orange" alt="Status: alpha">
   <a href="https://github.com/AerKov/aura/wiki"><img src="https://img.shields.io/badge/docs-wiki-0077dc" alt="Docs"></a>
 </p>
 
@@ -76,7 +76,8 @@ files in a git repository you own.
 
 ## Get started
 
-1. **Install.** Download a build from [Releases](https://github.com/AerKov/aura/releases), or run
+1. **Install.** Download a build from [Releases](https://github.com/AerKov/aura/releases) (read the
+   [alpha notes](docs/ALPHA.md) first), or run
    from source:
 
    ```sh
