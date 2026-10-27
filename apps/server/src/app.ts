@@ -35,6 +35,8 @@ import type { EventHub } from "./modules/realtime/hub";
 import { sandboxModule } from "./modules/sandbox";
 import type { SandboxService } from "./modules/sandbox/service";
 import type { SkillService } from "./modules/skills/service";
+import { summariesModule } from "./modules/summaries";
+import type { ChatSummaryService } from "./modules/summaries/service";
 import type { TaskService } from "./modules/tasks/service";
 
 export interface AppDeps extends HealthDeps {
@@ -48,6 +50,7 @@ export interface AppDeps extends HealthDeps {
   toolBridge: ToolBridge;
   memory: MemoryService;
   catalog: CatalogService;
+  summaries: ChatSummaryService;
   sandbox: SandboxService;
   dataDir: string;
   runtime: AgentRuntime;
@@ -84,6 +87,7 @@ export function createApp(deps: AppDeps) {
     .use(memoryModule(deps))
     .use(sandboxModule(deps))
     .use(catalogModule(deps))
+    .use(summariesModule(deps))
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))

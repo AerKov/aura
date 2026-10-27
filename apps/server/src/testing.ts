@@ -58,6 +58,7 @@ export async function createTestApp(
     hub,
     engines,
     embedder: () => engines.embedder(),
+    summaries: () => engines.store.get().summaries,
     fetch: opts.fetch,
     sandbox: new SandboxService({
       dataDir,
@@ -106,7 +107,9 @@ export async function createTestApp(
     async close() {
       stopRuntime();
       services.runtime.stopAll();
+      services.summaries.stopAll();
       await services.runtime.whenIdle();
+      await services.summaries.whenIdle();
       if (app.server) await app.stop();
       await stopLive();
       await db.close();

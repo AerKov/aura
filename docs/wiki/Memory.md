@@ -35,6 +35,21 @@ languages (a question in English finds a note in Ukrainian). It is free and loca
 Any OpenAI-compatible server with an `/embeddings` endpoint works too. Changing the model re-indexes
 the notes.
 
+## Long chats
+
+An agent reads roughly the last 30 messages of a chat. When a chat grows past that, the
+orchestrator folds the older messages into a short **summary**: decisions, what you asked for, who
+does what, and what is still open. Agents get the summary first, then the recent messages, so
+nothing between them is skipped.
+
+- Click **Summary** in a chat's header to read it, or **Forget this summary** to delete it.
+- Each update is a small run on the orchestrator's engine. It counts towards the orchestrator's
+  and the project's budget, and stops when either is used up.
+- Turn summaries off with **Long chats** on the Memory screen.
+
+A summary is a record of the chat, not instructions. For something every agent should always
+know, ask for a memory note instead.
+
 ## Limits
 
 A note is at most 1000 characters. An agent saves at most 10 notes per run, and each agent or project

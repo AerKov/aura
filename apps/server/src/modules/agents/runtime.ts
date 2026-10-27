@@ -9,7 +9,7 @@ import type { EngineSelector } from "../engines/registry";
 import type { ProjectInfo } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
 import { sandboxNote } from "../sandbox/service";
-import { buildPrompt, CONTEXT_WINDOW, userNote } from "./context";
+import { buildPrompt, CONTEXT_WINDOW, SUMMARY_BATCH, userNote } from "./context";
 import { teamRules, wakeNote } from "./defaults";
 import type { AgentDirectory } from "./directory";
 import {
@@ -50,6 +50,10 @@ export interface RuntimeDeps {
     projectId: string | null;
     query: string;
   }) => Promise<string>;
+  /** The chat's rolling summary of older messages, if any (ADR 0017). */
+  chatSummary?: (chatId: string) => Promise<{ text: string; upTo: string } | null>;
+  /** Called after each run, e.g. to fold old messages into the summary. */
+  afterRun?: (chat: Chat) => void;
   ownerName: string;
   /** Working directory for runs outside a project. */
   scratchDir: string;
@@ -178,6 +182,7 @@ export class AgentRuntime {
       })
       .finally(() => {
         this.active.delete(lane);
+        this.deps.afterRun?.(chat);
         const next = this.queues.get(lane)?.shift();
         if (next) {
           this.trigger(next.handle, next.chat, next.trigger, next.team, next.reason);
@@ -277,7 +282,13 @@ export class AgentRuntime {
     const cwd = project?.workspace ?? this.deps.scratchDir;
     mkdirSync(cwd, { recursive: true });
     const headBefore = project ? await headOf(project.workspace) : null;
-    const history = await repo.listMessages(chat.id, { limit: CONTEXT_WINDOW + 5 });
+    const history = await repo.listMessages(chat.id, {
+      limit: CONTEXT_WINDOW + SUMMARY_BATCH + 5,
+    });
+    const summary = await this.deps.chatSummary?.(chat.id).catch((e: unknown) => {
+      log.warn("chat summary unavailable", { chat: chat.id, error: errorMessage(e) });
+      return null;
+    });
     const prompt =
       buildPrompt({
         agentHandle: handle,
@@ -285,6 +296,7 @@ export class AgentRuntime {
         history,
         trigger,
         ownerName: this.deps.ownerName,
+        summary,
       }) + wakeNote(reason, handle, team, this.deps.ownerName);
 
     const builtinTools = toolsFor(profile, project !== null);

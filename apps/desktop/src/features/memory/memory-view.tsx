@@ -24,6 +24,7 @@ export function MemoryView() {
   const [notes, setNotes] = useState<MemoryNote[] | null>(null);
   const [query, setQuery] = useState("");
   const [settings, setSettings] = useState<MemorySettings | null>(null);
+  const [summaries, setSummaries] = useState<boolean | null>(null);
 
   const load = useCallback(async (q: string) => {
     try {
@@ -40,7 +41,10 @@ export function MemoryView() {
 
   useEffect(() => {
     loadSettings()
-      .then((data) => setSettings(data.memory))
+      .then((data) => {
+        setSettings(data.memory);
+        setSummaries(data.summaries);
+      })
       .catch(reportError);
   }, []);
 
@@ -78,6 +82,8 @@ export function MemoryView() {
             onIndexed={() => void load(query)}
           />
         )}
+
+        {summaries !== null && <LongChats on={summaries} onSaved={setSummaries} />}
 
         <label className="relative mb-6 block">
           <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -147,6 +153,46 @@ export function MemoryView() {
     </section>
   );
 }
+
+/** Rolling summaries of long chats (ADR 0017). */
+function LongChats({ on, onSaved }: { on: boolean; onSaved: (on: boolean) => void }) {
+  const [busy, setBusy] = useState(false);
+  const toggle = async () => {
+    setBusy(true);
+    try {
+      const data = await call(() => api.engines.settings.put({ summaries: !on }));
+      onSaved(data.summaries);
+    } catch (error) {
+      reportError(error);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="bg-card mb-6 flex items-start gap-4 rounded-2xl border p-4">
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 text-sm font-medium">Long chats</div>
+        <p className="text-muted-foreground text-[13px]">
+          Agents read the last {CONTEXT_MESSAGES} or so messages. With summaries on, the
+          orchestrator folds older ones into a short summary, so decisions are not lost. Each
+          summary is a small run on the orchestrator's engine and counts towards budgets. Open it
+          from a chat's header.
+        </p>
+      </div>
+      <Button
+        variant={on ? "default" : "outline"}
+        className="h-auto shrink-0 rounded-full"
+        disabled={busy}
+        aria-pressed={on}
+        onClick={() => void toggle()}
+      >
+        {on ? "On" : "Off"}
+      </Button>
+    </div>
+  );
+}
+
+const CONTEXT_MESSAGES = 30;
 
 function SemanticSearch({
   settings,

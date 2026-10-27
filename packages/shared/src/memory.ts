@@ -18,3 +18,14 @@ export interface MemoryNote {
 }
 
 export const MEMORY_MAX_CHARS = 1000;
+
+/** What agents keep of a chat's older messages (ADR 0017): one rolling summary per chat. */
+export interface ChatSummary {
+  chatId: string;
+  text: string;
+  /** The last message the summary covers; newer messages are shown to agents as they are. */
+  upTo: string;
+  /** How many messages the summary covers. */
+  covered: number;
+  updatedAt: string;
+}

@@ -14,6 +14,8 @@ export interface EngineSettings {
   custom: { baseUrl: string; label: string };
   /** Semantic memory search (ADR 0013): an embedding model on a local or compatible server. */
   memory: { engine: EmbeddingEngine | null; model: string | null };
+  /** Fold older chat messages into a rolling summary for agents (ADR 0017). */
+  summaries: boolean;
 }
 
 export const EMBEDDING_ENGINES = ["ollama", "openai-compatible"] as const;
@@ -33,6 +35,7 @@ export const DEFAULT_SETTINGS: EngineSettings = {
   ollama: { baseUrl: "http://127.0.0.1:11434" },
   custom: { baseUrl: "http://127.0.0.1:1234/v1", label: "LM Studio" },
   memory: { engine: null, model: null },
+  summaries: true,
 };
 
 export class EngineSettingsError extends Error {
@@ -91,6 +94,7 @@ export function parseSettings(raw: unknown): EngineSettings {
   ) {
     settings.memory = { engine: raw.memory.engine, model: raw.memory.model };
   }
+  if (typeof raw.summaries === "boolean") settings.summaries = raw.summaries;
   return settings;
 }
 
@@ -104,6 +108,7 @@ export interface SettingsPatch {
   /** Semantic memory search: both set to turn it on, both null to turn it off. */
   memoryEngine?: EmbeddingEngine | null;
   memoryModel?: string | null;
+  summaries?: boolean;
 }
 
 /** Engine settings and API keys on disk. */
@@ -156,6 +161,7 @@ export class EngineStore {
         throw new EngineSettingsError(`"${model}" is not a valid model id`);
       next.memory = engine && model ? { engine, model } : { engine: null, model: null };
     }
+    if (patch.summaries !== undefined) next.summaries = patch.summaries;
     writeFileSync(this.file, `${JSON.stringify(next, null, 2)}\n`);
     this.cached = next;
     await commitAll(this.dataDir, "chore(engines): update engine settings");

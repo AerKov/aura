@@ -335,6 +335,11 @@ Ready-made packs of agents, skills, themes and extensions: built in, or from a G
 shows every file and diff with a hash, then one commit installs it; the orchestrator can offer a
 pack as an approval (ADR 0016).
 
+**Phase 14: Long chats**
+Older messages are folded into a rolling summary per chat that agents get with the recent
+messages; it counts towards budgets, can be read and cleared from the chat, and turned off on the
+Memory page (ADR 0017).
+
 **Later**
-Memory summaries, a container per project (sandbox level 2),
+A container per project (sandbox level 2),
 pack signatures and a reviewed community index, multi-user.

@@ -72,6 +72,7 @@ export const enginesModule = ({ sessions, engines, agents, dataDir, toolBridge }
           customLabel: t.Optional(t.String({ maxLength: 40 })),
           memoryEngine: t.Optional(t.Nullable(t.UnionEnum(EMBEDDING_ENGINES))),
           memoryModel: t.Optional(t.Nullable(t.String({ maxLength: 120 }))),
+          summaries: t.Optional(t.Boolean()),
         }),
       },
     )

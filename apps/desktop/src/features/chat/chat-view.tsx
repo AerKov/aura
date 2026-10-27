@@ -1,5 +1,5 @@
-import type { Message } from "@aura/shared";
-import { ChevronLeft, ListTodo } from "lucide-react";
+import type { ChatSummary, Message } from "@aura/shared";
+import { ChevronLeft, ListTodo, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { isGrouped } from "./message-utils";
 import { chatSubtitle } from "./participants";
 import { SetupPanel } from "./setup-panel";
 import { useChatStore } from "./store";
+import { loadSummary, SummaryPanel } from "./summary-panel";
 import { TasksPanel } from "./tasks-panel";
 import { WebhookInfo } from "./webhook-info";
 
@@ -42,13 +43,23 @@ export function ChatView({ chatId }: { chatId: string }) {
     chat?.projectId ? (s.tasks[chat.projectId]?.length ?? 0) : 0,
   );
   const [replyTo, setReplyTo] = useState<Message | null>(null);
-  const [showTasks, setShowTasks] = useState(false);
+  const [panel, setPanel] = useState<"tasks" | "summary" | null>(null);
+  const [summary, setSummary] = useState<ChatSummary | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
   useEffect(() => {
     void loadMembers(chatId).catch(reportError);
   }, [chatId]);
+
+  // The summary changes only after runs, so it is refreshed when an agent finishes a reply.
+  const finished = messages.filter(
+    (m) => m.author.kind === "agent" && m.status !== "streaming",
+  ).length;
+  // biome-ignore lint/correctness/useExhaustiveDependencies: refresh when a reply finished
+  useEffect(() => {
+    void loadSummary(chatId).then(setSummary).catch(reportError);
+  }, [chatId, finished]);
 
   const working = messages.filter((m) => m.status === "streaming").map((m) => m.author.id);
   const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
@@ -126,11 +137,21 @@ export function ChatView({ chatId }: { chatId: string }) {
             )}
             {chat.kind === "system" && <WebhookInfo />}
             {project && <BudgetRing spent={project.spentUsd} budget={project.budgetUsd} />}
+            {summary && (
+              <Button
+                variant={panel === "summary" ? "secondary" : "ghost"}
+                size="sm"
+                title="What agents keep of older messages"
+                onClick={() => setPanel(panel === "summary" ? null : "summary")}
+              >
+                <ScrollText /> <span className="max-sm:hidden">Summary</span>
+              </Button>
+            )}
             {project && (
               <Button
-                variant={showTasks ? "secondary" : "ghost"}
+                variant={panel === "tasks" ? "secondary" : "ghost"}
                 size="sm"
-                onClick={() => setShowTasks(!showTasks)}
+                onClick={() => setPanel(panel === "tasks" ? null : "tasks")}
               >
                 <ListTodo /> <span className="max-sm:hidden">Tasks</span>
                 {taskCount ? ` ${taskCount}` : ""}
@@ -174,8 +195,18 @@ export function ChatView({ chatId }: { chatId: string }) {
           placeholder={chat.kind === "direct" ? "What do you have in mind?" : undefined}
         />
       </section>
-      {showTasks && chat.projectId && (
-        <TasksPanel projectId={chat.projectId} onClose={() => setShowTasks(false)} />
+      {panel === "tasks" && chat.projectId && (
+        <TasksPanel projectId={chat.projectId} onClose={() => setPanel(null)} />
+      )}
+      {panel === "summary" && summary && (
+        <SummaryPanel
+          summary={summary}
+          onCleared={() => {
+            setSummary(null);
+            setPanel(null);
+          }}
+          onClose={() => setPanel(null)}
+        />
       )}
     </div>
   );

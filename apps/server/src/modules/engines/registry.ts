@@ -256,6 +256,7 @@ export class EngineRegistry implements EngineSelector {
     default: EngineId;
     engines: EngineInfo[];
     memory: ReturnType<EngineStore["get"]>["memory"];
+    summaries: boolean;
   }> {
     const settings = this.store.get();
     const engines = await Promise.all(
@@ -288,7 +289,12 @@ export class EngineRegistry implements EngineSelector {
         };
       }),
     );
-    return { default: settings.default, engines, memory: settings.memory };
+    return {
+      default: settings.default,
+      engines,
+      memory: settings.memory,
+      summaries: settings.summaries,
+    };
   }
 
   /** Models an engine offers, free ones first. Claude Code has no listing API. */

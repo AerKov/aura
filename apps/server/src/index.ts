@@ -54,6 +54,7 @@ async function main(): Promise<void> {
     hub,
     engines,
     embedder: () => engines.embedder(),
+    summaries: () => engines.store.get().summaries,
     agents,
     dataDir: config.dataDir,
     safeMode: safe.mode,
@@ -115,7 +116,11 @@ async function main(): Promise<void> {
     stopScheduler();
     stopNotifications();
     services.runtime.stopAll();
-    await Promise.race([services.runtime.whenIdle(), Bun.sleep(5_000)]);
+    services.summaries.stopAll();
+    await Promise.race([
+      Promise.all([services.runtime.whenIdle(), services.summaries.whenIdle()]),
+      Bun.sleep(5_000),
+    ]);
     await app.stop();
     await stopLive().catch(() => {});
     await db.close();

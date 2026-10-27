@@ -154,6 +154,13 @@ DEFINE ANALYZER OVERWRITE memory_words TOKENIZERS blank, class, punct FILTERS lo
 DEFINE ANALYZER OVERWRITE memory_keys TOKENIZERS blank FILTERS lowercase;
 DEFINE INDEX OVERWRITE memory_text ON memory FIELDS text FULLTEXT ANALYZER memory_words BM25;
 DEFINE INDEX OVERWRITE memory_keys ON memory FIELDS keys FULLTEXT ANALYZER memory_keys BM25;
+
+-- Rolling summary of a chat's older messages (ADR 0017); the record id is the chat id.
+DEFINE TABLE OVERWRITE chat_summary SCHEMAFULL;
+DEFINE FIELD OVERWRITE text ON chat_summary TYPE string;
+DEFINE FIELD OVERWRITE up_to ON chat_summary TYPE record<message>;
+DEFINE FIELD OVERWRITE covered ON chat_summary TYPE int;
+DEFINE FIELD OVERWRITE updated_at ON chat_summary TYPE datetime DEFAULT time::now();
 `;
 
 export async function applySchema(surreal: Surreal): Promise<void> {

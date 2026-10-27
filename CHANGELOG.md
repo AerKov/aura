@@ -5,6 +5,9 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- Long chats: older messages are folded into a rolling summary per chat, so agents keep earlier
+  decisions. Open it from the chat header, clear it, or turn summaries off on the Memory page.
+
 - Catalog: packs of agents, skills, themes, CSS snippets and panel extensions. Six built-in packs
   (dev team, writing team, research, on-call, themes, alerts panel), or a pack from a GitHub link.
   A preview shows every file with diffs and warnings; installing is one git commit. The

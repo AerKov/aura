@@ -193,6 +193,22 @@ export class ChatRepo {
     return (rows ?? []).map(toMessage).reverse();
   }
 
+  /** Messages after `after` (all when null), oldest first. */
+  async listMessagesAfter(
+    chatId: string,
+    opts: { after: string | null; limit: number },
+  ): Promise<Message[]> {
+    const where = opts.after ? "chat = $chat AND id > $after" : "chat = $chat";
+    const [rows] = await this.db
+      .query<[Row[]]>(`SELECT * FROM message WHERE ${where} ORDER BY id ASC LIMIT $limit`, {
+        chat: new RecordId("chat", chatId),
+        after: opts.after ? new RecordId("message", opts.after) : undefined,
+        limit: opts.limit,
+      })
+      .collect();
+    return (rows ?? []).map(toMessage);
+  }
+
   async getMessage(messageId: string): Promise<Message | null> {
     const row = await this.one("SELECT * FROM ONLY $id", {
       id: new RecordId("message", messageId),

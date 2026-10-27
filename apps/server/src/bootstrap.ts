@@ -25,6 +25,7 @@ import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
 import { SandboxService } from "./modules/sandbox/service";
 import { SkillService } from "./modules/skills/service";
+import { ChatSummaryService } from "./modules/summaries/service";
 import { TaskService } from "./modules/tasks/service";
 import type { Embedder } from "./providers/embeddings";
 
@@ -46,6 +47,8 @@ export async function createServices(deps: {
   fetch?: typeof fetch;
   /** Embedding model for semantic memory search; keyword search when absent. */
   embedder?: () => Embedder | null;
+  /** Whether long chats are summarized for agents (engine settings, ADR 0017). */
+  summaries?: () => boolean;
   agents: AgentDirectory;
   dataDir: string;
   maxChainDepth?: number;
@@ -123,6 +126,18 @@ export async function createServices(deps: {
     fetch: deps.fetch,
   });
   const devices = new DeviceService({ db: deps.db, owner });
+  const scratchDir = join(deps.dataDir, "state", "scratch");
+  const summaries = new ChatSummaryService({
+    db: deps.db,
+    repo,
+    runs,
+    engines: deps.engines,
+    agents: deps.agents,
+    projects,
+    ownerName: owner.name,
+    scratchDir,
+    enabled: deps.summaries ?? (() => true),
+  });
   registerExecutors(toolDeps);
   const runtime = new AgentRuntime({
     chat,
@@ -145,8 +160,10 @@ export async function createServices(deps: {
     promptExtras: (profile) => skills.promptFor(profile),
     memoryPrompt: (input) => memory.promptFor(input),
     sandboxPolicy: () => sandbox.policy(),
+    chatSummary: (chatId) => summaries.get(chatId),
+    afterRun: (chat) => summaries.schedule(chat.id),
     ownerName: owner.name,
-    scratchDir: join(deps.dataDir, "state", "scratch"),
+    scratchDir,
     maxChainDepth: deps.maxChainDepth,
   });
   const lastOwnMessage = (await repo.listMessages("direct", { limit: 50 }))
@@ -167,6 +184,7 @@ export async function createServices(deps: {
     alerts,
     toolDeps,
     memory,
+    summaries,
     sandbox,
     appearance,
     mcp,
