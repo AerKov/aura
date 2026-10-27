@@ -1,11 +1,20 @@
 name: Release
 
 # Push a tag like v0.17.0-alpha.1 to build installers for macOS, Windows and Linux into a draft
-# pre-release. Run it by hand (workflow_dispatch) for a dry run: installers become artifacts only.
+# pre-release. Run it by hand with a tag name for the same (the tag is created when the release is
+# published), or without one for a dry run: installers become artifacts only.
 on:
   push:
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, e.g. v0.17.0-alpha.1 (empty: dry run)"
+        required: false
+        default: ""
+
+env:
+  RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
 
 permissions:
   contents: write
@@ -44,18 +53,19 @@ jobs:
           projectPath: apps/desktop
           tauriScript: bun run tauri
           args: --config src-tauri/tauri.sidecar.conf.json
-          tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-          releaseName: Aura ${{ github.ref_name }}
+          tagName: ${{ env.RELEASE_TAG }}
+          releaseCommitish: ${{ github.sha }}
+          releaseName: Aura ${{ env.RELEASE_TAG }}
           releaseBody: |
-            Alpha build. Read the [alpha notes](https://github.com/AerKov/aura/blob/${{ github.ref_name }}/docs/ALPHA.md)
-            first: requirements, what is optional, and known limits. Changes: [CHANGELOG](https://github.com/AerKov/aura/blob/${{ github.ref_name }}/CHANGELOG.md).
+            Alpha build. Read the [alpha notes](https://github.com/AerKov/aura/blob/${{ github.sha }}/docs/ALPHA.md)
+            first: requirements, what is optional, and known limits. Changes: [CHANGELOG](https://github.com/AerKov/aura/blob/${{ github.sha }}/CHANGELOG.md).
 
             The installers are not signed yet. On macOS, right-click the app and choose Open the
             first time; on Windows, choose "More info" → "Run anyway".
           releaseDraft: true
           prerelease: true
       - name: Keep installers of a dry run
-        if: github.ref_type != 'tag'
+        if: env.RELEASE_TAG == ''
         uses: actions/upload-artifact@v4
         with:
           name: aura-${{ matrix.platform }}
