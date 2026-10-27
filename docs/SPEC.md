@@ -309,5 +309,5 @@ Aura's own agent loop on OpenRouter, Ollama or any OpenAI-compatible server, wit
 shell and web tools (ADR 0011).
 
 **Later**
-MCP servers in Aura's loop, agent memory with vector search, container sandbox,
+Agent memory with vector search, container sandbox,
 community catalog with review and signatures, multi-user.

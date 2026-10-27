@@ -9,6 +9,8 @@ export interface NativeTool {
   name: string;
   description: string;
   schema: z.ZodObject;
+  /** JSON schema sent to the model, when it does not come from `schema` (MCP tools). */
+  parameters?: Record<string, unknown>;
   run(
     args: Record<string, unknown>,
     signal: AbortSignal,

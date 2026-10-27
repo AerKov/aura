@@ -367,10 +367,10 @@ function EngineCard({
           Show free models only
         </label>
       )}
-      {!engine.mcp && (
+      {engine.kind === "aura" && (
         <p className="text-muted-foreground text-xs">
-          Built-in tools: files, search, shell and web fetch. MCP servers work with Claude Code only
-          for now.
+          Tools: files, search, shell, web fetch and your MCP servers. Smaller models follow tools
+          less reliably; prefer models marked for tool use.
         </p>
       )}
 

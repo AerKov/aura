@@ -3,12 +3,30 @@
 A local-first desktop messenger where you work with an AI orchestrator and a team of AI agents.
 Working name; see [docs/SPEC.md](docs/SPEC.md) for the product and architecture spec.
 
-Status: **proof of concept**, roadmap phases 0-8 implemented (see `docs/SPEC.md` and `docs/decisions/`).
+Status: **proof of concept**, roadmap phases 0-9 implemented (see `docs/SPEC.md` and `docs/decisions/`).
 
 ## Requirements
 
 - [Bun](https://bun.sh) 1.4+
 - Rust toolchain and the [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS
+
+## Choose what runs your agents
+
+Open **Engines** in the left rail. Any one of these is enough:
+
+| Engine                       | What you need                                                            | Cost                  |
+| ---------------------------- | ------------------------------------------------------------------------ | --------------------- |
+| Claude Code                  | `npm i -g @anthropic-ai/claude-code`, then run `claude` and log in       | Claude plan or API    |
+| Gemini CLI                   | `npm i -g @google/gemini-cli`, then run `gemini` and sign in with Google | free tier             |
+| Codex                        | `npm i -g @openai/codex @zed-industries/codex-acp`, then `codex login`   | ChatGPT plan or API   |
+| OpenCode                     | `npm i -g opencode-ai`, then `opencode auth login`                       | depends on provider   |
+| Ollama                       | [ollama.com](https://ollama.com), then `ollama pull qwen3:8b`            | free, local           |
+| OpenRouter                   | a key from openrouter.ai/keys, pasted in Engines; pick a `:free` model   | free models available |
+| LM Studio / llama.cpp / vLLM | an OpenAI-compatible server URL                                          | free, local           |
+
+Press **Use for all agents** on a ready engine, or choose an engine per agent at the bottom of the
+page. Logins stay with each agent app; API keys you paste are kept in `~/.aura/state/secrets.json`
+(outside git) and sent only to their own service. See ADR 0011 and 0012.
 
 ## Development
 

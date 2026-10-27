@@ -35,8 +35,6 @@ export interface EngineInfo {
   needsKey: boolean;
   hasKey: boolean;
   baseUrl: string | null;
-  /** External MCP servers from mcp/servers.json reach agents on this engine. */
-  mcp: boolean;
 }
 
 const DESCRIPTIONS: Record<
@@ -263,7 +261,6 @@ export class EngineRegistry implements EngineSelector {
                 : id === "openrouter"
                   ? OPENROUTER_URL
                   : null,
-          mcp: d.kind !== "aura",
         };
       }),
     );

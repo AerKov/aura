@@ -37,7 +37,9 @@ OpenRouter or Ollama.
 - **App tools** (create_project, tasks…) are the same `AgentTool`s for both loops.
   - Claude Code gets them over the SDK's in-process MCP server.
   - The own loop calls them directly.
-  - External MCP servers (`mcp/servers.json`) reach Claude Code agents only for now.
+  - External MCP servers (`mcp/servers.json`) granted to an agent are connected with the official
+    MCP client (`providers/mcp-client.ts`). Their tools are named `mcp__<server>__<tool>`, as in
+    Claude Code. A server that does not start is skipped with a warning.
 - **Selection.**
   - `engines.json` in the data dir (config in files, committed) holds the default engine, a
     default model per engine, and the Ollama and custom server URLs.
@@ -60,5 +62,4 @@ OpenRouter or Ollama.
 ## Later
 
 - Gemini CLI, Codex and OpenCode: done in ADR 0012 (ACP).
-- MCP servers in the own loop.
 - WebSearch through a search API.

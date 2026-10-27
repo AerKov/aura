@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
+import { ToolBridge } from "../modules/engines/tool-bridge";
 import { OpenAICompatProvider } from "./openai-compat";
 import type { AgentEvent, AgentRunInput } from "./types";
 
@@ -268,5 +269,53 @@ describe("OpenAICompatProvider (Aura's own agent loop)", () => {
     }) as unknown as typeof fetch;
     const events = await collect(provider(fetchFn).run(input(), abort.signal));
     expect(events.at(-1)).toMatchObject({ type: "error", code: "aborted" });
+  });
+  test("uses tools from granted MCP servers and skips servers that are down", async () => {
+    let port = 0;
+    const bridge = new ToolBridge(() => `http://127.0.0.1:${port}`, "test");
+    const server = Bun.serve({
+      port: 0,
+      fetch: (req) => bridge.handle(new URL(req.url).pathname.split("/").at(-1) ?? "", req),
+    });
+    port = server.port ?? 0;
+    const endpoint = bridge.open("ext", [
+      {
+        name: "echo",
+        description: "Echo text",
+        inputSchema: { text: z.string() },
+        handler: async (args) => ({ text: `echo: ${String(args.text)}` }),
+      },
+    ]);
+    try {
+      const { fetchFn, requests } = scripted([
+        sseResponse([toolChunk(0, { id: "m1", name: "mcp__ext__echo", args: '{"text":"hi"}' })]),
+        sseResponse([textChunk("ok")]),
+      ]);
+      const events = await collect(
+        provider(fetchFn).run(
+          input({
+            mcpServers: {
+              ext: { type: "http", url: endpoint.url },
+              down: { type: "http", url: "http://127.0.0.1:9/mcp" },
+            },
+          }),
+          new AbortController().signal,
+        ),
+      );
+      const tools = requests[0]?.tools as {
+        function: { name: string; parameters: { properties: object } };
+      }[];
+      expect(tools.map((t) => t.function.name)).toEqual(["mcp__ext__echo"]);
+      expect(tools[0]?.function.parameters.properties).toHaveProperty("text");
+      expect(events.find((e) => e.type === "tool-result")).toMatchObject({
+        id: "m1",
+        isError: false,
+        output: "echo: hi",
+      });
+      expect(events.at(-1)).toEqual({ type: "done" });
+    } finally {
+      endpoint.close();
+      server.stop(true);
+    }
   });
 });
