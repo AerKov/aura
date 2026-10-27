@@ -1,56 +1,134 @@
-# aura
+<p align="center">
+  <img src="docs/assets/icon.png" width="96" height="96" alt="Aura">
+</p>
 
-A local-first desktop messenger where you work with an AI orchestrator and a team of AI agents.
-Working name; see [docs/SPEC.md](docs/SPEC.md) for the product and architecture spec.
+<h1 align="center">Aura</h1>
 
-Status: **proof of concept**, roadmap phases 0-9 implemented (see `docs/SPEC.md` and `docs/decisions/`).
+<p align="center">
+  <b>A messenger for you and your team of AI agents.</b><br>
+  Local-first. Bring your own agent: Claude Code, Gemini CLI, Codex, OpenCode, or local models.
+</p>
 
-## Requirements
+<p align="center">
+  <a href="https://github.com/AerKov/aura/actions/workflows/ci.yml"><img src="https://github.com/AerKov/aura/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
+  <img src="https://img.shields.io/badge/status-proof%20of%20concept-orange" alt="Status: proof of concept">
+  <a href="https://github.com/AerKov/aura/wiki"><img src="https://img.shields.io/badge/docs-wiki-0077dc" alt="Docs"></a>
+</p>
 
-- [Bun](https://bun.sh) 1.4+
-- Rust toolchain and the [Tauri 2 prerequisites](https://v2.tauri.app/start/prerequisites/) for your OS
+<p align="center">
+  <img src="docs/assets/project-light.png" alt="A project chat: a coder and a reviewer finish a CLI tool" width="900">
+</p>
 
-## Choose what runs your agents
+You talk to an **orchestrator**. It plans with you, puts together a team of **agents**, and they
+work in project chats like people do: they write code and files, hand work to each other with
+@mentions, review each other, handle monitoring alerts and improve their own skills. Anything that
+matters waits for your **approval**.
 
-Open **Engines** in the left rail. Any one of these is enough:
+Everything runs on your computer: chats in a local database, agents, skills and projects as plain
+files in a git repository you own.
 
-| Engine                       | What you need                                                                                                                                                          | Cost                  |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| Claude Code                  | `npm i -g @anthropic-ai/claude-code`, then run `claude` and log in                                                                                                     | Claude plan or API    |
-| Gemini CLI                   | `npm i -g @google/gemini-cli`, then run `gemini` and sign in with Google                                                                                               | free tier             |
-| Codex                        | `npm i -g @openai/codex @zed-industries/codex-acp`, then `codex login`                                                                                                 | ChatGPT plan or API   |
-| OpenCode                     | `npm i -g opencode-ai`, then `opencode auth login`                                                                                                                     | depends on provider   |
-| Ollama                       | [ollama.com](https://ollama.com), `ollama pull qwen3:8b`, then start it with `OLLAMA_CONTEXT_LENGTH=32768 ollama serve` (agents need more than the default 4K context) | free, local           |
-| OpenRouter                   | a key from openrouter.ai/keys, pasted in Engines; pick a `:free` model                                                                                                 | free models available |
-| LM Studio / llama.cpp / vLLM | an OpenAI-compatible server URL                                                                                                                                        | free, local           |
+## Features
 
-Press **Use for all agents** on a ready engine, or choose an engine per agent at the bottom of the
-page. Logins stay with each agent app; API keys you paste are kept in `~/.aura/state/secrets.json`
-(outside git) and sent only to their own service. See ADR 0011 and 0012.
+- **Everything is a chat.** Your orchestrator, one chat per project, and a chat for alerts. Replies
+  like a messenger; no channels, threads or workspaces.
+- **Agents as files.** Each agent has a role, tools (least privilege), a budget, skills and its own
+  engine. Ask the orchestrator for a new one; approve it.
+- **Projects that ship.** A project is a chat, a git folder and a budget. Agents take turns, every
+  run is committed, every reply shows the tools used and the cost.
+- **Choose the engine per agent.** Claude Code, Gemini CLI, Codex or OpenCode under your own login,
+  or Aura's built-in agent on OpenRouter, Ollama or LM Studio, free options included.
+- **Approvals for side effects.** New projects and agents, skill changes, schedules, CSS, MCP servers
+  and extensions all show a card with exactly what will change.
+- **Safe by default.** Agents stay inside their project folder, answer only when mentioned, stop at
+  their budget and treat web pages, alerts and files as data, never as instructions.
+- **Alerts and schedules.** Monitoring webhooks wake the orchestrator for triage; recurring jobs run
+  agents on a schedule.
+- **Skills that improve.** Agents propose changes to their own know-how; you approve the diff;
+  every version is a git commit you can roll back.
+- **Customize by asking.** Themes, MCP tool servers and sandboxed panel extensions, built by the
+  orchestrator in chat.
+- **On your phone.** Pair a phone with a one-time code; it connects to your desktop, with
+  notifications. No cloud.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/assets/engines.png" alt="Engines: choose what runs your agents"></td>
+    <td width="50%"><img src="docs/assets/alerts-dark.png" alt="Alert triage in the dark theme; an injected instruction is flagged, not followed"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Pick an engine for all agents or per agent</sub></td>
+    <td align="center"><sub>Alert triage: an injected instruction is flagged, not followed</sub></td>
+  </tr>
+</table>
+
+<p align="center"><img src="docs/assets/phone.png" alt="Aura on a phone" width="600"></p>
+
+## Get started
+
+1. **Install.** Download a build from [Releases](https://github.com/AerKov/aura/releases), or run
+   from source:
+
+   ```sh
+   git clone https://github.com/AerKov/aura && cd aura
+   bun install
+   bun run dev
+   ```
+
+   From source you need [Bun](https://bun.sh) 1.4+ and the
+   [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
+
+2. **Pick an engine** on the **Engines** page. Any one is enough:
+
+   | Engine                                        | Setup                                                              | Cost                  |
+   | --------------------------------------------- | ------------------------------------------------------------------ | --------------------- |
+   | Claude Code                                   | `npm i -g @anthropic-ai/claude-code`, run `claude`, log in         | Claude plan or API    |
+   | Gemini CLI                                    | `npm i -g @google/gemini-cli`, run `gemini`, sign in with Google   | free tier             |
+   | Codex                                         | `npm i -g @openai/codex @zed-industries/codex-acp`, `codex login`  | ChatGPT plan or API   |
+   | OpenCode                                      | `npm i -g opencode-ai`, `opencode auth login`                      | depends on provider   |
+   | Ollama                                        | `ollama pull qwen3:8b`, `OLLAMA_CONTEXT_LENGTH=32768 ollama serve` | free, local           |
+   | OpenRouter                                    | paste a key from openrouter.ai/keys, pick a `:free` model          | free models available |
+   | LM Studio and other OpenAI-compatible servers | the server URL                                                     | free, local           |
+
+3. **Tell the orchestrator what you want**, in any language, and approve its plan.
+
+The [wiki](https://github.com/AerKov/aura/wiki) covers everything else: engines, agents and
+projects, approvals and safety, skills, alerts, customization, the phone app, and your data.
+
+## Privacy
+
+Aura has no account and no telemetry. Prompts go only to the engine you choose (or nowhere, with local
+models). Agent apps keep their own logins; Aura never reads them. API keys you paste stay in
+`~/.aura/state`, outside git, and go only to their own service.
+
+## Status
+
+Proof of concept (0.9): the full loop works and is tested, with rough edges. Agents are confined by
+checks in the app, not yet by containers, so grant shell access with care. See the roadmap in
+[docs/SPEC.md](docs/SPEC.md) and what changed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 
 ```sh
 bun install
-bun run dev            # server (watch) + desktop app
-bun run dev:server     # server only, http://127.0.0.1:4517
-bun run dev:desktop    # desktop only (expects a running server)
-
+bun run dev            # server (watch) + desktop app, dev data in .aura-dev/
 bun run typecheck
-bun run lint           # biome; `bun run lint:fix` to apply fixes
+bun run lint           # biome; lint:fix applies fixes
 bun test
-
-bun run build          # compile the server sidecar, then `tauri build`
+bun run build          # compile the server sidecar, then tauri build
 ```
 
-Dev data (SurrealDB files) goes to `.aura-dev/`. A release build stores data in `~/.aura`
-(override with `AURA_DATA_DIR`).
-
-## Layout
-
 ```
-apps/server     Bun + Elysia API, WebSocket, embedded SurrealDB
-apps/desktop    Tauri 2 shell + React/Vite/Tailwind/shadcn UI
-packages/shared Protocol and types shared by server and client
-docs/           Spec and architecture decisions (docs/decisions)
+apps/server      Bun + Elysia: API, WebSocket, agents, engines, embedded SurrealDB
+apps/desktop     Tauri 2 + React/Vite/Tailwind UI (also served to phones as a web app)
+packages/shared  message protocol and shared types
+docs/            spec, architecture decisions, wiki sources
 ```
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) first; architecture decisions are in
+[docs/decisions](docs/decisions/). Security reports go through
+[private advisories](https://github.com/AerKov/aura/security/advisories/new).
+
+## License
+
+[MIT](LICENSE)

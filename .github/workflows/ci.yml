@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Typecheck, lint, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun test
+
+  sidecar:
+    name: Compile server sidecar
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: bun install --frozen-lockfile
+      - run: bun run build:sidecar
+      - name: Smoke test
+        run: |
+          bin=$(ls apps/desktop/src-tauri/binaries/aura-server-*)
+          export AURA_DATA_DIR="$RUNNER_TEMP/aura" AURA_PORT=4599
+          export NAPI_RS_NATIVE_LIBRARY_PATH="$PWD/apps/desktop/src-tauri/resources/surrealdb-node.node"
+          "$bin" & pid=$!
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:4599/health && break; sleep 1; done
+          curl -sf http://127.0.0.1:4599/health | grep '"status":"ok"'
+          kill $pid

@@ -1,0 +1,47 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Engines and pick Ollama
+        2. Ask the orchestrator to …
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Engine
+      options:
+        [
+          Claude Code,
+          Gemini CLI,
+          Codex,
+          OpenCode,
+          OpenRouter,
+          Ollama,
+          OpenAI-compatible,
+          Not related,
+        ]
+  - type: input
+    id: version
+    attributes:
+      label: Aura version and OS
+      placeholder: 0.9.0, macOS 15
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Server log lines around the problem. Remove API keys and personal data.
+      render: text
+  - type: markdown
+    attributes:
+      value: Security problems go to a [private security advisory](https://github.com/AerKov/aura/security/advisories/new), not here.

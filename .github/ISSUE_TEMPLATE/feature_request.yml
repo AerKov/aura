@@ -1,0 +1,22 @@
+name: Idea or feature request
+description: Suggest something Aura should do
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do?
+      description: The situation and the goal, not only the solution.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: How could it work?
+  - type: checkboxes
+    id: extension
+    attributes:
+      label: Could it be an extension?
+      description: Many things can be built by asking the orchestrator (themes, panels, MCP servers).
+      options:
+        - label: I checked whether this works as a theme, extension or MCP server

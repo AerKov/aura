@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security problem
+    url: https://github.com/AerKov/aura/security/advisories/new
+    about: Please report vulnerabilities privately.
+  - name: Documentation
+    url: https://github.com/AerKov/aura/wiki
+    about: Getting started, engines, agents, customization.
