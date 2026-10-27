@@ -64,6 +64,20 @@ const agentShape = {
     .describe(
       `variables for the agent's commands: plain values, or ${secretRef("NAME")} for keys the user stores on the Integrations page. Never put a key's value here.`,
     ),
+  network: z
+    .object({
+      hosts: z
+        .array(z.string())
+        .describe("hosts its commands may reach: api.example.com or *.example.com"),
+      shared: z
+        .boolean()
+        .describe("also the shared list of allowed hosts (package registries, GitHub…)"),
+      restrictWeb: z.boolean().describe("WebFetch only to these hosts too"),
+    })
+    .optional()
+    .describe(
+      "network rules; omit for the shared list. Give an agent only the hosts its work needs.",
+    ),
 };
 
 function profileFrom(input: Record<string, unknown>): AgentProfile {
@@ -78,13 +92,17 @@ function profileFrom(input: Record<string, unknown>): AgentProfile {
     budgetUsd: input.budget_usd,
     skills: [],
     env: input.env,
+    network: input.network,
   });
 }
 
 function describeAgent(p: AgentProfile, isNew: boolean): string {
   const budget = p.budgetUsd !== null ? ` · limit $${p.budgetUsd.toFixed(2)}` : "";
   const engine = p.engine ? ` · engine: ${p.engine}${p.model ? ` / ${p.model}` : ""}` : "";
-  return `- **@${p.handle}**${isNew ? " (new)" : ""}: ${p.role} · tools: ${p.builtinTools.join(", ") || "none"}${engine}${budget}`;
+  const net = p.network
+    ? ` · network: ${[p.network.shared ? "shared list" : "", ...p.network.hosts].filter(Boolean).join(", ") || "none"}${p.network.restrictWeb ? " (web too)" : ""}`
+    : "";
+  return `- **@${p.handle}**${isNew ? " (new)" : ""}: ${p.role} · tools: ${p.builtinTools.join(", ") || "none"}${engine}${budget}${net}`;
 }
 
 /** An existing profile with the fields an agent_change request sets. */
@@ -100,6 +118,7 @@ function changedProfile(current: AgentProfile, change: Record<string, unknown>):
     budgetUsd: current.budgetUsd,
     skills: current.skills,
     env: change.env ?? current.env,
+    network: change.network ?? current.network,
   });
 }
 
@@ -290,7 +309,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
     },
     {
       name: "propose_agent_change",
-      description: `Ask the user to approve a change to an existing agent: its tools, the variables its commands get, its role or its instructions. The card shows the exact diff of its agent.md. Only the fields you pass change. Secret values never go here: use ${secretRef("NAME")} and ask the user to store the value on the Integrations page.`,
+      description: `Ask the user to approve a change to an existing agent: its tools, the variables its commands get, where it may connect (network), its role or its instructions. The card shows the exact diff of its agent.md. Only the fields you pass change. Secret values never go here: use ${secretRef("NAME")} and ask the user to store the value on the Integrations page.`,
       inputSchema: {
         agent: z.string().describe("handle without @"),
         tools: z
@@ -298,6 +317,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
           .optional()
           .describe("the full new list of built-in tools"),
         env: agentShape.env,
+        network: agentShape.network,
         role: z.string().optional(),
         system_prompt: z.string().optional().describe("the full new instructions"),
         why: z.string().describe("one sentence for the user"),
@@ -319,6 +339,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
           const changed = [
             input.tools !== undefined ? "tools" : "",
             input.env !== undefined ? "variables" : "",
+            input.network !== undefined ? "network" : "",
             input.role !== undefined ? "role" : "",
             input.system_prompt !== undefined ? "instructions" : "",
           ].filter(Boolean);
@@ -335,6 +356,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
               summary,
               ...(input.tools !== undefined ? { tools: input.tools } : {}),
               ...(input.env !== undefined ? { env: input.env } : {}),
+              ...(input.network !== undefined ? { network: input.network } : {}),
               ...(input.role !== undefined ? { role: input.role } : {}),
               ...(input.system_prompt !== undefined ? { system_prompt: input.system_prompt } : {}),
             },

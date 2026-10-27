@@ -15,7 +15,7 @@ export function integrationTools(integrations: IntegrationsService): AgentTool[]
     {
       name: "inspect_setup",
       description:
-        "Read-only: how an agent is set up (engine, model, tools, variables by name, MCP servers, chats, last error, warnings), or all integrations when no agent is given. Use it when an agent does not answer or a tool is missing. Secret values are never shown.",
+        "Read-only: how an agent is set up (engine, model, tools, variables by name, network rules, MCP servers, chats, last error, warnings), or all integrations when no agent is given. Use it when an agent does not answer or a tool is missing. Secret values are never shown.",
       inputSchema: {
         agent: z.string().optional().describe("agent handle without @"),
       },
@@ -30,6 +30,7 @@ export function integrationTools(integrations: IntegrationsService): AgentTool[]
                 `tools: ${s.tools.join(", ") || "none"}${s.unsupported.length ? ` (not on this engine: ${s.unsupported.join(", ")})` : ""}`,
                 `variables: ${s.env.map((e) => `${e.name}${e.set ? "" : " (no value)"}`).join(", ") || "none"}`,
                 `shared variables: ${s.sharedEnv.map((e) => `${e.name} from ${e.from}${e.set ? "" : " (no value)"}`).join(", ") || "none"}`,
+                `network: commands reach ${s.network.effective.join(", ") || "no hosts"}${s.network.shared ? "" : " (shared list off)"}; WebFetch ${s.network.restrictWeb ? "only these hosts" : "any public page"}${s.network.notes.length ? ` (${s.network.notes.join(" ")})` : ""}`,
                 `MCP servers: ${s.mcpServers.map((m) => m.name).join(", ") || "none"}`,
                 `chats: ${s.chats.map((c) => c.title).join(", ") || "none"}`,
                 `last run: ${s.lastRun ? `${s.lastRun.status}${s.lastRun.error ? `: ${s.lastRun.error}` : ""}` : "never"}`,

@@ -659,12 +659,18 @@ function HostCheck() {
             </p>
             {result.sandbox.active && !result.sandbox.allowed && (
               <p className="text-amber-600 dark:text-amber-400">
-                Agents' commands cannot reach {result.host}: add it to the allowed hosts in the
-                Command sandbox card on the Engines page. MCP servers are not limited by it.
+                {result.sandbox.agents.length > 0
+                  ? `Only the commands of ${result.sandbox.agents.map((a) => `@${a}`).join(", ")} may reach ${result.host}. `
+                  : `No agent's commands may reach ${result.host}. `}
+                Add it to an agent's hosts on the Agents page, or to the shared list in the Command
+                sandbox card on the Engines page. MCP servers are not limited by it.
               </p>
             )}
             {result.sandbox.active && result.sandbox.allowed && (
-              <p className="text-muted-foreground">Agents' commands may reach this host.</p>
+              <p className="text-muted-foreground">
+                It is on the shared list: the commands of agents that use the shared list may reach
+                it.
+              </p>
             )}
           </div>
         )}

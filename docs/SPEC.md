@@ -370,5 +370,10 @@ context, project apps that open by themselves, extension storage, network to app
 secrets filled in by the server, asking agents as the user, reading project files, extension icons,
 form and button helpers, and an arrangeable rail (ADR 0021).
 
+**Phase 19: Per-agent network rules**
+Each agent can have its own allowed hosts on top of (or instead of) the shared list, and WebFetch
+limited to them; enforced per command in the OS sandbox, in Claude Code's sandbox and tool checks,
+and for ACP fetches; editable on the agent's card or proposed by the orchestrator (ADR 0022).
+
 **Later**
-Per-agent network rules, pack signatures and a reviewed community index, multi-user.
+Pack signatures and a reviewed community index, multi-user.

@@ -217,7 +217,9 @@ export async function createServices(deps: {
     promptExtras: (profile) =>
       skills.promptFor(profile) + (profile.handle === "orchestrator" ? AURA_GUIDE : ""),
     memoryPrompt: (input) => memory.promptFor(input),
-    sandboxPolicy: () => sandbox.policy(),
+    sandboxPolicy: (profile) => sandbox.policy(profile.network),
+    webHosts: (profile) =>
+      profile.network?.restrictWeb ? sandbox.hostsFor(profile.network) : undefined,
     // Shared variable sets first; the agent's own variables win on a clash.
     agentEnv: (profile) =>
       resolveEnv(

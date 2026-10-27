@@ -5,7 +5,13 @@ import { type McpProbe, probeMcpServer } from "../../providers/mcp-client";
 import { NATIVE_BUILTINS } from "../../providers/native-tools";
 import type { ProviderStatus } from "../../providers/types";
 import type { AgentDirectory } from "../agents/directory";
-import { BUILTIN_TOOLS, type BuiltinTool, validateProfile } from "../agents/profiles";
+import {
+  type AgentNetwork,
+  BUILTIN_TOOLS,
+  type BuiltinTool,
+  DEFAULT_NETWORK,
+  validateProfile,
+} from "../agents/profiles";
 import type { RunRepo } from "../agents/runs";
 import type { ChatRepo } from "../chat/repo";
 import type { McpService } from "../customize/mcp";
@@ -43,6 +49,13 @@ export interface AgentStatus {
   mcpServers: { name: string; target: string }[];
   chats: { id: string; title: string }[];
   lastRun: { status: string; error: string | null; at: string } | null;
+  /** Where its commands and WebFetch may connect (ADR 0022). */
+  network: AgentNetwork & {
+    /** Hosts its commands reach in the end: the shared list (unless off) and its own. */
+    effective: string[];
+    /** Where the rules do not apply, in plain words. */
+    notes: string[];
+  };
   /** Things that stop the agent from working as configured, in plain words. */
   warnings: string[];
 }
@@ -54,17 +67,14 @@ export interface HostCheck {
   status: number | null;
   ms: number;
   error: string | null;
-  /** Whether agents' sandboxed commands may reach this host. */
-  sandbox: { active: boolean; allowed: boolean };
+  /** Whether agents' sandboxed commands may reach this host: the shared list, and which agents. */
+  sandbox: { active: boolean; allowed: boolean; agents: string[] };
 }
 
 /** Whether `host` matches an allowlist entry (`example.com` or `*.example.com`). */
-export function hostAllowed(host: string, allowed: readonly string[]): boolean {
-  const h = host.toLowerCase();
-  return allowed.some((d) =>
-    d.startsWith("*.") ? h.endsWith(d.slice(1)) || h === d.slice(2) : h === d,
-  );
-}
+import { hostAllowed } from "../../providers/hosts";
+
+export { hostAllowed };
 
 const REF = /^\$\{(env|secret):([A-Z_][A-Z0-9_]*)\}$/;
 
@@ -238,9 +248,14 @@ export class IntegrationsService {
     if (url.protocol !== "http:" && url.protocol !== "https:")
       throw new IntegrationError("Only http(s) addresses can be checked");
     const status = this.deps.sandbox.status();
+    const agents: string[] = [];
+    for (const profile of await this.deps.agents.list())
+      if (hostAllowed(url.hostname, this.deps.sandbox.hostsFor(profile.network)))
+        agents.push(profile.handle);
     const sandbox = {
       active: status.active,
       allowed: hostAllowed(url.hostname, status.allowedDomains),
+      agents,
     };
     const started = Date.now();
     try {
@@ -339,6 +354,18 @@ export class IntegrationsService {
     if (env.length > 0 && !profile.builtinTools.includes("Bash"))
       warnings.push("The agent has variables but no Bash, so no command can use them.");
     const sandbox = this.deps.sandbox.status();
+    const rules = profile.network ?? DEFAULT_NETWORK;
+    const effective = this.deps.sandbox.hostsFor(rules);
+    const notes: string[] = [];
+    if (profile.builtinTools.includes("Bash")) {
+      if (!sandbox.active)
+        notes.push("The command sandbox is off, so commands are not limited to these hosts.");
+      if (kind === "acp")
+        notes.push(
+          `${engineLabel(engine)} runs commands with its own shell, so Aura cannot limit where they connect.`,
+        );
+      notes.push("In container projects, the project's container network setting applies instead.");
+    }
     if (profile.builtinTools.includes("Bash") && sandbox.active) {
       for (const e of env) {
         if (REF.test(e.value) || looksSecret(e.name)) continue;
@@ -346,9 +373,9 @@ export class IntegrationsService {
         try {
           host = new URL(e.value).hostname;
         } catch {}
-        if (host && !hostAllowed(host, sandbox.allowedDomains))
+        if (host && !hostAllowed(host, effective))
           warnings.push(
-            `${e.name} points to ${host}, which the command sandbox blocks. Add it to the allowed hosts on the Engines page.`,
+            `${e.name} points to ${host}, which this agent's commands cannot reach. Add it to the agent's hosts below.`,
           );
       }
     }
@@ -369,6 +396,7 @@ export class IntegrationsService {
       sharedEnv,
       mcpServers: servers,
       chats,
+      network: { ...rules, effective, notes },
       lastRun: lastRun
         ? {
             ...lastRun,
@@ -382,7 +410,7 @@ export class IntegrationsService {
   /** A user action from the agent's card: its tools and variables, as one commit. */
   async updateAgent(
     handle: string,
-    patch: { tools?: string[]; env?: Record<string, string> },
+    patch: { tools?: string[]; env?: Record<string, string>; network?: AgentNetwork },
   ): Promise<AgentStatus> {
     const profile = await this.deps.agents.get(handle);
     if (!profile) throw new IntegrationError(`No agent @${handle}`);
@@ -397,10 +425,19 @@ export class IntegrationsService {
       budgetUsd: profile.budgetUsd,
       skills: profile.skills,
       env: patch.env ?? profile.env,
+      network: patch.network ?? profile.network,
     });
     await this.deps.agents.update(next);
-    const what = [patch.tools ? "tools" : "", patch.env ? "environment" : ""].filter(Boolean);
-    await commitAll(this.deps.dataDir, `agents(@${handle}): update ${what.join(" and ")}`, "owner");
+    // The card sends every field; the commit names only what changed.
+    const differs = (a: unknown, b: unknown) =>
+      JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
+    const what = [
+      differs(next.builtinTools, profile.builtinTools) ? "tools" : "",
+      differs(next.env, profile.env) ? "environment" : "",
+      differs(next.network, profile.network) ? "network" : "",
+    ].filter(Boolean);
+    if (what.length === 0) return this.agentStatus(handle);
+    await commitAll(this.deps.dataDir, `agents(@${handle}): update ${what.join(", ")}`, "owner");
     return this.agentStatus(handle);
   }
 }

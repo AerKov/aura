@@ -8,7 +8,7 @@ import type { ChatService } from "../chat/service";
 import type { EngineSelector } from "../engines/registry";
 import type { ProjectInfo } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
-import { sandboxNote } from "../sandbox/service";
+import { sandboxNote, webNote } from "../sandbox/service";
 import { buildPrompt, CONTEXT_WINDOW, SUMMARY_BATCH, userNote } from "./context";
 import { teamRules, wakeNote } from "./defaults";
 import type { AgentDirectory } from "./directory";
@@ -48,7 +48,10 @@ export interface RuntimeDeps {
   /** Extra system prompt sections for an agent (its skills). */
   promptExtras?: (profile: AgentProfile) => string;
   /** OS sandbox for shell commands, or null to run them without it (ADR 0015). */
-  sandboxPolicy?: () => SandboxPolicy | null;
+  /** The OS sandbox for this agent's commands, with its network rules (ADR 0015, 0022). */
+  sandboxPolicy?: (profile: AgentProfile) => SandboxPolicy | null;
+  /** Hosts WebFetch may reach for this agent, or undefined for any public page (ADR 0022). */
+  webHosts?: (profile: AgentProfile) => string[] | undefined;
   /** Notes the agent saved earlier that match this message (agent memory, ADR 0013). */
   memoryPrompt?: (input: {
     handle: string;
@@ -380,7 +383,8 @@ export class AgentRuntime {
         : null;
     // In a container project the host shell is replaced, never offered alongside.
     const builtinTools = shell ? granted.filter((t) => t !== "Bash") : granted;
-    const sandbox = shell ? null : (this.deps.sandboxPolicy?.() ?? null);
+    const sandbox = shell ? null : (this.deps.sandboxPolicy?.(profile) ?? null);
+    const webHosts = builtinTools.includes("WebFetch") ? this.deps.webHosts?.(profile) : undefined;
     const memoryNotes =
       (await this.deps.memoryPrompt?.({
         handle,
@@ -427,6 +431,7 @@ export class AgentRuntime {
           systemPromptFor(profile, project !== null, team) +
           (this.deps.promptExtras?.(profile) ?? "") +
           (sandbox && builtinTools.includes("Bash") ? sandboxNote(sandbox) : "") +
+          (webHosts ? webNote(webHosts) : "") +
           (shell?.note ?? "") +
           envNote(ownEnv) +
           memoryNotes +
@@ -442,6 +447,7 @@ export class AgentRuntime {
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,
         env: ownEnv.values,
+        webHosts,
       },
       abort.signal,
     )) {

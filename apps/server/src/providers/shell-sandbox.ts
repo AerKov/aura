@@ -1,4 +1,5 @@
 /// <reference path="./vendor-files.d.ts" />
+import { randomBytes } from "node:crypto";
 import { chmodSync, existsSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -55,9 +56,13 @@ async function seccompHelper(): Promise<string | undefined> {
 
 let started: { key: string; ready: Promise<void> } | null = null;
 
-/** The sandbox runtime is process-wide; it is (re)started when the network allowlist changes. */
+/**
+ * The sandbox runtime is process-wide, with no hosts allowed for everyone: each command gets its
+ * agent's list under its own id (ADR 0022), so agents with different rules can run side by side.
+ * It is restarted only when the denied paths change.
+ */
 async function ensureStarted(policy: SandboxPolicy): Promise<void> {
-  const key = JSON.stringify(policy.allowedDomains);
+  const key = JSON.stringify(policy.denyRead);
   if (started?.key === key) return started.ready;
   const previous = started;
   const ready = (async () => {
@@ -67,7 +72,7 @@ async function ensureStarted(policy: SandboxPolicy): Promise<void> {
     }
     const applyPath = await seccompHelper();
     await SandboxManager.initialize({
-      network: { allowedDomains: policy.allowedDomains, deniedDomains: [] },
+      network: { allowedDomains: [], deniedDomains: [] },
       filesystem: { denyRead: policy.denyRead, allowWrite: [], denyWrite: [] },
       ...(applyPath ? { seccomp: { applyPath } } : {}),
     });
@@ -83,26 +88,38 @@ async function ensureStarted(policy: SandboxPolicy): Promise<void> {
 
 /**
  * The argv and environment that run `command` with bash in the sandbox: it may write only in `cwd`
- * (and the temp folder), not read `denyRead`, and reach only the allowed hosts.
+ * (and the temp folder), not read `denyRead`, and reach only the allowed hosts. Call `release`
+ * when the command has exited (or never started), so its host list stops applying.
  */
 export async function sandboxedShell(
   policy: SandboxPolicy,
   command: string,
   cwd: string,
   signal?: AbortSignal,
-): Promise<{ argv: string[]; env: Record<string, string> }> {
+): Promise<{ argv: string[]; env: Record<string, string>; release: () => void }> {
   const support = sandboxSupport();
   if (!support.ok) throw new SandboxUnavailableError(support.reason);
   await ensureStarted(policy);
-  const { argv, env } = await SandboxManager.wrapWithSandboxArgv(
-    command,
-    "bash",
-    { filesystem: { denyRead: policy.denyRead, allowWrite: [cwd, tmpdir()], denyWrite: [] } },
-    signal,
-    cwd,
-    { commandId: Bun.randomUUIDv7(), commandText: command },
-  );
-  const clean: Record<string, string> = {};
-  for (const [k, v] of Object.entries(env)) if (typeof v === "string") clean[k] = v;
-  return { argv, env: clean };
+  // The proxy knows the command by this id alone, so it must be unguessable (128 random bits).
+  const commandId = randomBytes(16).toString("base64url");
+  const release = () => SandboxManager.unregisterCommandNetworkLists(commandId);
+  try {
+    const { argv, env } = await SandboxManager.wrapWithSandboxArgv(
+      command,
+      "bash",
+      { filesystem: { denyRead: policy.denyRead, allowWrite: [cwd, tmpdir()], denyWrite: [] } },
+      signal,
+      cwd,
+      { commandId, commandText: command },
+    );
+    SandboxManager.registerCommandNetworkLists(commandId, {
+      allowedDomains: policy.allowedDomains,
+    });
+    const clean: Record<string, string> = {};
+    for (const [k, v] of Object.entries(env)) if (typeof v === "string") clean[k] = v;
+    return { argv, env: clean, release };
+  } catch (error) {
+    release();
+    throw error;
+  }
 }

@@ -2,6 +2,7 @@ import {
   Bot,
   Check,
   CircleAlert,
+  Globe,
   MessagesSquare,
   Plug,
   RefreshCw,
@@ -24,6 +25,29 @@ import { cn } from "@/lib/utils";
 
 type Status = Awaited<ReturnType<typeof loadStatus>>;
 const loadStatus = (handle: string) => call(() => api.agents({ handle }).status.get());
+
+interface NetworkRules {
+  hosts: string[];
+  shared: boolean;
+  restrictWeb: boolean;
+}
+
+/** Hosts typed one per line (or separated by commas or spaces), lowercased, without duplicates. */
+function parseHosts(text: string): string[] {
+  return [
+    ...new Set(
+      text
+        .split(/[\s,]+/)
+        .map((h) => h.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+const sameNetwork = (a: NetworkRules, b: NetworkRules) =>
+  a.shared === b.shared &&
+  a.restrictWeb === b.restrictWeb &&
+  JSON.stringify(a.hosts) === JSON.stringify(b.hosts);
 
 const TOOLS: { name: string; text: string }[] = [
   { name: "Read", text: "read files" },
@@ -90,6 +114,12 @@ function AgentCard({ handle }: { handle: string }) {
   const [tools, setTools] = useState<string[]>([]);
   const [env, setEnv] = useState<EnvRow[]>([]);
   const [secrets, setSecrets] = useState<string[]>([]);
+  const [network, setNetwork] = useState<NetworkRules>({
+    hosts: [],
+    shared: true,
+    restrictWeb: false,
+  });
+  const [hostsText, setHostsText] = useState("");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -97,6 +127,9 @@ function AgentCard({ handle }: { handle: string }) {
     setStatus(s);
     setTools(s.tools);
     setEnv(rowsFromEnv(s.env));
+    const { hosts, shared, restrictWeb } = s.network;
+    setNetwork({ hosts, shared, restrictWeb });
+    setHostsText(hosts.join("\n"));
   }, []);
 
   useEffect(() => {
@@ -111,7 +144,9 @@ function AgentCard({ handle }: { handle: string }) {
   if (error) return <p className="text-destructive text-sm">{error}</p>;
   if (!status) return <p className="text-muted-foreground text-sm">Loading…</p>;
 
+  const nextNetwork = { ...network, hosts: parseHosts(hostsText) };
   const dirty =
+    !sameNetwork(nextNetwork, status.network) ||
     JSON.stringify(tools) !== JSON.stringify(status.tools) ||
     JSON.stringify(envFromRows(env)) !== JSON.stringify(envFromRows(rowsFromEnv(status.env)));
 
@@ -123,7 +158,11 @@ function AgentCard({ handle }: { handle: string }) {
       for (const [name, value] of Object.entries(newSecrets)) {
         await call(() => api.integrations.secrets({ name }).put({ value }));
       }
-      apply(await call(() => api.agents({ handle }).settings.put({ tools, env: envMap })));
+      apply(
+        await call(() =>
+          api.agents({ handle }).settings.put({ tools, env: envMap, network: nextNetwork }),
+        ),
+      );
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     } catch (err) {
@@ -239,6 +278,44 @@ function AgentCard({ handle }: { handle: string }) {
             </div>
           </div>
         )}
+
+        <h3 className="kicker mt-5 mb-1 flex items-center gap-1.5">
+          <Globe className="size-3.5" /> Network
+        </h3>
+        <p className="text-muted-foreground mb-2 text-xs">
+          Where its commands may connect. Give it only the hosts its work needs, for example your
+          tracker's address.
+        </p>
+        <label className="mb-2 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={network.shared}
+            onChange={(e) => setNetwork({ ...network, shared: e.target.checked })}
+          />
+          The shared list (package registries, GitHub; Engines page)
+        </label>
+        <textarea
+          aria-label="Its own hosts"
+          value={hostsText}
+          onChange={(e) => setHostsText(e.target.value)}
+          placeholder={"Its own hosts, one per line:\napi.service.example.com\n*.example.org"}
+          rows={3}
+          className="bg-background w-full rounded-lg border px-3 py-2 font-mono text-xs"
+        />
+        <label className="mt-2 flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={network.restrictWeb}
+            onChange={(e) => setNetwork({ ...network, restrictWeb: e.target.checked })}
+          />
+          WebFetch only to these hosts too (otherwise any public page)
+        </label>
+        <p className="text-muted-foreground mt-2 text-xs">
+          {nextNetwork.shared || nextNetwork.hosts.length > 0
+            ? "Its commands reach the hosts above and nothing else."
+            : "Its commands reach no hosts at all."}
+          {status.network.notes.map((n) => ` ${n}`)}
+        </p>
 
         {error && <p className="text-destructive mt-3 text-xs">{error}</p>}
         <div className="mt-4">

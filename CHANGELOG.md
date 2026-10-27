@@ -5,6 +5,16 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.19.0] - 2026-10-27: Network per agent
+
+- Each agent can have its own allowed hosts (Agents page → Network), on top of the shared list or
+  instead of it, so a tracker's address goes only to the agent that works with the tracker.
+- WebFetch can be limited to the same hosts.
+- Agents running at the same time each get their own list in the command sandbox.
+- The orchestrator can propose an agent's hosts (with approval); the host check on the Integrations
+  page says which agents may reach a host, and an agent's card warns when its variables point to a
+  host it cannot reach.
+
 ## [0.18.0] - 2026-10-27: Side panel and apps
 
 - Side panel next to the chat: open any extension there with **Apps**; it knows the chat and

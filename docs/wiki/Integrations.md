@@ -71,11 +71,12 @@ environment that starts Aura.
 Enter an address, for example a service behind your VPN. Aura tells you:
 
 - whether this computer reaches it, or why not (unknown host, refused, no answer, certificate);
-- whether agents' commands may reach it.
+- whether agents' commands may reach it, and which agents.
 
 Commands run in the [command sandbox](Approvals-and-Safety), which allows only listed hosts. To let
-them reach an internal host, add it on the Engines page, card **Command sandbox**. MCP servers are
-not limited by that list.
+one agent reach an internal host (your tracker, say), add it to that agent's hosts on the **Agents**
+page, card **Network**. To let every agent reach it, add it to the shared list on the Engines page,
+card **Command sandbox**. MCP servers are not limited by these lists.
 
 Proxy settings (`HTTPS_PROXY`, `NO_PROXY`…) of the environment that starts Aura are passed on to
 agents' commands and MCP servers.

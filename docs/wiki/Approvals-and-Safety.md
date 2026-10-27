@@ -44,6 +44,10 @@ hosts you allow (package registries and code hosts by default).
   available), `Required` (refuse commands without it) or `Off`.
 - macOS works out of the box. On Linux install `bubblewrap` and `socat`
   (`sudo apt install bubblewrap socat`). On Windows the sandbox is not available yet.
+- **Per agent:** each agent can have its own hosts on the **Agents** page, card **Network**: on
+  top of the shared list, or instead of it (turn the shared list off; with no hosts its commands
+  reach nothing). You can also limit its **WebFetch** to the same hosts. Agents running at the same
+  time each get their own list. The orchestrator can propose a change; you approve it.
 - Gemini CLI, Codex and OpenCode run their own tools; Aura answers their permission requests, and
   they have sandboxes of their own. MCP servers are not sandboxed by Aura yet.
 

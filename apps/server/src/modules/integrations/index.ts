@@ -179,6 +179,13 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
         body: t.Object({
           tools: t.Optional(t.Array(t.String({ maxLength: 20 }), { maxItems: 20 })),
           env: t.Optional(ENV),
+          network: t.Optional(
+            t.Object({
+              hosts: t.Array(t.String({ maxLength: 253 }), { maxItems: 100 }),
+              shared: t.Boolean(),
+              restrictWeb: t.Boolean(),
+            }),
+          ),
         }),
       },
     );

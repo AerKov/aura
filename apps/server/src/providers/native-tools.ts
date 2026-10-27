@@ -4,6 +4,7 @@ import { z } from "zod";
 import { errorMessage } from "../lib/log";
 import { proxyEnv } from "../lib/proxy";
 import { isInside } from "./confine";
+import { hostAllowed, webDenied } from "./hosts";
 import { SandboxUnavailableError, sandboxedShell } from "./shell-sandbox";
 import type { SandboxPolicy } from "./types";
 
@@ -126,6 +127,8 @@ export function nativeTools(
   cwd: string,
   sandbox?: SandboxPolicy,
   extraEnv: Record<string, string> = {},
+  /** When set, WebFetch reaches only these hosts (the agent's network rules, ADR 0022). */
+  webHosts?: string[],
 ): NativeTool[] {
   const all: NativeTool[] = [
     {
@@ -255,12 +258,14 @@ export function nativeTools(
       }),
       async run(args, signal) {
         let cmd = ["bash", "-c", String(args.command)];
+        let release = () => {};
         // The agent's own variables and proxies; the sandbox's settings below take precedence.
         const env = { ...shellEnv(), ...proxyEnv(), ...extraEnv };
         if (sandbox) {
           try {
             const wrapped = await sandboxedShell(sandbox, String(args.command), cwd, signal);
             cmd = wrapped.argv;
+            release = wrapped.release;
             // Only what the sandbox adds (proxies), never the server's own environment.
             for (const [key, value] of Object.entries(wrapped.env)) {
               if (process.env[key] !== value) env[key] = value;
@@ -274,35 +279,40 @@ export function nativeTools(
             }
           }
         }
-        const proc = Bun.spawn(cmd, {
-          cwd,
-          env,
-          stdin: "ignore",
-          stdout: "pipe",
-          stderr: "pipe",
-        });
-        const timeout =
-          (typeof args.timeout_seconds === "number" ? args.timeout_seconds : 120) * 1000;
-        let timedOut = false;
-        const timer = setTimeout(() => {
-          timedOut = true;
-          proc.kill();
-        }, timeout);
-        const onAbort = () => proc.kill();
-        signal.addEventListener("abort", onAbort, { once: true });
         try {
-          const [stdout, stderr, code] = await Promise.all([
-            new Response(proc.stdout).text(),
-            new Response(proc.stderr).text(),
-            proc.exited,
-          ]);
-          const output = clip([stdout.trimEnd(), stderr.trimEnd()].filter(Boolean).join("\n"));
-          if (timedOut)
-            return { text: `${output}\n(timed out after ${timeout / 1000}s)`, isError: true };
-          return { text: `${output || "(no output)"}\nexit code ${code}`, isError: code !== 0 };
+          const proc = Bun.spawn(cmd, {
+            cwd,
+            env,
+            stdin: "ignore",
+            stdout: "pipe",
+            stderr: "pipe",
+          });
+          const timeout =
+            (typeof args.timeout_seconds === "number" ? args.timeout_seconds : 120) * 1000;
+          let timedOut = false;
+          const timer = setTimeout(() => {
+            timedOut = true;
+            proc.kill();
+          }, timeout);
+          const onAbort = () => proc.kill();
+          signal.addEventListener("abort", onAbort, { once: true });
+          try {
+            const [stdout, stderr, code] = await Promise.all([
+              new Response(proc.stdout).text(),
+              new Response(proc.stderr).text(),
+              proc.exited,
+            ]);
+            const output = clip([stdout.trimEnd(), stderr.trimEnd()].filter(Boolean).join("\n"));
+            if (timedOut)
+              return { text: `${output}\n(timed out after ${timeout / 1000}s)`, isError: true };
+            return { text: `${output || "(no output)"}\nexit code ${code}`, isError: code !== 0 };
+          } finally {
+            clearTimeout(timer);
+            signal.removeEventListener("abort", onAbort);
+          }
         } finally {
-          clearTimeout(timer);
-          signal.removeEventListener("abort", onAbort);
+          // The command's host list must not outlive it.
+          release();
         }
       },
     },
@@ -322,13 +332,18 @@ export function nativeTools(
           return { text: "Only http(s) URLs can be fetched", isError: true };
         if (isPrivateHost(url.hostname))
           return { text: "Local and private network addresses cannot be fetched", isError: true };
+        if (webHosts && !hostAllowed(url.hostname, webHosts))
+          return { text: webDenied(url.hostname, webHosts), isError: true };
         const res = await fetch(url, {
           signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]),
           redirect: "follow",
           headers: { "user-agent": "aura-agent" },
         });
-        if (isPrivateHost(new URL(res.url || url.href).hostname))
+        const landed = new URL(res.url || url.href).hostname;
+        if (isPrivateHost(landed))
           return { text: "The page redirected to a private address", isError: true };
+        if (webHosts && !hostAllowed(landed, webHosts))
+          return { text: webDenied(landed, webHosts), isError: true };
         const body = (await res.text()).slice(0, MAX_READ_BYTES);
         const type = res.headers.get("content-type") ?? "";
         const text = clip(type.includes("html") ? htmlToText(body) : body, 40_000);

@@ -192,7 +192,7 @@ describe("integrations", () => {
     const warnings = status?.warnings.join("\n") ?? "";
     expect(warnings).toContain("does not provide WebSearch");
     expect(warnings).toContain("REDMINE_API_KEY has no value");
-    expect(warnings).toContain("redmine.corp.example, which the command sandbox blocks");
+    expect(warnings).toContain("redmine.corp.example, which this agent's commands cannot reach");
     expect(warnings).toContain("not in any chat yet");
 
     // Fixing it from the card: tools and variables, committed.

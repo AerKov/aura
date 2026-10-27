@@ -55,6 +55,8 @@ export interface AgentRunInput {
   sandbox?: SandboxPolicy;
   /** Extra environment for the agent's shell commands (its own variables, ADR 0020). */
   env?: Record<string, string>;
+  /** When set, WebFetch may reach only these hosts (the agent's network rules, ADR 0022). */
+  webHosts?: string[];
 }
 
 export type AgentEvent =
