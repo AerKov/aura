@@ -239,8 +239,12 @@ export interface Project {
   chatId: string;
   budgetUsd: number | null;
   spentUsd: number;
+  /** Where agents' shell commands run: the host (with the OS sandbox) or the project's container. */
+  isolation: ProjectIsolation;
   createdAt: string;
 }
+
+export type ProjectIsolation = "host" | "container";
 
 export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,47}$/;
 

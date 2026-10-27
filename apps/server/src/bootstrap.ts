@@ -12,6 +12,7 @@ import { CatalogService } from "./modules/catalog/service";
 import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
+import { ContainerService, containerNote } from "./modules/containers/service";
 import { AppearanceService } from "./modules/customize/appearance";
 import { ExtensionService } from "./modules/customize/extensions";
 import { McpService } from "./modules/customize/mcp";
@@ -43,6 +44,8 @@ export async function createServices(deps: {
   engines: EngineSelector;
   /** OS sandbox for agents' shell commands; created from the data dir when absent. */
   sandbox?: SandboxService;
+  /** Project containers (ADR 0018); created from the sandbox settings when absent. */
+  containers?: ContainerService;
   /** Network for packs installed from a URL (replaced in tests). */
   fetch?: typeof fetch;
   /** Embedding model for semantic memory search; keyword search when absent. */
@@ -60,6 +63,13 @@ export async function createServices(deps: {
   const chat = new ChatService(repo);
   const owner = await chat.bootstrap();
   const runs = new RunRepo(deps.db);
+  const sandbox = deps.sandbox ?? new SandboxService({ dataDir: deps.dataDir });
+  const containers =
+    deps.containers ??
+    new ContainerService({
+      dataDir: deps.dataDir,
+      settings: () => sandbox.store.get().container,
+    });
   const projects = new ProjectService({
     db: deps.db,
     dataDir: deps.dataDir,
@@ -67,6 +77,7 @@ export async function createServices(deps: {
     repo,
     runs,
     agents: deps.agents,
+    newProjectIsolation: () => (sandbox.store.get().container.newProjects ? "container" : "host"),
   });
   const approvals = new ApprovalService(deps.db, repo);
   const skills = new SkillService({
@@ -84,7 +95,6 @@ export async function createServices(deps: {
     limiter: new TriageLimiter(),
     triageDelayMs: deps.triageDelayMs,
   });
-  const sandbox = deps.sandbox ?? new SandboxService({ dataDir: deps.dataDir });
   const memory = new MemoryService({ db: deps.db, embedder: deps.embedder ?? (() => null) });
   const toolDeps = {
     agents: deps.agents,
@@ -160,6 +170,13 @@ export async function createServices(deps: {
     promptExtras: (profile) => skills.promptFor(profile),
     memoryPrompt: (input) => memory.promptFor(input),
     sandboxPolicy: () => sandbox.policy(),
+    projectShell: (project, handle, signal) =>
+      project.isolation === "container"
+        ? {
+            tool: containers.bashTool(project, handle, signal),
+            note: containerNote(sandbox.store.get().container),
+          }
+        : null,
     chatSummary: (chatId) => summaries.get(chatId),
     afterRun: (chat) => summaries.schedule(chat.id),
     ownerName: owner.name,
@@ -186,6 +203,7 @@ export async function createServices(deps: {
     memory,
     summaries,
     sandbox,
+    containers,
     appearance,
     mcp,
     extensions,

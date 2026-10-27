@@ -52,6 +52,7 @@ DEFINE FIELD OVERWRITE status ON project TYPE string ASSERT $value IN ["active",
 DEFINE FIELD OVERWRITE chat ON project TYPE record<chat>;
 DEFINE FIELD OVERWRITE repo_path ON project TYPE string;
 DEFINE FIELD OVERWRITE budget_usd ON project TYPE option<float>;
+DEFINE FIELD OVERWRITE isolation ON project TYPE string DEFAULT "host" ASSERT $value IN ["host", "container"];
 DEFINE FIELD OVERWRITE created_at ON project TYPE datetime DEFAULT time::now();
 
 DEFINE TABLE OVERWRITE approval SCHEMAFULL;

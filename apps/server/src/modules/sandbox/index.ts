@@ -30,6 +30,15 @@ export const sandboxModule = ({ sessions, sandbox }: SandboxDeps) =>
         body: t.Object({
           mode: t.Optional(t.UnionEnum(["auto", "required", "off"])),
           allowedDomains: t.Optional(t.Array(t.String({ maxLength: 253 }), { maxItems: 200 })),
+          container: t.Optional(
+            t.Object({
+              newProjects: t.Optional(t.Boolean()),
+              image: t.Optional(t.String({ maxLength: 300 })),
+              network: t.Optional(t.Boolean()),
+              memoryMb: t.Optional(t.Integer()),
+              cpus: t.Optional(t.Number()),
+            }),
+          ),
         }),
       },
     );

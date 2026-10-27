@@ -5,6 +5,10 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- Project containers: a project can run its agents' shell commands in its own Docker or Podman
+  container that sees only the project folder (no capabilities, memory/CPU/process limits, optional
+  network). Switch it in the project chat header; defaults on the Engines page.
+
 - Long chats: older messages are folded into a rolling summary per chat, so agents keep earlier
   decisions. Open it from the chat header, clear it, or turn summaries off on the Memory page.
 

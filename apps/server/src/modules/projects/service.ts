@@ -1,6 +1,13 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { type Chat, type Project, parseMentions, SLUG_PATTERN, slugify } from "@aura/shared";
+import {
+  type Chat,
+  type Project,
+  type ProjectIsolation,
+  parseMentions,
+  SLUG_PATTERN,
+  slugify,
+} from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 import { isoOf, keyOf } from "../../db/convert";
 import { commitAll, ensureRepo } from "../../lib/git";
@@ -49,6 +56,8 @@ export class ProjectService {
       repo: ChatRepo;
       runs: RunRepo;
       agents: AgentDirectory;
+      /** Isolation for new projects (sandbox settings, ADR 0018). */
+      newProjectIsolation?: () => ProjectIsolation;
     },
   ) {}
 
@@ -145,6 +154,7 @@ export class ProjectService {
           chat: new RecordId("chat", chat.id),
           repo_path: workspace,
           budget_usd: input.budgetUsd,
+          isolation: this.deps.newProjectIsolation?.() ?? "host",
         },
       })
       .collect();
@@ -172,6 +182,20 @@ export class ProjectService {
     return { project, chat };
   }
 
+  /** User action only: agents cannot change where their commands run. */
+  async setIsolation(slug: string, isolation: ProjectIsolation): Promise<ProjectInfo> {
+    if (!(await this.get(slug))) throw new ProjectError(`No project "${slug}"`);
+    await this.deps.db
+      .query("UPDATE $id SET isolation = $isolation", {
+        id: new RecordId("project", slug),
+        isolation,
+      })
+      .collect();
+    const project = await this.get(slug);
+    if (!project) throw new ProjectError(`No project "${slug}"`);
+    return project;
+  }
+
   private async toProject(row: Row): Promise<ProjectInfo> {
     const id = keyOf(row.id);
     const spent = await this.deps.runs.spentByProject(id);
@@ -182,6 +206,7 @@ export class ProjectService {
       chatId: keyOf(row.chat),
       budgetUsd: typeof row.budget_usd === "number" ? row.budget_usd : null,
       spentUsd: spent.usd,
+      isolation: row.isolation === "container" ? "container" : "host",
       createdAt: isoOf(row.created_at),
       workspace: String(row.repo_path),
     };

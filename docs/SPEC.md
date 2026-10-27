@@ -178,7 +178,9 @@ login ourselves.
 - Level 1 (ADR 0015): shell commands of Claude Code and Aura's own agent run in an OS sandbox
   (bubblewrap on Linux, Seatbelt on macOS): writes only in the project folder, no credentials,
   network only to allowed hosts. Modes `auto`, `required`, `off` in `sandbox.json`.
-- Level 2 (later): a container per project, also for external agent apps and MCP servers.
+- Level 2 (ADR 0018): per project, shell commands run in the project's own container (Docker or
+  Podman) that mounts only the project folder; no capabilities, limited memory, CPU and processes,
+  optional network. Later: external agent apps and MCP servers in containers too.
 
 ## 8. Conversation rules
 
@@ -340,6 +342,10 @@ Older messages are folded into a rolling summary per chat that agents get with t
 messages; it counts towards budgets, can be read and cleared from the chat, and turned off on the
 Memory page (ADR 0017).
 
+**Phase 15: Project containers**
+Sandbox level 2: a project can run its agents' shell commands in its own container that sees only
+the project folder; set per project in its chat, defaults on the Engines page (ADR 0018).
+
 **Later**
-A container per project (sandbox level 2),
+Agent apps and MCP servers in containers,
 pack signatures and a reviewed community index, multi-user.

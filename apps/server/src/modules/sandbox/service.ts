@@ -2,7 +2,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { sandboxSupport } from "../../providers/shell-sandbox";
 import type { SandboxPolicy } from "../../providers/types";
-import { type SandboxMode, type SandboxSettings, SandboxStore } from "./settings";
+import { type SandboxPatch, type SandboxSettings, SandboxStore } from "./settings";
 
 /** Credentials and the app's own state: never readable from an agent's shell (rules 4, 9). */
 export function deniedReads(dataDir: string, home = homedir()): string[] {
@@ -78,7 +78,7 @@ export class SandboxService {
     };
   }
 
-  update(patch: { mode?: SandboxMode; allowedDomains?: string[] }): Promise<SandboxSettings> {
+  update(patch: SandboxPatch): Promise<SandboxSettings> {
     return this.store.update(patch);
   }
 }

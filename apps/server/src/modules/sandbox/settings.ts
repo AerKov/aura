@@ -15,6 +15,70 @@ export interface SandboxSettings {
   mode: SandboxMode;
   /** Hosts shell commands may reach: package registries and code hosts by default. */
   allowedDomains: string[];
+  /** Sandbox level 2: a container per project (ADR 0018). */
+  container: ContainerSettings;
+}
+
+export interface ContainerSettings {
+  /** New projects run their shell commands in a container. */
+  newProjects: boolean;
+  /** Image for project containers. */
+  image: string;
+  /** Containers may reach the network. */
+  network: boolean;
+  memoryMb: number;
+  cpus: number;
+}
+
+export const DEFAULT_CONTAINER: ContainerSettings = {
+  newProjects: false,
+  image: "node:22-bookworm",
+  network: true,
+  memoryMb: 4096,
+  cpus: 2,
+};
+
+/** An image reference like node:22-bookworm or ghcr.io/owner/image@sha256:… */
+export const IMAGE_PATTERN =
+  /^[a-z0-9][a-z0-9._\-/]{0,199}(:[\w][\w.-]{0,127})?(@sha256:[a-f0-9]{64})?$/;
+
+export function validContainer(raw: unknown, base: ContainerSettings): ContainerSettings {
+  if (!raw || typeof raw !== "object")
+    throw new SandboxSettingsError("container must be an object");
+  const r = raw as Record<string, unknown>;
+  const next = { ...base };
+  if (r.newProjects !== undefined) {
+    if (typeof r.newProjects !== "boolean")
+      throw new SandboxSettingsError("newProjects must be true or false");
+    next.newProjects = r.newProjects;
+  }
+  if (r.network !== undefined) {
+    if (typeof r.network !== "boolean")
+      throw new SandboxSettingsError("network must be true or false");
+    next.network = r.network;
+  }
+  if (r.image !== undefined) {
+    const image = typeof r.image === "string" ? r.image.trim() : "";
+    if (!IMAGE_PATTERN.test(image))
+      throw new SandboxSettingsError(`"${image}" is not an image like node:22-bookworm`);
+    next.image = image;
+  }
+  if (r.memoryMb !== undefined) {
+    if (
+      typeof r.memoryMb !== "number" ||
+      !Number.isInteger(r.memoryMb) ||
+      r.memoryMb < 256 ||
+      r.memoryMb > 65536
+    )
+      throw new SandboxSettingsError("memory must be 256 to 65536 MB");
+    next.memoryMb = r.memoryMb;
+  }
+  if (r.cpus !== undefined) {
+    if (typeof r.cpus !== "number" || !(r.cpus >= 0.5 && r.cpus <= 64))
+      throw new SandboxSettingsError("cpus must be 0.5 to 64");
+    next.cpus = r.cpus;
+  }
+  return next;
 }
 
 export const DEFAULT_ALLOWED_DOMAINS = [
@@ -40,6 +104,7 @@ export const DEFAULT_ALLOWED_DOMAINS = [
 export const DEFAULT_SANDBOX: SandboxSettings = {
   mode: "auto",
   allowedDomains: DEFAULT_ALLOWED_DOMAINS,
+  container: DEFAULT_CONTAINER,
 };
 
 /** A host name, or `*.` plus a host name. No schemes, paths, ports or bare wildcards. */
@@ -76,7 +141,22 @@ export function parseSandbox(raw: unknown): SandboxSettings {
       log.warn("sandbox.json: invalid domains; using defaults", { error: errorMessage(error) });
     }
   }
+  if (record.container !== undefined) {
+    try {
+      settings.container = validContainer(record.container, DEFAULT_CONTAINER);
+    } catch (error) {
+      log.warn("sandbox.json: invalid container settings; using defaults", {
+        error: errorMessage(error),
+      });
+    }
+  }
   return settings;
+}
+
+export interface SandboxPatch {
+  mode?: SandboxMode;
+  allowedDomains?: string[];
+  container?: Partial<ContainerSettings>;
 }
 
 /** `<dataDir>/sandbox.json`: config in files, committed (rule 3, 10). */
@@ -103,7 +183,7 @@ export class SandboxStore {
     return this.cached;
   }
 
-  async update(patch: { mode?: SandboxMode; allowedDomains?: string[] }): Promise<SandboxSettings> {
+  async update(patch: SandboxPatch): Promise<SandboxSettings> {
     const next = structuredClone(this.get());
     if (patch.mode !== undefined) {
       if (!isMode(patch.mode)) throw new SandboxSettingsError("mode must be auto, required or off");
@@ -111,6 +191,8 @@ export class SandboxStore {
     }
     if (patch.allowedDomains !== undefined)
       next.allowedDomains = validDomains(patch.allowedDomains);
+    if (patch.container !== undefined)
+      next.container = validContainer(patch.container, next.container);
     writeFileSync(this.file, `${JSON.stringify(next, null, 2)}\n`);
     this.cached = next;
     await commitAll(

@@ -14,6 +14,8 @@ import type { CatalogService } from "./modules/catalog/service";
 import { chatModule } from "./modules/chat";
 import type { ChatRepo } from "./modules/chat/repo";
 import type { ChatService } from "./modules/chat/service";
+import { containersModule } from "./modules/containers";
+import type { ContainerService } from "./modules/containers/service";
 import { customizeModule } from "./modules/customize";
 import type { AppearanceService } from "./modules/customize/appearance";
 import type { ExtensionService } from "./modules/customize/extensions";
@@ -51,6 +53,7 @@ export interface AppDeps extends HealthDeps {
   memory: MemoryService;
   catalog: CatalogService;
   summaries: ChatSummaryService;
+  containers: ContainerService;
   sandbox: SandboxService;
   dataDir: string;
   runtime: AgentRuntime;
@@ -88,6 +91,7 @@ export function createApp(deps: AppDeps) {
     .use(sandboxModule(deps))
     .use(catalogModule(deps))
     .use(summariesModule(deps))
+    .use(containersModule(deps))
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))

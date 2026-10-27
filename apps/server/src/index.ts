@@ -63,6 +63,7 @@ async function main(): Promise<void> {
   if (interrupted > 0) log.warn("marked interrupted runs as stopped", { count: interrupted });
   const stopRuntime = services.runtime.start();
   const stopScheduler = services.jobs.start();
+  const stopReaper = services.containers.startIdleReaper();
 
   const sessions = new LocalSessions();
   sessions.useDevices((token) => services.devices.verify(token));
@@ -114,6 +115,7 @@ async function main(): Promise<void> {
     log.info("shutting down", { signal });
     stopRuntime();
     stopScheduler();
+    stopReaper();
     stopNotifications();
     services.runtime.stopAll();
     services.summaries.stopAll();

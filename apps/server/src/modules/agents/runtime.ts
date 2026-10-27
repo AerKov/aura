@@ -52,6 +52,15 @@ export interface RuntimeDeps {
   }) => Promise<string>;
   /** The chat's rolling summary of older messages, if any (ADR 0017). */
   chatSummary?: (chatId: string) => Promise<{ text: string; upTo: string } | null>;
+  /**
+   * The project's container shell (ADR 0018), or null when its commands run on the host. Agents
+   * with Bash get this tool instead of the host shell.
+   */
+  projectShell?: (
+    project: ProjectInfo,
+    handle: string,
+    signal: AbortSignal,
+  ) => { tool: AgentTool; note: string } | null;
   /** Called after each run, e.g. to fold old messages into the summary. */
   afterRun?: (chat: Chat) => void;
   ownerName: string;
@@ -299,8 +308,14 @@ export class AgentRuntime {
         summary,
       }) + wakeNote(reason, handle, team, this.deps.ownerName);
 
-    const builtinTools = toolsFor(profile, project !== null);
-    const sandbox = this.deps.sandboxPolicy?.() ?? null;
+    const granted = toolsFor(profile, project !== null);
+    const shell =
+      project && granted.includes("Bash")
+        ? (this.deps.projectShell?.(project, handle, abort.signal) ?? null)
+        : null;
+    // In a container project the host shell is replaced, never offered alongside.
+    const builtinTools = shell ? granted.filter((t) => t !== "Bash") : granted;
+    const sandbox = shell ? null : (this.deps.sandboxPolicy?.() ?? null);
     const memoryNotes =
       (await this.deps.memoryPrompt?.({
         handle,
@@ -340,6 +355,7 @@ export class AgentRuntime {
           systemPromptFor(profile, project !== null, team) +
           (this.deps.promptExtras?.(profile) ?? "") +
           (sandbox && builtinTools.includes("Bash") ? sandboxNote(sandbox) : "") +
+          (shell?.note ?? "") +
           memoryNotes +
           userNote(this.deps.ownerName, this.userLanguage),
         prompt,
@@ -348,7 +364,7 @@ export class AgentRuntime {
         confineToCwd: true,
         builtinTools,
         sandbox: sandbox ?? undefined,
-        tools: this.deps.appTools({ handle, chat, depth }),
+        tools: [...this.deps.appTools({ handle, chat, depth }), ...(shell ? [shell.tool] : [])],
         mcpServers: this.deps.mcpServers?.(handle),
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,

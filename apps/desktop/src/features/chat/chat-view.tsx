@@ -1,5 +1,5 @@
 import type { ChatSummary, Message } from "@aura/shared";
-import { ChevronLeft, ListTodo, ScrollText } from "lucide-react";
+import { Box, ChevronLeft, ListTodo, Monitor, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { loadMembers, reportError, showList } from "./actions";
 import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
+import { IsolationPanel } from "./isolation-panel";
 import { MessageBubble } from "./message-bubble";
 import { isGrouped } from "./message-utils";
 import { chatSubtitle } from "./participants";
@@ -43,7 +44,7 @@ export function ChatView({ chatId }: { chatId: string }) {
     chat?.projectId ? (s.tasks[chat.projectId]?.length ?? 0) : 0,
   );
   const [replyTo, setReplyTo] = useState<Message | null>(null);
-  const [panel, setPanel] = useState<"tasks" | "summary" | null>(null);
+  const [panel, setPanel] = useState<"tasks" | "summary" | "isolation" | null>(null);
   const [summary, setSummary] = useState<ChatSummary | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -149,6 +150,19 @@ export function ChatView({ chatId }: { chatId: string }) {
             )}
             {project && (
               <Button
+                variant={panel === "isolation" ? "secondary" : "ghost"}
+                size="sm"
+                title="Where this project's commands run"
+                onClick={() => setPanel(panel === "isolation" ? null : "isolation")}
+              >
+                {project.isolation === "container" ? <Box /> : <Monitor />}
+                <span className="max-sm:hidden">
+                  {project.isolation === "container" ? "Container" : "Host"}
+                </span>
+              </Button>
+            )}
+            {project && (
+              <Button
                 variant={panel === "tasks" ? "secondary" : "ghost"}
                 size="sm"
                 onClick={() => setPanel(panel === "tasks" ? null : "tasks")}
@@ -197,6 +211,9 @@ export function ChatView({ chatId }: { chatId: string }) {
       </section>
       {panel === "tasks" && chat.projectId && (
         <TasksPanel projectId={chat.projectId} onClose={() => setPanel(null)} />
+      )}
+      {panel === "isolation" && project && (
+        <IsolationPanel project={project} onClose={() => setPanel(null)} />
       )}
       {panel === "summary" && summary && (
         <SummaryPanel
