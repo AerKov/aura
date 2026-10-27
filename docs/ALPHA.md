@@ -1,4 +1,4 @@
-# Aura 0.16 alpha
+# Aura 0.17 alpha
 
 Aura is a messenger where you work with an AI orchestrator and a team of AI agents. This is the
 first public build. It works end to end, but expect rough edges. Please
@@ -29,6 +29,14 @@ Agents need a model. Aura uses what you already have and never asks for or store
 - or an **OpenRouter** key, with free models available.
 
 Then follow [Getting started](https://github.com/AerKov/aura/wiki/Getting-Started).
+
+## Connecting your tools
+
+Trackers, databases and internal APIs connect on the **Integrations** page: an MCP server or a
+script, its keys stored as secrets (no `~/.profile` needed), and a **Test** button that says what
+is wrong. The **Agents** page shows what each agent can do and what stops it. Or just ask the
+orchestrator: it knows how Aura works and can check the setup for you. Details:
+[Integrations](https://github.com/AerKov/aura/wiki/Integrations).
 
 ## Optional
 

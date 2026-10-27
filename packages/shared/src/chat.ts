@@ -56,7 +56,8 @@ export type ApprovalKind =
   | "theme_change"
   | "mcp_server"
   | "extension_install"
-  | "pack_install";
+  | "pack_install"
+  | "agent_change";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "failed";
 
 export interface ApprovalCard {

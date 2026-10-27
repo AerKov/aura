@@ -21,6 +21,7 @@ import type { SafeMode } from "./modules/customize/safe-mode";
 import { customizeTools } from "./modules/customize/tools";
 import { DeviceService } from "./modules/devices/service";
 import type { EngineSelector } from "./modules/engines/registry";
+import { AURA_GUIDE, helpTools } from "./modules/help/tools";
 import { redact, resolveEnv } from "./modules/integrations/env";
 import { SecretStore } from "./modules/integrations/secrets";
 import { IntegrationsService } from "./modules/integrations/service";
@@ -114,6 +115,7 @@ export async function createServices(deps: {
     repo,
     chat,
     memory,
+    dataDir: deps.dataDir,
   };
   const appearance = new AppearanceService({
     db: deps.db,
@@ -180,7 +182,7 @@ export async function createServices(deps: {
     projects,
     appTools: (ctx) => [
       ...toolsFor(toolDeps, ctx),
-      ...(ctx.handle === "orchestrator" ? integrationTools(integrations) : []),
+      ...(ctx.handle === "orchestrator" ? [...integrationTools(integrations), ...helpTools()] : []),
       ...(ctx.handle === "orchestrator" && ctx.chat.kind === "direct"
         ? [
             ...customizeTools(customize, { handle: ctx.handle, chatId: ctx.chat.id }),
@@ -193,7 +195,8 @@ export async function createServices(deps: {
       project.isolation === "container"
         ? containers.wrapMcp(project, servers)
         : Promise.resolve(servers),
-    promptExtras: (profile) => skills.promptFor(profile),
+    promptExtras: (profile) =>
+      skills.promptFor(profile) + (profile.handle === "orchestrator" ? AURA_GUIDE : ""),
     memoryPrompt: (input) => memory.promptFor(input),
     sandboxPolicy: () => sandbox.policy(),
     agentEnv: (profile) =>

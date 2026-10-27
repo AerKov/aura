@@ -16,7 +16,9 @@ An agent is a file: `~/.aura/agents/<handle>/agent.md`. It has a name, a role, a
 read and run tests), an optional lifetime budget, its [skills](Skills), and its instructions.
 
 You usually do not write these files. Ask the orchestrator ("I need someone who writes good
-documentation"); it proposes the agent and you approve it.
+documentation"); it proposes the agent and you approve it. It can also change an agent ("give
+@redmine a shell and REDMINE_URL"), again on an approval card that shows the exact change, and add
+an agent to a project. The orchestrator has this guide built in, so you can ask it how Aura works.
 
 The **Agents** page shows each agent's engine and model, its tools (and the ones its engine does
 not provide), the variables its commands get, its tool servers, its chats and its last error,

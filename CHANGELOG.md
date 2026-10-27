@@ -5,7 +5,17 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
-From the first alpha feedback:
+## [0.17.0] - 2026-10-27: First alpha
+
+The first public build: phases 10 to 17 on top of 0.9.0. Unsigned installers; see the
+[alpha notes](docs/ALPHA.md) for requirements and known limits.
+
+From the first test of the alpha:
+
+- The orchestrator knows Aura: the user guide is built in (`aura_docs`), its instructions describe
+  the app's pages, chats and settings, and it can add an agent to a project and propose changes to
+  an agent's tools, variables or instructions (with approval). Agents say what they miss instead
+  of claiming they changed their own setup.
 
 - Agents never stay silent without a reason: mentioning an agent outside the chat says where it is,
   and an empty model answer shows as an error.
@@ -19,11 +29,6 @@ From the first alpha feedback:
   and what stops the agent; tools and variables editable there.
 - Host check (reachable? may commands reach it?), proxy settings passed to commands and servers.
 - The orchestrator can inspect the setup (read-only, no secrets) and test a server.
-
-## [0.16.0] - 2026-10-27: First alpha
-
-The first public build: phases 10 to 16 on top of 0.9.0. Unsigned installers; see the
-[alpha notes](docs/ALPHA.md) for requirements and known limits.
 
 - MCP servers in project containers: in a container project, agents' MCP tool servers that run
   as a command start inside the project's container, with secrets passed as environment.

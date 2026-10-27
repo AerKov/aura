@@ -53,6 +53,15 @@ The first alpha user connected Redmine through an agent and got stuck at every s
 
   `test_integration` lets the orchestrator test a server. Neither tool can change anything or see
   a secret value.
+- **The orchestrator knows Aura.** Its profile file is written once, at first start, so it cannot
+  carry new knowledge. Two things are added at run time instead:
+  - a section describing chats, agents, engines and pages;
+  - the user guide (`docs/wiki`, embedded in the server) through `aura_docs`.
+
+  It can add an existing agent to a project (`add_agent_to_project`, no approval: the user asks
+  for it, and the chat shows it) and propose changes to an agent's tools, variables, role or
+  instructions (`propose_agent_change`, approved on a card with the diff of `agent.md`). Other
+  agents are told they cannot change their own setup and must say what they miss.
 - **Network.** A host check from the server reports reachability with a plain reason, and whether
   the sandbox allows the host. Proxy variables of the server's environment are passed to commands,
   MCP servers and containers.

@@ -355,7 +355,8 @@ logins (ADR 0019).
 **Phase 17: Integrations and diagnostics**
 From the alpha feedback: an Integrations page for MCP servers with a connection test, secrets kept
 by Aura, variables for agents' commands, an Agents page that shows what stops an agent, a host
-check, no silent agents, read-only setup inspection for the orchestrator (ADR 0020).
+check, no silent agents, read-only setup inspection for the orchestrator, the user guide built in
+for the orchestrator, and agent changes and project membership by request (ADR 0020).
 
 **Later**
 Per-agent network rules, pack signatures and a reviewed community index, multi-user.

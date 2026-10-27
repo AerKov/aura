@@ -8,7 +8,7 @@ anything that matters.
 Everything runs on your computer. Your chats, projects and agents stay on your machine, in plain
 files and a local database.
 
-> **Status:** proof of concept (version 0.9). It works end to end, but expect rough edges.
+> **Status:** alpha (version 0.17). It works end to end, but expect rough edges.
 
 ## Start here
 

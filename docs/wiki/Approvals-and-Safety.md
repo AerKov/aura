@@ -35,7 +35,7 @@ commands, search. That is their job. Every change is committed with git, so it c
 
 ## Limits to know
 
-This is a proof of concept. Shell commands of Claude Code and Aura's own agent run in an **OS
+This is an alpha. Shell commands of Claude Code and Aura's own agent run in an **OS
 sandbox** when your computer supports it: they write only in the project folder (and the temp
 folder), cannot read credentials such as `~/.ssh` or your agent apps' logins, and reach only the
 hosts you allow (package registries and code hosts by default).

@@ -1,6 +1,6 @@
 name: Release
 
-# Push a tag like v0.16.0-alpha.1 to build installers for macOS, Windows and Linux into a draft
+# Push a tag like v0.17.0-alpha.1 to build installers for macOS, Windows and Linux into a draft
 # pre-release. Run it by hand (workflow_dispatch) for a dry run: installers become artifacts only.
 on:
   push:

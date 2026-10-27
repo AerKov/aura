@@ -1,17 +1,26 @@
 import { type Chat, ENGINE_IDS, type TaskStatus } from "@aura/shared";
 import { z } from "zod";
+import { unifiedDiff } from "../../lib/diff";
+import { commitAll } from "../../lib/git";
 import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
 import type { ApprovalService } from "../approvals/service";
 import type { ChatRepo } from "../chat/repo";
 import type { ChatService } from "../chat/service";
+import { secretRef } from "../integrations/env";
 import type { JobInput, JobService } from "../jobs/service";
 import type { MemoryOwner, MemoryService } from "../memory/service";
 import type { ProjectInput, ProjectService } from "../projects/service";
 import type { SkillService } from "../skills/service";
 import { TASK_STATUSES, type TaskService } from "../tasks/service";
 import type { AgentDirectory } from "./directory";
-import { type AgentProfile, BUILTIN_TOOLS, ORCHESTRATOR_HANDLE, validateProfile } from "./profiles";
+import {
+  type AgentProfile,
+  BUILTIN_TOOLS,
+  ORCHESTRATOR_HANDLE,
+  serializeAgentFile,
+  validateProfile,
+} from "./profiles";
 
 export interface ToolDeps {
   agents: AgentDirectory;
@@ -23,6 +32,8 @@ export interface ToolDeps {
   repo: ChatRepo;
   chat: ChatService;
   memory: MemoryService;
+  /** The user data directory (a git repo), for commits of approved agent changes. */
+  dataDir?: string;
 }
 
 export interface ToolContext {
@@ -47,6 +58,12 @@ const agentShape = {
     .describe("what runs the agent; omit for the user's default engine (usually best)"),
   model: z.string().optional().describe("model id for that engine; omit for the default"),
   budget_usd: z.number().optional().describe("lifetime spend limit for this agent"),
+  env: z
+    .record(z.string(), z.string())
+    .optional()
+    .describe(
+      `variables for the agent's commands: plain values, or ${secretRef("NAME")} for keys the user stores on the Integrations page. Never put a key's value here.`,
+    ),
 };
 
 function profileFrom(input: Record<string, unknown>): AgentProfile {
@@ -60,6 +77,7 @@ function profileFrom(input: Record<string, unknown>): AgentProfile {
     model: input.model,
     budgetUsd: input.budget_usd,
     skills: [],
+    env: input.env,
   });
 }
 
@@ -69,12 +87,41 @@ function describeAgent(p: AgentProfile, isNew: boolean): string {
   return `- **@${p.handle}**${isNew ? " (new)" : ""}: ${p.role} · tools: ${p.builtinTools.join(", ") || "none"}${engine}${budget}`;
 }
 
+/** An existing profile with the fields an agent_change request sets. */
+function changedProfile(current: AgentProfile, change: Record<string, unknown>): AgentProfile {
+  return validateProfile({
+    handle: current.handle,
+    name: current.name,
+    role: change.role ?? current.role,
+    engine: current.engine,
+    model: current.model,
+    systemPrompt: change.system_prompt ?? current.systemPrompt,
+    tools: change.tools ?? current.builtinTools,
+    budgetUsd: current.budgetUsd,
+    skills: current.skills,
+    env: change.env ?? current.env,
+  });
+}
+
 /** Registers the effects that run after the user approves a request. */
 export function registerExecutors(deps: ToolDeps): void {
   deps.approvals.register("create_agent", async (payload) => {
     const profile = profileFrom(payload);
     await deps.agents.create(profile);
     return `Created @${profile.handle}.`;
+  });
+  deps.approvals.register("agent_change", async (payload, ctx) => {
+    const current = await deps.agents.get(String(payload.handle));
+    if (!current) throw new Error(`@${String(payload.handle)} no longer exists`);
+    const next = changedProfile(current, payload);
+    await deps.agents.update(next);
+    if (deps.dataDir)
+      await commitAll(
+        deps.dataDir,
+        `agents(@${next.handle}): ${String(payload.summary)}`,
+        ctx.requestedBy,
+      );
+    return `Updated @${next.handle}: ${String(payload.summary)}. It applies from its next reply.`;
   });
   deps.approvals.register("schedule_job", async (payload) => {
     const job = await deps.jobs.create(payload as unknown as JobInput);
@@ -236,6 +283,93 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
           return ok(
             `Approval requested for @${profile.handle}. It is created when the user approves.`,
           );
+        } catch (error) {
+          return fail(error);
+        }
+      },
+    },
+    {
+      name: "propose_agent_change",
+      description: `Ask the user to approve a change to an existing agent: its tools, the variables its commands get, its role or its instructions. The card shows the exact diff of its agent.md. Only the fields you pass change. Secret values never go here: use ${secretRef("NAME")} and ask the user to store the value on the Integrations page.`,
+      inputSchema: {
+        agent: z.string().describe("handle without @"),
+        tools: z
+          .array(z.enum(BUILTIN_TOOLS))
+          .optional()
+          .describe("the full new list of built-in tools"),
+        env: agentShape.env,
+        role: z.string().optional(),
+        system_prompt: z.string().optional().describe("the full new instructions"),
+        why: z.string().describe("one sentence for the user"),
+      },
+      async handler(input) {
+        try {
+          const handle = String(input.agent ?? "").replace(/^@/, "");
+          const current = await deps.agents.get(handle);
+          if (!current) throw new Error(`@${handle} does not exist`);
+          if (handle === ORCHESTRATOR_HANDLE)
+            throw new Error(
+              "the orchestrator's own profile is changed by the user, not by request",
+            );
+          const next = changedProfile(current, input);
+          const before = serializeAgentFile(current);
+          const after = serializeAgentFile(next);
+          if (before === after)
+            return ok(`Nothing to change: @${handle} is already set up like that.`);
+          const changed = [
+            input.tools !== undefined ? "tools" : "",
+            input.env !== undefined ? "variables" : "",
+            input.role !== undefined ? "role" : "",
+            input.system_prompt !== undefined ? "instructions" : "",
+          ].filter(Boolean);
+          const summary = `update ${changed.join(", ")}`;
+          await deps.approvals.request({
+            kind: "agent_change",
+            requestedBy: ctx.handle,
+            chatId: ctx.chat.id,
+            title: `Change @${handle}: ${changed.join(", ")}`,
+            why: String(input.why ?? ""),
+            preview: `\`\`\`diff\n${unifiedDiff(before, after, `agents/${handle}/agent.md`)}\n\`\`\``,
+            payload: {
+              handle,
+              summary,
+              ...(input.tools !== undefined ? { tools: input.tools } : {}),
+              ...(input.env !== undefined ? { env: input.env } : {}),
+              ...(input.role !== undefined ? { role: input.role } : {}),
+              ...(input.system_prompt !== undefined ? { system_prompt: input.system_prompt } : {}),
+            },
+          });
+          return ok(`Approval requested to change @${handle}. It applies when the user approves.`);
+        } catch (error) {
+          return fail(error);
+        }
+      },
+    },
+    {
+      name: "add_agent_to_project",
+      description:
+        "Add an existing agent to a project's chat, so it can be mentioned and assigned there. Agents answer only in chats they belong to.",
+      inputSchema: {
+        agent: z.string().describe("handle without @"),
+        project: z.string().describe("project id (slug) from list_projects"),
+      },
+      async handler(input) {
+        try {
+          const handle = String(input.agent ?? "").replace(/^@/, "");
+          if (!(await deps.agents.get(handle))) throw new Error(`@${handle} does not exist`);
+          const project = await deps.projects.get(String(input.project ?? ""));
+          if (!project) throw new Error(`No project "${String(input.project)}"; see list_projects`);
+          const participant = { kind: "agent" as const, id: handle };
+          if (await deps.repo.isMember(project.chatId, participant))
+            return ok(`@${handle} is already in "${project.name}".`);
+          await deps.repo.addMember(project.chatId, participant, "member");
+          await deps.repo.createMessage({
+            chatId: project.chatId,
+            author: { kind: "bot", id: "system" },
+            kind: "system",
+            body: `@${ctx.handle} added @${handle} to the project.`,
+          });
+          return ok(`Added @${handle} to "${project.name}". Mention it in that chat to start.`);
         } catch (error) {
           return fail(error);
         }
