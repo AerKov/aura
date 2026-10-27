@@ -44,6 +44,8 @@ files in a git repository you own.
   their budget and treat web pages, alerts and files as data, never as instructions.
 - **Alerts and schedules.** Monitoring webhooks wake the orchestrator for triage; recurring jobs run
   agents on a schedule.
+- **Memory.** Agents keep notes across runs (their own, and shared per project) and get the relevant
+  ones every time; you can read and delete all of them.
 - **Skills that improve.** Agents propose changes to their own know-how; you approve the diff;
   every version is a git commit you can roll back.
 - **Customize by asking.** Themes, MCP tool servers and sandboxed panel extensions, built by the

@@ -4,6 +4,10 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    # Major versions of the stack (TypeScript, Elysia, SDKs) are migrated deliberately, not by bot.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       dependencies:
         patterns: ["*"]

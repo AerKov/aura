@@ -6,7 +6,7 @@ import type { AgentDirectory } from "../agents/directory";
 import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import type { EngineRegistry } from "./registry";
-import { EngineSettingsError, KEYED_ENGINES } from "./settings";
+import { EMBEDDING_ENGINES, EngineSettingsError, KEYED_ENGINES } from "./settings";
 import type { ToolBridge } from "./tool-bridge";
 
 export interface EnginesDeps {
@@ -70,6 +70,8 @@ export const enginesModule = ({ sessions, engines, agents, dataDir, toolBridge }
           ollamaBaseUrl: t.Optional(t.String({ maxLength: 300 })),
           customBaseUrl: t.Optional(t.String({ maxLength: 300 })),
           customLabel: t.Optional(t.String({ maxLength: 40 })),
+          memoryEngine: t.Optional(t.Nullable(t.UnionEnum(EMBEDDING_ENGINES))),
+          memoryModel: t.Optional(t.Nullable(t.String({ maxLength: 120 }))),
         }),
       },
     )

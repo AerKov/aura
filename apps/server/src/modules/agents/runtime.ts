@@ -41,6 +41,12 @@ export interface RuntimeDeps {
   mcpServers?: (handle: string) => Record<string, McpServerSpec>;
   /** Extra system prompt sections for an agent (its skills). */
   promptExtras?: (profile: AgentProfile) => string;
+  /** Notes the agent saved earlier that match this message (agent memory, ADR 0013). */
+  memoryPrompt?: (input: {
+    handle: string;
+    projectId: string | null;
+    query: string;
+  }) => Promise<string>;
   ownerName: string;
   /** Working directory for runs outside a project. */
   scratchDir: string;
@@ -263,6 +269,13 @@ export class AgentRuntime {
       ownerName: this.deps.ownerName,
     });
 
+    const memoryNotes =
+      (await this.deps.memoryPrompt?.({
+        handle,
+        projectId: chat.projectId,
+        query: trigger.body,
+      })) ?? "";
+
     let text = "";
     let usage: Usage | null = null;
     let error: Extract<AgentEvent, { type: "error" }> | null = null;
@@ -294,6 +307,7 @@ export class AgentRuntime {
         systemPrompt:
           systemPromptFor(profile, project !== null, team) +
           (this.deps.promptExtras?.(profile) ?? "") +
+          memoryNotes +
           userNote(this.deps.ownerName, this.userLanguage),
         prompt,
         model: model ?? undefined,

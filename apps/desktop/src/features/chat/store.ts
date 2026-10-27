@@ -29,7 +29,15 @@ export interface ChatState {
   members: Record<string, Participant[]>;
   tasks: Record<string, Task[]>;
   /** "ext:<id>" shows an extension panel. */
-  view: "chat" | "skills" | "jobs" | "engines" | "customize" | "devices" | `ext:${string}`;
+  view:
+    | "chat"
+    | "skills"
+    | "memory"
+    | "jobs"
+    | "engines"
+    | "customize"
+    | "devices"
+    | `ext:${string}`;
   /** On narrow screens only one pane is visible: the list or the content. */
   pane: "list" | "main";
   needsPairing: boolean;

@@ -138,6 +138,22 @@ DEFINE FIELD OVERWRITE started_at ON run TYPE datetime DEFAULT time::now();
 DEFINE FIELD OVERWRITE ended_at ON run TYPE option<datetime>;
 DEFINE FIELD OVERWRITE error ON run TYPE option<string>;
 DEFINE INDEX OVERWRITE run_agent ON run FIELDS agent;
+
+DEFINE TABLE OVERWRITE memory SCHEMAFULL;
+DEFINE FIELD OVERWRITE scope ON memory TYPE string ASSERT $value IN ["agent", "project"];
+DEFINE FIELD OVERWRITE owner ON memory TYPE string;
+DEFINE FIELD OVERWRITE text ON memory TYPE string;
+DEFINE FIELD OVERWRITE keys ON memory TYPE string;
+DEFINE FIELD OVERWRITE author ON memory TYPE string;
+DEFINE FIELD OVERWRITE chat ON memory TYPE option<string>;
+DEFINE FIELD OVERWRITE embedding ON memory TYPE option<array<float>>;
+DEFINE FIELD OVERWRITE embed_model ON memory TYPE option<string>;
+DEFINE FIELD OVERWRITE created_at ON memory TYPE datetime DEFAULT time::now();
+DEFINE INDEX OVERWRITE memory_owner ON memory FIELDS scope, owner;
+DEFINE ANALYZER OVERWRITE memory_words TOKENIZERS blank, class, punct FILTERS lowercase, snowball(english);
+DEFINE ANALYZER OVERWRITE memory_keys TOKENIZERS blank FILTERS lowercase;
+DEFINE INDEX OVERWRITE memory_text ON memory FIELDS text FULLTEXT ANALYZER memory_words BM25;
+DEFINE INDEX OVERWRITE memory_keys ON memory FIELDS keys FULLTEXT ANALYZER memory_keys BM25;
 `;
 
 export async function applySchema(surreal: Surreal): Promise<void> {

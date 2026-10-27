@@ -114,6 +114,10 @@ export function showJobs(): void {
   setState(() => ({ view: "jobs", pane: "main" }));
 }
 
+export function showMemory(): void {
+  setState(() => ({ view: "memory", pane: "main" }));
+}
+
 export function showEngines(): void {
   setState(() => ({ view: "engines", pane: "main" }));
 }

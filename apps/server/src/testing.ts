@@ -54,6 +54,7 @@ export async function createTestApp(
     db: db.surreal,
     hub,
     engines,
+    embedder: () => engines.embedder(),
     agents,
     dataDir,
     maxChainDepth: opts.maxChainDepth,

@@ -19,7 +19,7 @@ state/                       database, keys, tokens (not in git)
 
 - **Config is files, committed.** Every change by an agent or an approval is a git commit with a
   clear message, so you can see who changed what and revert it (`git log`, `git revert`).
-- **State is the database** (`state/db`): chats, messages, runs, tasks, approvals.
+- **State is the database** (`state/db`): chats, messages, runs, tasks, approvals, agent memory.
 - **Secrets** in `state/` are readable only by you: API keys (`secrets.json`), the webhook token,
   Web Push keys. Paired devices are stored only as token hashes.
 

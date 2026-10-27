@@ -16,6 +16,7 @@ import { DevicesView } from "@/features/devices/devices-view";
 import { PairingScreen } from "@/features/devices/pairing-screen";
 import { EnginesView } from "@/features/engines/engines-view";
 import { JobsView } from "@/features/jobs/jobs-view";
+import { MemoryView } from "@/features/memory/memory-view";
 import { Rail } from "@/features/shell/rail";
 import { SkillsView } from "@/features/skills/skills-view";
 import { SERVER_URL } from "@/lib/api";
@@ -64,6 +65,8 @@ export function App() {
         <div className="flex min-h-0 flex-1">
           {view === "skills" ? (
             <SkillsView />
+          ) : view === "memory" ? (
+            <MemoryView />
           ) : view === "jobs" ? (
             <JobsView />
           ) : view === "engines" ? (

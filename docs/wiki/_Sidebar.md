@@ -6,6 +6,7 @@
 - [Chats and agents](Chats-and-Agents)
 - [Approvals and safety](Approvals-and-Safety)
 - [Skills](Skills)
+- [Memory](Memory)
 - [Alerts and schedules](Alerts-and-Schedules)
 - [Customization](Customization)
 - [Phone](Phone)

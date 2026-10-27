@@ -12,6 +12,15 @@ export interface EngineSettings {
   models: Partial<Record<EngineId, string>>;
   ollama: { baseUrl: string };
   custom: { baseUrl: string; label: string };
+  /** Semantic memory search (ADR 0013): an embedding model on a local or compatible server. */
+  memory: { engine: EmbeddingEngine | null; model: string | null };
+}
+
+export const EMBEDDING_ENGINES = ["ollama", "openai-compatible"] as const;
+export type EmbeddingEngine = (typeof EMBEDDING_ENGINES)[number];
+
+function isEmbeddingEngine(value: unknown): value is EmbeddingEngine {
+  return typeof value === "string" && (EMBEDDING_ENGINES as readonly string[]).includes(value);
 }
 
 /** Engines that use an API key. Keys live in `state/secrets.json`, outside git (ADR 0011). */
@@ -23,6 +32,7 @@ export const DEFAULT_SETTINGS: EngineSettings = {
   models: {},
   ollama: { baseUrl: "http://127.0.0.1:11434" },
   custom: { baseUrl: "http://127.0.0.1:1234/v1", label: "LM Studio" },
+  memory: { engine: null, model: null },
 };
 
 export class EngineSettingsError extends Error {
@@ -73,6 +83,14 @@ export function parseSettings(raw: unknown): EngineSettings {
     if (typeof raw.custom.label === "string" && raw.custom.label.trim())
       settings.custom.label = raw.custom.label.trim().slice(0, 40);
   }
+  if (
+    isRecord(raw.memory) &&
+    isEmbeddingEngine(raw.memory.engine) &&
+    typeof raw.memory.model === "string" &&
+    MODEL_ID_PATTERN.test(raw.memory.model)
+  ) {
+    settings.memory = { engine: raw.memory.engine, model: raw.memory.model };
+  }
   return settings;
 }
 
@@ -83,6 +101,9 @@ export interface SettingsPatch {
   ollamaBaseUrl?: string;
   customBaseUrl?: string;
   customLabel?: string;
+  /** Semantic memory search: both set to turn it on, both null to turn it off. */
+  memoryEngine?: EmbeddingEngine | null;
+  memoryModel?: string | null;
 }
 
 /** Engine settings and API keys on disk. */
@@ -127,6 +148,14 @@ export class EngineStore {
     if (patch.ollamaBaseUrl !== undefined) next.ollama.baseUrl = validBaseUrl(patch.ollamaBaseUrl);
     if (patch.customBaseUrl !== undefined) next.custom.baseUrl = validBaseUrl(patch.customBaseUrl);
     if (patch.customLabel?.trim()) next.custom.label = patch.customLabel.trim().slice(0, 40);
+    if (patch.memoryEngine !== undefined || patch.memoryModel !== undefined) {
+      const engine = patch.memoryEngine === undefined ? next.memory.engine : patch.memoryEngine;
+      const model =
+        (patch.memoryModel === undefined ? next.memory.model : patch.memoryModel) || null;
+      if (engine && model && !MODEL_ID_PATTERN.test(model))
+        throw new EngineSettingsError(`"${model}" is not a valid model id`);
+      next.memory = engine && model ? { engine, model } : { engine: null, model: null };
+    }
     writeFileSync(this.file, `${JSON.stringify(next, null, 2)}\n`);
     this.cached = next;
     await commitAll(this.dataDir, "chore(engines): update engine settings");

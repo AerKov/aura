@@ -5,6 +5,11 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- Agent memory: agents remember notes across runs (their own, and shared per project) and get the
+  relevant ones in every run; keyword search in any language, optional semantic search with a local
+  embedding model; Memory screen to review and delete notes.
+- Fix: skills attached to an agent now reach its instructions (they were never added since 0.4).
+
 - Project page: README, wiki (published from `docs/wiki`), license, contributing and security
   guides, issue and pull request templates.
 - CI (typecheck, lint, tests, sidecar smoke test) and release builds for macOS, Windows and Linux.

@@ -113,7 +113,8 @@ projects/<slug>/                  project git workspaces
 - `approval`: kind, requested_by, target, payload, status (`pending` | `approved` | `rejected`),
   decided_by, decided_at.
 - `skill_index`: name, current version (git ref), attached agents.
-- `memory`: scope (agent | project), text, embedding (vector index).
+- `memory`: scope (agent | project), owner, text, search keys, optional embedding and its model
+  (ADR 0013).
 - `job`: kind, schedule (cron), payload, next_run_at, status.
 - `extension_state`: id, version, enabled, granted_permissions.
 
@@ -308,6 +309,11 @@ A choice of engines per agent: Claude Code; Gemini CLI, Codex and OpenCode over 
 Aura's own agent loop on OpenRouter, Ollama or any OpenAI-compatible server, with built-in file,
 shell and web tools (ADR 0011).
 
+**Phase 10: Agent memory**
+Agents remember notes across runs (`remember`, `recall`, `forget`), per agent and per project;
+relevant notes are added to each run. Keyword search everywhere, semantic search with a local
+embedding model; a Memory screen to review and delete (ADR 0013).
+
 **Later**
-Agent memory with vector search, container sandbox,
+Memory summaries with vector search, container sandbox,
 community catalog with review and signatures, multi-user.

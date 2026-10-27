@@ -18,10 +18,12 @@ import { customizeTools } from "./modules/customize/tools";
 import { DeviceService } from "./modules/devices/service";
 import type { EngineSelector } from "./modules/engines/registry";
 import { JobService } from "./modules/jobs/service";
+import { MemoryService } from "./modules/memory/service";
 import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
 import { SkillService } from "./modules/skills/service";
 import { TaskService } from "./modules/tasks/service";
+import type { Embedder } from "./providers/embeddings";
 
 /** The user data directory is a git repo; DB state and project repos are kept out of it. */
 export const DATA_GITIGNORE = "state/\nprojects/\n";
@@ -35,6 +37,8 @@ export async function createServices(deps: {
   db: Surreal;
   hub: EventHub;
   engines: EngineSelector;
+  /** Embedding model for semantic memory search; keyword search when absent. */
+  embedder?: () => Embedder | null;
   agents: AgentDirectory;
   dataDir: string;
   maxChainDepth?: number;
@@ -70,7 +74,18 @@ export async function createServices(deps: {
     limiter: new TriageLimiter(),
     triageDelayMs: deps.triageDelayMs,
   });
-  const toolDeps = { agents: deps.agents, projects, approvals, skills, tasks, jobs, repo, chat };
+  const memory = new MemoryService({ db: deps.db, embedder: deps.embedder ?? (() => null) });
+  const toolDeps = {
+    agents: deps.agents,
+    projects,
+    approvals,
+    skills,
+    tasks,
+    jobs,
+    repo,
+    chat,
+    memory,
+  };
   const appearance = new AppearanceService({
     db: deps.db,
     dataDir: deps.dataDir,
@@ -110,6 +125,7 @@ export async function createServices(deps: {
     ],
     mcpServers: (handle) => mcp.forAgent(handle),
     promptExtras: (profile) => skills.promptFor(profile),
+    memoryPrompt: (input) => memory.promptFor(input),
     ownerName: owner.name,
     scratchDir: join(deps.dataDir, "state", "scratch"),
     maxChainDepth: deps.maxChainDepth,
@@ -131,6 +147,7 @@ export async function createServices(deps: {
     jobs,
     alerts,
     toolDeps,
+    memory,
     appearance,
     mcp,
     extensions,

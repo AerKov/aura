@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Blocks,
+  Brain,
   CalendarClock,
   Cpu,
   MessagesSquare,
@@ -15,6 +16,7 @@ import {
   showExtension,
   showJobs,
   showList,
+  showMemory,
   showSkills,
 } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
@@ -64,6 +66,13 @@ export function Rail() {
       icon: Sparkles,
       active: view === "skills",
       onClick: showSkills,
+    },
+    {
+      key: "memory",
+      label: "Memory",
+      icon: Brain,
+      active: view === "memory",
+      onClick: showMemory,
     },
     {
       key: "jobs",

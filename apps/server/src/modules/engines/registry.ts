@@ -2,6 +2,7 @@ import { ENGINE_IDS, type EngineId, type EngineModel } from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
 import { type AcpAgentSpec, AcpProvider, type AgentProcess } from "../../providers/acp";
 import { locateExecutable } from "../../providers/claude-locate";
+import { type Embedder, OpenAICompatEmbedder } from "../../providers/embeddings";
 import { OpenAICompatProvider } from "../../providers/openai-compat";
 import type { LLMProvider, ProviderStatus } from "../../providers/types";
 import { EngineStore, KEYED_ENGINES, type KeyedEngine } from "./settings";
@@ -207,6 +208,25 @@ export class EngineRegistry implements EngineSelector {
     };
   }
 
+  /** The embedding model for semantic memory search, or null when it is off (ADR 0013). */
+  embedder(): Embedder | null {
+    const settings = this.store.get();
+    const { engine, model } = settings.memory;
+    if (!engine || !model) return null;
+    const baseUrl = engine === "ollama" ? `${settings.ollama.baseUrl}/v1` : settings.custom.baseUrl;
+    const apiKey = engine === "openai-compatible" ? this.store.key("openai-compatible") : null;
+    const key = `${engine}|${model}|${baseUrl}|${apiKey ?? ""}`;
+    if (this.embedderCache?.key !== key) {
+      this.embedderCache = {
+        key,
+        embedder: new OpenAICompatEmbedder({ engine, baseUrl, model, apiKey, fetch: this.fetch }),
+      };
+    }
+    return this.embedderCache.embedder;
+  }
+
+  private embedderCache: { key: string; embedder: Embedder } | null = null;
+
   provider(engine: EngineId): LLMProvider {
     return this.providers[engine];
   }
@@ -232,7 +252,11 @@ export class EngineRegistry implements EngineSelector {
     this.opts.claude.resetStatus?.();
   }
 
-  async list(): Promise<{ default: EngineId; engines: EngineInfo[] }> {
+  async list(): Promise<{
+    default: EngineId;
+    engines: EngineInfo[];
+    memory: ReturnType<EngineStore["get"]>["memory"];
+  }> {
     const settings = this.store.get();
     const engines = await Promise.all(
       ENGINE_IDS.map(async (id): Promise<EngineInfo> => {
@@ -264,7 +288,7 @@ export class EngineRegistry implements EngineSelector {
         };
       }),
     );
-    return { default: settings.default, engines };
+    return { default: settings.default, engines, memory: settings.memory };
   }
 
   /** Models an engine offers, free ones first. Claude Code has no listing API. */

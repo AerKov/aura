@@ -53,6 +53,7 @@ async function main(): Promise<void> {
     db: db.surreal,
     hub,
     engines,
+    embedder: () => engines.embedder(),
     agents,
     dataDir: config.dataDir,
     safeMode: safe.mode,
