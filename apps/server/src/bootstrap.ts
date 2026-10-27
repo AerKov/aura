@@ -15,6 +15,7 @@ import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
 import { ContainerService, containerNote } from "./modules/containers/service";
 import { AppearanceService } from "./modules/customize/appearance";
+import { ExtensionBridge } from "./modules/customize/bridge";
 import { ExtensionService } from "./modules/customize/extensions";
 import { McpService } from "./modules/customize/mcp";
 import type { SafeMode } from "./modules/customize/safe-mode";
@@ -88,6 +89,7 @@ export async function createServices(deps: {
     runs,
     agents: deps.agents,
     newProjectIsolation: () => (sandbox.store.get().container.newProjects ? "container" : "host"),
+    onChange: () => deps.hub.publish({ type: "customize.updated" }),
   });
   const approvals = new ApprovalService(deps.db, repo);
   const skills = new SkillService({
@@ -140,6 +142,18 @@ export async function createServices(deps: {
     hub: deps.hub,
     appVersion: SERVER_VERSION,
     safeMode: () => safeMode.on,
+    projectExists: async (slug) => (await projects.get(slug)) !== null,
+    bindProject: async (slug, id) => {
+      await projects.setApp(slug, id);
+    },
+  });
+  const extensionBridge = new ExtensionBridge({
+    db: deps.db,
+    extensions,
+    secrets,
+    chat,
+    projects,
+    fetch: deps.fetch,
   });
   const customize = { appearance, mcp, extensions };
   const catalog = new CatalogService({
@@ -250,6 +264,7 @@ export async function createServices(deps: {
     appearance,
     mcp,
     extensions,
+    extensionBridge,
     catalog,
     safeMode,
     appVersion: SERVER_VERSION,

@@ -241,7 +241,13 @@ Manifest:
 }
 ```
 
-Extension API (draft, finalize in Phase 6):
+Implemented API (Phase 6, extended in Phase 18, ADR 0021): `ctx.ui.registerPanel`, `ctx.ui.form`,
+`ctx.ui.button`, `ctx.context()`, `ctx.chat.*`, `ctx.alerts.recent()`, `ctx.events.on`,
+`ctx.storage.*`, `ctx.net.fetch` (manifest `hosts`, server-side `secrets`), `ctx.agents.ask`,
+`ctx.files.*`; an `icon` from a fixed list. Extensions open in the side panel next to a chat; a
+project can pin one as its app.
+
+Original draft:
 ```ts
 export default function activate(ctx: ExtensionContext) {
   ctx.commands.register({ id: "refresh", title: "Refresh news", run: () => {} });
@@ -357,6 +363,12 @@ From the alpha feedback: an Integrations page for MCP servers with a connection 
 by Aura, variables for agents' commands, an Agents page that shows what stops an agent, a host
 check, no silent agents, read-only setup inspection for the orchestrator, the user guide built in
 for the orchestrator, and agent changes and project membership by request (ADR 0020).
+
+**Phase 18: Side panel and extensions v2**
+From the alpha feedback: a side panel next to the chat where extensions open with the chat as their
+context, project apps that open by themselves, extension storage, network to approved hosts with
+secrets filled in by the server, asking agents as the user, reading project files, extension icons,
+form and button helpers, and an arrangeable rail (ADR 0021).
 
 **Later**
 Per-agent network rules, pack signatures and a reviewed community index, multi-user.

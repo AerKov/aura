@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Appearance } from "@aura/shared";
+import { type Appearance, RAIL_PINNED, type RailLayout } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 import { unifiedDiff } from "../../lib/diff";
 import { commitAll } from "../../lib/git";
@@ -20,6 +20,16 @@ export interface CssChange {
 }
 
 const SETTING = new RecordId("setting", "appearance");
+
+const RAIL_KEY = /^(ext:)?[a-z][a-z0-9-]{0,47}$/;
+
+/** Rail item keys: page names ("skills") and extensions ("ext:<id>"); unknown ones are kept. */
+function railKeys(keys: string[]): string[] {
+  const bad = keys.find((k) => !RAIL_KEY.test(k));
+  if (bad) throw new AppearanceError(`"${bad}" is not a rail item`);
+  if (keys.length > 64) throw new AppearanceError("too many rail items");
+  return [...new Set(keys)];
+}
 
 /** Tier 1 customization: themes (`themes/<name>/theme.css`) and snippets (`snippets/<name>.css`). */
 export class AppearanceService {
@@ -70,19 +80,27 @@ export class AppearanceService {
       .sort();
   }
 
-  private async settings(): Promise<{ theme: string | null; snippets: string[] }> {
+  private async settings(): Promise<{
+    theme: string | null;
+    snippets: string[];
+    rail: RailLayout;
+  }> {
     const [rows] = await this.deps.db
-      .query<[{ theme?: string | null; snippets?: string[] }[]]>(
+      .query<[{ theme?: string | null; snippets?: string[]; rail?: Partial<RailLayout> }[]]>(
         "SELECT * FROM setting WHERE id = $id",
         { id: SETTING },
       )
       .collect();
     const row = rows?.[0];
-    return { theme: row?.theme ?? null, snippets: row?.snippets ?? [] };
+    return {
+      theme: row?.theme ?? null,
+      snippets: row?.snippets ?? [],
+      rail: { order: row?.rail?.order ?? [], hidden: row?.rail?.hidden ?? [] },
+    };
   }
 
   async get(): Promise<Appearance> {
-    const { theme, snippets } = await this.settings();
+    const { theme, snippets, rail } = await this.settings();
     const themes = this.themes();
     const available = this.snippets();
     const css: { name: string; css: string }[] = [];
@@ -91,11 +109,15 @@ export class AppearanceService {
     for (const s of snippets.filter((n) => available.includes(n))) {
       css.push({ name: `snippet:${s}`, css: sanitizeCss(this.read("snippet", s) ?? "") });
     }
-    return { theme, snippets, themes, availableSnippets: available, css };
+    return { theme, snippets, themes, availableSnippets: available, css, rail };
   }
 
   /** Switches the theme and snippets among files that already exist. Harmless and reversible. */
-  async set(input: { theme?: string | null; snippets?: string[] }): Promise<Appearance> {
+  async set(input: {
+    theme?: string | null;
+    snippets?: string[];
+    rail?: Partial<RailLayout>;
+  }): Promise<Appearance> {
     const current = await this.settings();
     const theme = input.theme === undefined ? current.theme : input.theme;
     if (theme !== null && !this.themes().includes(theme))
@@ -103,11 +125,19 @@ export class AppearanceService {
     const snippets = input.snippets ?? current.snippets;
     const unknown = snippets.filter((s) => !this.snippets().includes(s));
     if (unknown.length > 0) throw new AppearanceError(`unknown snippets: ${unknown.join(", ")}`);
+    const rail = {
+      order: railKeys(input.rail?.order ?? current.rail.order),
+      // Chats and Customize stay, so the user can always get back.
+      hidden: railKeys(input.rail?.hidden ?? current.rail.hidden).filter(
+        (k) => !RAIL_PINNED.includes(k),
+      ),
+    };
     await this.deps.db
-      .query("UPSERT $id CONTENT { theme: $theme, snippets: $snippets }", {
+      .query("UPSERT $id CONTENT { theme: $theme, snippets: $snippets, rail: $rail }", {
         id: SETTING,
         theme,
         snippets,
+        rail,
       })
       .collect();
     this.deps.hub.publish({ type: "customize.updated" });

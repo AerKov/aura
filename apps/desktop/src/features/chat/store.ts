@@ -54,6 +54,8 @@ export interface ChatState {
   needsPairing: boolean;
   appearance: Appearance | null;
   customize: CustomizeState | null;
+  /** Extension open in the side panel per chat; null = closed, absent = the project's app. */
+  sideApp: Record<string, string | null>;
 }
 
 let state: ChatState = {
@@ -72,6 +74,7 @@ let state: ChatState = {
   view: "chat",
   appearance: null,
   customize: null,
+  sideApp: {},
   pane: "list",
   needsPairing: false,
 };

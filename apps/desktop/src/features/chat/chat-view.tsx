@@ -1,8 +1,9 @@
 import type { ChatSummary, Message } from "@aura/shared";
-import { Box, ChevronLeft, ListTodo, Monitor, ScrollText } from "lucide-react";
+import { Box, ChevronLeft, ListTodo, Monitor, PanelRight, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
+import { SidePanel, toggleApps, useApps, useOpenApp } from "@/features/customize/side-panel";
 import { cn } from "@/lib/utils";
 import { loadMembers, reportError, showList } from "./actions";
 import { ChatMark } from "./chat-mark";
@@ -46,6 +47,8 @@ export function ChatView({ chatId }: { chatId: string }) {
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [panel, setPanel] = useState<"tasks" | "summary" | "isolation" | null>(null);
   const [summary, setSummary] = useState<ChatSummary | null>(null);
+  const apps = useApps();
+  const app = useOpenApp(chatId, project);
   const scroller = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
@@ -171,6 +174,16 @@ export function ChatView({ chatId }: { chatId: string }) {
                 {taskCount ? ` ${taskCount}` : ""}
               </Button>
             )}
+            {apps.length > 0 && (
+              <Button
+                variant={app ? "secondary" : "ghost"}
+                size="sm"
+                title="Apps next to this chat"
+                onClick={() => toggleApps(chatId, project, apps)}
+              >
+                <PanelRight /> <span className="max-sm:hidden">Apps</span>
+              </Button>
+            )}
           </div>
         </header>
         <div
@@ -225,6 +238,7 @@ export function ChatView({ chatId }: { chatId: string }) {
           onClose={() => setPanel(null)}
         />
       )}
+      {app && <SidePanel chatId={chatId} project={project} app={app} />}
     </div>
   );
 }

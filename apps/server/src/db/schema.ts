@@ -53,6 +53,7 @@ DEFINE FIELD OVERWRITE chat ON project TYPE record<chat>;
 DEFINE FIELD OVERWRITE repo_path ON project TYPE string;
 DEFINE FIELD OVERWRITE budget_usd ON project TYPE option<float>;
 DEFINE FIELD OVERWRITE isolation ON project TYPE string DEFAULT "host" ASSERT $value IN ["host", "container"];
+DEFINE FIELD OVERWRITE app ON project TYPE option<string>;
 DEFINE FIELD OVERWRITE created_at ON project TYPE datetime DEFAULT time::now();
 
 DEFINE TABLE OVERWRITE approval SCHEMAFULL;
@@ -112,6 +113,14 @@ DEFINE FIELD OVERWRITE version ON extension_state TYPE string;
 DEFINE FIELD OVERWRITE enabled ON extension_state TYPE bool;
 DEFINE FIELD OVERWRITE granted_permissions ON extension_state TYPE array<string>;
 DEFINE FIELD OVERWRITE errors ON extension_state TYPE int DEFAULT 0;
+DEFINE FIELD OVERWRITE granted_hosts ON extension_state TYPE array<string> DEFAULT [];
+DEFINE FIELD OVERWRITE granted_secrets ON extension_state TYPE array<string> DEFAULT [];
+
+DEFINE TABLE OVERWRITE extension_data SCHEMAFULL;
+DEFINE FIELD OVERWRITE ext ON extension_data TYPE string;
+DEFINE FIELD OVERWRITE key ON extension_data TYPE string;
+DEFINE FIELD OVERWRITE value ON extension_data TYPE string;
+DEFINE INDEX OVERWRITE extension_data_ext ON extension_data FIELDS ext;
 
 DEFINE TABLE OVERWRITE device SCHEMAFULL;
 DEFINE FIELD OVERWRITE name ON device TYPE string;

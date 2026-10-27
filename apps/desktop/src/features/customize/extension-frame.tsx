@@ -25,10 +25,32 @@ const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
   "chat.messages": "chat.read",
   "chat.post": "chat.write",
   "alerts.recent": "alerts.read",
-  "events.subscribe": "chat.read",
+  // Checked per event below: "context" needs nothing, "message.created" needs chat.read.
+  "events.subscribe": null,
   "ui.setTitle": "ui.panel",
+  "context.get": null,
+  "storage.get": "storage",
+  "storage.set": "storage",
+  "storage.keys": "storage",
+  "net.fetch": "net",
+  "agents.ask": "agents.ask",
+  "files.list": "files.read",
+  "files.read": "files.read",
   error: null,
 };
+
+/** The chat the extension is open next to (side panel), or nothing (a page in the rail). */
+export interface ExtensionContext {
+  chatId: string | null;
+  projectId: string | null;
+}
+
+const NO_CONTEXT: ExtensionContext = { chatId: null, projectId: null };
+
+function stringRecord(value: unknown): Record<string, string> | undefined {
+  if (typeof value !== "object" || value === null) return undefined;
+  return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, String(v)]));
+}
 
 /** What an extension may see of a message: no run internals. */
 function publicMessage(m: Message) {
@@ -44,16 +66,29 @@ function publicMessage(m: Message) {
 
 /**
  * Hosts one UI extension in a sandboxed iframe (opaque origin, no network) and answers its
- * postMessage requests, checking each against the permissions the user granted.
+ * postMessage requests, checking each against the permissions the user granted. The server checks
+ * them again for everything it serves (ADR 0021).
  */
-export function ExtensionFrame({ extension }: { extension: ExtensionInfo }) {
+export function ExtensionFrame({
+  extension,
+  context = NO_CONTEXT,
+  variant = "page",
+}: {
+  extension: ExtensionInfo;
+  context?: ExtensionContext;
+  /** "side": inside the side panel, which has its own header. */
+  variant?: "page" | "side";
+}) {
   const ref = useRef<HTMLIFrameElement>(null);
   const [title, setTitle] = useState(extension.name);
   const subscribed = useRef(new Set<string>());
+  const contextRef = useRef(context);
+  contextRef.current = context;
 
   useEffect(() => {
     const frame = ref.current;
     const has = (p: ExtensionPermission) => extension.permissions.includes(p);
+    const ext = () => api.extensions({ extensionId: extension.id });
     const reply = (id: number | undefined, result: unknown, error?: string) =>
       frame?.contentWindow?.postMessage({ aura: 1, id, result, error }, "*");
 
@@ -99,7 +134,60 @@ export function ExtensionFrame({ extension }: { extension: ExtensionInfo }) {
             ),
           );
         }
+        case "context.get":
+          return reply(req.id, contextRef.current);
+        case "storage.get": {
+          const { value } = await call(() =>
+            ext().storage.get({ query: { key: String(p.key ?? "") } }),
+          );
+          return reply(req.id, value ?? null);
+        }
+        case "storage.keys": {
+          const { keys } = await call(() => ext().storage.get({ query: {} }));
+          return reply(req.id, keys ?? []);
+        }
+        case "storage.set":
+          await call(() => ext().storage.put({ key: String(p.key ?? ""), value: p.value ?? null }));
+          return reply(req.id, true);
+        case "net.fetch":
+          return reply(
+            req.id,
+            await call(() =>
+              ext().fetch.post({
+                url: String(p.url ?? ""),
+                method: typeof p.method === "string" ? p.method : undefined,
+                headers: stringRecord(p.headers),
+                body: typeof p.body === "string" ? p.body : undefined,
+              }),
+            ),
+          );
+        case "agents.ask": {
+          const chatId = typeof p.chatId === "string" ? p.chatId : contextRef.current.chatId;
+          if (!chatId)
+            return reply(req.id, null, "Open the extension next to a chat, or pass chatId");
+          const message = await call(() =>
+            ext().ask.post({ chatId, agent: String(p.agent ?? ""), text: String(p.text ?? "") }),
+          );
+          return reply(req.id, publicMessage(message as Message));
+        }
+        case "files.list":
+        case "files.read": {
+          const project = typeof p.project === "string" ? p.project : contextRef.current.projectId;
+          if (!project)
+            return reply(
+              req.id,
+              null,
+              "Open the extension next to a project chat, or pass project",
+            );
+          const read = req.method === "files.read";
+          const result = await call(() =>
+            ext().files.get({ query: { project, path: String(p.path ?? ""), read } }),
+          );
+          return reply(req.id, read ? result.content : result.entries);
+        }
         case "events.subscribe":
+          if (p.name === "message.created" && !has("chat.read"))
+            return reply(req.id, null, 'Permission "chat.read" was not granted');
           subscribed.current.add(String(p.name ?? ""));
           return reply(req.id, true);
         case "ui.setTitle":
@@ -107,7 +195,7 @@ export function ExtensionFrame({ extension }: { extension: ExtensionInfo }) {
           return reply(req.id, true);
         case "error":
           console.warn(`extension ${extension.id} error:`, p.message);
-          await call(() => api.extensions({ extensionId: extension.id }).error.post());
+          await call(() => ext().error.post());
           return;
       }
     };
@@ -124,6 +212,18 @@ export function ExtensionFrame({ extension }: { extension: ExtensionInfo }) {
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [extension]);
+
+  // Tell the extension when the chat next to it changes.
+  useEffect(() => {
+    ref.current?.contentWindow?.postMessage(
+      {
+        aura: 1,
+        event: "context",
+        payload: { chatId: context.chatId, projectId: context.projectId },
+      },
+      "*",
+    );
+  }, [context.chatId, context.projectId]);
 
   // Forward new messages to an extension that subscribed (and may read chats).
   const messages = useChatStore((s) => s.messages);
@@ -162,13 +262,15 @@ export function ExtensionFrame({ extension }: { extension: ExtensionInfo }) {
   useEffect(sendTheme, [appearance]);
 
   return (
-    <section className="flex min-w-0 flex-1 flex-col">
-      <header className="flex items-center gap-3 border-b px-4 py-3">
-        <h1 className="font-semibold">{title}</h1>
-        <span className="text-muted-foreground text-xs">
-          extension · {extension.permissions.join(", ")}
-        </span>
-      </header>
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+      {variant === "page" && (
+        <header className="flex items-center gap-3 border-b px-4 py-3">
+          <h1 className="font-semibold">{title}</h1>
+          <span className="text-muted-foreground text-xs">
+            extension · {extension.permissions.join(", ")}
+          </span>
+        </header>
+      )}
       <iframe
         ref={ref}
         title={title}

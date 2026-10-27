@@ -1,6 +1,5 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Blocks,
   Bot,
   Brain,
   CalendarClock,
@@ -12,6 +11,7 @@ import {
   Smartphone,
   Sparkles,
 } from "lucide-react";
+import { useMemo } from "react";
 import { AuraLogo } from "@/components/logo";
 import {
   showAgents,
@@ -27,9 +27,11 @@ import {
   showSkills,
 } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
+import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
+import { arrangeRail } from "./rail-layout";
 
-interface Item {
+export interface RailItem {
   key: string;
   label: string;
   icon: LucideIcon;
@@ -40,26 +42,21 @@ interface Item {
 /** Setup pages stay on the desktop; the phone's tab bar keeps the daily ones. */
 const DESKTOP_ONLY = new Set(["integrations", "catalog", "engines", "customize", "devices"]);
 
-/**
- * Aura's navigation: a slim rail on the left on desktop, a tab bar at the bottom on phones.
- * Conversations are one place among others (skills, schedule, customize, devices, panels).
- */
-export function Rail() {
+/** Every rail item in its default order, before the user's layout is applied. */
+export function useRailItems(): RailItem[] {
   const view = useChatStore((s) => s.view);
-  const pane = useChatStore((s) => s.pane);
-  const connection = useChatStore((s) => s.connection);
   const customize = useChatStore((s) => s.customize);
-  const pendingApprovals = useChatStore(
-    (s) =>
-      Object.values(s.messages)
-        .flat()
-        .filter((m) => m.card?.type === "approval" && m.card.status === "pending").length,
+  const panels = useMemo(
+    () =>
+      customize?.safeMode.on
+        ? []
+        : (customize?.extensions ?? []).filter(
+            (e) => e.enabled && e.permissions.includes("ui.panel"),
+          ),
+    [customize],
   );
-  const panels = customize?.safeMode.on
-    ? []
-    : (customize?.extensions ?? []).filter((e) => e.enabled && e.permissions.includes("ui.panel"));
 
-  const items: Item[] = [
+  return [
     {
       key: "chats",
       label: "Chats",
@@ -115,7 +112,7 @@ export function Rail() {
     ...panels.map((ext) => ({
       key: `ext:${ext.id}`,
       label: ext.name,
-      icon: Blocks,
+      icon: extensionIcon(ext.icon),
       active: view === `ext:${ext.id}`,
       onClick: () => showExtension(ext.id),
     })),
@@ -141,6 +138,25 @@ export function Rail() {
       onClick: showDevices,
     },
   ];
+}
+
+/**
+ * Aura's navigation: a slim rail on the left on desktop, a tab bar at the bottom on phones.
+ * Conversations are one place among others (skills, schedule, customize, devices, panels).
+ * The user arranges it on the Customize page (order, hidden items).
+ */
+export function Rail() {
+  const view = useChatStore((s) => s.view);
+  const pane = useChatStore((s) => s.pane);
+  const connection = useChatStore((s) => s.connection);
+  const layout = useChatStore((s) => s.appearance?.rail);
+  const pendingApprovals = useChatStore(
+    (s) =>
+      Object.values(s.messages)
+        .flat()
+        .filter((m) => m.card?.type === "approval" && m.card.status === "pending").length,
+  );
+  const items = arrangeRail(useRailItems(), layout);
 
   // On phones the tab bar hides inside a conversation, where the composer needs the space.
   const hideOnPhone = view === "chat" && pane === "main";

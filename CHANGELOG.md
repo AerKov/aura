@@ -5,6 +5,20 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.18.0] - 2026-10-27: Side panel and apps
+
+- Side panel next to the chat: open any extension there with **Apps**; it knows the chat and
+  project it is next to.
+- Project apps: pin an extension to a project (or ask the orchestrator for one) and it opens by
+  itself in the project chat.
+- Extensions can keep their own data, reach approved hosts through Aura with keys filled in by
+  Aura (never visible to them), ask an agent on your behalf (within budgets, rate limited), and
+  read project files. Each is a permission shown before install.
+- Forms and buttons for agents' extensions, styled with the current theme.
+- Extension icons, and a Navigation list on the Customize page to order and hide the rail's icons
+  (also by asking the orchestrator).
+- Removing an extension also deletes its data.
+
 ## [0.17.0] - 2026-10-27: First alpha
 
 The first public build: phases 10 to 17 on top of 0.9.0. Unsigned installers; see the

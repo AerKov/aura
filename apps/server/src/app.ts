@@ -18,6 +18,7 @@ import { containersModule } from "./modules/containers";
 import type { ContainerService } from "./modules/containers/service";
 import { customizeModule } from "./modules/customize";
 import type { AppearanceService } from "./modules/customize/appearance";
+import type { ExtensionBridge } from "./modules/customize/bridge";
 import type { ExtensionService } from "./modules/customize/extensions";
 import type { McpService } from "./modules/customize/mcp";
 import type { SafeMode } from "./modules/customize/safe-mode";
@@ -72,6 +73,7 @@ export interface AppDeps extends HealthDeps {
   publicUrl: string;
   appearance: AppearanceService;
   extensions: ExtensionService;
+  extensionBridge: ExtensionBridge;
   mcp: McpService;
   safeMode: SafeMode;
   appVersion: string;

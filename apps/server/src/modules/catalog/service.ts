@@ -146,6 +146,12 @@ export class CatalogService {
         );
         if (manifest.permissions.includes("chat.write"))
           warnings.push(`Extension ${manifest.name} can post messages.`);
+        if (manifest.hosts?.length)
+          warnings.push(
+            `Extension ${manifest.name} can reach ${manifest.hosts.join(", ")}${manifest.secrets?.length ? ` with secrets ${manifest.secrets.join(", ")}` : ""}.`,
+          );
+        if (manifest.permissions.includes("agents.ask"))
+          warnings.push(`Extension ${manifest.name} can ask agents for you (spends budget).`);
       } else {
         lines.push(`- \`${path}\`: ${before === null ? "new" : "replaces the existing file"}`);
       }

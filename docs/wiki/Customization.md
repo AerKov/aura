@@ -26,15 +26,49 @@ listed in `mcp/servers.json` and granted per agent. Secrets are never written to
 MCP servers work with every engine. Aura does not use the servers you set up in Claude Code itself
 (`claude mcp list`): agents get exactly the servers listed here.
 
-## Panels: extensions
+## Apps: extensions
 
-> Add a panel that shows today's alerts with their severity.
+> Make a panel for this project with a form that files a ticket in our tracker.
 
-Extensions are small JavaScript apps in `extensions/<id>/` that add panels to the left rail. They run
-in a sandbox: no network, no storage, no access to the app except the permissions you approved
-(`chat.read`, `chat.write`, `ui.panel`, `alerts.read`). Messages they post never wake agents. An
-extension that keeps crashing is turned off automatically. **Remove** (the bin on its card) deletes
-its files as one commit in your data folder, so it can be restored from history.
+Extensions are small JavaScript apps in `extensions/<id>/`. Open one next to a chat with **Apps** in
+the chat header: it appears in the side panel on the right and knows which chat and project it is
+next to. Extensions with a page are also in the rail on the left.
+
+**Project apps.** Pin an extension to a project with the pin button in the side panel, or ask the
+orchestrator for an app for a project. It then opens by itself whenever you enter that project's
+chat. Close the panel to hide it for now; unpin to stop it opening.
+
+Extensions run in a sandbox and can do only what you approved when you installed or enabled them:
+
+| Permission    | What it allows                                                                  |
+| ------------- | ------------------------------------------------------------------------------- |
+| `ui.panel`    | Show a panel (and forms and buttons in it)                                      |
+| `chat.read`   | Read chats and messages                                                         |
+| `chat.write`  | Post messages as the extension (they never wake agents)                         |
+| `alerts.read` | Read alerts                                                                     |
+| `storage`     | Keep its own data (not in your chats)                                           |
+| `net`         | Reach the hosts listed on the card, through Aura                                |
+| `agents.ask`  | Ask an agent for you: posts your message `@agent …` in the chat, within budgets |
+| `files.read`  | Read a project's files (read-only)                                              |
+
+**Network and keys.** An extension cannot reach the internet by itself. With `net`, Aura makes the
+request for it, only to the hosts shown on the install card. If it needs a key, the card also names
+the secret; store it on the [Integrations](Integrations) page under Secrets. Aura puts the key into
+the request and hides it in the answer, so the extension never sees it.
+
+**Asking agents.** A button or form that asks an agent posts a message from you, so the agent must
+be in the chat and the usual budgets and limits apply (at most 10 requests a minute per extension).
+
+An extension that keeps crashing is turned off automatically. **Remove** (the bin on its card)
+deletes its files and its data as one commit in your data folder, so the files can be restored from
+history.
+
+## Navigation
+
+The **Navigation** list on the Customize page sets the order of the icons on the left and hides the
+ones you do not use (Chats and Customize always stay). Items after Customize sit at the bottom. You
+can also ask the orchestrator ("move the tracker app to the top, hide Memory"). Extensions pick
+their icon from Aura's set.
 
 ## Safe mode
 

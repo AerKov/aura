@@ -242,6 +242,8 @@ export interface Project {
   spentUsd: number;
   /** Where agents' shell commands run: the host (with the OS sandbox) or the project's container. */
   isolation: ProjectIsolation;
+  /** Extension pinned as the project's app: it opens next to the project chat (ADR 0021). */
+  app: string | null;
   createdAt: string;
 }
 
@@ -269,9 +271,75 @@ export interface Appearance {
   availableSnippets: string[];
   /** Sanitized CSS to inject, in order: theme, then snippets. */
   css: { name: string; css: string }[];
+  rail: RailLayout;
 }
 
-export type ExtensionPermission = "chat.read" | "chat.write" | "ui.panel" | "alerts.read";
+/** Order and visibility of the navigation rail's items, by key ("skills", "ext:<id>", …). */
+export interface RailLayout {
+  order: string[];
+  hidden: string[];
+}
+
+/** Rail items that cannot be hidden, so the user can always get back to the settings. */
+export const RAIL_PINNED = ["chats", "customize"];
+
+export type ExtensionPermission =
+  | "chat.read"
+  | "chat.write"
+  | "ui.panel"
+  | "alerts.read"
+  | "storage"
+  | "net"
+  | "agents.ask"
+  | "files.read";
+
+/** Icons an extension may name in its manifest (lucide names the app ships). */
+export const EXTENSION_ICONS = [
+  "blocks",
+  "bell",
+  "book-open",
+  "bot",
+  "bug",
+  "calendar",
+  "chart-bar",
+  "chart-line",
+  "check-square",
+  "clipboard-list",
+  "clock",
+  "cloud",
+  "code",
+  "database",
+  "file-text",
+  "folder",
+  "gauge",
+  "git-branch",
+  "globe",
+  "heart-pulse",
+  "inbox",
+  "kanban",
+  "layout-dashboard",
+  "list-todo",
+  "mail",
+  "map",
+  "megaphone",
+  "notebook-pen",
+  "package",
+  "rocket",
+  "search",
+  "server",
+  "shield",
+  "shopping-cart",
+  "sticky-note",
+  "table",
+  "terminal",
+  "ticket",
+  "users",
+  "wallet",
+  "wrench",
+  "zap",
+] as const;
+
+export type ExtensionIcon = (typeof EXTENSION_ICONS)[number];
 
 export interface ExtensionInfo {
   id: string;
@@ -280,6 +348,12 @@ export interface ExtensionInfo {
   minAppVersion: string;
   permissions: ExtensionPermission[];
   author: string;
+  /** One of EXTENSION_ICONS, or null for the default. */
+  icon: ExtensionIcon | null;
+  /** Hosts it may reach through the server (`net`), as granted at install. */
+  hosts: string[];
+  /** Stored secrets the server may put into its requests, by name; values never reach it. */
+  secrets: string[];
   enabled: boolean;
   /** Why it cannot run, e.g. an invalid manifest or a newer minAppVersion. */
   problem: string | null;

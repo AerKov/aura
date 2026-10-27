@@ -58,6 +58,8 @@ export class ProjectService {
       agents: AgentDirectory;
       /** Isolation for new projects (sandbox settings, ADR 0018). */
       newProjectIsolation?: () => ProjectIsolation;
+      /** Called after a user-facing project setting changed (to refresh clients). */
+      onChange?: (project: Project) => void;
     },
   ) {}
 
@@ -196,6 +198,21 @@ export class ProjectService {
     return project;
   }
 
+  /** Pins an extension as the project's app (ADR 0021), or unpins it with null. */
+  async setApp(slug: string, extensionId: string | null): Promise<ProjectInfo> {
+    if (!(await this.get(slug))) throw new ProjectError(`No project "${slug}"`);
+    await this.deps.db
+      .query(extensionId ? "UPDATE $id SET app = $app" : "UPDATE $id SET app = NONE", {
+        id: new RecordId("project", slug),
+        app: extensionId,
+      })
+      .collect();
+    const project = await this.get(slug);
+    if (!project) throw new ProjectError(`No project "${slug}"`);
+    this.deps.onChange?.(project);
+    return project;
+  }
+
   private async toProject(row: Row): Promise<ProjectInfo> {
     const id = keyOf(row.id);
     const spent = await this.deps.runs.spentByProject(id);
@@ -207,6 +224,7 @@ export class ProjectService {
       budgetUsd: typeof row.budget_usd === "number" ? row.budget_usd : null,
       spentUsd: spent.usd,
       isolation: row.isolation === "container" ? "container" : "host",
+      app: typeof row.app === "string" ? row.app : null,
       createdAt: isoOf(row.created_at),
       workspace: String(row.repo_path),
     };

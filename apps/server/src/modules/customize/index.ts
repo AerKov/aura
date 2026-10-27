@@ -3,7 +3,10 @@ import { Elysia, t } from "elysia";
 import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import type { ChatRepo } from "../chat/repo";
+import { ChatError } from "../chat/service";
+import type { ProjectService } from "../projects/service";
 import { AppearanceError, type AppearanceService } from "./appearance";
+import { type ExtensionBridge, ExtensionDenied } from "./bridge";
 import { ExtensionError, type ExtensionService, FRAME_CSP } from "./extensions";
 import type { McpService } from "./mcp";
 import type { SafeMode } from "./safe-mode";
@@ -17,6 +20,16 @@ export interface CustomizeRouteDeps {
   appVersion: string;
   corsOrigins: string[];
   repo: ChatRepo;
+  extensionBridge: ExtensionBridge;
+  projects: ProjectService;
+  owner: { id: string };
+}
+
+/** Maps a bridge failure to a status: refused (403) or invalid (400). */
+function bridgeError(error: unknown): { code: 400 | 403; error: string } {
+  if (error instanceof ExtensionDenied) return { code: 403, error: error.message };
+  if (error instanceof ExtensionError) return { code: 400, error: error.message };
+  throw error;
 }
 
 export const customizeModule = (deps: CustomizeRouteDeps) =>
@@ -49,6 +62,12 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         body: t.Object({
           theme: t.Optional(t.Nullable(t.String({ maxLength: 48 }))),
           snippets: t.Optional(t.Array(t.String({ maxLength: 48 }))),
+          rail: t.Optional(
+            t.Object({
+              order: t.Optional(t.Array(t.String({ maxLength: 52 }), { maxItems: 64 })),
+              hidden: t.Optional(t.Array(t.String({ maxLength: 52 }), { maxItems: 64 })),
+            }),
+          ),
         }),
       },
     )
@@ -79,6 +98,7 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
       async ({ params, status }) => {
         try {
           await deps.extensions.remove(params.extensionId);
+          await deps.extensionBridge.forget(params.extensionId);
           return { ok: true };
         } catch (error) {
           if (error instanceof ExtensionError) return status(404, { error: error.message });
@@ -112,6 +132,136 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         body: t.Object({
           chatId: t.String({ maxLength: 64 }),
           body: t.String({ minLength: 1, maxLength: 8000 }),
+        }),
+      },
+    )
+    .put(
+      "/projects/:projectId/app",
+      async ({ params, body, status }) => {
+        if (body.extensionId) {
+          const info = await deps.extensions.info(body.extensionId);
+          if (!info.enabled || !info.permissions.includes("ui.panel"))
+            return status(400, { error: "Only an enabled extension with a panel can be the app" });
+        }
+        if (!(await deps.projects.get(params.projectId)))
+          return status(404, { error: "Project not found" });
+        const { workspace: _w, ...project } = await deps.projects.setApp(
+          params.projectId,
+          body.extensionId,
+        );
+        return project;
+      },
+      {
+        auth: true,
+        body: t.Object({ extensionId: t.Nullable(t.String({ maxLength: 48 })) }),
+      },
+    )
+    // Extension API v2 (ADR 0021). The frame asks the app over postMessage; the app calls these
+    // with the user's session, and each call checks what the user granted the extension.
+    .get(
+      "/extensions/:extensionId/storage",
+      async ({ params, query, status }) => {
+        try {
+          return query.key === undefined
+            ? { keys: await deps.extensionBridge.storageKeys(params.extensionId) }
+            : { value: await deps.extensionBridge.storageGet(params.extensionId, query.key) };
+        } catch (error) {
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      { auth: true, query: t.Object({ key: t.Optional(t.String({ maxLength: 200 })) }) },
+    )
+    .put(
+      "/extensions/:extensionId/storage",
+      async ({ params, body, status }) => {
+        try {
+          if (body.value === null || body.value === undefined)
+            await deps.extensionBridge.storageDelete(params.extensionId, body.key);
+          else await deps.extensionBridge.storageSet(params.extensionId, body.key, body.value);
+          return { ok: true };
+        } catch (error) {
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      {
+        auth: true,
+        body: t.Object({ key: t.String({ minLength: 1, maxLength: 200 }), value: t.Unknown() }),
+      },
+    )
+    .post(
+      "/extensions/:extensionId/fetch",
+      async ({ params, body, status }) => {
+        try {
+          return await deps.extensionBridge.fetch(params.extensionId, body);
+        } catch (error) {
+          if (error instanceof Error && error.name === "TimeoutError")
+            return status(400, { error: "The host did not answer in 20 seconds" });
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      {
+        auth: true,
+        body: t.Object({
+          url: t.String({ minLength: 1, maxLength: 4000 }),
+          method: t.Optional(t.String({ maxLength: 10 })),
+          headers: t.Optional(t.Record(t.String({ maxLength: 64 }), t.String({ maxLength: 8000 }))),
+          body: t.Optional(t.String({ maxLength: 1_000_000 })),
+        }),
+      },
+    )
+    .post(
+      "/extensions/:extensionId/ask",
+      async ({ params, body, status }) => {
+        try {
+          return await deps.extensionBridge.ask(params.extensionId, body, deps.owner);
+        } catch (error) {
+          if (error instanceof ChatError) return status(400, { error: error.message });
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      {
+        auth: true,
+        body: t.Object({
+          chatId: t.String({ maxLength: 64 }),
+          agent: t.String({ maxLength: 40 }),
+          text: t.String({ minLength: 1, maxLength: 8000 }),
+        }),
+      },
+    )
+    .get(
+      "/extensions/:extensionId/files",
+      async ({ params, query, status }) => {
+        try {
+          return query.read
+            ? {
+                content: await deps.extensionBridge.readFile(
+                  params.extensionId,
+                  query.project,
+                  query.path ?? "",
+                ),
+              }
+            : {
+                entries: await deps.extensionBridge.listFiles(
+                  params.extensionId,
+                  query.project,
+                  query.path ?? "",
+                ),
+              };
+        } catch (error) {
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      {
+        auth: true,
+        query: t.Object({
+          project: t.String({ maxLength: 48 }),
+          path: t.Optional(t.String({ maxLength: 1000 })),
+          read: t.Optional(t.BooleanString()),
         }),
       },
     );

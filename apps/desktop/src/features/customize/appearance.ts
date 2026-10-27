@@ -1,4 +1,4 @@
-import type { Appearance } from "@aura/shared";
+import type { Appearance, RailLayout } from "@aura/shared";
 import { setState } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 
@@ -25,6 +25,7 @@ export async function loadAppearance(): Promise<void> {
 export async function setAppearance(input: {
   theme?: string | null;
   snippets?: string[];
+  rail?: Partial<RailLayout>;
 }): Promise<void> {
   const appearance = await call(() => api.appearance.put(input));
   apply(appearance);
