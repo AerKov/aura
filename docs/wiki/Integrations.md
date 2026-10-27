@@ -28,6 +28,10 @@ no answer. The server's own log is shown below, with secrets hidden. If the serv
 variables that you stored as secrets but did not give to it, the test says so and offers **Give
 them to this server**.
 
+A command server can also **give its variables to its agents' commands** (on by default for new
+servers): then a script or CLI for the same service works with the same address and key, without
+setting them twice.
+
 Changes apply from each agent's next reply. Nothing needs a restart. Aura does not read the
 servers set up in Claude Code (`claude mcp list`); add them here.
 
@@ -41,8 +45,9 @@ for a database, a tracker's CLI, or your own script. These need an address and a
 **Variables for commands**, create a set (for example `git-host` with `GITLAB_URL` and
 `GITLAB_TOKEN`) and pick the agents whose commands get it.
 
-An agent can also have its own variables, on its card on the **Agents** page; those win when a
-name is in both places. The card lists every variable the agent gets and where it comes from.
+An agent can also have its own variables, on its card on the **Agents** page. When a name comes from
+several places, the agent's own value wins, then a variable set, then a server that shares its
+variables. The card lists every variable the agent gets and where it comes from.
 
 Variables reach the agent's commands on every engine and in project containers. The agent is told
 their names, never their values, and secret values are replaced with `[secret]` in what it writes

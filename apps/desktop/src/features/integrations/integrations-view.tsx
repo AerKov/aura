@@ -163,6 +163,7 @@ function ServerCard({
           command: server.command ?? undefined,
           args: server.args,
           env,
+          shareEnv: server.shareEnv,
           agents: server.agents,
         }),
       );
@@ -322,6 +323,9 @@ function ServerForm({
   const [args, setArgs] = useState((server?.args ?? []).join("\n"));
   const [url, setUrl] = useState(server?.url ?? "");
   const [env, setEnv] = useState<EnvRow[]>(rowsFromEnv(server?.env ?? []));
+  // New command servers share their variables with their agents' commands (a script or CLI of the
+  // same service then works too); the user can turn it off.
+  const [shareEnv, setShareEnv] = useState(server ? server.shareEnv : true);
   const [headers, setHeaders] = useState<HeaderRow[]>(
     (server?.headers ?? []).map((h) => ({ id: crypto.randomUUID(), name: h.name, value: h.value })),
   );
@@ -354,6 +358,7 @@ function ServerForm({
                   .map((a) => a.trim())
                   .filter(Boolean),
                 env: envMap,
+                shareEnv,
                 agents,
               },
         ),
@@ -420,6 +425,15 @@ function ServerForm({
             <div>
               <span className="kicker mb-1 block">Variables</span>
               <EnvEditor rows={env} secrets={secrets} onChange={setEnv} />
+              <label className="mt-2 flex items-center gap-2 text-[13px]">
+                <input
+                  type="checkbox"
+                  checked={shareEnv}
+                  onChange={(e) => setShareEnv(e.target.checked)}
+                />
+                Also give these variables to its agents' commands (for a script or CLI of the same
+                service)
+              </label>
             </div>
           </>
         ) : (

@@ -16,6 +16,12 @@ From the first test of the alpha:
   sets that give a service's address and token to several agents' commands (CLIs and scripts).
 - A stored secret is offered wherever variables are edited, and a server test that sees the
   server ask for a stored secret it did not get says so and offers to give it.
+- A command server can share its variables with its agents' commands, so a script for the same
+  service works without setting them twice.
+- Extensions can be removed (one commit, so they can be restored).
+- Scheduled jobs and the orchestrator can post into the alerts chat.
+- The orchestrator has its theme, extension, MCP and catalog tools in every chat, and says it sent
+  an approval card only after the tool confirms it.
 - The orchestrator knows Aura: the user guide is built in (`aura_docs`), its instructions describe
   the app's pages, chats and settings, and it can add an agent to a project and propose changes to
   an agent's tools, variables or instructions (with approval). Agents say what they miss instead

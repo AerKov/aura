@@ -74,6 +74,19 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
       },
       { auth: true, body: t.Object({ enabled: t.Boolean() }) },
     )
+    .delete(
+      "/extensions/:extensionId",
+      async ({ params, status }) => {
+        try {
+          await deps.extensions.remove(params.extensionId);
+          return { ok: true };
+        } catch (error) {
+          if (error instanceof ExtensionError) return status(404, { error: error.message });
+          throw error;
+        }
+      },
+      { auth: true },
+    )
     .post(
       "/extensions/:extensionId/error",
       ({ params }) => deps.extensions.reportError(params.extensionId),

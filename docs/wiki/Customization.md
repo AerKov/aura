@@ -33,7 +33,8 @@ MCP servers work with every engine. Aura does not use the servers you set up in 
 Extensions are small JavaScript apps in `extensions/<id>/` that add panels to the left rail. They run
 in a sandbox: no network, no storage, no access to the app except the permissions you approved
 (`chat.read`, `chat.write`, `ui.panel`, `alerts.read`). Messages they post never wake agents. An
-extension that keeps crashing is turned off automatically.
+extension that keeps crashing is turned off automatically. **Remove** (the bin on its card) deletes
+its files as one commit in your data folder, so it can be restored from history.
 
 ## Safe mode
 

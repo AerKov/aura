@@ -26,6 +26,7 @@ Ask the orchestrator for something recurring: "every morning at 8, have @news gi
 Bun releases". It proposes a **job** (a cron schedule, an agent, a prompt); you approve it because
 every run costs money. Jobs run at most every 10 minutes.
 
-At the scheduled time a scheduler bot mentions the agent in the target chat, so the usual budgets
+The target chat is your direct chat, a project chat, or the alerts chat (for example a nightly
+check that reports there). At the scheduled time a scheduler bot mentions the agent in the target chat, so the usual budgets
 and guards apply. The **Schedule** screen (calendar icon) lists jobs with their next run and can
 pause, resume or delete them.

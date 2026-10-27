@@ -22,6 +22,8 @@ export interface McpServerConfig {
   url?: string;
   /** Headers for a server at a URL; credentials only as `${secret:…}` references. */
   headers?: Record<string, string>;
+  /** The server's variables also reach its agents' shell commands (for a CLI or script too). */
+  shareEnv?: boolean;
   agents: string[];
 }
 
@@ -49,7 +51,13 @@ export function validateServer(name: string, value: unknown): McpServerConfig {
   if (!Array.isArray(args) || !args.every((a) => typeof a === "string"))
     throw new McpError(`${name}: args must be strings`);
   const env = validateEnvMap(v.env, (message) => new McpError(`${name}: ${message}`));
-  return { command: v.command, args: args as string[], env, agents };
+  return {
+    command: v.command,
+    args: args as string[],
+    env,
+    ...(v.shareEnv === true ? { shareEnv: true } : {}),
+    agents,
+  };
 }
 
 /** Tier 2 customization: MCP servers in `mcp/servers.json`, each granted to specific agents. */
@@ -193,6 +201,21 @@ export class McpService {
       author,
     );
     return `MCP server "${name}" is available to ${config.agents.map((a) => `@${a}`).join(", ")} from their next run.`;
+  }
+
+  /** Variables of the command servers granted to an agent that share them with its commands. */
+  sharedEnvFor(handle: string): { env: Record<string, string>; from: Record<string, string> } {
+    const env: Record<string, string> = {};
+    const from: Record<string, string> = {};
+    if (this.deps.safeMode()) return { env, from };
+    for (const [name, s] of Object.entries(this.servers())) {
+      if (!s.shareEnv || !s.agents.includes(handle)) continue;
+      for (const [key, value] of Object.entries(s.env ?? {})) {
+        env[key] = value;
+        from[key] = `server ${name}`;
+      }
+    }
+    return { env, from };
   }
 
   /** Removes a server; agents lose its tools from their next run. */

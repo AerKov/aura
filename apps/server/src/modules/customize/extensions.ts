@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { ExtensionInfo, ExtensionPermission } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
@@ -188,6 +188,16 @@ export class ExtensionService {
         problem: error instanceof Error ? error.message : String(error),
       };
     }
+  }
+
+  /** User action: removes the extension's files (one commit, so it can be restored) and its state. */
+  async remove(id: string, author = "owner"): Promise<void> {
+    if (!ID.test(id) || !existsSync(this.dirOf(id)))
+      throw new ExtensionError(`No extension "${id}"`);
+    rmSync(this.dirOf(id), { recursive: true, force: true });
+    await this.deps.db.query("DELETE $id", { id: new RecordId("extension_state", id) }).collect();
+    await commitAll(this.deps.dataDir, `extensions(${id}): remove`, author);
+    this.deps.hub.publish({ type: "customize.updated" });
   }
 
   /** User action: enabling grants exactly the permissions the manifest requests (shown before). */

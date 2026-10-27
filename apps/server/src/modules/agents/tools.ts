@@ -5,7 +5,7 @@ import { commitAll } from "../../lib/git";
 import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
 import type { ApprovalService } from "../approvals/service";
-import type { ChatRepo } from "../chat/repo";
+import { type ChatRepo, SYSTEM_CHAT_ID } from "../chat/repo";
 import type { ChatService } from "../chat/service";
 import { secretRef } from "../integrations/env";
 import type { JobInput, JobService } from "../jobs/service";
@@ -595,23 +595,26 @@ function taskTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
 function operationsTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
   const resolveChat = async (target: string) => {
     if (target === "direct") return deps.repo.getChat("direct");
+    if (target === "alerts" || target === SYSTEM_CHAT_ID) return deps.repo.getChat(SYSTEM_CHAT_ID);
     const project = await deps.projects.get(target);
-    if (!project) throw new Error(`unknown chat "${target}": use "direct" or a project id`);
+    if (!project)
+      throw new Error(`unknown chat "${target}": use "direct", "alerts" or a project id`);
     return deps.repo.getChat(project.chatId);
   };
   return [
     {
       name: "message_project",
       description:
-        "Post a message as yourself into a project chat, e.g. to hand an alert to the right agent. @mention the agent who should act; mentions wake agents.",
+        'Post a message as yourself into a project chat (e.g. to hand an alert to the right agent; @mention the agent who should act, mentions wake agents), or into the alerts chat with project "alerts" (e.g. a report from a scheduled check).',
       inputSchema: {
-        project: z.string().describe("project id (slug) from list_projects"),
+        project: z.string().describe('project id (slug) from list_projects, or "alerts"'),
         message: z.string().describe("markdown; quote external content (alerts) as data"),
       },
       async handler(input) {
         try {
           const chat = await resolveChat(String(input.project ?? ""));
-          if (!chat.projectId) throw new Error("message_project only posts into project chats");
+          if (!chat.projectId && chat.kind !== "system")
+            throw new Error("message_project posts into project chats and the alerts chat");
           const body = String(input.message ?? "").trim();
           if (!body || body.length > 8000) throw new Error("message is required (max 8000 chars)");
           await deps.chat.post({
@@ -651,7 +654,7 @@ function operationsTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
         schedule: z
           .string()
           .describe("5-field cron in the user's local time, e.g. '0 8 * * *' for 08:00 daily"),
-        chat: z.string().describe('"direct" or a project id'),
+        chat: z.string().describe('"direct", "alerts" or a project id'),
         agent: z.string().describe("handle of the agent to wake (must be a member of that chat)"),
         prompt: z.string().describe("what the agent should do on each run"),
         why: z.string().describe("for the user: what this job delivers"),

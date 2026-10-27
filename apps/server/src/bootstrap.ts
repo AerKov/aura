@@ -186,7 +186,9 @@ export async function createServices(deps: {
     appTools: (ctx) => [
       ...toolsFor(toolDeps, ctx),
       ...(ctx.handle === "orchestrator" ? [...integrationTools(integrations), ...helpTools()] : []),
-      ...(ctx.handle === "orchestrator" && ctx.chat.kind === "direct"
+      // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
+      // orchestrator had no such tools and claimed to have sent cards).
+      ...(ctx.handle === "orchestrator"
         ? [
             ...customizeTools(customize, { handle: ctx.handle, chatId: ctx.chat.id }),
             ...catalogTools(catalog, { handle: ctx.handle, chatId: ctx.chat.id }),
@@ -205,7 +207,7 @@ export async function createServices(deps: {
     // Shared variable sets first; the agent's own variables win on a clash.
     agentEnv: (profile) =>
       resolveEnv(
-        { ...variables.forAgent(profile.handle).env, ...(profile.env ?? {}) },
+        { ...integrations.sharedEnvFor(profile.handle).env, ...(profile.env ?? {}) },
         { secret: (n) => secrets.get(n), env: process.env },
       ),
     redact: (text) => redact(text, secrets.values()),

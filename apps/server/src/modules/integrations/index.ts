@@ -51,6 +51,7 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
           url: t.Optional(t.String({ maxLength: 500 })),
           headers: t.Optional(t.Record(t.String({ maxLength: 64 }), t.String({ maxLength: 2000 }))),
           env: t.Optional(ENV),
+          shareEnv: t.Optional(t.Boolean()),
           agents: t.Array(HANDLE, { maxItems: 50 }),
         }),
       },

@@ -1,5 +1,5 @@
 import type { CustomizeState } from "@aura/shared";
-import { Blocks, Palette, Plug, ShieldAlert } from "lucide-react";
+import { Blocks, Palette, Plug, ShieldAlert, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
@@ -122,6 +122,21 @@ export function CustomizeView() {
                   }
                 >
                   {ext.enabled ? "Disable" : "Enable"}
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label={`Remove ${ext.name}`}
+                  title="Remove (one commit in your data folder, so it can be restored)"
+                  onClick={() => {
+                    if (!window.confirm(`Remove the extension "${ext.name}"?`)) return;
+                    void run(async () => {
+                      await call(() => api.extensions({ extensionId: ext.id }).delete());
+                      await loadCustomize();
+                    });
+                  }}
+                >
+                  <Trash2 />
                 </Button>
               </div>
               {ext.problem && <p className="text-destructive mt-1 text-sm">{ext.problem}</p>}

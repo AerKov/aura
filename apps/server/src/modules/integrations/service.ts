@@ -116,6 +116,19 @@ export class IntegrationsService {
     }));
   }
 
+  /**
+   * Variables an agent's commands get besides its own: from command servers that share theirs,
+   * then from variable sets (later wins).
+   */
+  sharedEnvFor(handle: string): { env: Record<string, string>; from: Record<string, string> } {
+    const servers = this.deps.mcp.sharedEnvFor(handle);
+    const sets = this.deps.variables.forAgent(handle);
+    return {
+      env: { ...servers.env, ...sets.env },
+      from: { ...servers.from, ...sets.from },
+    };
+  }
+
   overview() {
     const servers = this.deps.mcp.servers();
     return {
@@ -132,6 +145,7 @@ export class IntegrationsService {
         url: s.url ?? null,
         env: this.envEntries(s.env ?? {}),
         headers: this.headerEntries(s.headers ?? {}),
+        shareEnv: s.shareEnv === true,
         agents: s.agents,
       })),
       secrets: this.deps.secrets.names(),
@@ -146,12 +160,14 @@ export class IntegrationsService {
       url?: string;
       headers?: Record<string, string>;
       env?: Record<string, string>;
+      shareEnv?: boolean;
       agents: string[];
     },
   ): Promise<string> {
     const config = input.url
       ? { url: input.url, headers: input.headers ?? {}, agents: input.agents }
       : {
+          shareEnv: input.shareEnv === true,
           command: input.command,
           args: input.args ?? [],
           env: input.env ?? {},
@@ -286,7 +302,7 @@ export class IntegrationsService {
       kind === "aura" ? NATIVE_BUILTINS : kind === "official" ? BUILTIN_TOOLS : BUILTIN_TOOLS;
     const unsupported = profile.builtinTools.filter((t) => !supported.includes(t));
     const own = this.envEntries(profile.env ?? {});
-    const shared = this.deps.variables.forAgent(handle);
+    const shared = this.sharedEnvFor(handle);
     const sharedEnv = this.envEntries(shared.env)
       .filter((e) => !(e.name in (profile.env ?? {})))
       .map((e) => ({ ...e, from: shared.from[e.name] ?? "" }));
