@@ -150,6 +150,17 @@ export class ChatRepo {
     }));
   }
 
+  /** Ids of the chats an agent belongs to. */
+  async chatsOfAgent(handle: string): Promise<string[]> {
+    const [rows] = await this.db
+      .query<[Row[]]>(
+        "SELECT chat FROM member WHERE participant.kind = 'agent' AND participant.id = $handle",
+        { handle },
+      )
+      .collect();
+    return (rows ?? []).map((row) => keyOf(row.chat));
+  }
+
   async isMember(chatId: string, participant: Participant): Promise<boolean> {
     return (await this.members(chatId)).some(
       (m) => m.participant.kind === participant.kind && m.participant.id === participant.id,

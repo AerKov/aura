@@ -184,6 +184,41 @@ export class AgentRuntime {
     for (const { handle, reason } of wakes) {
       this.trigger(handle, chat, message, agentMembers, reason);
     }
+    if (message.author.kind === "user" && message.kind === "text" && message.status === "final") {
+      await this.explainAbsent(message, chat, agentMembers);
+    }
+  }
+
+  /**
+   * A user's @mention of an agent outside this chat wakes nobody (agents answer only where they are
+   * members), so the chat says so instead of staying silent.
+   */
+  private async explainAbsent(message: Message, chat: Chat, agentMembers: string[]): Promise<void> {
+    const absent = message.mentions.filter((h) => !agentMembers.includes(h));
+    for (const handle of absent) {
+      const profile = await this.deps.agents.get(handle);
+      if (!profile) {
+        const known = (await this.deps.agents.list()).map((a) => `@${a.handle}`).join(", ");
+        await this.postSystem(chat.id, `There is no agent @${handle}. Agents: ${known}.`);
+        continue;
+      }
+      const chats = await this.deps.repo.chatsOfAgent(handle);
+      const titles: string[] = [];
+      for (const id of chats) {
+        const found = await this.deps.repo.findChat(id);
+        if (found) titles.push(`"${found.title}"`);
+      }
+      const where =
+        titles.length > 0
+          ? `Write to it in ${titles.join(", ")}, or ask the orchestrator to add it to this project.`
+          : chat.kind === "group"
+            ? "Ask the orchestrator to add it to this project."
+            : "It is not in any chat yet: ask the orchestrator to start a project with it.";
+      await this.postSystem(
+        chat.id,
+        `@${handle} is not in this chat, so it did not get your message. ${where}`,
+      );
+    }
   }
 
   private trigger(
@@ -458,7 +493,15 @@ export class AgentRuntime {
     }
 
     const stopped = error?.code === "aborted";
-    const status = stopped ? "stopped" : error ? "error" : "done";
+    // Never an empty bubble: an answer without text says why (A8 in the alpha feedback).
+    const emptyNote =
+      !body && !silent && !error
+        ? toolCalls.length > 0 || commit
+          ? `@${handle} worked but wrote no reply.`
+          : `The model returned an empty answer (${provider.id}${model ? `, ${model}` : ""}). Try again, or choose another model on the Engines page.`
+        : null;
+    const failed = Boolean(error) || (emptyNote !== null && toolCalls.length === 0 && !commit);
+    const status = stopped ? "stopped" : failed ? "error" : "done";
     if (silent && toolCalls.length === 0 && !commit) {
       // The agent decided nothing was needed from it: remove the placeholder, keep the run record.
       await repo.deleteMessage(reply.id);
@@ -471,7 +514,7 @@ export class AgentRuntime {
             mentions: parseMentions(body),
             status: body && (!error || stopped) ? "final" : "error",
             usage,
-            error: error ? error.message : null,
+            error: error ? error.message : emptyNote,
             card: toolCalls.length > 0 || commit ? card(status, commit) : null,
           });
     await runs.finish(runId, {
@@ -480,7 +523,7 @@ export class AgentRuntime {
       tokensOut: usage?.outputTokens ?? 0,
       costUsd: usage?.costUsd ?? 0,
       toolCalls: toolCalls.map(({ name, summary, isError }) => ({ name, summary, isError })),
-      error: error?.message ?? null,
+      error: error?.message ?? emptyNote,
     });
 
     const cost = usage?.costUsd ?? 0;
