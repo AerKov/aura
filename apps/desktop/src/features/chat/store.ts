@@ -41,6 +41,7 @@ export interface ChatState {
     | "chat"
     | "skills"
     | "memory"
+    | "catalog"
     | "jobs"
     | "engines"
     | "customize"

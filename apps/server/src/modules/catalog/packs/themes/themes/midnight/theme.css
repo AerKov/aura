@@ -1,0 +1,27 @@
+/* Midnight: deep navy surfaces and a cyan accent. Dark only. */
+:root,
+.dark {
+  --background: oklch(0.16 0.03 265);
+  --foreground: oklch(0.93 0.01 250);
+  --card: oklch(0.2 0.035 265);
+  --card-foreground: oklch(0.93 0.01 250);
+  --popover: oklch(0.21 0.035 265);
+  --popover-foreground: oklch(0.93 0.01 250);
+  --primary: oklch(0.78 0.13 210);
+  --primary-foreground: oklch(0.16 0.03 265);
+  --secondary: oklch(0.24 0.035 265);
+  --secondary-foreground: oklch(0.9 0.01 250);
+  --muted: oklch(0.22 0.03 265);
+  --muted-foreground: oklch(0.68 0.03 250);
+  --accent: oklch(0.26 0.04 262);
+  --accent-foreground: oklch(0.93 0.01 250);
+  --border: oklch(0.29 0.035 265);
+  --input: oklch(0.32 0.035 265);
+  --ring: oklch(0.78 0.13 210);
+  --sidebar: oklch(0.18 0.032 265);
+  --rail: oklch(0.18 0.032 265);
+  --rail-foreground: oklch(0.72 0.03 250);
+  --grid-dot: oklch(0.26 0.035 265);
+  --bubble-own: oklch(0.3 0.06 240);
+  --signal: oklch(0.78 0.13 210);
+}

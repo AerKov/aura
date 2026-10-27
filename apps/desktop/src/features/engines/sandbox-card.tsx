@@ -98,7 +98,6 @@ export function SandboxCard() {
             </button>
           ))}
         </div>
-        {/* biome-ignore lint/a11y/noLabelWithoutControl: the textarea is inside the label */}
         <label className="block">
           <span className="kicker mb-1 block">
             Allowed hosts (one per line, *.example.com for subdomains)

@@ -1,0 +1,8 @@
+{
+  "id": "alerts-today",
+  "name": "Alerts today",
+  "version": "1.0.0",
+  "minAppVersion": "0.6.0",
+  "permissions": ["ui.panel", "alerts.read"],
+  "author": "Aura"
+}

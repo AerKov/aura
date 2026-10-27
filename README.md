@@ -52,6 +52,8 @@ files in a git repository you own.
   ones every time; you can read and delete all of them.
 - **Skills that improve.** Agents propose changes to their own know-how; you approve the diff;
   every version is a git commit you can roll back.
+- **Catalog.** Install a ready-made dev team, writers, researchers, on-call, themes or panels in one
+  click, or a pack from a GitHub link; you see every file and diff first.
 - **Customize by asking.** Themes, MCP tool servers and sandboxed panel extensions, built by the
   orchestrator in chat.
 - **On your phone.** Pair a phone with a one-time code; it connects to your desktop, with

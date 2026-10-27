@@ -8,6 +8,8 @@ import { AgentRuntime } from "./modules/agents/runtime";
 import { registerExecutors, toolsFor } from "./modules/agents/tools";
 import { AlertService, TriageLimiter } from "./modules/alerts/service";
 import { ApprovalService } from "./modules/approvals/service";
+import { CatalogService } from "./modules/catalog/service";
+import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
 import { AppearanceService } from "./modules/customize/appearance";
@@ -40,6 +42,8 @@ export async function createServices(deps: {
   engines: EngineSelector;
   /** OS sandbox for agents' shell commands; created from the data dir when absent. */
   sandbox?: SandboxService;
+  /** Network for packs installed from a URL (replaced in tests). */
+  fetch?: typeof fetch;
   /** Embedding model for semantic memory search; keyword search when absent. */
   embedder?: () => Embedder | null;
   agents: AgentDirectory;
@@ -111,6 +115,13 @@ export async function createServices(deps: {
     safeMode: () => safeMode.on,
   });
   const customize = { appearance, mcp, extensions };
+  const catalog = new CatalogService({
+    dataDir: deps.dataDir,
+    approvals,
+    extensions,
+    hub: deps.hub,
+    fetch: deps.fetch,
+  });
   const devices = new DeviceService({ db: deps.db, owner });
   registerExecutors(toolDeps);
   const runtime = new AgentRuntime({
@@ -124,7 +135,10 @@ export async function createServices(deps: {
     appTools: (ctx) => [
       ...toolsFor(toolDeps, ctx),
       ...(ctx.handle === "orchestrator" && ctx.chat.kind === "direct"
-        ? customizeTools(customize, { handle: ctx.handle, chatId: ctx.chat.id })
+        ? [
+            ...customizeTools(customize, { handle: ctx.handle, chatId: ctx.chat.id }),
+            ...catalogTools(catalog, { handle: ctx.handle, chatId: ctx.chat.id }),
+          ]
         : []),
     ],
     mcpServers: (handle) => mcp.forAgent(handle),
@@ -157,6 +171,7 @@ export async function createServices(deps: {
     appearance,
     mcp,
     extensions,
+    catalog,
     safeMode,
     appVersion: SERVER_VERSION,
     devices,

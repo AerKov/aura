@@ -66,6 +66,8 @@ export function startRealtime(): () => void {
         case "customize.updated":
           void loadAppearance().catch(reportError);
           void loadCustomize().catch(reportError);
+          // A pack may have added agents.
+          refreshProjectsSoon();
           break;
         case "notification":
           showNotification(event);

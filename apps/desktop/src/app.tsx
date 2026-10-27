@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { AuraLogo } from "@/components/logo";
+import { CatalogView } from "@/features/catalog/catalog-view";
 import {
   loadInitial,
   loadMessages,
@@ -68,6 +69,8 @@ export function App() {
             <SkillsView />
           ) : view === "memory" ? (
             <MemoryView />
+          ) : view === "catalog" ? (
+            <CatalogView />
           ) : view === "jobs" ? (
             <JobsView />
           ) : view === "engines" ? (

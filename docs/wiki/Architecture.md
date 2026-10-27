@@ -48,6 +48,7 @@ The reasons behind the design are recorded as ADRs in
 | 0013 | Agent memory: notes, hybrid search                       |
 | 0014 | Who answers a message: mentions, replies, names, routing |
 | 0015 | OS sandbox for agents' shell commands                    |
+| 0016 | Catalog of packs: preview, hash, one commit              |
 
 The full product and architecture spec, including the roadmap, is
 [docs/SPEC.md](https://github.com/AerKov/aura/blob/HEAD/docs/SPEC.md).

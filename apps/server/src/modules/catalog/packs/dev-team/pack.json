@@ -1,0 +1,9 @@
+{
+  "id": "dev-team",
+  "name": "Dev team",
+  "version": "1.0.0",
+  "description": "A coder who builds in small tested steps and a reviewer who runs the code and checks it. The default team for software projects.",
+  "author": "Aura",
+  "tags": ["code", "team"],
+  "files": ["agents/coder/agent.md", "agents/reviewer/agent.md", "skills/test-first/SKILL.md"]
+}

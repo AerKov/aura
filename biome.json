@@ -7,7 +7,12 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!**/src-tauri", "!**/*.gen.ts"]
+    "includes": [
+      "**",
+      "!**/src-tauri",
+      "!**/*.gen.ts",
+      "!apps/server/src/modules/catalog/packs/**/*.{md,css,json,txt}"
+    ]
   },
   "formatter": {
     "enabled": true,

@@ -5,12 +5,14 @@ import {
   CalendarClock,
   Cpu,
   MessagesSquare,
+  Package,
   Palette,
   Smartphone,
   Sparkles,
 } from "lucide-react";
 import { AuraLogo } from "@/components/logo";
 import {
+  showCatalog,
   showCustomize,
   showDevices,
   showEngines,
@@ -74,6 +76,13 @@ export function Rail() {
       icon: Brain,
       active: view === "memory",
       onClick: showMemory,
+    },
+    {
+      key: "catalog",
+      label: "Catalog",
+      icon: Package,
+      active: view === "catalog",
+      onClick: showCatalog,
     },
     {
       key: "jobs",

@@ -7,6 +7,7 @@
 - [Approvals and safety](Approvals-and-Safety)
 - [Skills](Skills)
 - [Memory](Memory)
+- [Catalog](Catalog)
 - [Alerts and schedules](Alerts-and-Schedules)
 - [Customization](Customization)
 - [Phone](Phone)

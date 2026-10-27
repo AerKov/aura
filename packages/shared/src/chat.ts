@@ -55,7 +55,8 @@ export type ApprovalKind =
   | "schedule_job"
   | "theme_change"
   | "mcp_server"
-  | "extension_install";
+  | "extension_install"
+  | "pack_install";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "failed";
 
 export interface ApprovalCard {

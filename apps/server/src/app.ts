@@ -9,6 +9,8 @@ import { controlModule } from "./modules/approvals";
 import type { ApprovalService } from "./modules/approvals/service";
 import { authModule } from "./modules/auth";
 import type { LocalSessions, SessionUser } from "./modules/auth/sessions";
+import { catalogModule } from "./modules/catalog";
+import type { CatalogService } from "./modules/catalog/service";
 import { chatModule } from "./modules/chat";
 import type { ChatRepo } from "./modules/chat/repo";
 import type { ChatService } from "./modules/chat/service";
@@ -45,6 +47,7 @@ export interface AppDeps extends HealthDeps {
   engines: EngineRegistry;
   toolBridge: ToolBridge;
   memory: MemoryService;
+  catalog: CatalogService;
   sandbox: SandboxService;
   dataDir: string;
   runtime: AgentRuntime;
@@ -80,6 +83,7 @@ export function createApp(deps: AppDeps) {
     .use(enginesModule(deps))
     .use(memoryModule(deps))
     .use(sandboxModule(deps))
+    .use(catalogModule(deps))
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))

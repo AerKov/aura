@@ -330,6 +330,11 @@ Agents' shell commands run in an OS sandbox (Claude Code's own, and the same run
 agent): writes only in the project, no credentials, network only to allowed hosts; a card on the
 Engines page; new Aura mark (ADR 0015, 0010).
 
+**Phase 13: Catalog**
+Ready-made packs of agents, skills, themes and extensions: built in, or from a GitHub URL. A preview
+shows every file and diff with a hash, then one commit installs it; the orchestrator can offer a
+pack as an approval (ADR 0016).
+
 **Later**
 Memory summaries, a container per project (sandbox level 2),
-community catalog with review and signatures, multi-user.
+pack signatures and a reviewed community index, multi-user.

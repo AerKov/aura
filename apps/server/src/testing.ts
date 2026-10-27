@@ -58,6 +58,7 @@ export async function createTestApp(
     hub,
     engines,
     embedder: () => engines.embedder(),
+    fetch: opts.fetch,
     sandbox: new SandboxService({
       dataDir,
       support: opts.sandboxSupport ?? (() => ({ ok: false, reason: "not in tests" })),

@@ -5,6 +5,11 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- Catalog: packs of agents, skills, themes, CSS snippets and panel extensions. Six built-in packs
+  (dev team, writing team, research, on-call, themes, alerts panel), or a pack from a GitHub link.
+  A preview shows every file with diffs and warnings; installing is one git commit. The
+  orchestrator can offer a pack as an approval card.
+
 - Command sandbox: shell commands of Claude Code and Aura's own agent run in an OS sandbox
   (bubblewrap on Linux, Seatbelt on macOS): writes only in the project, no credentials, network only
   to allowed hosts; modes Auto / Required / Off on the Engines page.
