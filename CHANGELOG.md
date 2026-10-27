@@ -5,6 +5,15 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.20.0] - 2026-10-27: Budgets in tokens
+
+- Budgets are optional: new projects have no limit unless you set one.
+- A limit can be in tokens (right for subscriptions: Claude Code, Gemini CLI, Codex, OpenCode) or in
+  dollars (paid APIs). Change or remove it any time: the budget button in the project chat header,
+  or the agent's card on the Agents page. The orchestrator can propose one, with approval.
+- Replies and the chat header show tokens; the dollar figure is an estimate at API prices, shown
+  only as a hint.
+
 ## [0.19.0] - 2026-10-27: Network per agent
 
 - Each agent can have its own allowed hosts (Agents page → Network), on top of the shared list or

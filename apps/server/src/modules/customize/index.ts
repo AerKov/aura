@@ -4,7 +4,7 @@ import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import type { ChatRepo } from "../chat/repo";
 import { ChatError } from "../chat/service";
-import type { ProjectService } from "../projects/service";
+import { ProjectError, type ProjectService } from "../projects/service";
 import { AppearanceError, type AppearanceService } from "./appearance";
 import { type ExtensionBridge, ExtensionDenied } from "./bridge";
 import { ExtensionError, type ExtensionService, FRAME_CSP } from "./extensions";
@@ -133,6 +133,25 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
           chatId: t.String({ maxLength: 64 }),
           body: t.String({ minLength: 1, maxLength: 8000 }),
         }),
+      },
+    )
+    .put(
+      "/projects/:projectId/budget",
+      async ({ params, body, status }) => {
+        try {
+          const { workspace: _w, ...project } = await deps.projects.setBudget(params.projectId, {
+            usd: body.usd,
+            tokens: body.tokens,
+          });
+          return project;
+        } catch (error) {
+          if (error instanceof ProjectError) return status(400, { error: error.message });
+          throw error;
+        }
+      },
+      {
+        auth: true,
+        body: t.Object({ usd: t.Nullable(t.Number()), tokens: t.Nullable(t.Integer()) }),
       },
     )
     .put(

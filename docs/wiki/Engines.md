@@ -88,9 +88,9 @@ app's tools (projects, tasks, skills, schedules…) and the MCP servers you gran
 
 ## Budgets
 
-Budgets stop runs when the engine reports cost: Claude Code and OpenRouter always do, local models cost
-nothing, and subscription apps (Gemini, ChatGPT plans) have no per-run price. See
-[Approvals and safety](Approvals-and-Safety).
+Every engine reports tokens, so a limit in tokens works everywhere. Dollar amounts come from the
+engine: real for OpenRouter, an estimate at API prices for Claude Code under a subscription, none
+for local models and most subscription apps. See [Chats and agents](Chats-and-Agents#budgets).
 
 ## Keys and privacy
 

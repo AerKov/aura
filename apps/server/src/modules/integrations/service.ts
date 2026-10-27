@@ -49,6 +49,8 @@ export interface AgentStatus {
   mcpServers: { name: string; target: string }[];
   chats: { id: string; title: string }[];
   lastRun: { status: string; error: string | null; at: string } | null;
+  /** Its limits (null = none) and what it used; dollars are API-price estimates (ADR 0023). */
+  budget: { usd: number | null; tokens: number | null; spentUsd: number; spentTokens: number };
   /** Where its commands and WebFetch may connect (ADR 0022). */
   network: AgentNetwork & {
     /** Hosts its commands reach in the end: the shared list (unless off) and its own. */
@@ -397,6 +399,14 @@ export class IntegrationsService {
       mcpServers: servers,
       chats,
       network: { ...rules, effective, notes },
+      budget: {
+        usd: profile.budgetUsd,
+        tokens: profile.budgetTokens ?? null,
+        ...(await this.deps.runs.spentByAgent(handle).then((x) => ({
+          spentUsd: x.usd,
+          spentTokens: x.tokens,
+        }))),
+      },
       lastRun: lastRun
         ? {
             ...lastRun,
@@ -410,7 +420,12 @@ export class IntegrationsService {
   /** A user action from the agent's card: its tools and variables, as one commit. */
   async updateAgent(
     handle: string,
-    patch: { tools?: string[]; env?: Record<string, string>; network?: AgentNetwork },
+    patch: {
+      tools?: string[];
+      env?: Record<string, string>;
+      network?: AgentNetwork;
+      budget?: { usd: number | null; tokens: number | null };
+    },
   ): Promise<AgentStatus> {
     const profile = await this.deps.agents.get(handle);
     if (!profile) throw new IntegrationError(`No agent @${handle}`);
@@ -422,7 +437,8 @@ export class IntegrationsService {
       model: profile.model,
       systemPrompt: profile.systemPrompt,
       tools: (patch.tools ?? profile.builtinTools) as BuiltinTool[],
-      budgetUsd: profile.budgetUsd,
+      budgetUsd: patch.budget ? patch.budget.usd : profile.budgetUsd,
+      budgetTokens: patch.budget ? patch.budget.tokens : profile.budgetTokens,
       skills: profile.skills,
       env: patch.env ?? profile.env,
       network: patch.network ?? profile.network,
@@ -435,6 +451,9 @@ export class IntegrationsService {
       differs(next.builtinTools, profile.builtinTools) ? "tools" : "",
       differs(next.env, profile.env) ? "environment" : "",
       differs(next.network, profile.network) ? "network" : "",
+      differs([next.budgetUsd, next.budgetTokens], [profile.budgetUsd, profile.budgetTokens])
+        ? "budget"
+        : "",
     ].filter(Boolean);
     if (what.length === 0) return this.agentStatus(handle);
     await commitAll(this.deps.dataDir, `agents(@${handle}): update ${what.join(", ")}`, "owner");

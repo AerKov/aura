@@ -1,5 +1,13 @@
 import { mkdirSync } from "node:fs";
-import { type Chat, type Message, parseMentions, type RunCard, type Usage } from "@aura/shared";
+import {
+  budgetText,
+  type Chat,
+  formatTokens,
+  type Message,
+  parseMentions,
+  type RunCard,
+  type Usage,
+} from "@aura/shared";
 import { commitAll, git } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
 import type { AgentEvent, AgentTool, McpServerSpec, SandboxPolicy } from "../../providers/types";
@@ -13,11 +21,12 @@ import { buildPrompt, CONTEXT_WINDOW, SUMMARY_BATCH, userNote } from "./context"
 import { teamRules, wakeNote } from "./defaults";
 import type { AgentDirectory } from "./directory";
 import {
-  budgetLevel,
   chainDepthAllowed,
-  crossedWarning,
+  crossedSpendWarning,
   DEFAULT_MAX_CHAIN_DEPTH,
   runBudget,
+  type Spend,
+  spendLevel,
 } from "./guards";
 import { type AgentProfile, ORCHESTRATOR_HANDLE } from "./profiles";
 import type { RunRepo } from "./runs";
@@ -309,20 +318,35 @@ export class AgentRuntime {
       return;
     }
 
-    // Guard: budgets per agent and per project.
+    // Guard: budgets per agent and per project, in dollars and in tokens (ADR 0023).
     const project = chat.projectId ? await this.deps.projects.get(chat.projectId) : null;
-    const agentSpent = (await runs.spentByAgent(handle)).usd;
-    if (budgetLevel(agentSpent, profile.budgetUsd) === "stop") {
+    const agentTotals = await runs.spentByAgent(handle);
+    const agentSpent = agentTotals.usd;
+    const agentSpend: Spend = {
+      spentUsd: agentTotals.usd,
+      spentTokens: agentTotals.tokens,
+      budgetUsd: profile.budgetUsd,
+      budgetTokens: profile.budgetTokens ?? null,
+    };
+    const projectSpend: Spend | null = project
+      ? {
+          spentUsd: project.spentUsd,
+          spentTokens: project.spentTokens,
+          budgetUsd: project.budgetUsd,
+          budgetTokens: project.budgetTokens,
+        }
+      : null;
+    if (spendLevel(agentSpend) === "stop") {
       await this.postSystem(
         chat.id,
-        `💸 @${handle} is out of budget ($${profile.budgetUsd?.toFixed(2)}).`,
+        `💸 @${handle} is out of budget (${budgetText({ usd: profile.budgetUsd, tokens: profile.budgetTokens ?? null })}). Raise or remove its limit on the Agents page.`,
       );
       return;
     }
-    if (project && budgetLevel(project.spentUsd, project.budgetUsd) === "stop") {
+    if (project && projectSpend && spendLevel(projectSpend) === "stop") {
       await this.postSystem(
         chat.id,
-        `💸 The project budget ($${project.budgetUsd?.toFixed(2)}) is used up. @${handle} was not started.`,
+        `💸 The project budget (${budgetText({ usd: project.budgetUsd, tokens: project.budgetTokens })}) is used up. @${handle} was not started. Raise or remove it from the budget button in the chat header.`,
       );
       return;
     }
@@ -544,13 +568,14 @@ export class AgentRuntime {
     });
 
     const cost = usage?.costUsd ?? 0;
-    if (project && crossedWarning(project.spentUsd, project.spentUsd + cost, project.budgetUsd)) {
+    const tokens = (usage?.inputTokens ?? 0) + (usage?.outputTokens ?? 0);
+    if (project && projectSpend && crossedSpendWarning(projectSpend, cost, tokens)) {
       await this.postSystem(
         chat.id,
-        `⚠️ 80% of the project budget is used ($${(project.spentUsd + cost).toFixed(2)} of $${project.budgetUsd?.toFixed(2)}).`,
+        `⚠️ 80% of the project budget is used (${formatTokens(project.spentTokens + tokens)} tokens; budget: ${budgetText({ usd: project.budgetUsd, tokens: project.budgetTokens })}).`,
       );
     }
-    if (crossedWarning(agentSpent, agentSpent + cost, profile.budgetUsd)) {
+    if (crossedSpendWarning(agentSpend, cost, tokens)) {
       await this.postSystem(chat.id, `⚠️ @${handle} used 80% of its budget.`);
     }
 

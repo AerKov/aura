@@ -57,7 +57,8 @@ export type ApprovalKind =
   | "mcp_server"
   | "extension_install"
   | "pack_install"
-  | "agent_change";
+  | "agent_change"
+  | "budget_change";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "failed";
 
 export interface ApprovalCard {
@@ -238,8 +239,13 @@ export interface Project {
   name: string;
   status: ProjectStatus;
   chatId: string;
+  /** Limits; null means none. A run stops the project when either is reached (rule 8). */
   budgetUsd: number | null;
+  budgetTokens: number | null;
+  /** Estimated at API prices: under a subscription nobody is billed this (ADR 0023). */
   spentUsd: number;
+  /** Input and output tokens of all runs, the measure that matters under a subscription. */
+  spentTokens: number;
   /** Where agents' shell commands run: the host (with the OS sandbox) or the project's container. */
   isolation: ProjectIsolation;
   /** Extension pinned as the project's app: it opens next to the project chat (ADR 0021). */
@@ -248,6 +254,29 @@ export interface Project {
 }
 
 export type ProjectIsolation = "host" | "container";
+
+/** Engines billed by their API, where a dollar limit is real money (ADR 0023). */
+export const PAID_ENGINES = ["openrouter", "openai-compatible"] as const;
+
+/** 1234 → "1.2K", 2500000 → "2.5M". */
+export function formatTokens(n: number): string {
+  if (n >= 1_000_000) return `${trimZero((n / 1_000_000).toFixed(1))}M`;
+  if (n >= 1_000) return `${trimZero((n / 1_000).toFixed(1))}K`;
+  return String(Math.round(n));
+}
+
+function trimZero(text: string): string {
+  return text.endsWith(".0") ? text.slice(0, -2) : text;
+}
+
+/** A budget in words: "2M tokens", "$5.00", both, or "no limit". */
+export function budgetText(budget: { usd: number | null; tokens: number | null }): string {
+  const parts = [
+    budget.tokens !== null ? `${formatTokens(budget.tokens)} tokens` : "",
+    budget.usd !== null ? `$${budget.usd.toFixed(2)}` : "",
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(" and ") : "no limit";
+}
 
 export const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,47}$/;
 

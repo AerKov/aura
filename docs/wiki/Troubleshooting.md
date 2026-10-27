@@ -35,8 +35,8 @@ pattern is `AURA_<NAME>_EXECUTABLE`; `AURA_CLAUDE_EXECUTABLE` for Claude Code).
 **OpenRouter: rate limit.** Free models are rate limited. Wait a bit, pick another free model, or add
 credit.
 
-**An agent stopped with a budget notice.** The project or agent budget is used up. Ask the
-orchestrator to raise it, or start a new project.
+**An agent stopped with a budget notice.** The project or agent budget is used up. Raise or remove
+it: the budget button in the project chat header, or the agent's card on the Agents page.
 
 **Agents stopped talking to each other.** A chain of agent replies stops after 8 steps. Reply in the
 chat to continue.

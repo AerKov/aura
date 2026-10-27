@@ -37,14 +37,15 @@ The first chat in the list is your **orchestrator**. Tell it what you want, in a
 
 > I want a small CLI that converts temperatures, with tests.
 
-The orchestrator asks what it needs, then proposes a **project**: a name, a budget, and a team (for
+The orchestrator asks what it needs, then proposes a **project**: a name, a team (for
 example `@coder` and `@reviewer`). Nothing happens until you press **Approve** on that card.
 
 ## 4. Watch the team work
 
 The project gets its own chat and its own folder (a git repository). Agents mention each other to
 hand work over, every run shows a card with the tools it used and what it cost, and the files are
-committed after each run. The budget ring in the chat header shows how much is left.
+committed after each run. The button in the chat header shows the tokens used; click it to set a
+limit.
 
 You can step in at any time: just write in the project chat and the orchestrator passes it to the
 right agent, reply to an agent's message to answer it, or type `@` to pick an agent yourself. Press

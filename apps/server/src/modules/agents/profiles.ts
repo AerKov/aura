@@ -19,6 +19,8 @@ export interface AgentProfile {
   builtinTools: BuiltinTool[];
   /** Spend limit across all runs of this agent, in USD. null means no agent-level limit. */
   budgetUsd: number | null;
+  /** Token limit across all runs of this agent (ADR 0023). Absent means none. */
+  budgetTokens?: number;
   /** Names of skills (folders in `skills/`) attached to this agent. */
   skills: string[];
   /** Environment for the agent's commands: values or `${secret:…}` / `${env:…}` refs (ADR 0020). */
@@ -92,6 +94,20 @@ export class ProfileError extends Error {
 }
 
 const MAX_PROMPT = 20_000;
+export const MAX_BUDGET_TOKENS = 10_000_000_000;
+
+/** A token limit: a whole number from 1,000 up, or null for none. */
+export function validTokens(value: unknown, error: (message: string) => Error): number | null {
+  if (value === undefined || value === null) return null;
+  if (
+    typeof value !== "number" ||
+    !Number.isInteger(value) ||
+    value < 1000 ||
+    value > MAX_BUDGET_TOKENS
+  )
+    throw error("token budget must be a whole number from 1000 up");
+  return value;
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -107,6 +123,7 @@ export function validateProfile(input: {
   systemPrompt: unknown;
   tools?: unknown;
   budgetUsd?: unknown;
+  budgetTokens?: unknown;
   skills?: unknown;
   env?: unknown;
   network?: unknown;
@@ -157,6 +174,7 @@ export function validateProfile(input: {
   ) {
     throw new ProfileError("budget must be a positive number of USD (max 1000)");
   }
+  const budgetTokens = validTokens(input.budgetTokens, (m) => new ProfileError(m));
   const skillList = skills ?? [];
   if (
     !Array.isArray(skillList) ||
@@ -175,6 +193,7 @@ export function validateProfile(input: {
     systemPrompt: systemPrompt.trim(),
     builtinTools: [...new Set(toolList as BuiltinTool[])],
     budgetUsd: typeof budgetUsd === "number" ? budgetUsd : null,
+    ...(budgetTokens !== null ? { budgetTokens } : {}),
     skills: [...new Set(skillList as string[])],
     ...(Object.keys(env).length > 0 ? { env } : {}),
     ...(network ? { network } : {}),
@@ -204,6 +223,7 @@ export function parseAgentFile(handle: string, text: string): AgentProfile {
     systemPrompt: match[2] ?? "",
     tools: meta.tools,
     budgetUsd: meta.budget_usd,
+    budgetTokens: meta.budget_tokens,
     skills: meta.skills,
     env: meta.env,
     network: meta.network,
@@ -220,6 +240,7 @@ export function serializeAgentFile(profile: AgentProfile): string {
     ...(profile.model ? [`model: ${JSON.stringify(profile.model)}`] : []),
     `tools: ${JSON.stringify(profile.builtinTools)}`,
     ...(profile.budgetUsd !== null ? [`budget_usd: ${profile.budgetUsd}`] : []),
+    ...(profile.budgetTokens !== undefined ? [`budget_tokens: ${profile.budgetTokens}`] : []),
     ...(profile.skills.length > 0 ? [`skills: ${JSON.stringify(profile.skills)}`] : []),
     ...(profile.env && Object.keys(profile.env).length > 0
       ? [`env: ${JSON.stringify(profile.env)}`]

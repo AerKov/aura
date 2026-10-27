@@ -4,8 +4,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
 import { SidePanel, toggleApps, useApps, useOpenApp } from "@/features/customize/side-panel";
-import { cn } from "@/lib/utils";
 import { loadMembers, reportError, showList } from "./actions";
+import { BudgetButton } from "./budget";
 import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
 import { IsolationPanel } from "./isolation-panel";
@@ -140,7 +140,7 @@ export function ChatView({ chatId }: { chatId: string }) {
               </div>
             )}
             {chat.kind === "system" && <WebhookInfo />}
-            {project && <BudgetRing spent={project.spentUsd} budget={project.budgetUsd} />}
+            {project && <BudgetButton project={project} />}
             {summary && (
               <Button
                 variant={panel === "summary" ? "secondary" : "ghost"}
@@ -239,43 +239,6 @@ export function ChatView({ chatId }: { chatId: string }) {
         />
       )}
       {app && <SidePanel chatId={chatId} project={project} app={app} />}
-    </div>
-  );
-}
-
-/** Project spend as a ring: green, amber from 80%, red at the limit. */
-function BudgetRing({ spent, budget }: { spent: number; budget: number | null }) {
-  const ratio = budget ? Math.min(1, spent / budget) : 0;
-  const r = 15;
-  const c = 2 * Math.PI * r;
-  return (
-    <div
-      className="flex items-center gap-2"
-      title={`Spent $${spent.toFixed(2)} of ${budget ? `$${budget.toFixed(2)}` : "no limit"}`}
-    >
-      <svg viewBox="0 0 36 36" className="size-9 -rotate-90" aria-hidden>
-        <circle cx="18" cy="18" r={r} fill="none" stroke="var(--muted)" strokeWidth="4" />
-        <circle
-          cx="18"
-          cy="18"
-          r={r}
-          fill="none"
-          strokeWidth="4"
-          strokeLinecap="round"
-          strokeDasharray={`${c * ratio} ${c}`}
-          className={cn(
-            ratio >= 1
-              ? "stroke-rose-500"
-              : ratio >= 0.8
-                ? "stroke-amber-500"
-                : "stroke-emerald-500",
-          )}
-        />
-      </svg>
-      <div className="text-xs leading-tight max-sm:hidden">
-        <div className="font-medium">${spent.toFixed(2)}</div>
-        <div className="text-muted-foreground">of {budget ? `$${budget.toFixed(0)}` : "∞"}</div>
-      </div>
     </div>
   );
 }

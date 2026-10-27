@@ -36,3 +36,28 @@ export function runBudget(
     .map((l) => Math.max(0, (l.budgetUsd as number) - l.spentUsd));
   return remaining.length > 0 ? Math.min(...remaining) : undefined;
 }
+
+/** Spend against both limits of a project or an agent (ADR 0023). */
+export interface Spend {
+  spentUsd: number;
+  spentTokens: number;
+  budgetUsd: number | null;
+  budgetTokens: number | null;
+}
+
+const LEVELS: BudgetLevel[] = ["ok", "warn", "stop"];
+
+/** The worse of the two levels: a limit in tokens or in dollars, whichever comes first. */
+export function spendLevel(s: Spend): BudgetLevel {
+  const a = LEVELS.indexOf(budgetLevel(s.spentUsd, s.budgetUsd));
+  const b = LEVELS.indexOf(budgetLevel(s.spentTokens, s.budgetTokens));
+  return LEVELS[Math.max(a, b)] ?? "ok";
+}
+
+/** True when a run moved either measure across its warning line. */
+export function crossedSpendWarning(before: Spend, usd: number, tokens: number): boolean {
+  return (
+    crossedWarning(before.spentUsd, before.spentUsd + usd, before.budgetUsd) ||
+    crossedWarning(before.spentTokens, before.spentTokens + tokens, before.budgetTokens)
+  );
+}

@@ -186,6 +186,9 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
               restrictWeb: t.Boolean(),
             }),
           ),
+          budget: t.Optional(
+            t.Object({ usd: t.Nullable(t.Number()), tokens: t.Nullable(t.Integer()) }),
+          ),
         }),
       },
     );

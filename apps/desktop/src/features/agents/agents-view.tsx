@@ -2,6 +2,7 @@ import {
   Bot,
   Check,
   CircleAlert,
+  Gauge,
   Globe,
   MessagesSquare,
   Plug,
@@ -13,6 +14,7 @@ import { Mark } from "@/components/mark";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { loadProjects, openChat, reportError } from "@/features/chat/actions";
+import { BudgetEditor } from "@/features/chat/budget";
 import { useChatStore } from "@/features/chat/store";
 import {
   EnvEditor,
@@ -328,6 +330,20 @@ function AgentCard({ handle }: { handle: string }) {
             {busy ? <RefreshCw className="animate-spin" /> : <Check />} {saved ? "Saved" : "Save"}
           </Button>
         </div>
+      </div>
+
+      <div className="bg-card rounded-2xl border p-5">
+        <h3 className="kicker mb-2 flex items-center gap-1.5">
+          <Gauge className="size-3.5" /> Budget
+        </h3>
+        <BudgetEditor
+          key={`${status.budget.usd}:${status.budget.tokens}`}
+          value={{ usd: status.budget.usd, tokens: status.budget.tokens }}
+          spent={{ usd: status.budget.spentUsd, tokens: status.budget.spentTokens }}
+          onSave={async (budget) => {
+            apply(await call(() => api.agents({ handle }).settings.put({ budget })));
+          }}
+        />
       </div>
 
       <div className="bg-card grid gap-4 rounded-2xl border p-5 sm:grid-cols-2">

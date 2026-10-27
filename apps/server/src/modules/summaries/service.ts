@@ -5,7 +5,7 @@ import { isoOf, keyOf } from "../../db/convert";
 import { errorMessage, log } from "../../lib/log";
 import { CONTEXT_WINDOW, formatMessage, SUMMARY_BATCH } from "../agents/context";
 import type { AgentDirectory } from "../agents/directory";
-import { budgetLevel, runBudget } from "../agents/guards";
+import { runBudget, spendLevel } from "../agents/guards";
 import { ORCHESTRATOR_HANDLE } from "../agents/profiles";
 import type { RunRepo } from "../agents/runs";
 import type { ProjectLookup } from "../agents/runtime";
@@ -163,10 +163,17 @@ export class ChatSummaryService {
     if (!profile) return null;
     const chat = await repo.getChat(chatId);
     const project = chat.projectId ? await projects.get(chat.projectId) : null;
-    const agentSpent = (await runs.spentByAgent(ORCHESTRATOR_HANDLE)).usd;
-    // Budgets stop summaries too (CLAUDE.md rule 8).
-    if (budgetLevel(agentSpent, profile.budgetUsd) === "stop") return null;
-    if (project && budgetLevel(project.spentUsd, project.budgetUsd) === "stop") return null;
+    const totals = await runs.spentByAgent(ORCHESTRATOR_HANDLE);
+    const agentSpent = totals.usd;
+    // Budgets stop summaries too (CLAUDE.md rule 8), in dollars or tokens.
+    const agentSpend = {
+      spentUsd: totals.usd,
+      spentTokens: totals.tokens,
+      budgetUsd: profile.budgetUsd,
+      budgetTokens: profile.budgetTokens ?? null,
+    };
+    if (spendLevel(agentSpend) === "stop") return null;
+    if (project && spendLevel(project) === "stop") return null;
     const maxBudgetUsd = Math.min(
       MAX_USD,
       runBudget([

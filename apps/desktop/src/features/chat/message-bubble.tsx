@@ -1,4 +1,5 @@
 import type { Message } from "@aura/shared";
+import { formatTokens } from "@aura/shared";
 import { CornerDownRight, Reply, Square } from "lucide-react";
 import { Mark } from "@/components/mark";
 import { Markdown } from "@/components/markdown";
@@ -142,11 +143,13 @@ export function MessageBubble({
               )}
               {message.usage && (
                 <span
-                  title={`${message.usage.inputTokens} in / ${message.usage.outputTokens} out tokens`}
+                  title={`${message.usage.inputTokens} in / ${message.usage.outputTokens} out tokens${
+                    message.usage.costUsd !== null
+                      ? ` · ≈ $${message.usage.costUsd.toFixed(4)} at API prices (a subscription is not billed this)`
+                      : ""
+                  }`}
                 >
-                  {message.usage.costUsd !== null
-                    ? `$${message.usage.costUsd.toFixed(4)}`
-                    : `${message.usage.outputTokens} tok`}
+                  {formatTokens(message.usage.inputTokens + message.usage.outputTokens)} tokens
                 </span>
               )}
             </div>

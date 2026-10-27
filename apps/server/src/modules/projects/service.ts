@@ -1,6 +1,7 @@
 import { existsSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  budgetText,
   type Chat,
   type Project,
   type ProjectIsolation,
@@ -12,7 +13,7 @@ import { RecordId, type Surreal } from "surrealdb";
 import { isoOf, keyOf } from "../../db/convert";
 import { commitAll, ensureRepo } from "../../lib/git";
 import type { AgentDirectory } from "../agents/directory";
-import { ORCHESTRATOR_HANDLE } from "../agents/profiles";
+import { ORCHESTRATOR_HANDLE, validTokens } from "../agents/profiles";
 import type { RunRepo } from "../agents/runs";
 import { type ChatRepo, OWNER_ID } from "../chat/repo";
 import type { ChatService } from "../chat/service";
@@ -30,7 +31,9 @@ export interface ProjectInput {
   slug?: string;
   brief: string;
   agents: string[];
-  budgetUsd: number;
+  /** Limits; absent or null means none (ADR 0023). */
+  budgetUsd?: number | null;
+  budgetTokens?: number | null;
   /** The agent the kickoff wakes; defaults to the first agent mentioned in the brief. */
   startWith?: string;
 }
@@ -41,7 +44,20 @@ export interface ValidProject {
   brief: string;
   agents: string[];
   startWith: string;
-  budgetUsd: number;
+  budgetUsd: number | null;
+  budgetTokens: number | null;
+}
+
+/** Checks a pair of limits (null = none); shared by creation and later changes. */
+export function validBudget(input: { usd?: number | null; tokens?: number | null }): {
+  usd: number | null;
+  tokens: number | null;
+} {
+  const usd = input.usd ?? null;
+  if (usd !== null && (!Number.isFinite(usd) || usd <= 0 || usd > 1000))
+    throw new ProjectError("budget must be a positive number of USD (max 1000)");
+  const tokens = validTokens(input.tokens, (m) => new ProjectError(m));
+  return { usd, tokens };
 }
 
 type Row = Record<string, unknown>;
@@ -95,9 +111,7 @@ export class ProjectService {
         "slug must be 2-48 chars of lowercase latin letters, digits and dashes",
       );
     }
-    if (!Number.isFinite(input.budgetUsd) || input.budgetUsd <= 0 || input.budgetUsd > 1000) {
-      throw new ProjectError("budget must be a positive number of USD (max 1000)");
-    }
+    const budget = validBudget({ usd: input.budgetUsd, tokens: input.budgetTokens });
     const brief = input.brief.trim();
     if (!brief || brief.length > 8000) throw new ProjectError("brief is required (max 8000 chars)");
 
@@ -121,11 +135,20 @@ export class ProjectService {
     if ((await this.get(slug)) || existsSync(this.workspaceOf(slug))) {
       throw new ProjectError(`a project "${slug}" already exists`);
     }
-    return { name, slug, brief, agents, startWith, budgetUsd: input.budgetUsd };
+    return {
+      name,
+      slug,
+      brief,
+      agents,
+      startWith,
+      budgetUsd: budget.usd,
+      budgetTokens: budget.tokens,
+    };
   }
 
   async create(input: ProjectInput): Promise<{ project: ProjectInfo; chat: Chat }> {
-    const { name, slug, brief, agents, startWith } = await this.validate(input);
+    const { name, slug, brief, agents, startWith, budgetUsd, budgetTokens } =
+      await this.validate(input);
 
     // Workspace first: a git repo with the brief, so every agent change is a reversible commit.
     const workspace = this.workspaceOf(slug);
@@ -155,7 +178,8 @@ export class ProjectService {
           status: "active",
           chat: new RecordId("chat", chat.id),
           repo_path: workspace,
-          budget_usd: input.budgetUsd,
+          ...(budgetUsd !== null ? { budget_usd: budgetUsd } : {}),
+          ...(budgetTokens !== null ? { budget_tokens: budgetTokens } : {}),
           isolation: this.deps.newProjectIsolation?.() ?? "host",
         },
       })
@@ -165,7 +189,7 @@ export class ProjectService {
       chatId: chat.id,
       author: { kind: "bot", id: "system" },
       kind: "system",
-      body: `Project created · budget $${input.budgetUsd.toFixed(2)} · team: ${agents.map((a) => `@${a}`).join(", ")}`,
+      body: `Project created · budget: ${budgetText({ usd: budgetUsd, tokens: budgetTokens })} · team: ${agents.map((a) => `@${a}`).join(", ")}`,
     });
 
     // The kickoff comes from the orchestrator and wakes only the agent who starts; the others
@@ -198,6 +222,25 @@ export class ProjectService {
     return project;
   }
 
+  /** User action (or an approved request): changes or removes the project's limits. */
+  async setBudget(
+    slug: string,
+    input: { usd: number | null; tokens: number | null },
+  ): Promise<ProjectInfo> {
+    if (!(await this.get(slug))) throw new ProjectError(`No project "${slug}"`);
+    const { usd, tokens } = validBudget(input);
+    await this.deps.db
+      .query(
+        `UPDATE $id SET budget_usd = ${usd === null ? "NONE" : "$usd"}, budget_tokens = ${tokens === null ? "NONE" : "$tokens"}`,
+        { id: new RecordId("project", slug), usd, tokens },
+      )
+      .collect();
+    const project = await this.get(slug);
+    if (!project) throw new ProjectError(`No project "${slug}"`);
+    this.deps.onChange?.(project);
+    return project;
+  }
+
   /** Pins an extension as the project's app (ADR 0021), or unpins it with null. */
   async setApp(slug: string, extensionId: string | null): Promise<ProjectInfo> {
     if (!(await this.get(slug))) throw new ProjectError(`No project "${slug}"`);
@@ -222,7 +265,9 @@ export class ProjectService {
       status: row.status as Project["status"],
       chatId: keyOf(row.chat),
       budgetUsd: typeof row.budget_usd === "number" ? row.budget_usd : null,
+      budgetTokens: typeof row.budget_tokens === "number" ? row.budget_tokens : null,
       spentUsd: spent.usd,
+      spentTokens: spent.tokens,
       isolation: row.isolation === "container" ? "container" : "host",
       app: typeof row.app === "string" ? row.app : null,
       createdAt: isoOf(row.created_at),

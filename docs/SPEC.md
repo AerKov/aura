@@ -375,5 +375,10 @@ Each agent can have its own allowed hosts on top of (or instead of) the shared l
 limited to them; enforced per command in the OS sandbox, in Claude Code's sandbox and tool checks,
 and for ACP fetches; editable on the agent's card or proposed by the orchestrator (ADR 0022).
 
+**Phase 20: Budgets that mean something**
+From alpha feedback: budgets are optional, in tokens (subscriptions) or dollars (paid APIs),
+changeable at any time from the chat header and the agent's card, or proposed by the orchestrator;
+replies show tokens (ADR 0023).
+
 **Later**
 Pack signatures and a reviewed community index, multi-user.
