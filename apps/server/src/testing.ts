@@ -51,6 +51,9 @@ export async function createTestApp(
     corsOrigins: [TEST_ORIGIN],
     extraHosts: ["e.ly"],
     webhookToken: TEST_WEBHOOK_TOKEN,
+    pushPublicKey: null,
+    webDir: null,
+    lanUrls: [],
     publicUrl: "http://127.0.0.1:4517",
     sessions,
     hub,
@@ -58,6 +61,7 @@ export async function createTestApp(
     agents,
     ...services,
   });
+  sessions.useDevices((t) => services.devices.verify(t));
   const token = sessions.issue(services.owner);
   return {
     app,

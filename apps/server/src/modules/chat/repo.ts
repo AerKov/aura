@@ -11,7 +11,7 @@ import {
   type Usage,
 } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
-import { isoOf, keyOf, optionalIso, optionalKey } from "../../db/convert";
+import { isoOf, keyOf, optionalIso, optionalKey, retryOnConflict } from "../../db/convert";
 
 export const OWNER_ID = "owner";
 export const DIRECT_CHAT_ID = "direct";
@@ -253,13 +253,16 @@ export class ChatRepo {
       : message.card
         ? `[${message.card.type}]`
         : "";
-    await this.db
-      .query("UPDATE $id SET last_message_at = $at, last_message_preview = $preview", {
-        id: new RecordId("chat", chatId),
-        at: new Date(message.createdAt),
-        preview,
-      })
-      .collect();
+    // Many writers touch the same chat record; retry optimistic-concurrency conflicts.
+    await retryOnConflict(() =>
+      this.db
+        .query("UPDATE $id SET last_message_at = $at, last_message_preview = $preview", {
+          id: new RecordId("chat", chatId),
+          at: new Date(message.createdAt),
+          preview,
+        })
+        .collect(),
+    );
   }
 }
 

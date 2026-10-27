@@ -26,7 +26,10 @@ export interface ChatState {
   members: Record<string, Participant[]>;
   tasks: Record<string, Task[]>;
   /** "ext:<id>" shows an extension panel. */
-  view: "chat" | "skills" | "jobs" | "customize" | `ext:${string}`;
+  view: "chat" | "skills" | "jobs" | "customize" | "devices" | `ext:${string}`;
+  /** On narrow screens only one pane is visible: the list or the content. */
+  pane: "list" | "main";
+  needsPairing: boolean;
   appearance: Appearance | null;
   customize: CustomizeState | null;
 }
@@ -46,6 +49,8 @@ let state: ChatState = {
   view: "chat",
   appearance: null,
   customize: null,
+  pane: "list",
+  needsPairing: false,
 };
 
 const listeners = new Set<() => void>();

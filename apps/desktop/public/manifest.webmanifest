@@ -1,0 +1,10 @@
+{
+  "name": "Aura",
+  "short_name": "Aura",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#0b0b14",
+  "theme_color": "#0b0b14",
+  "icons": [{ "src": "icon.png", "sizes": "512x512", "type": "image/png" }]
+}

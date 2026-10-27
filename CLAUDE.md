@@ -21,7 +21,8 @@ Full product and architecture spec: `docs/SPEC.md`. Read the relevant section be
   **Eden Treaty**; never hand-write API types.
 - **Desktop shell:** Tauri 2. The Bun server runs as a Tauri **sidecar** (`bun build --compile`).
 - **Frontend:** React + TypeScript + Vite, Tailwind CSS, **shadcn/ui**.
-- **Auth:** v1 uses an automatic local session (ADR 0003); Better Auth arrives with mobile (Phase 7).
+- **Auth:** automatic local session on the desktop (ADR 0003); phones pair with a one-time code and
+  use device tokens (ADR 0009). Better Auth is not used for now.
 - **Database:** SurrealDB, embedded in the server via `@surrealdb/node` (ADR 0001). State, realtime via
   LIVE SELECT, vector search for memory, graph relations.
 - **Markdown (required everywhere in chat):** streamdown (react-markdown compatible, GFM built in) with
@@ -63,7 +64,8 @@ docs/
 - `bun run build`: compile the server sidecar (`build:sidecar`), then `tauri build`
 - Server env: `AURA_PORT` (4517), `AURA_HOST`, `AURA_DATA_DIR` (`~/.aura`), `AURA_DB_URL`,
   `AURA_DEFAULT_MODEL`, `AURA_CLAUDE_EXECUTABLE`, `AURA_PUBLIC_URL` (webhooks via a tunnel),
-  `AURA_SAFE_MODE=1`.
+  `AURA_SAFE_MODE=1`, `AURA_REMOTE=1` (listen on the LAN for paired phones).
+- `bun run --cwd apps/desktop build:web`: web client served by the server at `/app/` (phones).
 
 ## Architecture rules (do not break these)
 

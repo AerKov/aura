@@ -112,6 +112,15 @@ DEFINE FIELD OVERWRITE enabled ON extension_state TYPE bool;
 DEFINE FIELD OVERWRITE granted_permissions ON extension_state TYPE array<string>;
 DEFINE FIELD OVERWRITE errors ON extension_state TYPE int DEFAULT 0;
 
+DEFINE TABLE OVERWRITE device SCHEMAFULL;
+DEFINE FIELD OVERWRITE name ON device TYPE string;
+DEFINE FIELD OVERWRITE token_hash ON device TYPE string;
+DEFINE FIELD OVERWRITE revoked ON device TYPE bool DEFAULT false;
+DEFINE FIELD OVERWRITE push ON device TYPE option<object> FLEXIBLE;
+DEFINE FIELD OVERWRITE created_at ON device TYPE datetime DEFAULT time::now();
+DEFINE FIELD OVERWRITE last_seen_at ON device TYPE option<datetime>;
+DEFINE INDEX OVERWRITE device_token ON device FIELDS token_hash UNIQUE;
+
 DEFINE TABLE OVERWRITE run SCHEMAFULL;
 DEFINE FIELD OVERWRITE agent ON run TYPE string;
 DEFINE FIELD OVERWRITE chat ON run TYPE record<chat>;

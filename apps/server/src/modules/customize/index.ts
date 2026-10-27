@@ -28,7 +28,7 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
       if (!html) return status(404, "Extension is not enabled");
       set.headers["content-type"] = "text/html; charset=utf-8";
       set.headers["content-security-policy"] =
-        `${FRAME_CSP}; frame-ancestors ${deps.corsOrigins.join(" ")}`;
+        `${FRAME_CSP}; frame-ancestors 'self' ${deps.corsOrigins.join(" ")}`;
       set.headers["x-content-type-options"] = "nosniff";
       return html;
     })

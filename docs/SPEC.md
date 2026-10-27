@@ -290,7 +290,8 @@ User data dir as git repo, themes and snippets, MCP config by orchestrator, exte
 UI extensions, permissions, safe mode.
 
 **Phase 7: Mobile**
-Tauri mobile thin client connecting to the desktop server, Better Auth login, push notifications.
+Mobile thin client (web/PWA served by the desktop server; Tauri mobile later) paired with the desktop by a
+one-time code, push notifications (ADR 0009).
 
 **Phase 8: Own visual identity**
 A distinct look and feel instead of a Telegram clone: Aura's own design language (layout, typography,

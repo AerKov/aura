@@ -56,3 +56,22 @@ describe("ChatRepo", () => {
     expect(await repo.getMessage("nope")).toBeNull();
   });
 });
+
+test("concurrent messages in one chat do not fail on write conflicts", async () => {
+  const { connectDb } = await import("../../db/client");
+  const { ChatRepo } = await import("./repo");
+  const db = await connectDb("mem://");
+  try {
+    const repo = new ChatRepo(db.surreal);
+    await repo.createChat({ id: "busy", kind: "group", title: "Busy", members: [] });
+    const author = { kind: "user" as const, id: "owner" };
+    await Promise.all(
+      Array.from({ length: 20 }, (_, i) =>
+        repo.createMessage({ chatId: "busy", author, body: `m${i}` }),
+      ),
+    );
+    expect(await repo.listMessages("busy", { limit: 50 })).toHaveLength(20);
+  } finally {
+    await db.close();
+  }
+});

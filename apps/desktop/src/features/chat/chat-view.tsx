@@ -1,8 +1,8 @@
 import type { Message } from "@aura/shared";
-import { ListTodo } from "lucide-react";
+import { ChevronLeft, ListTodo } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { loadMembers, reportError } from "./actions";
+import { loadMembers, reportError, showList } from "./actions";
 import { ChatAvatar } from "./avatar";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
@@ -61,7 +61,15 @@ export function ChatView({ chatId }: { chatId: string }) {
   return (
     <div className="relative flex min-w-0 flex-1">
       <section className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-3 border-b px-4 py-2">
+        <header className="flex items-center gap-3 border-b px-4 py-2 max-md:px-2">
+          <button
+            type="button"
+            aria-label="Back to chats"
+            onClick={showList}
+            className="text-muted-foreground md:hidden"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
           <ChatAvatar kind={chat.kind} title={chat.title} />
           <div>
             <h1 className="font-semibold">{chat.title}</h1>

@@ -22,3 +22,21 @@ export function isoOf(value: unknown): string {
 export function optionalIso(value: unknown): string | null {
   return value === undefined || value === null ? null : isoOf(value);
 }
+
+/**
+ * Retries an operation that failed with a SurrealDB transaction conflict (optimistic concurrency:
+ * concurrent writes to one record). Other errors are rethrown at once.
+ */
+export async function retryOnConflict<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
+  for (let i = 1; ; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      const conflict =
+        error instanceof Error &&
+        /transaction (write )?conflict|can be retried/i.test(error.message);
+      if (!conflict || i >= attempts) throw error;
+      await Bun.sleep(5 * i + Math.random() * 10);
+    }
+  }
+}

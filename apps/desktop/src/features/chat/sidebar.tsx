@@ -1,7 +1,7 @@
-import { Blocks, CalendarClock, Palette, Sparkles } from "lucide-react";
+import { Blocks, CalendarClock, Palette, Smartphone, Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { showCustomize, showExtension, showJobs, showSkills } from "./actions";
+import { showCustomize, showDevices, showExtension, showJobs, showSkills } from "./actions";
 import { ChatList } from "./chat-list";
 import { useChatStore } from "./store";
 
@@ -10,13 +10,19 @@ export function Sidebar() {
   const version = useChatStore((s) => s.serverVersion);
   const me = useChatStore((s) => s.me);
   const view = useChatStore((s) => s.view);
+  const pane = useChatStore((s) => s.pane);
   const customize = useChatStore((s) => s.customize);
   const panels = customize?.safeMode.on
     ? []
     : (customize?.extensions ?? []).filter((e) => e.enabled && e.permissions.includes("ui.panel"));
 
   return (
-    <aside className="bg-sidebar flex w-80 shrink-0 flex-col border-r max-md:w-64">
+    <aside
+      className={cn(
+        "bg-sidebar flex w-80 shrink-0 flex-col border-r max-md:w-full",
+        pane === "main" && "max-md:hidden",
+      )}
+    >
       <div className="flex items-center justify-between px-4 py-3">
         <span className="text-lg font-semibold tracking-tight">aura</span>
         <span className="text-muted-foreground truncate text-xs">{me?.name}</span>
@@ -43,6 +49,13 @@ export function Sidebar() {
           icon={<Palette className="size-4" />}
         >
           Customize
+        </NavButton>
+        <NavButton
+          active={view === "devices"}
+          onClick={showDevices}
+          icon={<Smartphone className="size-4" />}
+        >
+          Devices
         </NavButton>
         {panels.map((ext) => (
           <NavButton

@@ -7,6 +7,8 @@ const host = process.env.TAURI_DEV_HOST;
 
 // https://v2.tauri.app/start/frontend/vite/
 export default defineConfig({
+  // The server serves the web client (phones, ADR 0009) under /app/.
+  base: process.env.AURA_WEB_BASE ?? "/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },

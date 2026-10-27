@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 import pkg from "../package.json" with { type: "json" };
@@ -13,6 +14,10 @@ export interface ServerConfig {
   dbUrl: string;
   /** Origins allowed to call the HTTP API (desktop webview, Vite dev server). */
   corsOrigins: string[];
+  /** Listen on the network so paired devices (phones) can connect (ADR 0009). */
+  remote: boolean;
+  /** Built web client served at /app (Vite dist-web). */
+  webDir: string | null;
   /** Base URL shown for webhooks; set it to a tunnel URL to receive alerts from the internet. */
   publicUrl: string;
   /** Model used when an agent profile does not name one. */
@@ -51,8 +56,16 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     .map((origin) => origin.trim())
     .filter(Boolean);
 
+  const remote = env.AURA_REMOTE === "1" || env.AURA_REMOTE === "true";
+  const defaultWeb = resolve(import.meta.dir, "../../desktop/dist-web");
   return {
-    host: env.AURA_HOST ?? "127.0.0.1",
+    remote,
+    webDir: env.AURA_WEB_DIR
+      ? resolve(env.AURA_WEB_DIR)
+      : existsSync(defaultWeb)
+        ? defaultWeb
+        : null,
+    host: env.AURA_HOST ?? (remote ? "0.0.0.0" : "127.0.0.1"),
     port: parsePort(env.AURA_PORT),
     dataDir,
     dbUrl,

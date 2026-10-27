@@ -15,6 +15,7 @@ import { ExtensionService } from "./modules/customize/extensions";
 import { McpService } from "./modules/customize/mcp";
 import type { SafeMode } from "./modules/customize/safe-mode";
 import { customizeTools } from "./modules/customize/tools";
+import { DeviceService } from "./modules/devices/service";
 import { JobService } from "./modules/jobs/service";
 import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
@@ -92,6 +93,7 @@ export async function createServices(deps: {
     safeMode: () => safeMode.on,
   });
   const customize = { appearance, mcp, extensions };
+  const devices = new DeviceService({ db: deps.db, owner });
   registerExecutors(toolDeps);
   const runtime = new AgentRuntime({
     chat,
@@ -136,5 +138,6 @@ export async function createServices(deps: {
     extensions,
     safeMode,
     appVersion: SERVER_VERSION,
+    devices,
   };
 }

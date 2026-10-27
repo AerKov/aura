@@ -16,8 +16,8 @@ export const realtimeModule = ({ sessions, hub }: RealtimeDeps) => {
 
   return new Elysia({ name: "realtime" }).ws(WS_PATH, {
     query: t.Object({ token: t.String() }),
-    beforeHandle({ query, status }) {
-      if (!sessions.verify(query.token)) return status(401, "Unauthorized");
+    async beforeHandle({ query, status }) {
+      if (!(await sessions.authenticate(query.token))) return status(401, "Unauthorized");
     },
     open(ws) {
       const hello: ServerEvent = {

@@ -1,3 +1,4 @@
+import { networkInterfaces } from "node:os";
 import { createApp } from "./app";
 import { createServices, prepareDataDir } from "./bootstrap";
 import { loadConfig } from "./config";
@@ -7,7 +8,9 @@ import { isParentAlive, watchParent } from "./lib/parent-watch";
 import { FileAgentDirectory } from "./modules/agents/directory";
 import { loadWebhookToken } from "./modules/alerts/service";
 import { LocalSessions } from "./modules/auth/sessions";
+import { DIRECT_CHAT_ID } from "./modules/chat/repo";
 import { detectSafeMode } from "./modules/customize/safe-mode";
+import { NotificationService, WebPushSender } from "./modules/devices/notifications";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
 import { ClaudeAgentSdkProvider } from "./providers/claude-agent-sdk";
@@ -47,11 +50,36 @@ async function main(): Promise<void> {
   const stopRuntime = services.runtime.start();
   const stopScheduler = services.jobs.start();
 
+  const sessions = new LocalSessions();
+  sessions.useDevices((token) => services.devices.verify(token));
+  let push: WebPushSender | null = null;
+  try {
+    push = new WebPushSender(config.dataDir);
+  } catch (error) {
+    log.warn("web push disabled", { error: errorMessage(error) });
+  }
+  const stopNotifications = new NotificationService({
+    hub,
+    devices: services.devices,
+    sender: push,
+    chatKind: (chatId) => (chatId === DIRECT_CHAT_ID ? "direct" : undefined),
+  }).start();
+  const lanUrls = config.remote
+    ? Object.values(networkInterfaces())
+        .flat()
+        .filter((i) => i && i.family === "IPv4" && !i.internal)
+        .map((i) => `http://${i?.address}:${config.port}/app/`)
+    : [];
+
   const app = createApp({
     dbHealth: db.health,
     startedAt: Date.now(),
     corsOrigins: config.corsOrigins,
-    sessions: new LocalSessions(),
+    sessions,
+    pushPublicKey: push?.publicKey ?? null,
+    webDir: config.webDir,
+    lanUrls,
+    remote: config.remote,
     hub,
     provider,
     agents,
@@ -70,6 +98,7 @@ async function main(): Promise<void> {
     log.info("shutting down", { signal });
     stopRuntime();
     stopScheduler();
+    stopNotifications();
     services.runtime.stopAll();
     await Promise.race([services.runtime.whenIdle(), Bun.sleep(5_000)]);
     await app.stop();

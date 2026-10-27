@@ -1,4 +1,4 @@
-import { api, call } from "@/lib/api";
+import { api, call, NeedsPairingError } from "@/lib/api";
 import { getState, mergeMessages, setState, upsertChat, upsertMessage } from "./store";
 
 export async function loadInitial(): Promise<void> {
@@ -36,7 +36,7 @@ export async function sendMessage(
 }
 
 export function openChat(chatId: string): void {
-  setState(() => ({ activeChatId: chatId, view: "chat" }));
+  setState(() => ({ activeChatId: chatId, view: "chat", pane: "main" }));
   if (!getState().messages[chatId]) void loadMessages(chatId).catch(reportError);
 }
 
@@ -59,7 +59,19 @@ export function refreshProjectsSoon(): void {
 
 export { upsertChat };
 
+export function showDevices(): void {
+  setState(() => ({ view: "devices", pane: "main" }));
+}
+
+export function showList(): void {
+  setState(() => ({ pane: "list" }));
+}
+
 export function reportError(error: unknown): void {
+  if (error instanceof NeedsPairingError) {
+    setState(() => ({ needsPairing: true }));
+    return;
+  }
   console.error("aura:", error instanceof Error ? error.message : error);
 }
 
@@ -95,17 +107,17 @@ export async function setTaskStatus(
 }
 
 export function showSkills(): void {
-  setState(() => ({ view: "skills" }));
+  setState(() => ({ view: "skills", pane: "main" }));
 }
 
 export function showJobs(): void {
-  setState(() => ({ view: "jobs" }));
+  setState(() => ({ view: "jobs", pane: "main" }));
 }
 
 export function showCustomize(): void {
-  setState(() => ({ view: "customize" }));
+  setState(() => ({ view: "customize", pane: "main" }));
 }
 
 export function showExtension(id: string): void {
-  setState(() => ({ view: `ext:${id}` }));
+  setState(() => ({ view: `ext:${id}`, pane: "main" }));
 }

@@ -17,6 +17,8 @@ import type { AppearanceService } from "./modules/customize/appearance";
 import type { ExtensionService } from "./modules/customize/extensions";
 import type { McpService } from "./modules/customize/mcp";
 import type { SafeMode } from "./modules/customize/safe-mode";
+import { devicesModule } from "./modules/devices";
+import type { DeviceService } from "./modules/devices/service";
 import { type HealthDeps, healthModule } from "./modules/health";
 import type { JobService } from "./modules/jobs/service";
 import { projectsModule } from "./modules/projects";
@@ -51,6 +53,11 @@ export interface AppDeps extends HealthDeps {
   mcp: McpService;
   safeMode: SafeMode;
   appVersion: string;
+  devices: DeviceService;
+  pushPublicKey: string | null;
+  webDir: string | null;
+  lanUrls: string[];
+  remote?: boolean;
 }
 
 export function createApp(deps: AppDeps) {
@@ -64,6 +71,7 @@ export function createApp(deps: AppDeps) {
     .use(controlModule(deps))
     .use(opsModule(deps))
     .use(customizeModule(deps))
+    .use(devicesModule(deps))
     .use(realtimeModule(deps));
 }
 

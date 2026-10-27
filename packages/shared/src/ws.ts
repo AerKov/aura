@@ -16,7 +16,9 @@ export type ServerEvent =
   | { type: "message.deleted"; chatId: string; messageId: string }
   | { type: "chat.updated"; chat: Chat }
   /** Theme, snippets or extensions changed; clients reload them. */
-  | { type: "customize.updated" };
+  | { type: "customize.updated" }
+  /** Something that deserves the user's attention (shown when the app is in the background). */
+  | { type: "notification"; title: string; body: string; chatId: string; tag: string };
 
 export type ClientEvent = { type: "ping"; nonce: string };
 
@@ -32,6 +34,7 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "message.deleted",
   "chat.updated",
   "customize.updated",
+  "notification",
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
