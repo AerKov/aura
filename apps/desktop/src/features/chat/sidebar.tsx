@@ -40,7 +40,7 @@ export function Sidebar() {
     >
       <header className="flex h-14 items-center justify-between border-b px-4">
         <h1 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
-          <span className="bg-primary inline-block size-2.5 rounded-[3px]" />
+          <span className="bg-primary inline-block size-2.5 rounded-full" />
           aura
         </h1>
         <span className="kicker">
@@ -56,7 +56,7 @@ export function Sidebar() {
           const group = sorted.filter((c) => c.kind === kind);
           if (group.length === 0) return null;
           return (
-            <section key={kind} className="border-b last:border-b-0">
+            <section key={kind}>
               <h2 className="kicker px-4 pt-4 pb-1.5">{label}</h2>
               {group.map((chat) => {
                 const active = chat.id === activeChatId;
@@ -67,12 +67,11 @@ export function Sidebar() {
                     type="button"
                     onClick={() => openChat(chat.id)}
                     className={cn(
-                      "relative flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                      "relative mx-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-xl px-2.5 py-2 text-left transition-colors",
                       active ? "bg-accent" : "hover:bg-accent/60",
                     )}
                   >
-                    {active && <span className="bg-primary absolute inset-y-0 left-0 w-0.5" />}
-                    <ChatMark chat={chat} size="md" working={busy} />
+                                        <ChatMark chat={chat} size="md" working={busy} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="truncate text-[14px] font-medium">{chat.title}</span>

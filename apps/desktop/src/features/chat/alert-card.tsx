@@ -15,7 +15,7 @@ export function AlertCard({ card }: { card: AlertCardData }) {
   return (
     <div
       className={cn(
-        "w-[min(34rem,100%)] rounded-lg border border-l-4 p-3 text-sm",
+        "w-[min(34rem,100%)] rounded-xl border border-l-4 p-3 text-sm",
         SEVERITY[card.severity],
       )}
     >

@@ -100,7 +100,7 @@ export function Rail() {
       )}
     >
       <div className="mb-2 hidden h-10 items-center justify-center md:flex" title="Aura">
-        <span className="bg-foreground text-primary flex size-7 items-center justify-center rounded-md text-sm leading-none">
+        <span className="bg-primary text-primary-foreground flex size-7 items-center justify-center rounded-[34%] text-sm leading-none">
           ◆
         </span>
       </div>
@@ -113,22 +113,22 @@ export function Rail() {
           aria-current={item.active ? "page" : undefined}
           onClick={item.onClick}
           className={cn(
-            "group relative flex size-10 items-center justify-center rounded-md transition-colors",
+            "group relative flex size-10 items-center justify-center rounded-xl transition-colors",
             item.active ? "bg-accent text-foreground" : "hover:bg-accent/70 hover:text-foreground",
             item.key === "customize" && "md:mt-auto",
           )}
         >
           <item.icon className="size-5" />
           {item.active && (
-            <span className="bg-primary absolute top-1/2 -left-2 hidden h-5 w-0.5 -translate-y-1/2 md:block" />
+            <span className="bg-primary absolute top-1/2 -left-2 hidden h-5 w-1 -translate-y-1/2 rounded-full md:block" />
           )}
           {item.key === "chats" && pendingApprovals > 0 && (
             <span
-              className="bg-primary absolute top-1.5 right-1.5 size-2 rounded-[2px]"
+              className="bg-primary absolute top-1.5 right-1.5 size-2 rounded-full"
               title="Approvals waiting"
             />
           )}
-          <span className="bg-foreground text-background pointer-events-none absolute left-12 z-30 hidden rounded px-2 py-1 font-mono text-[11px] whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100 md:block">
+          <span className="bg-foreground text-background pointer-events-none absolute left-12 z-30 hidden rounded-lg px-2 py-1 font-mono text-[11px] whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100 md:block">
             {item.label}
           </span>
         </button>

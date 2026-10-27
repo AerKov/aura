@@ -9,7 +9,7 @@ export function RunCard({ card }: { card: RunCardData }) {
   const failed = card.tools.filter((t) => t.isError).length;
 
   return (
-    <div className="mt-2 rounded-lg border bg-black/[0.03] text-xs dark:bg-white/[0.04]">
+    <div className="mt-2 rounded-xl border bg-black/[0.03] text-xs dark:bg-white/[0.04]">
       <button
         type="button"
         onClick={() => setOpen(!open)}

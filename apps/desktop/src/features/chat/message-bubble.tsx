@@ -76,7 +76,7 @@ export function MessageBubble({
         className={cn("group message-in flex flex-col items-end", showAuthor ? "mt-5" : "mt-1.5")}
       >
         {reply}
-        <div className="relative max-w-[min(36rem,85%)] rounded-lg border bg-[var(--bubble-own)] px-3.5 py-2">
+        <div className="relative max-w-[min(36rem,85%)] rounded-2xl rounded-br-md bg-[var(--bubble-own)] px-3.5 py-2">
           {replyButton}
           <Markdown>{highlightMentions(body)}</Markdown>
         </div>
@@ -106,7 +106,7 @@ export function MessageBubble({
       <div className="w-8 shrink-0 pt-0.5">
         {showAuthor && <Mark name={message.author.id} kind={kind} size="md" working={streaming} />}
       </div>
-      <div className="min-w-0 flex-1 rounded-xl bg-[var(--bubble-other)]">
+      <div className="min-w-0 flex-1 bg-[var(--bubble-other)]">
         {showAuthor && (
           <div className="mb-1 flex items-baseline gap-2">
             <span className="text-[14px] font-semibold">{name}</span>
@@ -169,7 +169,7 @@ function Thinking() {
         {[0, 160, 320].map((delay) => (
           <span
             key={delay}
-            className="bg-primary size-1.5 animate-pulse rounded-[2px]"
+            className="bg-primary size-1.5 animate-pulse rounded-full"
             style={{ animationDelay: `${delay}ms` }}
           />
         ))}

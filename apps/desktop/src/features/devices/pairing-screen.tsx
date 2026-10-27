@@ -51,7 +51,7 @@ export function PairingScreen() {
         <label className="block text-sm">
           <span className="text-muted-foreground">Server</span>
           <input
-            className="bg-background mt-1 w-full rounded-md border px-3 py-2"
+            className="bg-background mt-1 w-full rounded-lg border px-3 py-2"
             value={server}
             onChange={(e) => setServer(e.target.value)}
           />
@@ -59,7 +59,7 @@ export function PairingScreen() {
         <label className="block text-sm">
           <span className="text-muted-foreground">Code</span>
           <input
-            className="bg-background mt-1 w-full rounded-md border px-3 py-2 font-mono tracking-widest uppercase"
+            className="bg-background mt-1 w-full rounded-lg border px-3 py-2 font-mono tracking-widest uppercase"
             placeholder="XXXX-XXXX"
             autoComplete="one-time-code"
             value={code}
@@ -69,7 +69,7 @@ export function PairingScreen() {
         <label className="block text-sm">
           <span className="text-muted-foreground">This device</span>
           <input
-            className="bg-background mt-1 w-full rounded-md border px-3 py-2"
+            className="bg-background mt-1 w-full rounded-lg border px-3 py-2"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />

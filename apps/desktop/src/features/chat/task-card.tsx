@@ -23,7 +23,7 @@ export function TaskStatusBadge({ status }: { status: TaskStatus }) {
 
 export function TaskCard({ card }: { card: TaskCardData }) {
   return (
-    <div className="mt-2 flex items-center gap-2 rounded-lg border bg-black/[0.03] px-2 py-1.5 text-xs dark:bg-white/[0.04]">
+    <div className="mt-2 flex items-center gap-2 rounded-xl border bg-black/[0.03] px-2 py-1.5 text-xs dark:bg-white/[0.04]">
       <TaskStatusBadge status={card.status} />
       <span className="text-muted-foreground ml-auto">→ @{card.assignee}</span>
     </div>

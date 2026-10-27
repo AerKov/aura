@@ -58,7 +58,7 @@ export function Composer({
     <div className="px-4 pt-2 pb-4 max-md:px-2 max-md:pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <div className="mx-auto max-w-3xl">
         {error && <p className="text-destructive mb-2 px-2 text-sm">{error}</p>}
-        <div className="bg-card focus-within:border-primary/60 focus-within:ring-primary/15 rounded-lg border shadow-sm transition-shadow focus-within:ring-4">
+        <div className="bg-card focus-within:border-primary/60 focus-within:ring-primary/15 rounded-2xl border shadow-sm transition-shadow focus-within:ring-4">
           {replyTo && (
             <div className="flex items-center gap-2 border-b px-4 py-2 text-sm">
               <CornerDownRight className="text-muted-foreground size-4 shrink-0" />
@@ -92,7 +92,7 @@ export function Composer({
               disabled={!text.trim() || sending}
               onClick={() => void send()}
               className={cn(
-                "flex size-9 shrink-0 items-center justify-center rounded-md transition-colors",
+                "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
                 text.trim()
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground",

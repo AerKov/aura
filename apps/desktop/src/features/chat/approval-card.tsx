@@ -43,7 +43,7 @@ export function ApprovalCard({ card }: { card: ApprovalCardData }) {
   };
 
   return (
-    <div className="bg-card border-primary/40 mt-2 w-[min(36rem,100%)] overflow-hidden rounded-lg border">
+    <div className="bg-card border-primary/40 mt-2 w-[min(36rem,100%)] overflow-hidden rounded-xl border">
       <div className="bg-primary/8 kicker text-primary! border-primary/30 border-b px-4 py-1.5">
         Approval · @{card.requestedBy}
       </div>

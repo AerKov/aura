@@ -23,8 +23,8 @@ const SIZES = {
 };
 
 /**
- * A participant's mark: a square monogram tile tinted by its name. The orchestrator is ink with the
- * signal colour; `working` shows a small pulsing signal square in the corner.
+ * A participant's mark: a rounded monogram tile tinted by its name. The orchestrator is a solid signal
+ * tile; `working` shows a small pulsing signal square in the corner.
  */
 export function Mark({
   name,
@@ -43,7 +43,7 @@ export function Mark({
 }) {
   const look =
     kind === "orchestrator"
-      ? "bg-foreground text-background border border-foreground"
+      ? "bg-primary text-primary-foreground border border-primary"
       : kind === "user"
         ? "bg-secondary text-secondary-foreground border"
         : kind === "alert"
@@ -53,7 +53,7 @@ export function Mark({
     <span
       aria-hidden
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center rounded-md font-mono font-semibold",
+        "relative inline-flex shrink-0 items-center justify-center rounded-[34%] font-mono font-semibold",
         SIZES[size],
         look,
         className,
@@ -63,12 +63,12 @@ export function Mark({
       {Icon ? (
         <Icon className="size-[50%]" />
       ) : kind === "orchestrator" ? (
-        <span className="text-primary text-[1.15em] leading-none">◆</span>
+        <span className="text-[1.15em] leading-none">◆</span>
       ) : (
         initialsOf(name)
       )}
       {working && (
-        <span className="bg-primary ring-background absolute -right-1 -bottom-1 size-2.5 animate-pulse rounded-[3px] ring-2" />
+        <span className="bg-primary ring-background absolute -right-1 -bottom-1 size-2.5 animate-pulse rounded-full ring-2" />
       )}
     </span>
   );
