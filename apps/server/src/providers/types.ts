@@ -15,6 +15,11 @@ export interface AgentTool {
   handler: (input: Record<string, unknown>) => Promise<{ text: string; isError?: boolean }>;
 }
 
+/** An external MCP server for a run (tier 2 customization). */
+export type McpServerSpec =
+  | { type: "stdio"; command: string; args: string[]; env: Record<string, string> }
+  | { type: "http"; url: string };
+
 export interface AgentRunInput {
   /** Stable id of the run, for logs. */
   runId: string;
@@ -29,6 +34,8 @@ export interface AgentRunInput {
   confineToCwd?: boolean;
   /** App tools exposed to the agent. */
   tools: AgentTool[];
+  /** External MCP servers whose tools the agent may use. */
+  mcpServers?: Record<string, McpServerSpec>;
   maxTurns?: number;
   /** Hard stop for this run, in USD. */
   maxBudgetUsd?: number;

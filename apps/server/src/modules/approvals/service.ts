@@ -40,6 +40,7 @@ export interface ApprovalRecord {
   payload: Record<string, unknown>;
   status: ApprovalStatus;
   result: string | null;
+  tryCss: string | null;
 }
 
 type Row = Record<string, unknown>;
@@ -70,6 +71,7 @@ export class ApprovalService {
     why: string;
     preview: string;
     payload: Record<string, unknown>;
+    tryCss?: string;
   }): Promise<ApprovalRecord> {
     if (!this.executors.has(input.kind))
       throw new Error(`no executor registered for ${input.kind}`);
@@ -85,6 +87,7 @@ export class ApprovalService {
           why: input.why,
           preview: input.preview,
           payload: input.payload,
+          try_css: input.tryCss,
           status: "pending",
         },
       })
@@ -182,6 +185,7 @@ function toRecord(row: Row): ApprovalRecord {
     payload: (row.payload as Record<string, unknown>) ?? {},
     status: row.status as ApprovalStatus,
     result: (row.result as string | undefined) ?? null,
+    tryCss: (row.try_css as string | undefined) ?? null,
   };
 }
 
@@ -196,5 +200,6 @@ export function toCard(record: ApprovalRecord): ApprovalCard {
     preview: record.preview,
     status: record.status,
     result: record.result,
+    tryCss: record.tryCss,
   };
 }

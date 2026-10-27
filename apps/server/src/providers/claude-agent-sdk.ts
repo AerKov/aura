@@ -97,6 +97,13 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
         tools: input.tools.map(toSdkTool),
       });
     }
+    for (const [name, spec] of Object.entries(input.mcpServers ?? {})) {
+      mcpServers[name] =
+        spec.type === "http"
+          ? { type: "http", url: spec.url }
+          : { type: "stdio", command: spec.command, args: spec.args, env: spec.env };
+    }
+    const allowedPrefixes = Object.keys(input.mcpServers ?? {}).map((name) => `mcp__${name}__`);
     // Every tool call outside the app's own tools goes through this check.
     const canUseTool: CanUseTool = async (toolName, args, { blockedPath }) => {
       const decision = decideToolUse({
@@ -104,6 +111,7 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
         args,
         granted: input.builtinTools,
         appTools,
+        allowedPrefixes,
         cwd: input.confineToCwd ? input.cwd : undefined,
         blockedPath,
       });

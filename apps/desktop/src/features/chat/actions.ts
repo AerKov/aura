@@ -101,3 +101,11 @@ export function showSkills(): void {
 export function showJobs(): void {
   setState(() => ({ view: "jobs" }));
 }
+
+export function showCustomize(): void {
+  setState(() => ({ view: "customize" }));
+}
+
+export function showExtension(id: string): void {
+  setState(() => ({ view: `ext:${id}` }));
+}

@@ -65,6 +65,7 @@ DEFINE FIELD OVERWRITE preview ON approval TYPE string;
 DEFINE FIELD OVERWRITE payload ON approval TYPE object FLEXIBLE;
 DEFINE FIELD OVERWRITE status ON approval TYPE string ASSERT $value IN ["pending", "approved", "rejected", "failed"];
 DEFINE FIELD OVERWRITE result ON approval TYPE option<string>;
+DEFINE FIELD OVERWRITE try_css ON approval TYPE option<string>;
 DEFINE FIELD OVERWRITE decided_by ON approval TYPE option<string>;
 DEFINE FIELD OVERWRITE decided_at ON approval TYPE option<datetime>;
 DEFINE FIELD OVERWRITE created_at ON approval TYPE datetime DEFAULT time::now();
@@ -102,6 +103,14 @@ DEFINE FIELD OVERWRITE next_run_at ON job TYPE option<datetime>;
 DEFINE FIELD OVERWRITE last_run_at ON job TYPE option<datetime>;
 DEFINE FIELD OVERWRITE last_error ON job TYPE option<string>;
 DEFINE FIELD OVERWRITE created_at ON job TYPE datetime DEFAULT time::now();
+
+DEFINE TABLE OVERWRITE setting SCHEMALESS;
+
+DEFINE TABLE OVERWRITE extension_state SCHEMAFULL;
+DEFINE FIELD OVERWRITE version ON extension_state TYPE string;
+DEFINE FIELD OVERWRITE enabled ON extension_state TYPE bool;
+DEFINE FIELD OVERWRITE granted_permissions ON extension_state TYPE array<string>;
+DEFINE FIELD OVERWRITE errors ON extension_state TYPE int DEFAULT 0;
 
 DEFINE TABLE OVERWRITE run SCHEMAFULL;
 DEFINE FIELD OVERWRITE agent ON run TYPE string;

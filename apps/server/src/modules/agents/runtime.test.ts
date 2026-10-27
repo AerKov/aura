@@ -52,9 +52,8 @@ describe("AgentRuntime", () => {
     await t.chat.post({ chatId: "direct", author: owner, body: "first" });
     await Bun.sleep(5);
     await t.chat.post({ chatId: "direct", author: owner, body: "second" });
-    await Bun.sleep(5);
-    await t.runtime.whenIdle();
-    await Bun.sleep(5);
+    // Wait until both runs finished (the second starts only after the first).
+    for (let i = 0; i < 100 && provider.calls.length < 2; i++) await Bun.sleep(10);
     await t.runtime.whenIdle();
 
     expect(provider.calls).toHaveLength(2);

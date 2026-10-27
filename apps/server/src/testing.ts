@@ -7,6 +7,7 @@ import { createServices, prepareDataDir } from "./bootstrap";
 import { connectDb } from "./db/client";
 import { type AgentDirectory, MemoryAgentDirectory } from "./modules/agents/directory";
 import { LocalSessions } from "./modules/auth/sessions";
+import type { SafeMode } from "./modules/customize/safe-mode";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
 import { FakeProvider } from "./providers/fake";
@@ -22,6 +23,7 @@ export async function createTestApp(
     provider?: LLMProvider;
     agents?: AgentDirectory;
     maxChainDepth?: number;
+    safeMode?: SafeMode;
   } = {},
 ) {
   const dataDir = mkdtempSync(join(tmpdir(), "aura-test-"));
@@ -39,6 +41,7 @@ export async function createTestApp(
     dataDir,
     maxChainDepth: opts.maxChainDepth,
     triageDelayMs: 10,
+    safeMode: opts.safeMode,
   });
   const stopRuntime = services.runtime.start();
   const sessions = new LocalSessions();

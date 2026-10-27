@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import type { Surreal } from "surrealdb";
+import { SERVER_VERSION } from "./config";
 import { ensureRepo } from "./lib/git";
 import type { AgentDirectory } from "./modules/agents/directory";
 import { RunRepo } from "./modules/agents/runs";
@@ -9,6 +10,11 @@ import { AlertService, TriageLimiter } from "./modules/alerts/service";
 import { ApprovalService } from "./modules/approvals/service";
 import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
+import { AppearanceService } from "./modules/customize/appearance";
+import { ExtensionService } from "./modules/customize/extensions";
+import { McpService } from "./modules/customize/mcp";
+import type { SafeMode } from "./modules/customize/safe-mode";
+import { customizeTools } from "./modules/customize/tools";
 import { JobService } from "./modules/jobs/service";
 import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
@@ -33,7 +39,9 @@ export async function createServices(deps: {
   defaultModel?: string;
   maxChainDepth?: number;
   triageDelayMs?: number;
+  safeMode?: SafeMode;
 }) {
+  const safeMode: SafeMode = deps.safeMode ?? { on: false, reason: null };
   const repo = new ChatRepo(deps.db);
   const chat = new ChatService(repo);
   const owner = await chat.bootstrap();
@@ -63,6 +71,27 @@ export async function createServices(deps: {
     triageDelayMs: deps.triageDelayMs,
   });
   const toolDeps = { agents: deps.agents, projects, approvals, skills, tasks, jobs, repo, chat };
+  const appearance = new AppearanceService({
+    db: deps.db,
+    dataDir: deps.dataDir,
+    approvals,
+    hub: deps.hub,
+  });
+  const mcp = new McpService({
+    dataDir: deps.dataDir,
+    agents: deps.agents,
+    approvals,
+    safeMode: () => safeMode.on,
+  });
+  const extensions = new ExtensionService({
+    db: deps.db,
+    dataDir: deps.dataDir,
+    approvals,
+    hub: deps.hub,
+    appVersion: SERVER_VERSION,
+    safeMode: () => safeMode.on,
+  });
+  const customize = { appearance, mcp, extensions };
   registerExecutors(toolDeps);
   const runtime = new AgentRuntime({
     chat,
@@ -72,7 +101,13 @@ export async function createServices(deps: {
     provider: deps.provider,
     agents: deps.agents,
     projects,
-    appTools: (ctx) => toolsFor(toolDeps, ctx),
+    appTools: (ctx) => [
+      ...toolsFor(toolDeps, ctx),
+      ...(ctx.handle === "orchestrator" && ctx.chat.kind === "direct"
+        ? customizeTools(customize, { handle: ctx.handle, chatId: ctx.chat.id })
+        : []),
+    ],
+    mcpServers: (handle) => mcp.forAgent(handle),
     promptExtras: (profile) => skills.promptFor(profile),
     ownerName: owner.name,
     scratchDir: join(deps.dataDir, "state", "scratch"),
@@ -96,5 +131,10 @@ export async function createServices(deps: {
     jobs,
     alerts,
     toolDeps,
+    appearance,
+    mcp,
+    extensions,
+    safeMode,
+    appVersion: SERVER_VERSION,
   };
 }

@@ -7,6 +7,7 @@ import { isParentAlive, watchParent } from "./lib/parent-watch";
 import { FileAgentDirectory } from "./modules/agents/directory";
 import { loadWebhookToken } from "./modules/alerts/service";
 import { LocalSessions } from "./modules/auth/sessions";
+import { detectSafeMode } from "./modules/customize/safe-mode";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
 import { ClaudeAgentSdkProvider } from "./providers/claude-agent-sdk";
@@ -15,6 +16,7 @@ import { isCompiled, locateClaude } from "./providers/claude-locate";
 async function main(): Promise<void> {
   const config = loadConfig();
   await prepareDataDir(config.dataDir);
+  const safe = detectSafeMode(config.dataDir);
   const db = await connectDb(config.dbUrl);
   log.info("database opened", { dataDir: config.dataDir });
 
@@ -38,6 +40,7 @@ async function main(): Promise<void> {
     agents,
     dataDir: config.dataDir,
     defaultModel: config.defaultModel,
+    safeMode: safe.mode,
   });
   const interrupted = await services.runs.recoverInterrupted();
   if (interrupted > 0) log.warn("marked interrupted runs as stopped", { count: interrupted });
@@ -58,6 +61,7 @@ async function main(): Promise<void> {
   }).listen({ hostname: config.host, port: config.port });
 
   log.info("server listening", { url: `http://${config.host}:${config.port}` });
+  setTimeout(safe.markHealthy, 60_000).unref();
 
   let shuttingDown = false;
   const shutdown = async (signal: string) => {

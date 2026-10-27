@@ -1,0 +1,183 @@
+import type { ExtensionInfo, ExtensionPermission, Message } from "@aura/shared";
+import { useEffect, useRef, useState } from "react";
+import { reportError } from "@/features/chat/actions";
+import { getState, useChatStore } from "@/features/chat/store";
+import { api, call, SERVER_URL } from "@/lib/api";
+
+const THEME_TOKENS = [
+  "--background",
+  "--foreground",
+  "--card",
+  "--card-foreground",
+  "--muted",
+  "--muted-foreground",
+  "--border",
+  "--primary",
+  "--primary-foreground",
+  "--accent",
+  "--radius",
+];
+
+type Request = { aura: 1; id?: number; method: string; params?: Record<string, unknown> };
+
+const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
+  "chat.list": "chat.read",
+  "chat.messages": "chat.read",
+  "chat.post": "chat.write",
+  "alerts.recent": "alerts.read",
+  "events.subscribe": "chat.read",
+  "ui.setTitle": "ui.panel",
+  error: null,
+};
+
+/** What an extension may see of a message: no run internals. */
+function publicMessage(m: Message) {
+  return {
+    id: m.id,
+    chatId: m.chatId,
+    author: m.author,
+    body: m.body,
+    card: m.card?.type === "run" ? null : m.card,
+    createdAt: m.createdAt,
+  };
+}
+
+/**
+ * Hosts one UI extension in a sandboxed iframe (opaque origin, no network) and answers its
+ * postMessage requests, checking each against the permissions the user granted.
+ */
+export function ExtensionFrame({ extension }: { extension: ExtensionInfo }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+  const [title, setTitle] = useState(extension.name);
+  const subscribed = useRef(new Set<string>());
+
+  useEffect(() => {
+    const frame = ref.current;
+    const has = (p: ExtensionPermission) => extension.permissions.includes(p);
+    const reply = (id: number | undefined, result: unknown, error?: string) =>
+      frame?.contentWindow?.postMessage({ aura: 1, id, result, error }, "*");
+
+    const handle = async (req: Request) => {
+      const needed = METHOD_PERMISSION[req.method];
+      if (needed === undefined) return reply(req.id, null, `Unknown method ${req.method}`);
+      if (needed && !has(needed))
+        return reply(req.id, null, `Permission "${needed}" was not granted`);
+      const p = req.params ?? {};
+      switch (req.method) {
+        case "chat.list":
+          return reply(
+            req.id,
+            Object.values(getState().chats).map((c) => ({
+              id: c.id,
+              kind: c.kind,
+              title: c.title,
+            })),
+          );
+        case "chat.messages": {
+          const chatId = String(p.chatId ?? "");
+          const messages = await call(() =>
+            api.chats({ chatId }).messages.get({ query: { limit: 100 } }),
+          );
+          return reply(req.id, messages.map(publicMessage));
+        }
+        case "chat.post": {
+          const message = await call(() =>
+            api
+              .extensions({ extensionId: extension.id })
+              .messages.post({ chatId: String(p.chatId ?? ""), body: String(p.body ?? "") }),
+          );
+          return reply(req.id, publicMessage(message as Message));
+        }
+        case "alerts.recent": {
+          const messages = await call(() =>
+            api.chats({ chatId: "system" }).messages.get({ query: { limit: 100 } }),
+          );
+          return reply(
+            req.id,
+            messages.flatMap((m) =>
+              m.card?.type === "alert" ? [{ ...m.card, raw: undefined, messageId: m.id }] : [],
+            ),
+          );
+        }
+        case "events.subscribe":
+          subscribed.current.add(String(p.name ?? ""));
+          return reply(req.id, true);
+        case "ui.setTitle":
+          setTitle(String(p.title ?? extension.name).slice(0, 60));
+          return reply(req.id, true);
+        case "error":
+          console.warn(`extension ${extension.id} error:`, p.message);
+          await call(() => api.extensions({ extensionId: extension.id }).error.post());
+          return;
+      }
+    };
+
+    const onMessage = (event: MessageEvent) => {
+      // Only messages from this extension's own frame are accepted.
+      if (!frame || event.source !== frame.contentWindow) return;
+      const data = event.data as Request;
+      if (data?.aura !== 1 || typeof data.method !== "string") return;
+      handle(data).catch((error: unknown) =>
+        reply(data.id, null, error instanceof Error ? error.message : "Request failed"),
+      );
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [extension]);
+
+  // Forward new messages to an extension that subscribed (and may read chats).
+  const messages = useChatStore((s) => s.messages);
+  const seen = useRef(new Set<string>());
+  useEffect(() => {
+    if (!subscribed.current.has("message.created") || !extension.permissions.includes("chat.read"))
+      return;
+    for (const list of Object.values(messages)) {
+      for (const m of list) {
+        if (seen.current.has(m.id) || m.status !== "final") continue;
+        seen.current.add(m.id);
+        ref.current?.contentWindow?.postMessage(
+          { aura: 1, event: "message.created", payload: publicMessage(m) },
+          "*",
+        );
+      }
+    }
+  }, [messages, extension.permissions]);
+
+  useEffect(() => {
+    // Messages that existed before the frame loaded are not "new".
+    for (const list of Object.values(getState().messages))
+      for (const m of list) seen.current.add(m.id);
+  }, []);
+
+  // Share the app's design tokens with the frame, now and whenever the theme changes.
+  const appearance = useChatStore((s) => s.appearance);
+  const sendTheme = () => {
+    const styles = getComputedStyle(document.documentElement);
+    const tokens = Object.fromEntries(
+      THEME_TOKENS.map((name) => [name, styles.getPropertyValue(name).trim()]),
+    );
+    ref.current?.contentWindow?.postMessage({ aura: 1, event: "theme", payload: tokens }, "*");
+  };
+  // biome-ignore lint/correctness/useExhaustiveDependencies: resend when the appearance changes
+  useEffect(sendTheme, [appearance]);
+
+  return (
+    <section className="flex min-w-0 flex-1 flex-col">
+      <header className="flex items-center gap-3 border-b px-4 py-3">
+        <h1 className="font-semibold">{title}</h1>
+        <span className="text-muted-foreground text-xs">
+          extension · {extension.permissions.join(", ")}
+        </span>
+      </header>
+      <iframe
+        ref={ref}
+        title={title}
+        sandbox="allow-scripts"
+        src={`${SERVER_URL}/extensions/${extension.id}/frame`}
+        className="flex-1 border-0"
+        onLoad={sendTheme}
+        onError={() => reportError(new Error(`extension ${extension.id} failed to load`))}
+      />
+    </section>
+  );
+}

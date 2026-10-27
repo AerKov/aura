@@ -52,7 +52,7 @@ export function MessageBubble({
       <div
         className={cn(
           "relative max-w-[min(42rem,80%)] min-w-0 rounded-2xl px-3 py-2 shadow-xs",
-          mine ? "bg-sky-100 dark:bg-sky-900/50" : "bg-card border",
+          mine ? "bg-[var(--bubble-own)]" : "border bg-[var(--bubble-other)]",
           message.status === "error" && "border-destructive",
         )}
       >

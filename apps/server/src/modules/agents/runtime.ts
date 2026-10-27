@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import { type Chat, type Message, parseMentions, type RunCard, type Usage } from "@aura/shared";
 import { commitAll, git } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
-import type { AgentEvent, AgentTool, LLMProvider } from "../../providers/types";
+import type { AgentEvent, AgentTool, LLMProvider, McpServerSpec } from "../../providers/types";
 import type { ChatRepo } from "../chat/repo";
 import type { ChatService } from "../chat/service";
 import type { ProjectInfo } from "../projects/service";
@@ -35,6 +35,8 @@ export interface RuntimeDeps {
   projects: ProjectLookup;
   /** App tools for a run (the orchestrator gets project and agent management). */
   appTools: (ctx: { handle: string; chat: Chat; depth: number }) => AgentTool[];
+  /** External MCP servers an agent may use (tier 2 customization). */
+  mcpServers?: (handle: string) => Record<string, McpServerSpec>;
   /** Extra system prompt sections for an agent (its skills). */
   promptExtras?: (profile: AgentProfile) => string;
   ownerName: string;
@@ -297,6 +299,7 @@ export class AgentRuntime {
         confineToCwd: true,
         builtinTools: toolsFor(profile, project !== null),
         tools: this.deps.appTools({ handle, chat, depth }),
+        mcpServers: this.deps.mcpServers?.(handle),
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,
       },

@@ -48,7 +48,14 @@ export interface RunCard {
   commit: string | null;
 }
 
-export type ApprovalKind = "create_project" | "create_agent" | "skill_change" | "schedule_job";
+export type ApprovalKind =
+  | "create_project"
+  | "create_agent"
+  | "skill_change"
+  | "schedule_job"
+  | "theme_change"
+  | "mcp_server"
+  | "extension_install";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "failed";
 
 export interface ApprovalCard {
@@ -64,6 +71,8 @@ export interface ApprovalCard {
   status: ApprovalStatus;
   /** Outcome text after the decision (e.g. what was created, or the error). */
   result: string | null;
+  /** CSS the user can try on before deciding (theme and snippet changes). */
+  tryCss?: string | null;
 }
 
 export type TaskStatus = "todo" | "doing" | "done" | "blocked";
@@ -207,4 +216,42 @@ export function slugify(name: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 48)
     .replace(/-+$/, "");
+}
+
+/** Appearance: the active theme and enabled CSS snippets (tier 1 customization). */
+export interface Appearance {
+  theme: string | null;
+  snippets: string[];
+  themes: string[];
+  availableSnippets: string[];
+  /** Sanitized CSS to inject, in order: theme, then snippets. */
+  css: { name: string; css: string }[];
+}
+
+export type ExtensionPermission = "chat.read" | "chat.write" | "ui.panel" | "alerts.read";
+
+export interface ExtensionInfo {
+  id: string;
+  name: string;
+  version: string;
+  minAppVersion: string;
+  permissions: ExtensionPermission[];
+  author: string;
+  enabled: boolean;
+  /** Why it cannot run, e.g. an invalid manifest or a newer minAppVersion. */
+  problem: string | null;
+}
+
+export interface McpServerInfo {
+  name: string;
+  /** Command line (stdio) or URL (http). */
+  target: string;
+  agents: string[];
+}
+
+export interface CustomizeState {
+  safeMode: { on: boolean; reason: string | null };
+  appVersion: string;
+  extensions: ExtensionInfo[];
+  mcpServers: McpServerInfo[];
 }

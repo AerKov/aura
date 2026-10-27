@@ -1,4 +1,12 @@
-import type { Chat, Message, Participant, Project, Task } from "@aura/shared";
+import type {
+  Appearance,
+  Chat,
+  CustomizeState,
+  Message,
+  Participant,
+  Project,
+  Task,
+} from "@aura/shared";
 import { useSyncExternalStore } from "react";
 
 export type Connection = "connecting" | "open" | "closed";
@@ -17,7 +25,10 @@ export interface ChatState {
   projects: Record<string, Project>;
   members: Record<string, Participant[]>;
   tasks: Record<string, Task[]>;
-  view: "chat" | "skills" | "jobs";
+  /** "ext:<id>" shows an extension panel. */
+  view: "chat" | "skills" | "jobs" | "customize" | `ext:${string}`;
+  appearance: Appearance | null;
+  customize: CustomizeState | null;
 }
 
 let state: ChatState = {
@@ -33,6 +44,8 @@ let state: ChatState = {
   members: {},
   tasks: {},
   view: "chat",
+  appearance: null,
+  customize: null,
 };
 
 const listeners = new Set<() => void>();

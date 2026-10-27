@@ -12,6 +12,11 @@ import type { LocalSessions, SessionUser } from "./modules/auth/sessions";
 import { chatModule } from "./modules/chat";
 import type { ChatRepo } from "./modules/chat/repo";
 import type { ChatService } from "./modules/chat/service";
+import { customizeModule } from "./modules/customize";
+import type { AppearanceService } from "./modules/customize/appearance";
+import type { ExtensionService } from "./modules/customize/extensions";
+import type { McpService } from "./modules/customize/mcp";
+import type { SafeMode } from "./modules/customize/safe-mode";
 import { type HealthDeps, healthModule } from "./modules/health";
 import type { JobService } from "./modules/jobs/service";
 import { projectsModule } from "./modules/projects";
@@ -41,6 +46,11 @@ export interface AppDeps extends HealthDeps {
   jobs: JobService;
   webhookToken: string;
   publicUrl: string;
+  appearance: AppearanceService;
+  extensions: ExtensionService;
+  mcp: McpService;
+  safeMode: SafeMode;
+  appVersion: string;
 }
 
 export function createApp(deps: AppDeps) {
@@ -53,6 +63,7 @@ export function createApp(deps: AppDeps) {
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))
+    .use(customizeModule(deps))
     .use(realtimeModule(deps));
 }
 

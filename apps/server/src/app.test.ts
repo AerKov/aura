@@ -132,7 +132,10 @@ describe("app", () => {
             void api.chats({ chatId: "direct" }).messages.post({ body: "live!" });
           }
           const sawChat = events.some((e) => e.type === "chat.updated");
-          const msg = events.find((e) => e.type === "message.created");
+          // Earlier tests may still stream orchestrator replies; wait for this test's message.
+          const msg = events.find(
+            (e) => e.type === "message.created" && e.message.body === "live!",
+          );
           if (sawChat && msg?.type === "message.created") resolve(msg.message);
         };
         ws.onerror = () => reject(new Error("websocket error"));

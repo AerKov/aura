@@ -20,11 +20,14 @@ export function decideToolUse(input: {
   args: Record<string, unknown>;
   granted: string[];
   appTools: string[];
+  /** Tool name prefixes allowed as a whole, e.g. `mcp__github__` for a granted MCP server. */
+  allowedPrefixes?: string[];
   cwd: string | undefined;
   blockedPath?: string;
 }): Decision {
   const { tool, args, granted, appTools, cwd, blockedPath } = input;
   if (appTools.includes(tool)) return { allow: true };
+  if (input.allowedPrefixes?.some((prefix) => tool.startsWith(prefix))) return { allow: true };
   if (!granted.includes(tool))
     return { allow: false, reason: `${tool} is not granted to this agent` };
   if (!cwd) return { allow: true };

@@ -1,8 +1,9 @@
 import type { ApprovalCard as ApprovalCardData } from "@aura/shared";
-import { Check, ShieldQuestion, X } from "lucide-react";
-import { useState } from "react";
+import { Check, Eye, EyeOff, ShieldQuestion, X } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
+import { tryCss } from "@/features/customize/appearance";
 import { cn } from "@/lib/utils";
 import { decideApproval, reportError } from "./actions";
 
@@ -17,6 +18,16 @@ const STATUS_LABEL = {
 export function ApprovalCard({ card }: { card: ApprovalCardData }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [trying, setTrying] = useState(false);
+
+  // Stop the try-on when the card is decided or leaves the screen.
+  useEffect(() => {
+    if (card.status !== "pending" && trying) {
+      tryCss(null);
+      setTrying(false);
+    }
+  }, [card.status, trying]);
+  useEffect(() => () => tryCss(null), []);
 
   const decide = async (approve: boolean) => {
     setBusy(true);
@@ -72,6 +83,18 @@ export function ApprovalCard({ card }: { card: ApprovalCardData }) {
           <Button size="sm" variant="outline" disabled={busy} onClick={() => void decide(false)}>
             <X /> Reject
           </Button>
+          {card.tryCss && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                tryCss(trying ? null : (card.tryCss ?? null));
+                setTrying(!trying);
+              }}
+            >
+              {trying ? <EyeOff /> : <Eye />} {trying ? "Stop trying" : "Try it"}
+            </Button>
+          )}
         </div>
       )}
     </div>

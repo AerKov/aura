@@ -1,4 +1,6 @@
 import { type ClientEvent, parseServerEvent } from "@aura/shared";
+import { loadAppearance } from "@/features/customize/appearance";
+import { loadCustomize } from "@/features/customize/customize-view";
 import { resetSession, wsUrl } from "@/lib/api";
 import { loadTasks, refreshProjectsSoon, reportError, resync } from "./actions";
 import { appendDelta, getState, removeMessage, setState, upsertChat, upsertMessage } from "./store";
@@ -58,6 +60,10 @@ export function startRealtime(): () => void {
         case "chat.updated":
           upsertChat(event.chat);
           if (event.chat.projectId) refreshProjectsSoon();
+          break;
+        case "customize.updated":
+          void loadAppearance().catch(reportError);
+          void loadCustomize().catch(reportError);
           break;
         case "pong":
           break;

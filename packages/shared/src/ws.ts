@@ -14,7 +14,9 @@ export type ServerEvent =
   /** Streaming text appended to a `streaming` message. Not persisted per delta. */
   | { type: "message.delta"; chatId: string; messageId: string; text: string }
   | { type: "message.deleted"; chatId: string; messageId: string }
-  | { type: "chat.updated"; chat: Chat };
+  | { type: "chat.updated"; chat: Chat }
+  /** Theme, snippets or extensions changed; clients reload them. */
+  | { type: "customize.updated" };
 
 export type ClientEvent = { type: "ping"; nonce: string };
 
@@ -29,6 +31,7 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "message.delta",
   "message.deleted",
   "chat.updated",
+  "customize.updated",
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

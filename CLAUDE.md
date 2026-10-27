@@ -62,7 +62,8 @@ docs/
 - `bun run typecheck`, `bun run lint` (`lint:fix` to apply), `bun test`
 - `bun run build`: compile the server sidecar (`build:sidecar`), then `tauri build`
 - Server env: `AURA_PORT` (4517), `AURA_HOST`, `AURA_DATA_DIR` (`~/.aura`), `AURA_DB_URL`,
-  `AURA_DEFAULT_MODEL`, `AURA_CLAUDE_EXECUTABLE`.
+  `AURA_DEFAULT_MODEL`, `AURA_CLAUDE_EXECUTABLE`, `AURA_PUBLIC_URL` (webhooks via a tunnel),
+  `AURA_SAFE_MODE=1`.
 
 ## Architecture rules (do not break these)
 

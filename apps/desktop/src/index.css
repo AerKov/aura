@@ -28,6 +28,8 @@
   --ring: oklch(0.708 0 0);
   --sidebar: oklch(0.985 0 0);
   --chat-bg: oklch(0.97 0.01 240);
+  --bubble-own: oklch(0.951 0.026 236.824);
+  --bubble-other: var(--card);
 }
 
 .dark {
@@ -51,6 +53,8 @@
   --ring: oklch(0.556 0 0);
   --sidebar: oklch(0.18 0 0);
   --chat-bg: oklch(0.17 0.01 250);
+  --bubble-own: oklch(0.391 0.09 240.876 / 0.5);
+  --bubble-other: var(--card);
 }
 
 @theme inline {
