@@ -34,6 +34,7 @@ export const ORCHESTRATOR_DEFAULT: AgentProfile = {
   handle: ORCHESTRATOR_HANDLE,
   name: "Orchestrator",
   role: "Plans with the user, creates projects and agents, delegates and reviews.",
+  engine: null,
   model: null,
   systemPrompt: ORCHESTRATOR_PROMPT,
   builtinTools: [],

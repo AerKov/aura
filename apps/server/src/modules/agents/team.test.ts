@@ -16,6 +16,7 @@ const worker = (handle: string, extra: Partial<AgentProfile> = {}): AgentProfile
   handle,
   name: handle,
   role: `${handle} role`,
+  engine: null,
   model: null,
   systemPrompt: `You are ${handle}.`,
   builtinTools: ["Read", "Write"],

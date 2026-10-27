@@ -14,6 +14,7 @@ import { CustomizeView, loadCustomize } from "@/features/customize/customize-vie
 import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
 import { PairingScreen } from "@/features/devices/pairing-screen";
+import { EnginesView } from "@/features/engines/engines-view";
 import { JobsView } from "@/features/jobs/jobs-view";
 import { Rail } from "@/features/shell/rail";
 import { SkillsView } from "@/features/skills/skills-view";
@@ -65,6 +66,8 @@ export function App() {
             <SkillsView />
           ) : view === "jobs" ? (
             <JobsView />
+          ) : view === "engines" ? (
+            <EnginesView />
           ) : view === "customize" ? (
             <CustomizeView />
           ) : view === "devices" ? (
@@ -75,7 +78,7 @@ export function App() {
             <ChatView key={activeChatId} chatId={activeChatId} />
           ) : (
             <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-              <span className="bg-foreground text-primary flex size-12 animate-pulse items-center justify-center rounded-lg text-xl">
+              <span className="bg-primary text-primary-foreground flex size-12 animate-pulse items-center justify-center rounded-[34%] text-xl">
                 ◆
               </span>
               <p className="text-muted-foreground max-w-sm text-sm">

@@ -11,6 +11,7 @@ const agent = (handle: string) => ({
   handle,
   name: handle,
   role: "r",
+  engine: null,
   model: null,
   systemPrompt: "p",
   builtinTools: [],

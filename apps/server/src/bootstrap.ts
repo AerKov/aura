@@ -16,12 +16,12 @@ import { McpService } from "./modules/customize/mcp";
 import type { SafeMode } from "./modules/customize/safe-mode";
 import { customizeTools } from "./modules/customize/tools";
 import { DeviceService } from "./modules/devices/service";
+import type { EngineSelector } from "./modules/engines/registry";
 import { JobService } from "./modules/jobs/service";
 import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
 import { SkillService } from "./modules/skills/service";
 import { TaskService } from "./modules/tasks/service";
-import type { LLMProvider } from "./providers/types";
 
 /** The user data directory is a git repo; DB state and project repos are kept out of it. */
 export const DATA_GITIGNORE = "state/\nprojects/\n";
@@ -34,10 +34,9 @@ export async function prepareDataDir(dataDir: string): Promise<void> {
 export async function createServices(deps: {
   db: Surreal;
   hub: EventHub;
-  provider: LLMProvider;
+  engines: EngineSelector;
   agents: AgentDirectory;
   dataDir: string;
-  defaultModel?: string;
   maxChainDepth?: number;
   triageDelayMs?: number;
   safeMode?: SafeMode;
@@ -100,7 +99,7 @@ export async function createServices(deps: {
     repo,
     runs,
     hub: deps.hub,
-    provider: deps.provider,
+    engines: deps.engines,
     agents: deps.agents,
     projects,
     appTools: (ctx) => [
@@ -113,7 +112,6 @@ export async function createServices(deps: {
     promptExtras: (profile) => skills.promptFor(profile),
     ownerName: owner.name,
     scratchDir: join(deps.dataDir, "state", "scratch"),
-    defaultModel: deps.defaultModel,
     maxChainDepth: deps.maxChainDepth,
   });
   const lastOwnMessage = (await repo.listMessages("direct", { limit: 50 }))

@@ -86,6 +86,7 @@ describe("jobs", () => {
       handle: "ops",
       name: "Ops",
       role: "r",
+      engine: null,
       model: null,
       systemPrompt: "p",
       builtinTools: [],

@@ -1,4 +1,4 @@
-import type { Chat, TaskStatus } from "@aura/shared";
+import { type Chat, ENGINE_IDS, type TaskStatus } from "@aura/shared";
 import { z } from "zod";
 import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
@@ -39,7 +39,11 @@ const agentShape = {
   role: z.string().describe("one sentence: what this agent owns"),
   system_prompt: z.string().describe("the agent's instructions"),
   tools: z.array(z.enum(BUILTIN_TOOLS)).describe("built-in tools to grant (least privilege)"),
-  model: z.string().optional().describe("model id; omit for the default"),
+  engine: z
+    .enum(ENGINE_IDS)
+    .optional()
+    .describe("what runs the agent; omit for the user's default engine (usually best)"),
+  model: z.string().optional().describe("model id for that engine; omit for the default"),
   budget_usd: z.number().optional().describe("lifetime spend limit for this agent"),
 };
 
@@ -48,6 +52,7 @@ function profileFrom(input: Record<string, unknown>): AgentProfile {
     handle: input.handle,
     name: input.name,
     role: input.role,
+    engine: input.engine,
     systemPrompt: input.system_prompt,
     tools: input.tools,
     model: input.model,
@@ -58,7 +63,8 @@ function profileFrom(input: Record<string, unknown>): AgentProfile {
 
 function describeAgent(p: AgentProfile, isNew: boolean): string {
   const budget = p.budgetUsd !== null ? ` · limit $${p.budgetUsd.toFixed(2)}` : "";
-  return `- **@${p.handle}**${isNew ? " (new)" : ""}: ${p.role} · tools: ${p.builtinTools.join(", ") || "none"}${budget}`;
+  const engine = p.engine ? ` · engine: ${p.engine}${p.model ? ` / ${p.model}` : ""}` : "";
+  return `- **@${p.handle}**${isNew ? " (new)" : ""}: ${p.role} · tools: ${p.builtinTools.join(", ") || "none"}${engine}${budget}`;
 }
 
 /** Registers the effects that run after the user approves a request. */
@@ -112,7 +118,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
           agents
             .map(
               (a) =>
-                `@${a.handle} (${a.name}): ${a.role} · tools: ${a.builtinTools.join(", ") || "none"}${a.skills.length ? ` · skills: ${a.skills.join(", ")}` : ""}`,
+                `@${a.handle} (${a.name}): ${a.role} · tools: ${a.builtinTools.join(", ") || "none"}${a.engine ? ` · engine: ${a.engine}` : ""}${a.skills.length ? ` · skills: ${a.skills.join(", ")}` : ""}`,
             )
             .join("\n") || "No agents yet.",
         );

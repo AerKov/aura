@@ -20,6 +20,7 @@ test("seeds the orchestrator, creates agents as committed files", async () => {
     handle: "coder",
     name: "Coder",
     role: "Writes code",
+    engine: null,
     model: null,
     systemPrompt: "Write code.",
     builtinTools: ["Read", "Write"],

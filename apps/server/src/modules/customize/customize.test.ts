@@ -13,6 +13,7 @@ const coder = {
   handle: "coder",
   name: "C",
   role: "r",
+  engine: null,
   model: null,
   systemPrompt: "p",
   builtinTools: [],

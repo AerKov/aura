@@ -21,12 +21,15 @@ export interface ChatState {
   connection: Connection;
   serverVersion: string | null;
   activeChatId: string | null;
-  provider: { ok: true; detail?: string } | { ok: false; reason: string } | null;
+  /** Status of the default agent engine (ADR 0011). */
+  provider:
+    | (({ ok: true; detail?: string } | { ok: false; reason: string }) & { engine: string })
+    | null;
   projects: Record<string, Project>;
   members: Record<string, Participant[]>;
   tasks: Record<string, Task[]>;
   /** "ext:<id>" shows an extension panel. */
-  view: "chat" | "skills" | "jobs" | "customize" | "devices" | `ext:${string}`;
+  view: "chat" | "skills" | "jobs" | "engines" | "customize" | "devices" | `ext:${string}`;
   /** On narrow screens only one pane is visible: the list or the content. */
   pane: "list" | "main";
   needsPairing: boolean;

@@ -1,10 +1,12 @@
-import { HANDLE_PATTERN } from "@aura/shared";
+import { type EngineId, HANDLE_PATTERN, isEngineId, MODEL_ID_PATTERN } from "@aura/shared";
 
 /** An agent profile, stored as `<dataDir>/agents/<handle>/agent.md` (docs/SPEC.md section 5). */
 export interface AgentProfile {
   handle: string;
   name: string;
   role: string;
+  /** What runs the agent (ADR 0011). null means the default engine from Engines settings. */
+  engine: EngineId | null;
   model: string | null;
   systemPrompt: string;
   /** Built-in Claude Code tools. Empty for chat-only agents. */
@@ -50,13 +52,14 @@ export function validateProfile(input: {
   handle: unknown;
   name: unknown;
   role: unknown;
+  engine?: unknown;
   model?: unknown;
   systemPrompt: unknown;
   tools?: unknown;
   budgetUsd?: unknown;
   skills?: unknown;
 }): AgentProfile {
-  const { handle, name, role, model, systemPrompt, tools, budgetUsd, skills } = input;
+  const { handle, name, role, engine, model, systemPrompt, tools, budgetUsd, skills } = input;
   if (typeof handle !== "string" || !HANDLE_PATTERN.test(handle)) {
     throw new ProfileError(
       "handle must be 2-32 chars: lowercase letters, digits, - or _, starting with a letter",
@@ -69,9 +72,12 @@ export function validateProfile(input: {
   if (
     model !== undefined &&
     model !== null &&
-    (typeof model !== "string" || !/^[a-z0-9.-]{3,64}$/.test(model))
+    (typeof model !== "string" || !MODEL_ID_PATTERN.test(model))
   ) {
-    throw new ProfileError("model must be a model id like claude-sonnet-5-5");
+    throw new ProfileError("model must be a model id like claude-sonnet-5-5 or qwen3:8b");
+  }
+  if (engine !== undefined && engine !== null && !isEngineId(engine)) {
+    throw new ProfileError("engine must be claude-code, openrouter, ollama or openai-compatible");
   }
   if (
     typeof systemPrompt !== "string" ||
@@ -110,6 +116,7 @@ export function validateProfile(input: {
     handle,
     name: name.trim(),
     role: role.trim(),
+    engine: isEngineId(engine) ? engine : null,
     model: typeof model === "string" ? model : null,
     systemPrompt: systemPrompt.trim(),
     builtinTools: [...new Set(toolList as BuiltinTool[])],
@@ -120,7 +127,7 @@ export function validateProfile(input: {
 
 const FRONTMATTER = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/;
 
-/** Parses `agent.md`: YAML frontmatter (name, role, model, tools, budget_usd) + system prompt body. */
+/** Parses `agent.md`: YAML frontmatter (name, role, engine, model, tools, budget_usd) + system prompt body. */
 export function parseAgentFile(handle: string, text: string): AgentProfile {
   const match = FRONTMATTER.exec(text);
   if (!match) throw new ProfileError(`agents/${handle}/agent.md has no frontmatter`);
@@ -136,6 +143,7 @@ export function parseAgentFile(handle: string, text: string): AgentProfile {
     handle,
     name: meta.name,
     role: meta.role,
+    engine: meta.engine,
     model: meta.model,
     systemPrompt: match[2] ?? "",
     tools: meta.tools,
@@ -150,6 +158,7 @@ export function serializeAgentFile(profile: AgentProfile): string {
     "---",
     `name: ${JSON.stringify(profile.name)}`,
     `role: ${JSON.stringify(profile.role)}`,
+    ...(profile.engine ? [`engine: ${JSON.stringify(profile.engine)}`] : []),
     ...(profile.model ? [`model: ${JSON.stringify(profile.model)}`] : []),
     `tools: ${JSON.stringify(profile.builtinTools)}`,
     ...(profile.budgetUsd !== null ? [`budget_usd: ${profile.budgetUsd}`] : []),

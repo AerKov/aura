@@ -25,6 +25,7 @@ export const projectsModule = (deps: {
           handle: a.handle,
           name: a.name,
           role: a.role,
+          engine: a.engine,
           model: a.model,
           tools: a.builtinTools,
           budgetUsd: a.budgetUsd,

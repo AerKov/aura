@@ -2,9 +2,10 @@ import { mkdirSync } from "node:fs";
 import { type Chat, type Message, parseMentions, type RunCard, type Usage } from "@aura/shared";
 import { commitAll, git } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
-import type { AgentEvent, AgentTool, LLMProvider, McpServerSpec } from "../../providers/types";
+import type { AgentEvent, AgentTool, McpServerSpec } from "../../providers/types";
 import type { ChatRepo } from "../chat/repo";
 import type { ChatService } from "../chat/service";
+import type { EngineSelector } from "../engines/registry";
 import type { ProjectInfo } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
 import { buildPrompt, CONTEXT_WINDOW, userNote } from "./context";
@@ -30,7 +31,8 @@ export interface RuntimeDeps {
   repo: ChatRepo;
   runs: RunRepo;
   hub: EventHub;
-  provider: LLMProvider;
+  /** Picks the engine (LLM provider) and model for each agent (ADR 0011). */
+  engines: EngineSelector;
   agents: AgentDirectory;
   projects: ProjectLookup;
   /** App tools for a run (the orchestrator gets project and agent management). */
@@ -42,7 +44,6 @@ export interface RuntimeDeps {
   ownerName: string;
   /** Working directory for runs outside a project. */
   scratchDir: string;
-  defaultModel?: string;
   maxChainDepth?: number;
   maxTurns?: number;
 }
@@ -182,7 +183,7 @@ export class AgentRuntime {
     run: ActiveRun,
   ): Promise<void> {
     const abort = run.abort;
-    const { repo, runs, hub, provider } = this.deps;
+    const { repo, runs, hub } = this.deps;
     const profile = await this.deps.agents.get(handle);
     if (!profile) {
       await this.postSystem(
@@ -228,7 +229,7 @@ export class AgentRuntime {
       ...(project ? [{ spentUsd: project.spentUsd, budgetUsd: project.budgetUsd }] : []),
     ]);
 
-    const model = profile.model ?? this.deps.defaultModel ?? null;
+    const { provider, model } = this.deps.engines.pick(profile);
     const runId = await runs.start({
       agent: handle,
       chatId: chat.id,

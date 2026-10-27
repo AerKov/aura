@@ -71,7 +71,7 @@ export function Sidebar() {
                       active ? "bg-accent" : "hover:bg-accent/60",
                     )}
                   >
-                                        <ChatMark chat={chat} size="md" working={busy} />
+                    <ChatMark chat={chat} size="md" working={busy} />
                     <div className="min-w-0 flex-1">
                       <div className="flex items-baseline justify-between gap-2">
                         <span className="truncate text-[14px] font-medium">{chat.title}</span>

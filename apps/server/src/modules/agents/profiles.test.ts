@@ -11,6 +11,7 @@ const coder: AgentProfile = {
   handle: "coder",
   name: "Coder",
   role: 'Writes code: "small" and tested',
+  engine: null,
   model: "claude-sonnet-5-5",
   systemPrompt: "You write code.\n\n---\nSeparators in the body are fine.",
   builtinTools: ["Read", "Write", "Bash"],

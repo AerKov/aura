@@ -19,6 +19,8 @@ import type { McpService } from "./modules/customize/mcp";
 import type { SafeMode } from "./modules/customize/safe-mode";
 import { devicesModule } from "./modules/devices";
 import type { DeviceService } from "./modules/devices/service";
+import { enginesModule } from "./modules/engines";
+import type { EngineRegistry } from "./modules/engines/registry";
 import { type HealthDeps, healthModule } from "./modules/health";
 import type { JobService } from "./modules/jobs/service";
 import { projectsModule } from "./modules/projects";
@@ -27,7 +29,6 @@ import { realtimeModule } from "./modules/realtime";
 import type { EventHub } from "./modules/realtime/hub";
 import type { SkillService } from "./modules/skills/service";
 import type { TaskService } from "./modules/tasks/service";
-import type { LLMProvider } from "./providers/types";
 
 export interface AppDeps extends HealthDeps {
   corsOrigins: string[];
@@ -36,7 +37,8 @@ export interface AppDeps extends HealthDeps {
   hub: EventHub;
   chat: ChatService;
   extraHosts?: string[];
-  provider: LLMProvider & { resetStatus?: () => void };
+  engines: EngineRegistry;
+  dataDir: string;
   runtime: AgentRuntime;
   projects: ProjectService;
   agents: AgentDirectory;
@@ -67,6 +69,7 @@ export function createApp(deps: AppDeps) {
     .use(healthModule(deps))
     .use(chatModule(deps))
     .use(agentsModule(deps))
+    .use(enginesModule(deps))
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))

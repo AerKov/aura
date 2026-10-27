@@ -27,8 +27,9 @@ Full product and architecture spec: `docs/SPEC.md`. Read the relevant section be
   LIVE SELECT, vector search for memory, graph relations.
 - **Markdown (required everywhere in chat):** streamdown (react-markdown compatible, GFM built in) with
   `@streamdown/code` (shiki). Use `components/markdown.tsx`. Mermaid/KaTeX later.
-- **LLM:** only through the `LLMProvider` interface. First provider: Claude Agent SDK
-  (`@anthropic-ai/claude-agent-sdk`) running under the user's own local Claude Code login.
+- **LLM:** only through the `LLMProvider` interface ("engines", ADR 0011): Claude Agent SDK
+  (`@anthropic-ai/claude-agent-sdk`) under the user's own Claude Code login, and Aura's own agent loop
+  over OpenAI-compatible APIs (OpenRouter, Ollama, LM Studio…).
 - **Agent tools:** MCP.
 - **Lint/format:** Biome. **Tests:** `bun test`.
 

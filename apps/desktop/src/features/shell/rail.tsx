@@ -1,8 +1,17 @@
 import type { LucideIcon } from "lucide-react";
-import { Blocks, CalendarClock, MessagesSquare, Palette, Smartphone, Sparkles } from "lucide-react";
+import {
+  Blocks,
+  CalendarClock,
+  Cpu,
+  MessagesSquare,
+  Palette,
+  Smartphone,
+  Sparkles,
+} from "lucide-react";
 import {
   showCustomize,
   showDevices,
+  showEngines,
   showExtension,
   showJobs,
   showList,
@@ -70,6 +79,13 @@ export function Rail() {
       active: view === `ext:${ext.id}`,
       onClick: () => showExtension(ext.id),
     })),
+    {
+      key: "engines",
+      label: "Engines",
+      icon: Cpu,
+      active: view === "engines",
+      onClick: showEngines,
+    },
     {
       key: "customize",
       label: "Customize",

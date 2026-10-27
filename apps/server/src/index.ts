@@ -11,6 +11,7 @@ import { LocalSessions } from "./modules/auth/sessions";
 import { DIRECT_CHAT_ID } from "./modules/chat/repo";
 import { detectSafeMode } from "./modules/customize/safe-mode";
 import { NotificationService, WebPushSender } from "./modules/devices/notifications";
+import { EngineRegistry } from "./modules/engines/registry";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
 import { ClaudeAgentSdkProvider } from "./providers/claude-agent-sdk";
@@ -29,20 +30,25 @@ async function main(): Promise<void> {
   // Prefer the user's own Claude Code; in dev the SDK's bundled copy is a fallback (ADR 0004).
   const claude = locateClaude();
   log.info("claude code", { path: claude ?? (isCompiled() ? "not found" : "sdk bundled") });
-  const provider = new ClaudeAgentSdkProvider({
+  const claudeProvider = new ClaudeAgentSdkProvider({
     executablePath: claude ?? (isCompiled() ? null : undefined),
     defaultModel: config.defaultModel,
   });
+  const engines = new EngineRegistry({
+    dataDir: config.dataDir,
+    claude: claudeProvider,
+    defaultModel: config.defaultModel,
+  });
+  log.info("default engine", { engine: engines.store.get().default });
 
   const agents = new FileAgentDirectory(config.dataDir);
   await agents.seed();
   const services = await createServices({
     db: db.surreal,
     hub,
-    provider,
+    engines,
     agents,
     dataDir: config.dataDir,
-    defaultModel: config.defaultModel,
     safeMode: safe.mode,
   });
   const interrupted = await services.runs.recoverInterrupted();
@@ -81,7 +87,8 @@ async function main(): Promise<void> {
     lanUrls,
     remote: config.remote,
     hub,
-    provider,
+    engines,
+    dataDir: config.dataDir,
     agents,
     webhookToken: loadWebhookToken(config.dataDir),
     publicUrl: config.publicUrl,

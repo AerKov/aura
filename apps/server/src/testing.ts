@@ -8,6 +8,7 @@ import { connectDb } from "./db/client";
 import { type AgentDirectory, MemoryAgentDirectory } from "./modules/agents/directory";
 import { LocalSessions } from "./modules/auth/sessions";
 import type { SafeMode } from "./modules/customize/safe-mode";
+import { EngineRegistry } from "./modules/engines/registry";
 import { EventHub } from "./modules/realtime/hub";
 import { startLiveBridge } from "./modules/realtime/live";
 import { FakeProvider } from "./providers/fake";
@@ -24,6 +25,8 @@ export async function createTestApp(
     agents?: AgentDirectory;
     maxChainDepth?: number;
     safeMode?: SafeMode;
+    /** Network for the OpenAI-compatible engines. */
+    fetch?: typeof fetch;
   } = {},
 ) {
   const dataDir = mkdtempSync(join(tmpdir(), "aura-test-"));
@@ -32,11 +35,13 @@ export async function createTestApp(
   const hub = new EventHub();
   const stopLive = await startLiveBridge(db.surreal, hub);
   const provider = opts.provider ?? new FakeProvider();
+  // The default engine is Claude Code; tests run it on the fake provider.
+  const engines = new EngineRegistry({ dataDir, claude: provider, fetch: opts.fetch });
   const agents = opts.agents ?? new MemoryAgentDirectory();
   const services = await createServices({
     db: db.surreal,
     hub,
-    provider,
+    engines,
     agents,
     dataDir,
     maxChainDepth: opts.maxChainDepth,
@@ -57,7 +62,8 @@ export async function createTestApp(
     publicUrl: "http://127.0.0.1:4517",
     sessions,
     hub,
-    provider,
+    engines,
+    dataDir,
     agents,
     ...services,
   });
@@ -68,6 +74,7 @@ export async function createTestApp(
     db,
     hub,
     provider,
+    engines,
     agents,
     sessions,
     token,

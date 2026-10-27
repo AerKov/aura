@@ -68,7 +68,8 @@ shows a preview or diff, applies on approval, commits to git.
 │   ├─ chat + realtime (WS)      ├─ skills + extensions (files + git)     │
 │   ├─ orchestrator              ├─ alert ingest (webhooks)               │
 │   ├─ agent runtime + guards    ├─ scheduler / job queue (in DB)         │
-│   └─ LLMProvider ── Claude Agent SDK ── Claude Code (user's own login)  │
+│   └─ LLMProvider ─┬ Claude Agent SDK ── Claude Code (user's own login) │
+│                   └ Aura loop ── OpenRouter / Ollama / OpenAI-compatible│
 │                │                                                        │
 │  SurrealDB (local, file storage)      ~/.aura/ (user data, git repo)    │
 │                                       ~/.aura/projects/* (git repos)    │
@@ -87,7 +88,8 @@ Notes:
 
 **Files (user data dir `~/.aura`, git repo)**
 ```
-agents/<handle>/agent.md          frontmatter (name, role, model, provider, permissions, budget, skills) + system prompt
+agents/<handle>/agent.md          frontmatter (name, role, engine, model, tools, budget, skills) + system prompt
+engines.json                      default engine, default model per engine, local server URLs (ADR 0011)
 skills/<name>/SKILL.md            + scripts/, versions tracked by git
 themes/<name>/theme.css
 snippets/*.css
@@ -148,8 +150,9 @@ type AgentEvent =
   | { type: "done" }
   | { type: "error"; message: string };
 ```
-Providers, in order: Claude Agent SDK (user's Claude Code login), Anthropic API key (BYOK), then
-OpenAI-compatible and local models (Ollama) for cheap routine agents.
+Engines (ADR 0011): Claude Agent SDK (user's Claude Code login), and Aura's own agent loop over
+OpenAI-compatible APIs: OpenRouter (free models available), Ollama (local, free) and any compatible
+server. The default engine and a per-agent engine are chosen on the Engines page.
 
 If Claude Code is not installed or not logged in, show a setup screen with instructions. Never handle the
 login ourselves.
@@ -297,6 +300,10 @@ one-time code, push notifications (ADR 0009).
 A distinct look and feel instead of a Telegram clone: Aura's own design language (layout, typography,
 color, motion, agent presence), light and dark themes.
 
+**Phase 9: Agent engines**
+A choice of engines per agent: Claude Code, or Aura's own agent loop on OpenRouter, Ollama or any
+OpenAI-compatible server, with built-in file, shell and web tools (ADR 0011).
+
 **Later**
-BYOK API key provider, other and local models, agent memory with vector search, container sandbox,
+Gemini CLI and Codex CLI engines, MCP servers in Aura's loop, agent memory with vector search, container sandbox,
 community catalog with review and signatures, multi-user.

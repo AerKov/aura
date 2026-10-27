@@ -76,14 +76,14 @@ export function reportError(error: unknown): void {
 }
 
 export async function loadProviderStatus(): Promise<void> {
-  const { status } = await call(() => api.provider.get());
-  setState(() => ({ provider: status }));
+  const { id, status } = await call(() => api.provider.get());
+  setState(() => ({ provider: { ...status, engine: id } }));
 }
 
 export async function recheckProvider(): Promise<void> {
   setState(() => ({ provider: null }));
-  const { status } = await call(() => api.provider.check.post());
-  setState(() => ({ provider: status }));
+  const { id, status } = await call(() => api.provider.check.post());
+  setState(() => ({ provider: { ...status, engine: id } }));
 }
 
 export async function stopRun(runId: string): Promise<void> {
@@ -112,6 +112,10 @@ export function showSkills(): void {
 
 export function showJobs(): void {
   setState(() => ({ view: "jobs", pane: "main" }));
+}
+
+export function showEngines(): void {
+  setState(() => ({ view: "engines", pane: "main" }));
 }
 
 export function showCustomize(): void {
