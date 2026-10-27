@@ -2,6 +2,7 @@ import type { ComponentHealth } from "@crew/shared";
 import { createRemoteEngines, Surreal } from "surrealdb";
 import { errorMessage, log } from "../lib/log";
 import { ensureNativeAddonPath } from "./native";
+import { applySchema } from "./schema";
 
 export const DB_NAMESPACE = "crew";
 export const DB_DATABASE = "main";
@@ -26,6 +27,7 @@ export async function connectDb(url: string): Promise<Db> {
   try {
     await surreal.connect(url);
     await surreal.use({ namespace: DB_NAMESPACE, database: DB_DATABASE });
+    await applySchema(surreal);
   } catch (error) {
     await surreal.close().catch(() => {});
     throw new DbConnectError(`Failed to open SurrealDB at ${redact(url)}: ${errorMessage(error)}`, {

@@ -97,9 +97,10 @@ projects/<slug>/                  project git workspaces
 ```
 
 **SurrealDB tables**
-- Better Auth tables (user, session, account, verification), managed by the adapter.
+- `user`: the local owner (v1). Better Auth tables arrive in Phase 7.
 - `chat`: kind (`direct` | `group` | `system`), title, project, created_at.
-- `member` (relation `user|agent -> member -> chat`): role (`owner` | `member`), joined_at.
+- `member`: chat, participant `{kind: user|agent|bot, id}`, role (`owner` | `member`), joined_at. A plain
+  table, because agents are files (not records) and are referenced by handle.
 - `agent_index`: handle, path to `agent.md`, status, cached profile (the file is the source of truth).
 - `message`: chat, author (user | agent | bot), kind, body (markdown), card (object), reply_to,
   mentions, status (`streaming` | `final` | `error`), chain_depth, run, created_at.
@@ -259,7 +260,7 @@ Vite, Tailwind, shadcn), `packages/shared`, Eden Treaty wired, SurrealDB running
 Done when: `bun run dev` opens the desktop window, it calls the server and shows DB health.
 
 **Phase 1: Auth and chat core**
-Better Auth, chat list and chat view, sending messages, realtime over WebSocket, markdown with code
+Automatic local session (ADR 0003; Better Auth moves to Phase 7), chat list and chat view, sending messages, realtime over WebSocket, markdown with code
 highlighting, replies.
 Done when: two windows see each other's messages instantly; markdown, tables and code render correctly.
 
@@ -286,7 +287,7 @@ User data dir as git repo, themes and snippets, MCP config by orchestrator, exte
 UI extensions, permissions, safe mode.
 
 **Phase 7: Mobile**
-Tauri mobile thin client connecting to the desktop server, push notifications.
+Tauri mobile thin client connecting to the desktop server, Better Auth login, push notifications.
 
 **Later**
 BYOK API key provider, other and local models, agent memory with vector search, container sandbox,

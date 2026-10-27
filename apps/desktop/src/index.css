@@ -1,6 +1,9 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@source "../node_modules/streamdown/dist/*.js";
+@source "../node_modules/@streamdown/code/dist/*.js";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -23,6 +26,8 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --chat-bg: oklch(0.97 0.01 240);
 }
 
 .dark {
@@ -44,6 +49,8 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.18 0 0);
+  --chat-bg: oklch(0.17 0.01 250);
 }
 
 @theme inline {
@@ -69,6 +76,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-sidebar: var(--sidebar);
 }
 
 @layer base {
@@ -77,5 +85,35 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+  }
+}
+
+.chat-bg {
+  background-color: var(--chat-bg);
+}
+
+/* Markdown inside message bubbles. */
+.markdown {
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.markdown > :first-child {
+  margin-top: 0;
+}
+.markdown > :last-child {
+  margin-bottom: 0;
+}
+
+/* Highlight when jumping to a replied message. */
+.flash > div {
+  animation: flash 1.2s ease-out;
+}
+@keyframes flash {
+  0% {
+    box-shadow: 0 0 0 3px var(--color-sky-400);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
   }
 }

@@ -1,48 +1,54 @@
 /**
- * WebSocket protocol between the server and clients.
- *
- * Phase 0 only carries connection-level events. Chat events (`message.created`, `message.delta`, ...)
- * are added in Phase 1, see docs/SPEC.md section 6.
+ * WebSocket protocol between the server and clients (docs/SPEC.md section 6).
+ * The client connects to `WS_PATH?token=<session token>`.
  */
+import type { Chat, Message } from "./chat";
 
 export const WS_PATH = "/ws";
 
 export type ServerEvent =
   | { type: "hello"; serverVersion: string; at: string }
-  | { type: "pong"; nonce: string; at: string };
+  | { type: "pong"; nonce: string; at: string }
+  | { type: "message.created"; message: Message }
+  | { type: "message.updated"; message: Message }
+  /** Streaming text appended to a `streaming` message. Not persisted per delta. */
+  | { type: "message.delta"; chatId: string; messageId: string; text: string }
+  | { type: "chat.updated"; chat: Chat };
 
 export type ClientEvent = { type: "ping"; nonce: string };
 
 export type ServerEventType = ServerEvent["type"];
 export type ClientEventType = ClientEvent["type"];
 
+const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
+  "hello",
+  "pong",
+  "message.created",
+  "message.updated",
+  "message.delta",
+  "chat.updated",
+]);
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-/** Parses a raw WebSocket payload from the server. Returns `null` for anything unknown. */
+/**
+ * Parses a raw WebSocket payload from the server. The server is trusted, so only the envelope is
+ * checked; unknown event types (e.g. from a newer server) return `null`.
+ */
 export function parseServerEvent(raw: unknown): ServerEvent | null {
   const value = typeof raw === "string" ? safeJsonParse(raw) : raw;
-  if (!isRecord(value)) return null;
-  switch (value.type) {
-    case "hello":
-      return typeof value.serverVersion === "string" && typeof value.at === "string"
-        ? { type: "hello", serverVersion: value.serverVersion, at: value.at }
-        : null;
-    case "pong":
-      return typeof value.nonce === "string" && typeof value.at === "string"
-        ? { type: "pong", nonce: value.nonce, at: value.at }
-        : null;
-    default:
-      return null;
-  }
+  if (!isRecord(value) || typeof value.type !== "string") return null;
+  if (!SERVER_EVENT_TYPES.has(value.type)) return null;
+  return value as ServerEvent;
 }
 
-/** Parses a raw WebSocket payload from a client. Returns `null` for anything unknown. */
+/** Parses a raw WebSocket payload from a client. Clients are untrusted: validate every field. */
 export function parseClientEvent(raw: unknown): ClientEvent | null {
   const value = typeof raw === "string" ? safeJsonParse(raw) : raw;
   if (!isRecord(value)) return null;
-  if (value.type === "ping" && typeof value.nonce === "string") {
+  if (value.type === "ping" && typeof value.nonce === "string" && value.nonce.length <= 128) {
     return { type: "ping", nonce: value.nonce };
   }
   return null;

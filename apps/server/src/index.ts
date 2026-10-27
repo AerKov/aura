@@ -3,16 +3,30 @@ import { loadConfig } from "./config";
 import { connectDb } from "./db/client";
 import { errorMessage, log } from "./lib/log";
 import { isParentAlive, watchParent } from "./lib/parent-watch";
+import { LocalSessions } from "./modules/auth/sessions";
+import { ChatRepo } from "./modules/chat/repo";
+import { ChatService } from "./modules/chat/service";
+import { EventHub } from "./modules/realtime/hub";
+import { startLiveBridge } from "./modules/realtime/live";
 
 async function main(): Promise<void> {
   const config = loadConfig();
   const db = await connectDb(config.dbUrl);
   log.info("database opened", { dataDir: config.dataDir });
 
+  const hub = new EventHub();
+  const stopLive = await startLiveBridge(db.surreal, hub);
+  const chat = new ChatService(new ChatRepo(db.surreal));
+  const owner = await chat.bootstrap();
+
   const app = createApp({
     dbHealth: db.health,
     startedAt: Date.now(),
     corsOrigins: config.corsOrigins,
+    sessions: new LocalSessions(),
+    owner,
+    hub,
+    chat,
   }).listen({ hostname: config.host, port: config.port });
 
   log.info("server listening", { url: `http://${config.host}:${config.port}` });
@@ -23,6 +37,7 @@ async function main(): Promise<void> {
     shuttingDown = true;
     log.info("shutting down", { signal });
     await app.stop();
+    await stopLive().catch(() => {});
     await db.close();
     process.exit(0);
   };

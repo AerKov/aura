@@ -21,11 +21,11 @@ Full product and architecture spec: `docs/SPEC.md`. Read the relevant section be
   **Eden Treaty**; never hand-write API types.
 - **Desktop shell:** Tauri 2. The Bun server runs as a Tauri **sidecar** (`bun build --compile`).
 - **Frontend:** React + TypeScript + Vite, Tailwind CSS, **shadcn/ui**.
-- **Auth:** Better Auth.
+- **Auth:** v1 uses an automatic local session (ADR 0003); Better Auth arrives with mobile (Phase 7).
 - **Database:** SurrealDB, embedded in the server via `@surrealdb/node` (ADR 0001). State, realtime via
   LIVE SELECT, vector search for memory, graph relations.
-- **Markdown (required everywhere in chat):** react-markdown + remark-gfm, shiki for code, streamdown
-  for streaming partial markdown. Mermaid/KaTeX later.
+- **Markdown (required everywhere in chat):** streamdown (react-markdown compatible, GFM built in) with
+  `@streamdown/code` (shiki). Use `components/markdown.tsx`. Mermaid/KaTeX later.
 - **LLM:** only through the `LLMProvider` interface. First provider: Claude Agent SDK
   (`@anthropic-ai/claude-agent-sdk`) running under the user's own local Claude Code login.
 - **Agent tools:** MCP.
