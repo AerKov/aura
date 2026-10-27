@@ -1,20 +1,22 @@
 import type { Message } from "@aura/shared";
-import { SendHorizontal, X } from "lucide-react";
+import { ArrowUp, CornerDownRight, X } from "lucide-react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { reportError, sendMessage } from "./actions";
 import { displayName, previewOf } from "./message-utils";
 import { useChatStore } from "./store";
 
+/** A floating command bar: write markdown, @mention agents, reply to a message. */
 export function Composer({
   chatId,
   replyTo,
   onCancelReply,
+  placeholder = "Message · @ to call an agent",
 }: {
   chatId: string;
   replyTo: Message | null;
   onCancelReply: () => void;
+  placeholder?: string;
 }) {
   const me = useChatStore((s) => s.me);
   const [text, setText] = useState("");
@@ -53,39 +55,53 @@ export function Composer({
   };
 
   return (
-    <div className="bg-background border-t p-3">
-      {replyTo && (
-        <div className="mb-2 flex items-center gap-2 rounded-md border-l-2 border-sky-500 bg-sky-50 px-2 py-1 text-sm dark:bg-sky-950/40">
-          <div className="min-w-0 flex-1">
-            <div className="font-medium text-sky-700 dark:text-sky-400">
-              Reply to {displayName(replyTo.author, me)}
+    <div className="px-4 pt-2 pb-4 max-md:px-2 max-md:pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <div className="mx-auto max-w-3xl">
+        {error && <p className="text-destructive mb-2 px-2 text-sm">{error}</p>}
+        <div className="aura-ring bg-card rounded-3xl shadow-[0_8px_30px_-12px_color-mix(in_oklch,var(--aura-1)_45%,transparent)]">
+          {replyTo && (
+            <div className="flex items-center gap-2 border-b px-4 py-2 text-sm">
+              <CornerDownRight className="text-muted-foreground size-4 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <span className="font-medium">{displayName(replyTo.author, me)}</span>
+                <span className="text-muted-foreground ml-2 truncate">{previewOf(replyTo)}</span>
+              </div>
+              <button
+                type="button"
+                aria-label="Cancel reply"
+                onClick={onCancelReply}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <X className="size-4" />
+              </button>
             </div>
-            <div className="text-muted-foreground truncate">{previewOf(replyTo)}</div>
+          )}
+          <div className="flex items-end gap-2 p-2 pl-4">
+            <textarea
+              ref={ref}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder={placeholder}
+              rows={1}
+              className="placeholder:text-muted-foreground field-sizing-content max-h-48 min-h-10 flex-1 resize-none bg-transparent py-2 text-[15px] outline-none"
+            />
+            <button
+              type="button"
+              aria-label="Send"
+              disabled={!text.trim() || sending}
+              onClick={() => void send()}
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-full text-white transition-opacity",
+                text.trim()
+                  ? "aura-fill shadow-[0_4px_14px_-4px_var(--aura-1)]"
+                  : "bg-muted text-muted-foreground",
+              )}
+            >
+              <ArrowUp className="size-5" />
+            </button>
           </div>
-          <Button variant="ghost" size="icon" aria-label="Cancel reply" onClick={onCancelReply}>
-            <X />
-          </Button>
         </div>
-      )}
-      {error && <p className="text-destructive mb-2 text-sm">{error}</p>}
-      <div className="flex items-end gap-2">
-        <Textarea
-          ref={ref}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={onKeyDown}
-          placeholder="Message (Markdown, Shift+Enter for a new line)"
-          className="max-h-48 min-h-10 resize-none"
-          rows={1}
-        />
-        <Button
-          size="icon"
-          aria-label="Send"
-          disabled={!text.trim() || sending}
-          onClick={() => void send()}
-        >
-          <SendHorizontal />
-        </Button>
       </div>
     </div>
   );

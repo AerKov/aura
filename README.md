@@ -3,7 +3,7 @@
 A local-first desktop messenger where you work with an AI orchestrator and a team of AI agents.
 Working name; see [docs/SPEC.md](docs/SPEC.md) for the product and architecture spec.
 
-Status: **Phase 0 (scaffold)**.
+Status: **proof of concept**, roadmap phases 0-8 implemented (see `docs/SPEC.md` and `docs/decisions/`).
 
 ## Requirements
 

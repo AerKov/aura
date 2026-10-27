@@ -1,65 +1,83 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/fraunces";
 
 @source "../node_modules/streamdown/dist/*.js";
 @source "../node_modules/@streamdown/code/dist/*.js";
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Aura design tokens. Light is "paper" (warm neutrals), dark is "ink" (deep violet). The aura accent is
+ * an iris → amber gradient. Themes (themes/<name>/theme.css) override these variables.
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  --radius: 0.9rem;
+  --background: oklch(0.985 0.006 80);
+  --foreground: oklch(0.23 0.025 285);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: oklch(0.23 0.025 285);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.23 0.025 285);
+  --primary: oklch(0.52 0.2 288);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.955 0.012 285);
+  --secondary-foreground: oklch(0.3 0.04 285);
+  --muted: oklch(0.96 0.008 80);
+  --muted-foreground: oklch(0.52 0.02 285);
+  --accent: oklch(0.945 0.02 288);
+  --accent-foreground: oklch(0.3 0.06 288);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --sidebar: oklch(0.985 0 0);
-  --chat-bg: oklch(0.97 0.01 240);
-  --bubble-own: oklch(0.951 0.026 236.824);
-  --bubble-other: var(--card);
+  --border: oklch(0.91 0.01 80);
+  --input: oklch(0.9 0.012 80);
+  --ring: oklch(0.62 0.16 288);
+  --sidebar: oklch(0.972 0.008 80);
+  --rail: oklch(0.21 0.035 288);
+  --rail-foreground: oklch(0.86 0.03 288);
+  --chat-bg: var(--background);
+  --bubble-own: oklch(0.94 0.035 288);
+  --bubble-other: transparent;
+  --aura-1: oklch(0.6 0.21 292);
+  --aura-2: oklch(0.8 0.14 65);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: oklch(0.165 0.02 285);
+  --foreground: oklch(0.94 0.012 285);
+  --card: oklch(0.205 0.025 285);
+  --card-foreground: oklch(0.94 0.012 285);
+  --popover: oklch(0.22 0.028 285);
+  --popover-foreground: oklch(0.94 0.012 285);
+  --primary: oklch(0.72 0.16 292);
+  --primary-foreground: oklch(0.17 0.03 285);
+  --secondary: oklch(0.245 0.03 285);
+  --secondary-foreground: oklch(0.92 0.02 285);
+  --muted: oklch(0.225 0.025 285);
+  --muted-foreground: oklch(0.69 0.025 285);
+  --accent: oklch(0.27 0.04 288);
+  --accent-foreground: oklch(0.93 0.03 288);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --sidebar: oklch(0.18 0 0);
-  --chat-bg: oklch(0.17 0.01 250);
-  --bubble-own: oklch(0.391 0.09 240.876 / 0.5);
-  --bubble-other: var(--card);
+  --border: oklch(1 0 0 / 9%);
+  --input: oklch(1 0 0 / 13%);
+  --ring: oklch(0.6 0.14 290);
+  --sidebar: oklch(0.185 0.022 285);
+  --rail: oklch(0.13 0.022 285);
+  --rail-foreground: oklch(0.8 0.03 288);
+  --chat-bg: var(--background);
+  --bubble-own: oklch(0.29 0.06 290);
+  --bubble-other: transparent;
+  --aura-1: oklch(0.68 0.2 292);
+  --aura-2: oklch(0.8 0.14 65);
 }
 
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
+  --font-display: "Fraunces Variable", ui-serif, Georgia, serif;
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
@@ -81,6 +99,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
+  --color-rail: var(--rail);
+  --color-rail-foreground: var(--rail-foreground);
 }
 
 @layer base {
@@ -88,7 +108,13 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  code,
+  pre,
+  kbd {
+    font-family: var(--font-mono);
   }
 }
 
@@ -96,10 +122,66 @@
   background-color: var(--chat-bg);
 }
 
-/* Markdown inside message bubbles. */
+/* The aura gradient as text, border or fill. */
+.aura-text {
+  background: linear-gradient(100deg, var(--aura-1), var(--aura-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.aura-fill {
+  background: linear-gradient(135deg, var(--aura-1), var(--aura-2));
+}
+.aura-ring {
+  position: relative;
+}
+.aura-ring::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    120deg,
+    color-mix(in oklch, var(--aura-1) 70%, transparent),
+    color-mix(in oklch, var(--aura-2) 60%, transparent)
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Agent orbs breathe while the agent works. */
+@keyframes orb-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--orb-glow, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px color-mix(in oklch, var(--orb-glow, transparent) 35%, transparent);
+  }
+}
+.orb-active {
+  animation: orb-breathe 1.6s ease-in-out infinite;
+}
+
+@keyframes message-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.message-in {
+  animation: message-in 0.22s ease-out;
+}
+
+/* Markdown inside messages. */
 .markdown {
   font-size: 0.9375rem;
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-wrap: anywhere;
 }
 .markdown > :first-child {
@@ -108,16 +190,32 @@
 .markdown > :last-child {
   margin-bottom: 0;
 }
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  font-family: var(--font-display);
+  font-weight: 560;
+  letter-spacing: -0.01em;
+}
 
 /* Highlight when jumping to a replied message. */
-.flash > div {
+.flash {
   animation: flash 1.2s ease-out;
+  border-radius: var(--radius);
 }
 @keyframes flash {
   0% {
-    box-shadow: 0 0 0 3px var(--color-sky-400);
+    background: color-mix(in oklch, var(--aura-1) 18%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 transparent;
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb-active,
+  .message-in,
+  .flash {
+    animation: none;
   }
 }

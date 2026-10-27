@@ -48,8 +48,8 @@ export function SkillsView() {
   return (
     <section className="flex min-w-0 flex-1">
       <div className="w-64 shrink-0 overflow-y-auto border-r p-2">
-        <h1 className="flex items-center gap-2 px-2 py-2 font-semibold">
-          <Sparkles className="size-4" /> Skills
+        <h1 className="font-display flex items-center gap-2 px-2 pt-3 pb-3 text-2xl font-semibold">
+          <Sparkles className="text-primary size-5" /> Skills
         </h1>
         {skills?.length === 0 && (
           <p className="text-muted-foreground px-2 text-sm">
@@ -73,7 +73,7 @@ export function SkillsView() {
       </div>
       {skill && (
         <div className="min-w-0 flex-1 overflow-y-auto p-6">
-          <h2 className="text-xl font-semibold">{skill.name}</h2>
+          <h2 className="font-display text-3xl font-semibold tracking-tight">{skill.name}</h2>
           <p className="text-muted-foreground mb-1">{skill.description}</p>
           <p className="text-muted-foreground mb-4 text-sm">
             Used by{" "}

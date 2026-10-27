@@ -1,11 +1,9 @@
-import { ChevronLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   loadInitial,
   loadMessages,
   loadProviderStatus,
   reportError,
-  showList,
 } from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
 import { startRealtime } from "@/features/chat/realtime";
@@ -17,6 +15,7 @@ import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
 import { PairingScreen } from "@/features/devices/pairing-screen";
 import { JobsView } from "@/features/jobs/jobs-view";
+import { Rail } from "@/features/shell/rail";
 import { SkillsView } from "@/features/skills/skills-view";
 import { SERVER_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -52,17 +51,15 @@ export function App() {
 
   return (
     <div className="flex h-dvh overflow-hidden">
+      <Rail />
       <Sidebar />
-      <div className={cn("flex min-w-0 flex-1 flex-col", pane === "list" && "max-md:hidden")}>
-        {view !== "chat" && (
-          <button
-            type="button"
-            onClick={showList}
-            className="text-muted-foreground flex items-center gap-1 border-b px-3 py-2 text-sm md:hidden"
-          >
-            <ChevronLeft className="size-4" /> Back
-          </button>
+      <div
+        className={cn(
+          "flex min-w-0 flex-1 flex-col",
+          view === "chat" && pane === "list" && "max-md:hidden",
+          view !== "chat" && "max-md:pb-16",
         )}
+      >
         <div className="flex min-h-0 flex-1">
           {view === "skills" ? (
             <SkillsView />
@@ -77,10 +74,13 @@ export function App() {
           ) : activeChatId ? (
             <ChatView key={activeChatId} chatId={activeChatId} />
           ) : (
-            <main className="text-muted-foreground flex flex-1 items-center justify-center p-6 text-center text-sm">
-              {startError
-                ? `Cannot reach the local server at ${SERVER_URL}: ${startError}`
-                : "Loading…"}
+            <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+              <span className="aura-fill orb-active block size-16 rounded-full [--orb-glow:var(--aura-1)]" />
+              <p className="text-muted-foreground max-w-sm text-sm">
+                {startError
+                  ? `Cannot reach the Aura server at ${SERVER_URL}: ${startError}`
+                  : "Waking up…"}
+              </p>
             </main>
           )}
         </div>

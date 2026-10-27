@@ -43,7 +43,7 @@ export function ApprovalCard({ card }: { card: ApprovalCardData }) {
   };
 
   return (
-    <div className="w-[min(36rem,100%)]">
+    <div className="aura-ring bg-card mt-2 w-[min(36rem,100%)] rounded-2xl p-4 shadow-[0_10px_30px_-18px_var(--aura-1)]">
       <div className="mb-2 flex items-center gap-2">
         <ShieldQuestion className="size-4 text-amber-600" />
         <span className="font-semibold">{card.title}</span>

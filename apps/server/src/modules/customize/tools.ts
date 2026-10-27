@@ -44,7 +44,7 @@ export function customizeTools(
             }`,
             `Extensions: ${ext.map((e) => `${e.id} (${e.enabled ? "on" : "off"}${e.problem ? `, ${e.problem}` : ""})`).join(", ") || "none"}`,
             "",
-            "Theme CSS overrides these variables on :root and .dark: --background, --foreground, --card, --card-foreground, --primary, --primary-foreground, --secondary, --muted, --muted-foreground, --accent, --border, --input, --ring, --radius, --sidebar, --chat-bg, --bubble-own, --bubble-other.",
+            "Theme CSS overrides these variables on :root and .dark: --background, --foreground, --card, --card-foreground, --primary, --primary-foreground, --secondary, --muted, --muted-foreground, --accent, --border, --input, --ring, --radius, --sidebar, --rail, --rail-foreground, --chat-bg, --bubble-own, --bubble-other, --aura-1, --aura-2 (the accent gradient).",
           ].join("\n"),
         );
       },
