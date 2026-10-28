@@ -118,6 +118,9 @@ describe("agent memory", () => {
     expect(system).toContain("## What you remember");
     expect(system).toContain("The user deploys to fly.io");
     expect(system).not.toContain("Coder secret preference");
+    // The run records which notes it was given, for the Agents page (ADR 0032).
+    const [run] = await t.runs.recent("orchestrator");
+    expect(run?.memory.map((n) => n.text)).toEqual(["The user deploys to fly.io"]);
     expect(provider.calls.at(-1)?.tools.map((x) => x.name)).toEqual(
       expect.arrayContaining(["remember", "recall", "forget"]),
     );

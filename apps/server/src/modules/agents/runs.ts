@@ -13,6 +13,21 @@ export interface RunRecord {
   costUsd: number;
 }
 
+export interface RecentRun {
+  id: string;
+  chatId: string;
+  chatTitle: string | null;
+  status: RunStatus;
+  error: string | null;
+  at: string;
+  tokens: number;
+  costUsd: number;
+  /** How many tool calls it made. */
+  tools: number;
+  /** Notes from memory it was given. */
+  memory: { id: string; text: string }[];
+}
+
 /** Audit log of agent runs (docs/SPEC.md section 10) and the source of spend totals for budgets. */
 export class RunRepo {
   constructor(private readonly db: Surreal) {}
@@ -80,6 +95,42 @@ export class RunRepo {
         },
       )
       .collect();
+  }
+
+  /** Notes from agent memory that were put into the run's prompt (ADR 0032). */
+  async recordMemory(runId: string, notes: { id: string; text: string }[]): Promise<void> {
+    await this.db
+      .query("UPDATE $id SET memory = $notes", { id: new RecordId("run", runId), notes })
+      .collect();
+  }
+
+  /** The agent's recent runs, newest first, for the Agents page. */
+  async recent(agent: string, limit = 20): Promise<RecentRun[]> {
+    const [rows] = await this.db
+      .query<[Record<string, unknown>[]]>(
+        `SELECT id, chat, chat.title AS chat_title, status, error, started_at, tokens_in, tokens_out,
+           cost_usd, tool_calls, memory FROM run WHERE agent = $agent ORDER BY started_at DESC LIMIT $limit`,
+        { agent, limit },
+      )
+      .collect();
+    return (rows ?? []).map((row) => ({
+      id: row.id instanceof RecordId ? String(row.id.id) : String(row.id),
+      chatId: row.chat instanceof RecordId ? String(row.chat.id) : String(row.chat),
+      chatTitle: typeof row.chat_title === "string" ? row.chat_title : null,
+      status: row.status as RunStatus,
+      error: typeof row.error === "string" ? row.error : null,
+      at: row.started_at instanceof Date ? row.started_at.toISOString() : String(row.started_at),
+      tokens: Number(row.tokens_in ?? 0) + Number(row.tokens_out ?? 0),
+      costUsd: Number(row.cost_usd ?? 0),
+      tools: Array.isArray(row.tool_calls) ? row.tool_calls.length : 0,
+      memory: Array.isArray(row.memory)
+        ? row.memory.flatMap((n: unknown) =>
+            n && typeof n === "object" && "id" in n && "text" in n
+              ? [{ id: String(n.id), text: String(n.text) }]
+              : [],
+          )
+        : [],
+    }));
   }
 
   /** Marks runs left `running` by a crash as stopped. */

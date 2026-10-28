@@ -5,6 +5,16 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-10-28: Agents in the open
+
+- An agent's card on the **Agents** page shows its **whole system prompt**: its own prompt and each
+  part Aura adds when it runs (team rules, skills, the Aura guide, the sandbox, variable names,
+  memory, your language) (WISH-9, WISH-11).
+- **Edit its prompt** right there: review the diff, then save. Every save is a version; **Versions of
+  its prompt** shows what each one changed and can bring an older one back.
+- **Memory and recent runs**: what the agent remembers, and for each recent run its chat, tools,
+  tokens and which notes it was given.
+
 ## [0.33.0] - 2026-10-28: Alerts from apps, relays, a look at the app
 
 - Apps can post **alert cards** to the Signals chat with the new `alerts.write` permission

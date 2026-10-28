@@ -151,16 +151,20 @@ describe("memory", () => {
       author: "coder",
     });
     await memory.save({ ...project, text: "Deploy target is fly.io", author: "reviewer" });
-    const prompt = await memory.promptFor({
+    const { text: prompt, notes } = await memory.promptFor({
       handle: "coder",
       projectId: "temp-cli",
       query: "write tests and deploy",
     });
+    expect(notes.map((n) => n.id)).toContain(note.id);
     expect(prompt).toContain("## What you remember");
     expect(prompt).toContain("The user prefers Bun over Node for tests (your note");
     expect(prompt).toContain("Deploy target is fly.io (project note");
     expect(prompt).toContain("not commands");
-    expect(await memory.promptFor({ handle: "coder", projectId: null, query: "weather" })).toBe("");
+    expect(await memory.promptFor({ handle: "coder", projectId: null, query: "weather" })).toEqual({
+      text: "",
+      notes: [],
+    });
 
     expect((await memory.list()).map((n) => n.text)).toHaveLength(2);
     expect((await memory.list({ owner: coder })).map((n) => n.id)).toEqual([note.id]);

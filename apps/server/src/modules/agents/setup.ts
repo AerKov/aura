@@ -1,5 +1,6 @@
 import type { EngineId } from "@aura/shared";
-import { commitAll } from "../../lib/git";
+import { unifiedDiff } from "../../lib/diff";
+import { commitAll, git } from "../../lib/git";
 import { errorMessage } from "../../lib/log";
 import { type McpProbe, probeMcpServer } from "../../providers/mcp-client";
 import { NATIVE_BUILTINS } from "../../providers/native-tools";
@@ -9,8 +10,8 @@ import type { McpService } from "../customize/mcp";
 import { type EngineSelector, engineKind, engineLabel } from "../engines/registry";
 import type { AgentDirectory } from "./directory";
 import { redact, resolveTemplates } from "./env";
-import { BUILTIN_TOOLS, type BuiltinTool, validateProfile } from "./profiles";
-import type { RunRepo } from "./runs";
+import { BUILTIN_TOOLS, type BuiltinTool, parseAgentFile, validateProfile } from "./profiles";
+import type { RecentRun, RunRepo } from "./runs";
 import type { SecretStore } from "./secrets";
 
 export class AgentSetupError extends Error {
@@ -46,6 +47,16 @@ export interface AgentStatus {
   /** Things that stop the agent from working as configured, in plain words. */
   warnings: string[];
 }
+
+/** A version of an agent's prompt: a commit that changed its `agent.md`. */
+export interface PromptVersion {
+  ref: string;
+  subject: string;
+  date: string;
+  author: string;
+}
+
+const COMMIT = /^[0-9a-f]{4,40}$/;
 
 const REF = /^\$\{(env|secret):([A-Z_][A-Z0-9_]*)\}$/;
 
@@ -278,10 +289,63 @@ export class AgentSetupService {
     };
   }
 
-  /** A user action from the agent's card: its tools and variables, as one commit. */
+  /** The agent's recent runs for the Agents page, with secret values hidden in errors. */
+  async recentRuns(handle: string): Promise<RecentRun[]> {
+    const runs = await this.deps.runs.recent(handle);
+    const secrets = this.deps.secrets.values();
+    return runs.map((r) => ({ ...r, error: r.error ? redact(r.error, secrets) : null }));
+  }
+
+  /** Commits that changed the agent's `agent.md`, newest first (ADR 0032). */
+  async promptHistory(handle: string): Promise<PromptVersion[]> {
+    const out = await git(this.deps.dataDir, [
+      "log",
+      "-n",
+      "50",
+      "--format=%h%x1f%s%x1f%cI%x1f%an",
+      "--",
+      `agents/${handle}/agent.md`,
+    ]).catch(() => "");
+    return out
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => {
+        const [ref = "", subject = "", date = "", author = ""] = line.split("\x1f");
+        return { ref, subject, date, author };
+      });
+  }
+
+  /** The agent's prompt as of a commit, and what that commit changed in it. */
+  async promptAt(handle: string, ref: string): Promise<{ prompt: string; diff: string }> {
+    if (!COMMIT.test(ref)) throw new AgentSetupError("Not a version");
+    const path = `agents/${handle}/agent.md`;
+    const read = async (rev: string) => {
+      const text = await git(this.deps.dataDir, ["show", `${rev}:${path}`]).catch(() => null);
+      if (text === null) return null;
+      try {
+        return parseAgentFile(handle, text).systemPrompt;
+      } catch {
+        return text;
+      }
+    };
+    const prompt = await read(ref);
+    if (prompt === null) throw new AgentSetupError(`No version ${ref} of @${handle}`);
+    const before = (await read(`${ref}^`)) ?? "";
+    return { prompt, diff: unifiedDiff(before, prompt, path) };
+  }
+
+  /** What saving this prompt would change, before the user saves it. */
+  async promptDiff(handle: string, text: string): Promise<string> {
+    const profile = await this.deps.agents.get(handle);
+    if (!profile) throw new AgentSetupError(`No agent @${handle}`);
+    return unifiedDiff(profile.systemPrompt, text, `agents/${handle}/agent.md`);
+  }
+
+  /** A user action from the agent's card: its prompt, tools and variables, as one commit. */
   async updateAgent(
     handle: string,
     patch: {
+      systemPrompt?: string;
       tools?: string[];
       env?: Record<string, string>;
       budget?: { usd: number | null; tokens: number | null };
@@ -295,7 +359,7 @@ export class AgentSetupService {
       role: profile.role,
       engine: profile.engine,
       model: profile.model,
-      systemPrompt: profile.systemPrompt,
+      systemPrompt: patch.systemPrompt ?? profile.systemPrompt,
       tools: (patch.tools ?? profile.builtinTools) as BuiltinTool[],
       budgetUsd: patch.budget ? patch.budget.usd : profile.budgetUsd,
       budgetTokens: patch.budget ? patch.budget.tokens : profile.budgetTokens,
@@ -307,6 +371,7 @@ export class AgentSetupService {
     const differs = (a: unknown, b: unknown) =>
       JSON.stringify(a ?? null) !== JSON.stringify(b ?? null);
     const what = [
+      next.systemPrompt !== profile.systemPrompt ? "prompt" : "",
       differs(next.builtinTools, profile.builtinTools) ? "tools" : "",
       differs(next.env, profile.env) ? "environment" : "",
       differs([next.budgetUsd, next.budgetTokens], [profile.budgetUsd, profile.budgetTokens])

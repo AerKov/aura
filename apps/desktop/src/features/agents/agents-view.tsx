@@ -18,6 +18,7 @@ import { useChatStore } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
+import { MemoryCard, PromptCard } from "./prompt-card";
 import { AgentToolServers } from "./tool-servers";
 
 type Status = Awaited<ReturnType<typeof loadStatus>>;
@@ -54,8 +55,9 @@ export function AgentsView() {
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
         <PageHeader title="Agents" icon={<Bot className="text-primary size-7" />}>
-          What each agent runs on, which tools and variables it has, where you can reach it, and
-          anything that stops it from working. Changes apply from its next reply.
+          What each agent runs on, its full prompt and its versions, which tools and variables it
+          has, what it remembers, where you can reach it, and anything that stops it from working.
+          Changes apply from its next reply.
         </PageHeader>
         <div className="mb-6 flex flex-wrap gap-1.5">
           {agents.map((a) => (
@@ -179,6 +181,13 @@ function AgentCard({ handle }: { handle: string }) {
         )}
       </div>
 
+      <PromptCard
+        handle={handle}
+        onSaved={() => {
+          loadStatus(handle).then(apply).catch(reportError);
+        }}
+      />
+
       <div className="bg-card rounded-2xl border p-5">
         <h3 className="kicker mb-2">Tools</h3>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -266,6 +275,8 @@ function AgentCard({ handle }: { handle: string }) {
           }}
         />
       </div>
+
+      <MemoryCard handle={handle} />
 
       <div className="bg-card grid gap-4 rounded-2xl border p-5 sm:grid-cols-2">
         <div>

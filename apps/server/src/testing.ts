@@ -5,7 +5,11 @@ import type { ComponentHealth } from "@aura/shared";
 import { createApp } from "./app";
 import { createServices, prepareDataDir } from "./bootstrap";
 import { connectDb } from "./db/client";
-import { type AgentDirectory, MemoryAgentDirectory } from "./modules/agents/directory";
+import {
+  type AgentDirectory,
+  FileAgentDirectory,
+  MemoryAgentDirectory,
+} from "./modules/agents/directory";
 import { LocalSessions } from "./modules/auth/sessions";
 import type { SafeMode } from "./modules/customize/safe-mode";
 import { EngineRegistry } from "./modules/engines/registry";
@@ -25,6 +29,8 @@ export async function createTestApp(
     dbHealth?: () => Promise<ComponentHealth>;
     provider?: LLMProvider;
     agents?: AgentDirectory;
+    /** Agents as files in the data dir (a git repo), as in the app, instead of in memory. */
+    fileAgents?: boolean;
     maxChainDepth?: number;
     safeMode?: SafeMode;
     /** Network for the OpenAI-compatible engines. */
@@ -54,7 +60,9 @@ export async function createTestApp(
     acpAgents: opts.acpAgents,
     acpSpawn: opts.acpSpawn,
   });
-  const agents = opts.agents ?? new MemoryAgentDirectory();
+  const agents =
+    opts.agents ?? (opts.fileAgents ? new FileAgentDirectory(dataDir) : new MemoryAgentDirectory());
+  if (agents instanceof FileAgentDirectory) await agents.seed();
   const sandbox = new SandboxService({
     dataDir,
     support: opts.sandboxSupport ?? (() => ({ ok: false, reason: "not in tests" })),

@@ -16,9 +16,8 @@ import type { ChatService } from "../chat/service";
 import type { EngineSelector } from "../engines/registry";
 import type { ProjectInfo } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
-import { sandboxNote } from "../sandbox/service";
-import { buildPrompt, CONTEXT_WINDOW, SUMMARY_BATCH, userNote } from "./context";
-import { teamRules, wakeNote } from "./defaults";
+import { buildPrompt, CONTEXT_WINDOW, SUMMARY_BATCH } from "./context";
+import { wakeNote } from "./defaults";
 import type { AgentDirectory } from "./directory";
 import {
   chainDepthAllowed,
@@ -29,6 +28,7 @@ import {
   spendLevel,
 } from "./guards";
 import { type AgentProfile, ORCHESTRATOR_HANDLE } from "./profiles";
+import { type InjectedNote, joinPrompt, type PromptPart, systemPromptParts } from "./prompt";
 import type { RunRepo } from "./runs";
 import { agentsToTrigger, type WakeReason } from "./triggers";
 
@@ -59,8 +59,8 @@ export interface RuntimeDeps {
   }) => AgentTool[] | Promise<AgentTool[]>;
   /** External MCP servers an agent may use (tier 2 customization). */
   mcpServers?: (handle: string) => Record<string, McpServerSpec>;
-  /** Extra system prompt sections for an agent (its skills). */
-  promptExtras?: (profile: AgentProfile) => string;
+  /** Extra system prompt parts for an agent (its skills, the Aura guide). */
+  promptExtras?: (profile: AgentProfile) => PromptPart[];
   /** The OS sandbox for shell commands (no network), or null to run them without it (ADR 0015). */
   sandboxPolicy?: (profile: AgentProfile) => SandboxPolicy | null;
   /** Notes the agent saved earlier that match this message (agent memory, ADR 0013). */
@@ -68,7 +68,7 @@ export interface RuntimeDeps {
     handle: string;
     projectId: string | null;
     query: string;
-  }) => Promise<string>;
+  }) => Promise<{ text: string; notes: InjectedNote[] }>;
   /** The chat's rolling summary of older messages, if any (ADR 0017). */
   chatSummary?: (
     chatId: string,
@@ -134,6 +134,31 @@ export class AgentRuntime {
   /** Restores the user's language from their latest message (it is kept in memory). */
   primeLanguage(text: string): void {
     this.userLanguage = detectLanguage(text) ?? this.userLanguage;
+  }
+
+  /**
+   * The system prompt an agent runs with now, part by part (ADR 0032). Memory notes depend on the
+   * message, so `memory` stands in for them; team rules are shown as in a project chat.
+   */
+  async explainPrompt(handle: string): Promise<PromptPart[] | null> {
+    const profile = await this.deps.agents.get(handle);
+    if (!profile) return null;
+    const granted = toolsFor(profile, false);
+    const sandbox = this.deps.sandboxPolicy?.(profile) ?? null;
+    return systemPromptParts({
+      profile,
+      team: [handle, "…"],
+      extras: this.deps.promptExtras?.(profile) ?? [],
+      sandbox: sandbox !== null && granted.includes("Bash"),
+      env: granted.includes("Bash")
+        ? (this.deps.agentEnv?.(profile) ?? { values: {}, missing: [] })
+        : { values: {}, missing: [] },
+      memory: this.deps.memoryPrompt
+        ? "\n\n## What you remember\n(Notes from its memory that match the message, chosen for each run.)"
+        : "",
+      ownerName: this.deps.ownerName,
+      language: this.userLanguage,
+    });
   }
 
   start(): () => void {
@@ -419,12 +444,15 @@ export class AgentRuntime {
       : { values: {}, missing: [] };
     const builtinTools = granted;
     const sandbox = this.deps.sandboxPolicy?.(profile) ?? null;
-    const memoryNotes =
-      (await this.deps.memoryPrompt?.({
-        handle,
-        projectId: chat.projectId,
-        query: trigger.body,
-      })) ?? "";
+    const memory = (await this.deps.memoryPrompt?.({
+      handle,
+      projectId: chat.projectId,
+      query: trigger.body,
+    })) ?? { text: "", notes: [] };
+    if (memory.notes.length > 0)
+      await runs.recordMemory(runId, memory.notes).catch((e: unknown) => {
+        log.warn("could not record injected notes", { runId, error: errorMessage(e) });
+      });
 
     const mcpServers = this.deps.mcpServers?.(handle) ?? {};
 
@@ -457,13 +485,18 @@ export class AgentRuntime {
     for await (const event of provider.run(
       {
         runId,
-        systemPrompt:
-          systemPromptFor(profile, project !== null, team) +
-          (this.deps.promptExtras?.(profile) ?? "") +
-          (sandbox && builtinTools.includes("Bash") ? sandboxNote() : "") +
-          envNote(ownEnv) +
-          memoryNotes +
-          userNote(this.deps.ownerName, this.userLanguage),
+        systemPrompt: joinPrompt(
+          systemPromptParts({
+            profile,
+            team: project !== null ? team : null,
+            extras: this.deps.promptExtras?.(profile) ?? [],
+            sandbox: sandbox !== null && builtinTools.includes("Bash"),
+            env: ownEnv,
+            memory: memory.text,
+            ownerName: this.deps.ownerName,
+            language: this.userLanguage,
+          }),
+        ),
         prompt,
         model: model ?? undefined,
         cwd,
@@ -607,21 +640,6 @@ export class AgentRuntime {
     // Mentions in a completed reply may wake other agents, one level deeper in the chain.
     if (final?.status === "final" && !stopped && body) this.deps.chat.notify(final, chat);
   }
-}
-
-/** What an agent with a shell is told about its own variables; values are never in the prompt. */
-function envNote(env: { values: Record<string, string>; missing: string[] }): string {
-  const names = Object.keys(env.values);
-  if (names.length === 0 && env.missing.length === 0) return "";
-  return `
-
-## Your environment
-${names.length > 0 ? `Your shell commands get these variables: ${names.join(", ")}. Use them by name (for example $${names[0]}); never print their values.` : ""}${env.missing.length > 0 ? ` These variables are configured but have no value: ${env.missing.join(", ")}. If you need them, ask the user to set them under Secrets on the Agents page.` : ""}`;
-}
-
-function systemPromptFor(profile: AgentProfile, inProject: boolean, team: string[]): string {
-  if (profile.handle === ORCHESTRATOR_HANDLE || !inProject) return profile.systemPrompt;
-  return `${profile.systemPrompt}\n${teamRules(profile.handle, team)}`;
 }
 
 /** The orchestrator may read a project's workspace to review it, but never edits it. */

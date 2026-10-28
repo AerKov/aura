@@ -161,6 +161,7 @@ DEFINE FIELD OVERWRITE tool_calls ON run TYPE array<object> FLEXIBLE DEFAULT [];
 DEFINE FIELD OVERWRITE started_at ON run TYPE datetime DEFAULT time::now();
 DEFINE FIELD OVERWRITE ended_at ON run TYPE option<datetime>;
 DEFINE FIELD OVERWRITE error ON run TYPE option<string>;
+DEFINE FIELD OVERWRITE memory ON run TYPE array<object> FLEXIBLE DEFAULT [];
 DEFINE INDEX OVERWRITE run_agent ON run FIELDS agent;
 
 DEFINE TABLE OVERWRITE memory SCHEMAFULL;

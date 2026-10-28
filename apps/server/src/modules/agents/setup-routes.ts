@@ -3,6 +3,7 @@ import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import { McpError } from "../customize/mcp";
 import { ProfileError } from "./profiles";
+import type { PromptPart } from "./prompt";
 import { SecretError } from "./secrets";
 import { AgentSetupError, type AgentSetupService } from "./setup";
 
@@ -26,9 +27,12 @@ function userError(error: unknown): string | null {
 export const agentSetupModule = ({
   sessions,
   setup,
+  explainPrompt,
 }: {
   sessions: LocalSessions;
   setup: AgentSetupService;
+  /** The agent's system prompt part by part (ADR 0032). */
+  explainPrompt: (handle: string) => Promise<PromptPart[] | null>;
 }) =>
   new Elysia({ name: "agent-setup" })
     .use(authGuard(sessions))
@@ -134,6 +138,7 @@ export const agentSetupModule = ({
         auth: true,
         params: t.Object({ handle: HANDLE }),
         body: t.Object({
+          systemPrompt: t.Optional(t.String({ minLength: 1, maxLength: 50_000 })),
           tools: t.Optional(t.Array(t.String({ maxLength: 20 }), { maxItems: 20 })),
           env: t.Optional(ENV),
           budget: t.Optional(
@@ -141,4 +146,47 @@ export const agentSetupModule = ({
           ),
         }),
       },
-    );
+    )
+    .get(
+      "/agents/:handle/prompt",
+      async ({ params, status }) => {
+        const parts = await explainPrompt(params.handle);
+        if (!parts) return status(404, { error: `No agent @${params.handle}` });
+        return { parts, history: await setup.promptHistory(params.handle) };
+      },
+      { auth: true, params: t.Object({ handle: HANDLE }) },
+    )
+    .post(
+      "/agents/:handle/prompt/diff",
+      async ({ params, body, status }) => {
+        try {
+          return { diff: await setup.promptDiff(params.handle, body.text) };
+        } catch (error) {
+          const message = userError(error);
+          if (message !== null) return status(404, { error: message });
+          throw error;
+        }
+      },
+      {
+        auth: true,
+        params: t.Object({ handle: HANDLE }),
+        body: t.Object({ text: t.String({ maxLength: 50_000 }) }),
+      },
+    )
+    .get(
+      "/agents/:handle/prompt/:ref",
+      async ({ params, status }) => {
+        try {
+          return await setup.promptAt(params.handle, params.ref);
+        } catch (error) {
+          const message = userError(error);
+          if (message !== null) return status(404, { error: message });
+          throw error;
+        }
+      },
+      { auth: true, params: t.Object({ handle: HANDLE, ref: t.String({ maxLength: 40 }) }) },
+    )
+    .get("/agents/:handle/runs", ({ params }) => setup.recentRuns(params.handle), {
+      auth: true,
+      params: t.Object({ handle: HANDLE }),
+    });

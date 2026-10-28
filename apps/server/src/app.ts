@@ -111,7 +111,13 @@ export function createApp(deps: AppDeps) {
     .use(sandboxModule(deps))
     .use(catalogModule(deps))
     .use(summariesModule(deps))
-    .use(agentSetupModule({ sessions: deps.sessions, setup: deps.agentSetup }))
+    .use(
+      agentSetupModule({
+        sessions: deps.sessions,
+        setup: deps.agentSetup,
+        explainPrompt: (handle) => deps.runtime.explainPrompt(handle),
+      }),
+    )
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))

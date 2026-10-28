@@ -444,5 +444,10 @@ servers and agents' secrets are on the Agents page; each app keeps its own secre
 Apps post alert cards with `alerts.write`; the orchestrator passes a message into another of its
 chats only on the user's request; agents in an app's chat see the app as the user sees it.
 
+**Phase 34: Agents in the open** (done, ADR 0032)
+An agent's card shows its whole system prompt part by part (its own and what Aura adds), lets the
+user edit its own prompt with a diff and bring back older versions, and lists its notes and recent
+runs with the notes each run was given.
+
 **Later**
 Pack signatures and a reviewed community index, multi-user.

@@ -288,11 +288,22 @@ export async function createServices(deps: {
           : []),
       ]),
     mcpServers: (handle) => mcp.forAgent(handle),
-    promptExtras: (profile) =>
-      (modules.enabled("skills") ? skills.promptFor(profile) : "") +
-      (profile.handle === "orchestrator" ? AURA_GUIDE : ""),
+    promptExtras: (profile) => [
+      {
+        source: "skills",
+        title: "Its skills",
+        text: modules.enabled("skills") ? skills.promptFor(profile) : "",
+      },
+      {
+        source: "guide",
+        title: "How Aura works (the orchestrator only)",
+        text: profile.handle === "orchestrator" ? AURA_GUIDE : "",
+      },
+    ],
     memoryPrompt: (input) =>
-      modules.enabled("memory") ? memory.promptFor(input) : Promise.resolve(""),
+      modules.enabled("memory")
+        ? memory.promptFor(input)
+        : Promise.resolve({ text: "", notes: [] }),
     sandboxPolicy: () => sandbox.policy(),
     // Variables its command tool servers share first; the agent's own win on a clash.
     agentEnv: (profile) =>

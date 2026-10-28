@@ -1,8 +1,9 @@
 # Agents
 
 The **Agents** page (the robot icon) is everything about your agents in one place: what each one
-runs on, its tools and variables, its tool servers, its chats, its budget, the last error and what
-stops it from working; then the tool servers (MCP) and the secrets agents use.
+runs on, its full prompt and its versions, its tools and variables, what it remembers, its tool
+servers, its chats, its budget, the last error and what stops it from working; then the tool
+servers (MCP) and the secrets agents use.
 
 ## An agent's card
 
@@ -19,6 +20,24 @@ Pick an agent at the top. Its card shows:
 Changes apply from its next reply. Agents' shell commands run in the
 [command sandbox](Approvals-and-Safety): only in the project folder, no credentials, and **no
 network**. Agents reach the web through their engine's own web tools (WebSearch, WebFetch).
+
+## Its prompt
+
+**System prompt** shows everything the agent is told before a message, in order: **its prompt**
+(from `agents/<handle>/agent.md`), then each part Aura adds when it runs, marked _added by Aura_:
+team rules in project chats, its skills, how Aura works (the orchestrator only), the sandbox, the
+names of its variables (never their values), notes from memory and the language you write in.
+
+- **Edit** its prompt, then **Review changes** to see the diff, then **Save**. Each save is a
+  commit.
+- **Versions of its prompt** lists every change to it. Click one to see what it changed;
+  **Bring this version back** puts it into the editor to review and save.
+
+## What it remembers
+
+**Memory and recent runs** lists the agent's notes (when Memory is on) and its recent runs: when,
+in which chat, how many tools and tokens, and **which notes it was given** in that run. Delete a
+note in the Memory app.
 
 ## Tool servers (MCP)
 

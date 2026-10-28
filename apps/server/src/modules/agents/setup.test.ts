@@ -58,4 +58,40 @@ describe("the Agents page (ADR 0020, ADR 0030)", () => {
     const updated = await api.agents({ handle: "coder" }).settings.put({ tools: ["Read"] });
     expect(updated.data?.tools).toEqual(["Read"]);
   });
+
+  test("the prompt part by part, its history with diffs, and edits as commits (ADR 0032)", async () => {
+    t = await createTestApp({ fileAgents: true });
+    await t.agents.create({ ...coder, systemPrompt: "You write code." });
+    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
+    const agent = api.agents({ handle: "coder" });
+
+    const explained = (await agent.prompt.get()).data;
+    expect(explained?.parts[0]).toMatchObject({ source: "profile", text: "You write code." });
+    const sources = explained?.parts.map((p) => p.source) ?? [];
+    expect(sources).toContain("team");
+    expect(sources).toContain("memory");
+    // Variable names only; a secret's value never shows up.
+    expect(explained?.parts.find((p) => p.source === "environment")?.text).toContain(
+      "SERVICE_TOKEN",
+    );
+
+    const diff = (await agent.prompt.diff.post({ text: "You write tests first." })).data;
+    expect(diff?.diff).toContain("-You write code.");
+    expect(diff?.diff).toContain("+You write tests first.");
+
+    await agent.settings.put({ systemPrompt: "You write tests first." });
+    await agent.settings.put({ systemPrompt: "You write tests first.\nKeep it short." });
+    const history = (await agent.prompt.get()).data?.history ?? [];
+    expect(history.map((h) => h.subject)).toEqual([
+      "agents(@coder): update prompt",
+      "agents(@coder): update prompt",
+      "feat(agents): add @coder (writes code)",
+    ]);
+    const newest = history[0]?.ref ?? "";
+    const version = (await agent.prompt({ ref: newest }).get()).data;
+    expect(version?.prompt).toBe("You write tests first.\nKeep it short.");
+    expect(version?.diff).toContain("+Keep it short.");
+    expect((await agent.prompt({ ref: "zzz" }).get()).status).toBe(404);
+    expect((await agent.prompt({ ref: "abcdef1" }).get()).status).toBe(404);
+  });
 });
