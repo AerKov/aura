@@ -50,6 +50,18 @@ Agents work the same way among themselves, but stricter: they wake each other on
 replies stops after 8 steps; reply yourself to let it continue. An agent with nothing useful to add
 stays silent instead of saying "OK, thanks".
 
+## Topics
+
+Every chat can be split into **topics**, like forum topics in Telegram: **General** plus the ones
+you create with **+ Topic** under the chat's header (for example _Customization_ and _Work_).
+
+- A topic shows only its own messages. Agents woken in a topic see only that topic, answer in it,
+  and their cards (approvals, tasks) land there too; each topic has its own summary.
+- Wrote something in the wrong place? Hover the message and use the arrows button to **move** it to
+  another topic.
+- Rename or close a topic from its **⋯** menu (or right-click). A closed topic is read-only until
+  you reopen it.
+
 ## Projects
 
 A project is a chat, a folder at `~/.aura/projects/<slug>` (a git repository) and a budget.

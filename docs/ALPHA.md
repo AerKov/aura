@@ -1,4 +1,4 @@
-# Aura 0.21 alpha
+# Aura 0.22 alpha
 
 Aura is a messenger where you work with an AI orchestrator and a team of AI agents. This is the
 first public build. It works end to end, but expect rough edges. Please

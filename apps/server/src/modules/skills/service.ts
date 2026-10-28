@@ -112,7 +112,7 @@ export class SkillService {
   /** Validates a proposed change and asks the user to approve it, with a diff as the preview. */
   async propose(
     change: SkillChange,
-    by: { requestedBy: string; chatId: string },
+    by: { requestedBy: string; chatId: string; topicId?: string | null },
   ): Promise<ApprovalRecord> {
     if (!SKILL_NAME_PATTERN.test(change.name)) {
       throw new SkillError("skill name must be 2-48 chars: lowercase letters, digits, dashes");
@@ -138,6 +138,7 @@ export class SkillService {
       kind: "skill_change",
       requestedBy: by.requestedBy,
       chatId: by.chatId,
+      topicId: by.topicId,
       title: before ? `Update skill "${change.name}"` : `New skill "${change.name}"`,
       why: reason + attach,
       preview: diff ? `\`\`\`diff\n${diff}\n\`\`\`` : "_No content change._",

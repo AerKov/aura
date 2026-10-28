@@ -4,7 +4,7 @@ import { loadCustomize } from "@/features/customize/customize-view";
 import { showNotification } from "@/features/devices/push";
 import { loadLayout, receiveLayout } from "@/features/shell/layout";
 import { NeedsPairingError, resetSession, wsUrl } from "@/lib/api";
-import { loadTasks, refreshProjectsSoon, reportError, resync } from "./actions";
+import { loadTasks, refreshProjectsSoon, reportError, resync, upsertTopic } from "./actions";
 import { appendDelta, getState, removeMessage, setState, upsertChat, upsertMessage } from "./store";
 
 const PING_MS = 15_000;
@@ -70,6 +70,9 @@ export function startRealtime(): () => void {
           // A pack may have added agents; a disabled extension leaves the layout.
           refreshProjectsSoon();
           void loadLayout().catch(reportError);
+          break;
+        case "topic.updated":
+          upsertTopic(event.topic);
           break;
         case "layout.updated":
           receiveLayout(event.layout);

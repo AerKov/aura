@@ -2,7 +2,7 @@
  * WebSocket protocol between the server and clients (docs/SPEC.md section 6).
  * The client connects to `WS_PATH?token=<session token>`.
  */
-import type { Chat, Message } from "./chat";
+import type { Chat, Message, Topic } from "./chat";
 import type { Layout } from "./layout";
 
 export const WS_PATH = "/ws";
@@ -16,6 +16,8 @@ export type ServerEvent =
   | { type: "message.delta"; chatId: string; messageId: string; text: string }
   | { type: "message.deleted"; chatId: string; messageId: string }
   | { type: "chat.updated"; chat: Chat }
+  /** A topic was created, renamed, closed or reopened. */
+  | { type: "topic.updated"; topic: Topic }
   /** Theme, snippets or extensions changed; clients reload them. */
   | { type: "customize.updated" }
   /** The shell's layout changed (the orchestrator or another window); clients show it. */
@@ -36,6 +38,7 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "message.delta",
   "message.deleted",
   "chat.updated",
+  "topic.updated",
   "customize.updated",
   "layout.updated",
   "notification",

@@ -185,11 +185,25 @@ function OpenMenu() {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [open]);
-  const apps: AppRef[] = [
-    "messenger",
-    ...extensions.map((e) => `ext:${e.id}` as AppRef),
-    ...PAGE_IDS.map((p) => `page:${p}` as AppRef),
-  ];
+  const yours: AppRef[] = extensions.map((e) => `ext:${e.id}` as AppRef);
+  const aura: AppRef[] = ["messenger", ...PAGE_IDS.map((p) => `page:${p}` as AppRef)];
+  const item = (app: AppRef) => {
+    const { label, icon: Icon } = appInfo(app, extensions);
+    return (
+      <li key={app}>
+        <button
+          type="button"
+          className="hover:bg-accent flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
+          onClick={() => {
+            openAppRef(app, where);
+            setOpen(false);
+          }}
+        >
+          <Icon className="size-4" /> {label}
+        </button>
+      </li>
+    );
+  };
   return (
     <div className="relative" ref={box}>
       <Button
@@ -226,25 +240,19 @@ function OpenMenu() {
               </button>
             ))}
           </div>
-          <ul className="max-h-80 overflow-y-auto">
-            {apps.map((app) => {
-              const { label, icon: Icon } = appInfo(app, extensions);
-              return (
-                <li key={app}>
-                  <button
-                    type="button"
-                    className="hover:bg-accent flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
-                    onClick={() => {
-                      openAppRef(app, where);
-                      setOpen(false);
-                    }}
-                  >
-                    <Icon className="size-4" /> {label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="max-h-96 overflow-y-auto">
+            <p className="kicker px-2 pt-1 pb-1">Your apps</p>
+            {yours.length > 0 ? (
+              <ul>{yours.map(item)}</ul>
+            ) : (
+              <p className="text-muted-foreground px-2 pb-2 text-xs">
+                None yet. Ask the orchestrator to make one (“a board for my clients”), or install
+                one from the Catalog.
+              </p>
+            )}
+            <p className="kicker px-2 pt-2 pb-1">Aura</p>
+            <ul>{aura.map(item)}</ul>
+          </div>
         </div>
       )}
     </div>

@@ -36,9 +36,14 @@ interface Row {
   updated_at: unknown;
 }
 
+/** One summary per chat topic: `<chat>` for General, `<chat>:<topic>` for a topic (ADR 0024). */
+function summaryKey(chatId: string, topicId: string | null): string {
+  return topicId ? `${chatId}:${topicId}` : chatId;
+}
+
 function toSummary(row: Row): ChatSummary {
   return {
-    chatId: keyOf(row.id),
+    chatId: keyOf(row.id).split(":")[0] ?? "",
     text: row.text,
     upTo: keyOf(row.up_to),
     covered: Number(row.covered),
@@ -71,40 +76,45 @@ export class ChatSummaryService {
     },
   ) {}
 
-  async get(chatId: string): Promise<ChatSummary | null> {
+  async get(chatId: string, topicId: string | null = null): Promise<ChatSummary | null> {
     const [rows] = await this.deps.db
-      .query<[Row[]]>("SELECT * FROM $id", { id: new RecordId("chat_summary", chatId) })
+      .query<[Row[]]>("SELECT * FROM $id", {
+        id: new RecordId("chat_summary", summaryKey(chatId, topicId)),
+      })
       .collect();
     const row = rows?.[0];
     return row ? toSummary(row) : null;
   }
 
   /** Forgets the summary; agents see the recent messages only until the next one is written. */
-  async clear(chatId: string): Promise<void> {
-    await this.deps.db.query("DELETE $id", { id: new RecordId("chat_summary", chatId) }).collect();
+  async clear(chatId: string, topicId: string | null = null): Promise<void> {
+    await this.deps.db
+      .query("DELETE $id", { id: new RecordId("chat_summary", summaryKey(chatId, topicId)) })
+      .collect();
   }
 
   /** Brings the summary up to date in the background (one update per chat at a time). */
-  schedule(chatId: string): void {
+  schedule(chatId: string, topicId: string | null = null): void {
     if (!this.deps.enabled()) return;
-    if (this.running.has(chatId)) {
-      this.again.add(chatId);
+    const key = summaryKey(chatId, topicId);
+    if (this.running.has(key)) {
+      this.again.add(key);
       return;
     }
     const work = (async () => {
       try {
         // A long chat that was never summarized catches up in a few steps.
         for (let step = 0; step < 10 && !this.abort.signal.aborted; step++) {
-          if (!(await this.update(chatId))) break;
+          if (!(await this.update(chatId, topicId))) break;
         }
       } catch (error) {
         log.warn("chat summary failed", { chat: chatId, error: errorMessage(error) });
       }
     })().finally(() => {
-      this.running.delete(chatId);
-      if (this.again.delete(chatId)) this.schedule(chatId);
+      this.running.delete(key);
+      if (this.again.delete(key)) this.schedule(chatId, topicId);
     });
-    this.running.set(chatId, work);
+    this.running.set(key, work);
   }
 
   /** Resolves when no summary is being written (tests, shutdown). */
@@ -122,10 +132,11 @@ export class ChatSummaryService {
    * Folds the messages that fell out of the agents' window into the summary, once at least
    * SUMMARY_BATCH of them have piled up. Returns whether it wrote a new summary.
    */
-  async update(chatId: string): Promise<boolean> {
-    const current = await this.get(chatId);
+  async update(chatId: string, topicId: string | null = null): Promise<boolean> {
+    const current = await this.get(chatId, topicId);
     const fresh = await this.deps.repo.listMessagesAfter(chatId, {
       after: current?.upTo ?? null,
+      topic: topicId,
       limit: MAX_STEP + CONTEXT_WINDOW,
     });
     if (fresh.length < CONTEXT_WINDOW + SUMMARY_BATCH) return false;
@@ -142,7 +153,7 @@ export class ChatSummaryService {
       .query(
         "UPSERT $id CONTENT { text: $text, up_to: $upTo, covered: $covered, updated_at: time::now() }",
         {
-          id: new RecordId("chat_summary", chatId),
+          id: new RecordId("chat_summary", summaryKey(chatId, topicId)),
           text,
           upTo: new RecordId("message", last.id),
           covered: (current?.covered ?? 0) + old.length,

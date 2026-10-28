@@ -40,11 +40,12 @@ export const EXTENSION_GUIDE = [
 /** Orchestrator tools to change the app itself by chat (docs/SPEC.md section 3, "Customization"). */
 export function customizeTools(
   deps: CustomizeDeps,
-  ctx: { handle: string; chatId: string },
+  ctx: { handle: string; chatId: string; topicId?: string | null },
 ): AgentTool[] {
   const by = (why: unknown) => ({
     requestedBy: ctx.handle,
     chatId: ctx.chatId,
+    topicId: ctx.topicId ?? null,
     why: String(why ?? ""),
   });
   return [

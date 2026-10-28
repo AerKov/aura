@@ -5,8 +5,11 @@ import { Button } from "@/components/ui/button";
 import { api, call } from "@/lib/api";
 import { reportError } from "./actions";
 
-export const loadSummary = (chatId: string) =>
-  call(() => api.chats({ chatId }).summary.get()).then((r) => r.summary);
+/** The summary of a chat's topic (null: General); each topic has its own (ADR 0024). */
+export const loadSummary = (chatId: string, topicId: string | null = null) =>
+  call(() => api.chats({ chatId }).summary.get({ query: topicId ? { topic: topicId } : {} })).then(
+    (r) => r.summary,
+  );
 
 /**
  * What agents keep of this chat's older messages (ADR 0017). The user can read it and make the
@@ -14,16 +17,22 @@ export const loadSummary = (chatId: string) =>
  */
 export function SummaryPanel({
   summary,
+  topicId = null,
   onCleared,
   onClose,
 }: {
   summary: ChatSummary;
+  topicId?: string | null;
   onCleared: () => void;
   onClose: () => void;
 }) {
   const clear = async () => {
     try {
-      await call(() => api.chats({ chatId: summary.chatId }).summary.delete());
+      await call(() =>
+        api
+          .chats({ chatId: summary.chatId })
+          .summary.delete(undefined, { query: topicId ? { topic: topicId } : {} }),
+      );
       onCleared();
     } catch (error) {
       reportError(error);

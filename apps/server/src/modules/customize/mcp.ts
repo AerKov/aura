@@ -150,7 +150,7 @@ export class McpService {
 
   async propose(
     input: { name: string; config: unknown },
-    by: { requestedBy: string; chatId: string; why: string },
+    by: { requestedBy: string; chatId: string; topicId?: string | null; why: string },
   ): Promise<ApprovalRecord> {
     const config = validateServer(input.name, input.config);
     for (const handle of config.agents) {
@@ -161,6 +161,7 @@ export class McpService {
       kind: "mcp_server",
       requestedBy: by.requestedBy,
       chatId: by.chatId,
+      topicId: by.topicId,
       title: `${this.servers()[input.name] ? "Update" : "Add"} MCP server "${input.name}"`,
       why: by.why,
       preview: [

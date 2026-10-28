@@ -5,6 +5,14 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.22.0] - 2026-10-28: Topics
+
+- Chats have topics, like Telegram forum topics: General plus your own (+ Topic under the chat
+  header). A topic shows only its messages; agents woken there see only that topic, answer in it,
+  and post their cards there; each topic keeps its own summary.
+- Move a message to another topic (the arrows button on hover); rename, close and reopen topics.
+- The **+** menu on a tile lists your apps separately and says how to get one when there are none.
+
 ## [0.21.0] - 2026-10-28: The screen
 
 Aura becomes a shell for your apps (ADR 0024).

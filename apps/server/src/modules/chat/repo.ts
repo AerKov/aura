@@ -8,6 +8,7 @@ import {
   type MessageStatus,
   type Participant,
   previewText,
+  type Topic,
   type Usage,
 } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
@@ -40,6 +41,7 @@ function toMessage(row: Row): Message {
   return {
     id: keyOf(row.id),
     chatId: keyOf(row.chat),
+    topicId: typeof row.topic === "string" ? row.topic : null,
     author: row.author as Participant,
     kind: row.kind as MessageKind,
     body: String(row.body),
@@ -56,10 +58,22 @@ function toMessage(row: Row): Message {
   };
 }
 
-export { toChat as rowToChat, toMessage as rowToMessage };
+function toTopic(row: Row): Topic {
+  return {
+    id: keyOf(row.id),
+    chatId: keyOf(row.chat),
+    title: String(row.title),
+    closed: row.closed === true,
+    createdAt: isoOf(row.created_at),
+  };
+}
+
+export { toChat as rowToChat, toMessage as rowToMessage, toTopic as rowToTopic };
 
 export interface NewMessage {
   chatId: string;
+  /** null or absent: the chat's General topic. */
+  topicId?: string | null;
   author: Participant;
   kind?: MessageKind;
   body: string;
@@ -192,12 +206,26 @@ export class ChatRepo {
   }
 
   /** Last `limit` messages before `before` (exclusive), oldest first. */
-  async listMessages(chatId: string, opts: { before?: string; limit: number }): Promise<Message[]> {
-    const where = opts.before ? "chat = $chat AND id < $before" : "chat = $chat";
+  /**
+   * Newest messages of a chat, oldest first. `topic`: a topic id, null for General, or absent for
+   * every topic.
+   */
+  async listMessages(
+    chatId: string,
+    opts: { before?: string; limit: number; topic?: string | null },
+  ): Promise<Message[]> {
+    const where = [
+      "chat = $chat",
+      opts.before ? "id < $before" : "",
+      opts.topic === undefined ? "" : opts.topic === null ? "topic IS NONE" : "topic = $topic",
+    ]
+      .filter(Boolean)
+      .join(" AND ");
     const [rows] = await this.db
       .query<[Row[]]>(`SELECT * FROM message WHERE ${where} ORDER BY id DESC LIMIT $limit`, {
         chat: new RecordId("chat", chatId),
         before: opts.before ? new RecordId("message", opts.before) : undefined,
+        topic: opts.topic ?? undefined,
         limit: opts.limit,
       })
       .collect();
@@ -207,17 +235,69 @@ export class ChatRepo {
   /** Messages after `after` (all when null), oldest first. */
   async listMessagesAfter(
     chatId: string,
-    opts: { after: string | null; limit: number },
+    opts: { after: string | null; limit: number; topic?: string | null },
   ): Promise<Message[]> {
-    const where = opts.after ? "chat = $chat AND id > $after" : "chat = $chat";
+    const where = [
+      "chat = $chat",
+      opts.after ? "id > $after" : "",
+      opts.topic === undefined ? "" : opts.topic === null ? "topic IS NONE" : "topic = $topic",
+    ]
+      .filter(Boolean)
+      .join(" AND ");
     const [rows] = await this.db
       .query<[Row[]]>(`SELECT * FROM message WHERE ${where} ORDER BY id ASC LIMIT $limit`, {
         chat: new RecordId("chat", chatId),
         after: opts.after ? new RecordId("message", opts.after) : undefined,
+        topic: opts.topic ?? undefined,
         limit: opts.limit,
       })
       .collect();
     return (rows ?? []).map(toMessage);
+  }
+
+  // Topics (ADR 0024): threads of a chat; General is the implicit null topic.
+
+  async listTopics(chatId: string): Promise<Topic[]> {
+    const [rows] = await this.db
+      .query<[Row[]]>("SELECT * FROM topic WHERE chat = $chat ORDER BY created_at ASC", {
+        chat: new RecordId("chat", chatId),
+      })
+      .collect();
+    return (rows ?? []).map(toTopic);
+  }
+
+  async getTopic(topicId: string): Promise<Topic | null> {
+    const row = await this.one("SELECT * FROM ONLY $id", {
+      id: new RecordId("topic", topicId),
+    }).catch(() => undefined);
+    return row ? toTopic(row) : null;
+  }
+
+  async createTopic(chatId: string, title: string): Promise<Topic> {
+    const row = await this.one("CREATE ONLY $id CONTENT $content RETURN AFTER", {
+      id: new RecordId("topic", Bun.randomUUIDv7()),
+      content: { chat: new RecordId("chat", chatId), title, closed: false },
+    });
+    if (!row) throw new Error("topic create returned nothing");
+    return toTopic(row);
+  }
+
+  async updateTopic(topicId: string, patch: { title?: string; closed?: boolean }): Promise<Topic> {
+    const row = await this.one("UPDATE ONLY $id MERGE $patch RETURN AFTER", {
+      id: new RecordId("topic", topicId),
+      patch,
+    });
+    if (!row) throw new Error("topic update returned nothing");
+    return toTopic(row);
+  }
+
+  async moveMessage(messageId: string, topicId: string | null): Promise<Message> {
+    const row = await this.one(
+      `UPDATE ONLY $id SET topic = ${topicId ? "$topic" : "NONE"}, updated_at = time::now() RETURN AFTER`,
+      { id: new RecordId("message", messageId), topic: topicId ?? undefined },
+    );
+    if (!row) throw new Error("message move returned nothing");
+    return toMessage(row);
   }
 
   async getMessage(messageId: string): Promise<Message | null> {
@@ -234,6 +314,7 @@ export class ChatRepo {
       id,
       content: {
         chat,
+        topic: input.topicId ?? undefined,
         author: input.author,
         kind: input.kind ?? "text",
         body: input.body,

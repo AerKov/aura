@@ -210,8 +210,16 @@ export async function createServices(deps: {
       ...(ctx.handle === "orchestrator"
         ? [
             ...shellTools(layout),
-            ...customizeTools(customize, { handle: ctx.handle, chatId: ctx.chat.id }),
-            ...catalogTools(catalog, { handle: ctx.handle, chatId: ctx.chat.id }),
+            ...customizeTools(customize, {
+              handle: ctx.handle,
+              chatId: ctx.chat.id,
+              topicId: ctx.topicId,
+            }),
+            ...catalogTools(catalog, {
+              handle: ctx.handle,
+              chatId: ctx.chat.id,
+              topicId: ctx.topicId,
+            }),
           ]
         : []),
     ],
@@ -240,8 +248,8 @@ export async function createServices(deps: {
             note: containerNote(sandbox.store.get().container),
           }
         : null,
-    chatSummary: (chatId) => summaries.get(chatId),
-    afterRun: (chat) => summaries.schedule(chat.id),
+    chatSummary: (chatId, topicId) => summaries.get(chatId, topicId),
+    afterRun: (chat, topicId) => summaries.schedule(chat.id, topicId),
     ownerName: owner.name,
     scratchDir,
     maxChainDepth: deps.maxChainDepth,

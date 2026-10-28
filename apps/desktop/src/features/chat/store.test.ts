@@ -5,6 +5,7 @@ import { mergeMessages } from "./store";
 const msg = (id: string, body = id): Message => ({
   id,
   chatId: "c",
+  topicId: null,
   author: { kind: "user", id: "owner" },
   kind: "text",
   body,

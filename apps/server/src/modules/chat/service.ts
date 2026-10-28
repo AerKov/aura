@@ -1,15 +1,25 @@
 import {
   type Chat,
+  GENERAL_TOPIC_TITLE,
   MAX_MESSAGE_LENGTH,
+  MAX_TOPIC_TITLE,
   type Message,
   type Participant,
   parseMentions,
+  type Topic,
 } from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
 import { type ChatRepo, DIRECT_CHAT_ID, ORCHESTRATOR, SYSTEM_CHAT_ID } from "./repo";
 import { WELCOME } from "./welcome";
 
 export type ChatErrorCode = "not_found" | "invalid" | "forbidden";
+
+function cleanTitle(title: string): string {
+  const clean = title.replace(/\s+/g, " ").trim();
+  if (!clean || clean.length > MAX_TOPIC_TITLE)
+    throw new ChatError("invalid", `A topic title is 1-${MAX_TOPIC_TITLE} characters`);
+  return clean;
+}
 
 const STATUS_BY_CODE: Record<ChatErrorCode, number> = {
   not_found: 404,
@@ -89,6 +99,8 @@ export class ChatService {
     body: string;
     replyTo?: string | null;
     chainDepth?: number;
+    /** undefined: the replied-to message's topic, else General. */
+    topicId?: string | null;
   }): Promise<Message> {
     const body = input.body.trim();
     if (!body) throw new ChatError("invalid", "Message is empty");
@@ -102,15 +114,19 @@ export class ChatService {
       throw new ChatError("forbidden", "Author is not a member of this chat");
     }
 
+    let topicId = input.topicId ?? null;
     if (input.replyTo) {
       const target = await this.repo.getMessage(input.replyTo);
       if (!target || target.chatId !== chat.id) {
         throw new ChatError("invalid", "Reply target is not in this chat");
       }
+      if (input.topicId === undefined) topicId = target.topicId;
     }
+    if (topicId) await this.writableTopic(chat.id, topicId);
 
     const message = await this.repo.createMessage({
       chatId: chat.id,
+      topicId,
       author: input.author,
       body,
       replyTo: input.replyTo ?? null,
@@ -119,6 +135,49 @@ export class ChatService {
     });
     this.notify(message, chat);
     return message;
+  }
+
+  /** A topic of this chat that is open for new messages. */
+  private async writableTopic(chatId: string, topicId: string): Promise<Topic> {
+    const topic = await this.repo.getTopic(topicId);
+    if (!topic || topic.chatId !== chatId)
+      throw new ChatError("invalid", "The topic is not in this chat");
+    if (topic.closed) throw new ChatError("invalid", `The topic "${topic.title}" is closed`);
+    return topic;
+  }
+
+  /** User action: a new topic in a chat (ADR 0024). */
+  async createTopic(chatId: string, title: string): Promise<Topic> {
+    if (!(await this.repo.findChat(chatId))) throw new ChatError("not_found", "Chat not found");
+    const clean = cleanTitle(title);
+    const taken = (await this.repo.listTopics(chatId)).some(
+      (t) => t.title.toLowerCase() === clean.toLowerCase(),
+    );
+    if (taken || clean.toLowerCase() === GENERAL_TOPIC_TITLE.toLowerCase())
+      throw new ChatError("invalid", `There is a topic "${clean}" already`);
+    return this.repo.createTopic(chatId, clean);
+  }
+
+  /** User action: rename, close or reopen a topic. */
+  async updateTopic(
+    chatId: string,
+    topicId: string,
+    patch: { title?: string; closed?: boolean },
+  ): Promise<Topic> {
+    const topic = await this.repo.getTopic(topicId);
+    if (!topic || topic.chatId !== chatId) throw new ChatError("not_found", "Topic not found");
+    return this.repo.updateTopic(topicId, {
+      ...(patch.title !== undefined ? { title: cleanTitle(patch.title) } : {}),
+      ...(patch.closed !== undefined ? { closed: patch.closed } : {}),
+    });
+  }
+
+  /** User action: puts a message in another topic of its chat (null: General). */
+  async moveMessage(messageId: string, topicId: string | null): Promise<Message> {
+    const message = await this.repo.getMessage(messageId);
+    if (!message) throw new ChatError("not_found", "Message not found");
+    if (topicId) await this.writableTopic(message.chatId, topicId);
+    return this.repo.moveMessage(messageId, topicId);
   }
 
   /** Notifies listeners about a message that became final (also used for agent replies). */

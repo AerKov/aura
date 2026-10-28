@@ -1,7 +1,7 @@
 import { type Surreal, Table } from "surrealdb";
 import { keyOf } from "../../db/convert";
 import { errorMessage, log } from "../../lib/log";
-import { rowToChat, rowToMessage } from "../chat/repo";
+import { rowToChat, rowToMessage, rowToTopic } from "../chat/repo";
 import type { EventHub } from "./hub";
 
 /**
@@ -44,8 +44,19 @@ export async function startLiveBridge(db: Surreal, hub: EventHub): Promise<() =>
     }
   });
 
+  const topics = await db.live(new Table("topic"));
+  topics.subscribe((change) => {
+    if (change.action !== "CREATE" && change.action !== "UPDATE") return;
+    try {
+      hub.publish({ type: "topic.updated", topic: rowToTopic(change.value) });
+    } catch (error) {
+      log.error("live topic mapping failed", { error: errorMessage(error) });
+    }
+  });
+
   return async () => {
     await messages.kill();
     await chats.kill();
+    await topics.kill();
   };
 }

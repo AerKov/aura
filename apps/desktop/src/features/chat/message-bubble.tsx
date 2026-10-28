@@ -1,6 +1,6 @@
 import type { Message } from "@aura/shared";
 import { formatTokens } from "@aura/shared";
-import { CornerDownRight, Reply, Square } from "lucide-react";
+import { ArrowRightLeft, CornerDownRight, Reply, Square } from "lucide-react";
 import { Mark } from "@/components/mark";
 import { Markdown } from "@/components/markdown";
 import { highlightMentions } from "@/lib/mentions";
@@ -23,12 +23,15 @@ export function MessageBubble({
   showAuthor,
   onReply,
   onJumpTo,
+  onMove,
 }: {
   message: Message;
   replyTarget: Message | undefined;
   showAuthor: boolean;
   onReply: (message: Message) => void;
   onJumpTo: (messageId: string) => void;
+  /** Offered when the chat has topics: put the message in another topic. */
+  onMove?: (message: Message) => void;
 }) {
   const me = useChatStore((s) => s.me);
   const streamingText = useChatStore((s) => s.streaming[message.id]);
@@ -59,15 +62,25 @@ export function MessageBubble({
     </button>
   );
 
+  const action =
+    "text-muted-foreground hover:text-foreground bg-background/80 rounded-full border p-1 shadow-sm";
   const replyButton = (
-    <button
-      type="button"
-      aria-label="Reply"
-      onClick={() => onReply(message)}
-      className="text-muted-foreground hover:text-foreground bg-background/80 absolute -top-3 right-2 rounded-full border p-1 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 focus:opacity-100"
-    >
-      <Reply className="size-3.5" />
-    </button>
+    <div className="absolute -top-3 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+      {onMove && (
+        <button
+          type="button"
+          aria-label="Move to another topic"
+          title="Move to another topic"
+          onClick={() => onMove(message)}
+          className={action}
+        >
+          <ArrowRightLeft className="size-3.5" />
+        </button>
+      )}
+      <button type="button" aria-label="Reply" onClick={() => onReply(message)} className={action}>
+        <Reply className="size-3.5" />
+      </button>
+    </div>
   );
 
   if (mine) {

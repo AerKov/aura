@@ -1,12 +1,17 @@
-import type { ChatSummary, Message } from "@aura/shared";
-import { tileOf } from "@aura/shared";
+import {
+  type ChatSummary,
+  GENERAL_TOPIC_TITLE,
+  type Message,
+  type Topic,
+  tileOf,
+} from "@aura/shared";
 import { Box, ChevronLeft, ListTodo, Monitor, PanelRight, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
 import { useExtensionApps } from "@/features/shell/apps";
 import { closeAppRef, openBeside } from "@/features/shell/layout";
-import { loadMembers, reportError, showList } from "./actions";
+import { loadMembers, loadTopics, moveToTopic, reportError, showList } from "./actions";
 import { BudgetButton } from "./budget";
 import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
@@ -18,6 +23,7 @@ import { SetupPanel } from "./setup-panel";
 import { getState, useChatStore } from "./store";
 import { loadSummary, SummaryPanel } from "./summary-panel";
 import { TasksPanel } from "./tasks-panel";
+import { TopicBar } from "./topic-bar";
 import { WebhookInfo } from "./webhook-info";
 
 const EMPTY: Message[] = [];
@@ -42,7 +48,13 @@ const GREETING: Record<"direct" | "system" | "group", { title: string; text: str
 
 export function ChatView({ chatId }: { chatId: string }) {
   const chat = useChatStore((s) => s.chats[chatId]);
-  const messages = useChatStore((s) => s.messages[chatId] ?? EMPTY);
+  const all = useChatStore((s) => s.messages[chatId] ?? EMPTY);
+  const topics = useChatStore((s) => s.topics[chatId]);
+  const topicId = useChatStore((s) => s.activeTopic[chatId] ?? null);
+  const topic = topics?.find((t) => t.id === topicId) ?? null;
+  // A topic shows only its own messages (ADR 0024).
+  const messages = useMemo(() => all.filter((m) => m.topicId === topicId), [all, topicId]);
+  const [moving, setMoving] = useState<Message | null>(null);
   const streaming = useChatStore((s) => s.streaming);
   const members = useChatStore((s) => s.members[chatId]);
   const project = useChatStore((s) => (chat?.projectId ? s.projects[chat.projectId] : undefined));
@@ -76,11 +88,15 @@ export function ChatView({ chatId }: { chatId: string }) {
   ).length;
   // biome-ignore lint/correctness/useExhaustiveDependencies: refresh when a reply finished
   useEffect(() => {
-    void loadSummary(chatId).then(setSummary).catch(reportError);
-  }, [chatId, finished]);
+    void loadSummary(chatId, topicId).then(setSummary).catch(reportError);
+  }, [chatId, topicId, finished]);
+
+  useEffect(() => {
+    void loadTopics(chatId).catch(reportError);
+  }, [chatId]);
 
   const working = messages.filter((m) => m.status === "streaming").map((m) => m.author.id);
-  const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
+  const byId = useMemo(() => new Map(all.map((m) => [m.id, m])), [all]);
 
   // Keep the view pinned to the newest message unless the user scrolled up.
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when content changes
@@ -202,6 +218,7 @@ export function ChatView({ chatId }: { chatId: string }) {
             )}
           </div>
         </header>
+        <TopicBar chatId={chatId} topics={topics} active={topicId} />
         <div
           ref={scroller}
           onScroll={onScroll}
@@ -225,13 +242,19 @@ export function ChatView({ chatId }: { chatId: string }) {
                 showAuthor={!isGrouped(messages[index - 1], message)}
                 onReply={setReplyTo}
                 onJumpTo={jumpTo}
+                onMove={topics && topics.length > 0 ? setMoving : undefined}
               />
             ))}
           </div>
         </div>
         {chat.kind === "direct" && <SetupPanel />}
+        {moving && (
+          <MoveDialog message={moving} topics={topics ?? []} onClose={() => setMoving(null)} />
+        )}
         <Composer
           chatId={chatId}
+          topicId={topicId}
+          closed={topic?.closed ?? false}
           chatKind={chat.kind}
           replyTo={replyTo}
           onCancelReply={() => setReplyTo(null)}
@@ -247,6 +270,7 @@ export function ChatView({ chatId }: { chatId: string }) {
       {panel === "summary" && summary && (
         <SummaryPanel
           summary={summary}
+          topicId={topicId}
           onCleared={() => {
             setSummary(null);
             setPanel(null);
@@ -254,6 +278,48 @@ export function ChatView({ chatId }: { chatId: string }) {
           onClose={() => setPanel(null)}
         />
       )}
+    </div>
+  );
+}
+
+/** Puts a message into another topic of its chat. */
+function MoveDialog({
+  message,
+  topics,
+  onClose,
+}: {
+  message: Message;
+  topics: Topic[];
+  onClose: () => void;
+}) {
+  const targets: { id: string | null; title: string }[] = [
+    { id: null, title: GENERAL_TOPIC_TITLE },
+    ...topics.filter((t) => !t.closed),
+  ].filter((t) => t.id !== message.topicId);
+  return (
+    <div className="bg-popover text-popover-foreground mx-auto mb-2 w-full max-w-3xl rounded-xl border p-3 shadow-lg">
+      <div className="mb-2 flex items-center justify-between text-sm">
+        <span className="font-medium">Move this message to</span>
+        <Button size="sm" variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {targets.map((t) => (
+          <Button
+            key={t.id ?? "general"}
+            size="sm"
+            variant="outline"
+            className="rounded-full"
+            onClick={() => {
+              onClose();
+              void moveToTopic(message.id, t.id).catch(reportError);
+            }}
+          >
+            {t.title}
+          </Button>
+        ))}
+      </div>
     </div>
   );
 }

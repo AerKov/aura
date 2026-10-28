@@ -9,7 +9,7 @@ const fail = (error: unknown) => ({ text: `Error: ${errorMessage(error)}`, isErr
 /** Orchestrator tools for the catalog (ADR 0016): suggest ready-made packs instead of writing them. */
 export function catalogTools(
   catalog: CatalogService,
-  ctx: { handle: string; chatId: string },
+  ctx: { handle: string; chatId: string; topicId?: string | null },
 ): AgentTool[] {
   return [
     {
@@ -55,6 +55,7 @@ export function catalogTools(
           const record = await catalog.request(ref, {
             requestedBy: ctx.handle,
             chatId: ctx.chatId,
+            topicId: ctx.topicId ?? null,
             why: String(input.why ?? ""),
           });
           return ok(`Approval requested: ${record.title}. It is installed when the user approves.`);

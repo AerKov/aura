@@ -146,7 +146,7 @@ export class AppearanceService {
 
   async propose(
     change: CssChange,
-    by: { requestedBy: string; chatId: string; why: string },
+    by: { requestedBy: string; chatId: string; topicId?: string | null; why: string },
   ): Promise<ApprovalRecord> {
     if (!ASSET_NAME_PATTERN.test(change.name))
       throw new AppearanceError("name must be 2-48 chars: lowercase letters, digits, dashes");
@@ -161,6 +161,7 @@ export class AppearanceService {
       kind: "theme_change",
       requestedBy: by.requestedBy,
       chatId: by.chatId,
+      topicId: by.topicId,
       title: `${before ? "Update" : "New"} ${change.target} "${change.name}"${change.activate ? " (and use it)" : ""}`,
       why: by.why,
       preview: `\`\`\`diff\n${diff}\n\`\`\``,

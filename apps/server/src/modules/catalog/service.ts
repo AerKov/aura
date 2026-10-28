@@ -183,7 +183,7 @@ export class CatalogService {
   /** An agent asks to install a pack: the user approves the preview as a card. */
   async request(
     ref: PackRef,
-    by: { requestedBy: string; chatId: string; why: string },
+    by: { requestedBy: string; chatId: string; topicId?: string | null; why: string },
   ): Promise<ApprovalRecord> {
     const { pack, source, url } = await this.load(ref);
     const preview = this.describe(pack, source, url);
@@ -191,6 +191,7 @@ export class CatalogService {
       kind: "pack_install",
       requestedBy: by.requestedBy,
       chatId: by.chatId,
+      topicId: by.topicId,
       title: `Install pack "${pack.manifest.name}" ${pack.manifest.version}`,
       why: by.why,
       preview: [

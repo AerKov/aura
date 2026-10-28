@@ -48,6 +48,7 @@ describe("chat summaries", () => {
     const msg = (id: string, body: string): Message => ({
       id,
       chatId: "c",
+      topicId: null,
       author: owner,
       kind: "text",
       body,

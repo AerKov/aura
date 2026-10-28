@@ -41,6 +41,8 @@ export class TaskService {
     assignee: string;
     createdBy: string;
     chainDepth: number;
+    /** The topic its card goes to; null or absent: General. */
+    topicId?: string | null;
   }): Promise<Task> {
     const { chat } = input;
     if (!chat.projectId) throw new TaskError("tasks belong to project chats");
@@ -74,6 +76,7 @@ export class TaskService {
         : { kind: "agent" as const, id: input.createdBy };
     const message = await this.deps.repo.createMessage({
       chatId: chat.id,
+      topicId: input.topicId ?? null,
       author,
       kind: "card",
       body: `@${assignee} task: **${title}**${task.description ? `\n\n${task.description}` : ""}`,

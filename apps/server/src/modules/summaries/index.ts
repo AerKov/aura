@@ -9,6 +9,8 @@ export interface SummariesDeps {
 }
 
 const params = t.Object({ chatId: t.String({ maxLength: 64 }) });
+/** A topic id; absent for the chat's General topic. */
+const topicQuery = t.Object({ topic: t.Optional(t.String({ maxLength: 64 })) });
 
 /** What agents keep of a chat's older messages (ADR 0017): read it, or make them forget it. */
 export const summariesModule = ({ sessions, summaries }: SummariesDeps) =>
@@ -16,14 +18,16 @@ export const summariesModule = ({ sessions, summaries }: SummariesDeps) =>
     .use(authGuard(sessions))
     .get(
       "/chats/:chatId/summary",
-      async ({ params }) => ({ summary: await summaries.get(params.chatId) }),
-      { auth: true, params },
+      async ({ params, query }) => ({
+        summary: await summaries.get(params.chatId, query.topic ?? null),
+      }),
+      { auth: true, params, query: topicQuery },
     )
     .delete(
       "/chats/:chatId/summary",
-      async ({ params }) => {
-        await summaries.clear(params.chatId);
+      async ({ params, query }) => {
+        await summaries.clear(params.chatId, query.topic ?? null);
         return { ok: true };
       },
-      { auth: true, params },
+      { auth: true, params, query: topicQuery },
     );

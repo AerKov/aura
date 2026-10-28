@@ -1,3 +1,4 @@
+import type { Topic } from "@aura/shared";
 import { openAppRef } from "@/features/shell/layout";
 import { api, call, NeedsPairingError } from "@/lib/api";
 import { getState, mergeMessages, setState, upsertChat, upsertMessage } from "./store";
@@ -12,8 +13,13 @@ export async function loadInitial(): Promise<void> {
   }));
 }
 
-export async function loadMessages(chatId: string): Promise<void> {
-  const messages = await call(() => api.chats({ chatId }).messages.get({ query: { limit: 100 } }));
+/** Loads a chat's newest messages; with `topic`, that topic's (null: General). */
+export async function loadMessages(chatId: string, topic?: string | null): Promise<void> {
+  const query =
+    topic === undefined
+      ? { limit: 100 }
+      : { limit: 100, topic: topic === null ? "general" : topic };
+  const messages = await call(() => api.chats({ chatId }).messages.get({ query }));
   setState((s) => ({
     messages: { ...s.messages, [chatId]: mergeMessages(s.messages[chatId], messages) },
   }));
@@ -31,9 +37,50 @@ export async function sendMessage(
   chatId: string,
   body: string,
   replyTo: string | null,
+  topicId: string | null = null,
 ): Promise<void> {
-  const message = await call(() => api.chats({ chatId }).messages.post({ body, replyTo }));
+  const message = await call(() => api.chats({ chatId }).messages.post({ body, replyTo, topicId }));
   upsertMessage(message);
+}
+
+// Topics (ADR 0024)
+
+export async function loadTopics(chatId: string): Promise<void> {
+  const topics = await call(() => api.chats({ chatId }).topics.get());
+  setState((s) => ({ topics: { ...s.topics, [chatId]: topics } }));
+}
+
+export function upsertTopic(topic: Topic): void {
+  setState((s) => {
+    const list = (s.topics[topic.chatId] ?? []).filter((t) => t.id !== topic.id);
+    list.push(topic);
+    list.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+    return { topics: { ...s.topics, [topic.chatId]: list } };
+  });
+}
+
+/** Shows a topic of a chat (null: General) and loads its messages. */
+export function openTopic(chatId: string, topicId: string | null): void {
+  setState((s) => ({ activeTopic: { ...s.activeTopic, [chatId]: topicId } }));
+  void loadMessages(chatId, topicId).catch(reportError);
+}
+
+export async function createTopic(chatId: string, title: string): Promise<void> {
+  const topic = await call(() => api.chats({ chatId }).topics.post({ title }));
+  upsertTopic(topic);
+  openTopic(chatId, topic.id);
+}
+
+export async function updateTopic(
+  chatId: string,
+  topicId: string,
+  patch: { title?: string; closed?: boolean },
+): Promise<void> {
+  upsertTopic(await call(() => api.chats({ chatId }).topics({ topicId }).patch(patch)));
+}
+
+export async function moveToTopic(messageId: string, topicId: string | null): Promise<void> {
+  upsertMessage(await call(() => api.messages({ messageId }).topic.post({ topicId })));
 }
 
 export function openChat(chatId: string): void {

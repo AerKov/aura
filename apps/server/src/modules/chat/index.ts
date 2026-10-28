@@ -30,6 +30,8 @@ export const chatModule = ({ chat, sessions }: ChatDeps) =>
         return chat.repo.listMessages(params.chatId, {
           before: query.before,
           limit: query.limit ?? 50,
+          // "general" is the chat's General topic; absent means every topic.
+          ...(query.topic ? { topic: query.topic === "general" ? null : query.topic } : {}),
         });
       },
       {
@@ -37,6 +39,7 @@ export const chatModule = ({ chat, sessions }: ChatDeps) =>
         query: t.Object({
           before: t.Optional(t.String({ maxLength: 64 })),
           limit: t.Optional(t.Numeric({ minimum: 1, maximum: 200 })),
+          topic: t.Optional(t.String({ maxLength: 64 })),
         }),
       },
     )
@@ -48,12 +51,38 @@ export const chatModule = ({ chat, sessions }: ChatDeps) =>
           author: { kind: "user", id: user.id },
           body: body.body,
           replyTo: body.replyTo ?? null,
+          topicId: body.topicId,
         }),
       {
         auth: true,
         body: t.Object({
           body: t.String({ minLength: 1, maxLength: 32_000 }),
           replyTo: t.Optional(t.Nullable(t.String({ maxLength: 64 }))),
+          topicId: t.Optional(t.Nullable(t.String({ maxLength: 64 }))),
         }),
       },
+    )
+    .get("/chats/:chatId/topics", ({ params }) => chat.repo.listTopics(params.chatId), {
+      auth: true,
+    })
+    .post(
+      "/chats/:chatId/topics",
+      ({ params, body }) => chat.createTopic(params.chatId, body.title),
+      { auth: true, body: t.Object({ title: t.String({ maxLength: 200 }) }) },
+    )
+    .patch(
+      "/chats/:chatId/topics/:topicId",
+      ({ params, body }) => chat.updateTopic(params.chatId, params.topicId, body),
+      {
+        auth: true,
+        body: t.Object({
+          title: t.Optional(t.String({ maxLength: 200 })),
+          closed: t.Optional(t.Boolean()),
+        }),
+      },
+    )
+    .post(
+      "/messages/:messageId/topic",
+      ({ params, body }) => chat.moveMessage(params.messageId, body.topicId),
+      { auth: true, body: t.Object({ topicId: t.Nullable(t.String({ maxLength: 64 })) }) },
     );

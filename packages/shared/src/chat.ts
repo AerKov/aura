@@ -148,6 +148,8 @@ export interface Skill {
 export interface Message {
   id: string;
   chatId: string;
+  /** The topic it belongs to; null is the chat's "General" (ADR 0024). */
+  topicId: string | null;
   author: Participant;
   kind: MessageKind;
   /** Markdown. */
@@ -164,6 +166,19 @@ export interface Message {
   createdAt: string;
   updatedAt: string;
 }
+
+/** A thread of a chat, like a Telegram forum topic. "General" is implicit (topicId null). */
+export interface Topic {
+  id: string;
+  chatId: string;
+  title: string;
+  /** Closed topics are read-only until reopened. */
+  closed: boolean;
+  createdAt: string;
+}
+
+export const GENERAL_TOPIC_TITLE = "General";
+export const MAX_TOPIC_TITLE = 60;
 
 export const HANDLE_PATTERN = /^[a-z][a-z0-9_-]{1,31}$/;
 

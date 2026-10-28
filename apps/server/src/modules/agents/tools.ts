@@ -41,6 +41,8 @@ export interface ToolContext {
   chat: Chat;
   /** Chain depth of the agent's reply; messages it causes are one level deeper. */
   depth: number;
+  /** The topic the run answers in (null or absent: General); cards it causes go there. */
+  topicId?: string | null;
 }
 
 const ok = (text: string) => ({ text });
@@ -329,6 +331,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             kind: "create_agent",
             requestedBy: ctx.handle,
             chatId: ctx.chat.id,
+            topicId: ctx.topicId,
             title: `Create agent @${profile.handle}`,
             why: String(input.why ?? ""),
             preview: `${describeAgent(profile, true)}\n\n**Prompt**\n\n${profile.systemPrompt}`,
@@ -383,6 +386,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             kind: "agent_change",
             requestedBy: ctx.handle,
             chatId: ctx.chat.id,
+            topicId: ctx.topicId,
             title: `Change @${handle}: ${changed.join(", ")}`,
             why: String(input.why ?? ""),
             preview: `\`\`\`diff\n${unifiedDiff(before, after, `agents/${handle}/agent.md`)}\n\`\`\``,
@@ -443,6 +447,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             kind: "budget_change",
             requestedBy: ctx.handle,
             chatId: ctx.chat.id,
+            topicId: ctx.topicId,
             title: `Budget of ${target.name}: ${budgetText({ usd, tokens })}`,
             why: String(input.why ?? ""),
             preview: `Now: ${target.now}.\nAfter: ${budgetText({ usd, tokens })}.`,
@@ -576,6 +581,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             kind: "create_project",
             requestedBy: ctx.handle,
             chatId: ctx.chat.id,
+            topicId: ctx.topicId,
             title: `Start project "${valid.name}"`,
             why: String(input.why ?? ""),
             preview: [
@@ -634,7 +640,7 @@ function skillTool(deps: ToolDeps, ctx: ToolContext): AgentTool {
             reason: String(input.reason ?? ""),
             attachTo,
           },
-          { requestedBy: ctx.handle, chatId: ctx.chat.id },
+          { requestedBy: ctx.handle, chatId: ctx.chat.id, topicId: ctx.topicId },
         );
         return ok("Approval requested for the skill change.");
       } catch (error) {
@@ -672,6 +678,7 @@ function taskTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
         try {
           const task = await deps.tasks.create({
             chat: ctx.chat,
+            topicId: ctx.topicId,
             title: String(input.title ?? ""),
             description: String(input.description ?? ""),
             assignee: String(input.assignee ?? ""),
@@ -794,6 +801,7 @@ function operationsTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             kind: "schedule_job",
             requestedBy: ctx.handle,
             chatId: ctx.chat.id,
+            topicId: ctx.topicId,
             title: `Schedule "${valid.name}"`,
             why: String(input.why ?? ""),
             preview: [

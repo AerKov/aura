@@ -5,6 +5,7 @@ import { buildPrompt, CONTEXT_WINDOW, userNote } from "./context";
 const msg = (id: string, body: string, extra: Partial<Message> = {}): Message => ({
   id,
   chatId: "c",
+  topicId: null,
   author: { kind: "user", id: "owner" },
   kind: "text",
   body,
