@@ -6,6 +6,7 @@ import { decideToolUse } from "../../providers/confine";
 import { createTestApp } from "../../testing";
 import { compareVersions, ExtensionError, validateManifest } from "./extensions";
 import { McpError, validateServer } from "./mcp";
+import { FORCED_REASON } from "./safe-mode";
 
 type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 const by = { requestedBy: "orchestrator", chatId: "direct", why: "test" };
@@ -192,5 +193,16 @@ describe("customization", () => {
     expect(t.mcp.forAgent("coder")).toEqual({});
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
     expect((await api.customize.get()).data?.safeMode).toEqual({ on: true, reason: "test" });
+
+    // The user leaves it: MCP servers come back without a restart.
+    expect((await api.customize["safe-mode"].off.post()).data?.safeMode.on).toBe(false);
+    expect(Object.keys(t.mcp.forAgent("coder"))).toEqual(["web"]);
+  });
+
+  test("safe mode forced by the env flag cannot be left from the app", async () => {
+    t = await createTestApp({ safeMode: { on: true, reason: FORCED_REASON } });
+    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
+    expect((await api.customize["safe-mode"].off.post()).status).toBe(409);
+    expect((await api.customize.get()).data?.safeMode.on).toBe(true);
   });
 });

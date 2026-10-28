@@ -5,6 +5,14 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.27.2] - 2026-10-28: Apps and safe mode
+
+- An app's tile no longer stays empty: it says why the app is not shown (safe mode, turned off, a
+  problem) and offers to fix it (**Leave safe mode**, **Turn on**).
+- Safe mode can be left from the app, without a restart (not when forced by `AURA_SAFE_MODE`).
+- Safe mode no longer turns on after a few short sessions: a start counts as clean after 10 seconds
+  (was a minute) and on a normal shutdown.
+
 ## [0.27.1] - 2026-10-28: Startup fix
 
 - The window waits up to 30 seconds for the server to start instead of failing at once with "Could

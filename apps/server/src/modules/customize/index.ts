@@ -5,11 +5,12 @@ import type { LocalSessions } from "../auth/sessions";
 import type { ChatRepo } from "../chat/repo";
 import { ChatError } from "../chat/service";
 import { ProjectError, type ProjectService } from "../projects/service";
+import type { EventHub } from "../realtime/hub";
 import { AppearanceError, type AppearanceService } from "./appearance";
 import { type ExtensionBridge, ExtensionDenied } from "./bridge";
 import { ExtensionError, type ExtensionService, FRAME_CSP } from "./extensions";
 import type { McpService } from "./mcp";
-import type { SafeMode } from "./safe-mode";
+import { leaveSafeMode, type SafeMode } from "./safe-mode";
 
 export interface CustomizeRouteDeps {
   sessions: LocalSessions;
@@ -17,6 +18,7 @@ export interface CustomizeRouteDeps {
   extensions: ExtensionService;
   mcp: McpService;
   safeMode: SafeMode;
+  hub: EventHub;
   appVersion: string;
   corsOrigins: string[];
   repo: ChatRepo;
@@ -83,6 +85,17 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         mcpServers: deps.mcp.list(),
       }),
       { auth: true },
+    )
+    .post(
+      "/customize/safe-mode/off",
+      ({ status }) => {
+        if (!deps.safeMode.on) return { safeMode: deps.safeMode };
+        if (!leaveSafeMode(deps.safeMode))
+          return status(409, { error: "Safe mode is forced by AURA_SAFE_MODE" });
+        deps.hub.publish({ type: "customize.updated" });
+        return { safeMode: deps.safeMode };
+      },
+      { auth: true, detail: { summary: "Leave automatic safe mode for this run" } },
     )
     .post(
       "/extensions/:extensionId/enabled",

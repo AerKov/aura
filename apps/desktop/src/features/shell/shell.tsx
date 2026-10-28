@@ -19,7 +19,7 @@ import { loadInitial, loadProjects, openChat, reportError } from "@/features/cha
 import { ChatView } from "@/features/chat/chat-view";
 import { Sidebar } from "@/features/chat/sidebar";
 import { getState, setState, useChatStore } from "@/features/chat/store";
-import { CustomizeView } from "@/features/customize/customize-view";
+import { CustomizeView, loadCustomize } from "@/features/customize/customize-view";
 import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
 import { EnginesView } from "@/features/engines/engines-view";
@@ -418,6 +418,50 @@ function PinButton({ app }: { app: AppRef }) {
   );
 }
 
+/** Why an app's tile is empty: safe mode, the app is off, or it has a problem. */
+function AppUnavailable({ id }: { id: string }) {
+  const customize = useChatStore((s) => s.customize);
+  const [error, setError] = useState<string | null>(null);
+  const info = customize?.extensions.find((e) => e.id === id);
+  let text: string;
+  let action: { label: string; run: () => Promise<unknown> } | null = null;
+  if (!customize) return null;
+  if (customize.safeMode.on) {
+    text = `Safe mode is on (${customize.safeMode.reason}), so apps and MCP servers are off.`;
+    action = {
+      label: "Leave safe mode",
+      run: () => call(() => api.customize["safe-mode"].off.post()),
+    };
+  } else if (!info) text = "This app is not installed.";
+  else if (info.problem) text = `This app cannot run: ${info.problem}`;
+  else if (!info.enabled) {
+    text = "This app is turned off.";
+    action = {
+      label: "Turn on",
+      run: () => call(() => api.extensions({ extensionId: id }).enabled.post({ enabled: true })),
+    };
+  } else text = "This app has no screen.";
+  return (
+    <div className="flex h-full flex-col items-center justify-center gap-3 p-6 text-center">
+      <p className="text-muted-foreground max-w-sm text-sm">{text}</p>
+      {action && (
+        <Button
+          variant="outline"
+          onClick={() =>
+            void action
+              .run()
+              .then(() => loadCustomize())
+              .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)))
+          }
+        >
+          {action.label}
+        </Button>
+      )}
+      {error && <p className="text-destructive text-sm">{error}</p>}
+    </div>
+  );
+}
+
 /** What an app shows inside its tile. */
 function AppView({ app }: { app: AppRef }) {
   const extensions = useExtensionApps();
@@ -427,7 +471,7 @@ function AppView({ app }: { app: AppRef }) {
   if (app === "messenger") return <Messenger />;
   if (app.startsWith("ext:")) {
     const ext = extensions.find((e) => e.id === app.slice(4));
-    if (!ext) return null;
+    if (!ext) return <AppUnavailable id={app.slice(4)} />;
     const draft = Boolean(ext.app?.draft && previewDraft[ext.id]);
     return (
       <ExtensionFrame

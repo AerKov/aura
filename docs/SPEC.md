@@ -267,7 +267,8 @@ export default function activate(ctx: ExtensionContext) {
 Rules:
 - Community/third-party extensions are disabled until the user enables them (restricted mode).
 - Install shows requested permissions; the user confirms.
-- **Safe mode:** start without tier 2 and 3 extensions (flag, or automatic after repeated crashes).
+- **Safe mode:** start without tier 2 and 3 extensions (flag, or automatic after repeated crashes at
+  startup). The user can leave automatic safe mode from the app without a restart.
 - Extension API is versioned; `minAppVersion` is checked on load.
 
 ## 12. Open questions (verify before relying on them)

@@ -9,7 +9,7 @@ import { FileAgentDirectory } from "./modules/agents/directory";
 import { loadWebhookToken } from "./modules/alerts/service";
 import { LocalSessions } from "./modules/auth/sessions";
 import { DIRECT_CHAT_ID } from "./modules/chat/repo";
-import { detectSafeMode } from "./modules/customize/safe-mode";
+import { detectSafeMode, HEALTHY_AFTER_MS } from "./modules/customize/safe-mode";
 import { NotificationService, WebPushSender } from "./modules/devices/notifications";
 import { EngineRegistry } from "./modules/engines/registry";
 import { ToolBridge } from "./modules/engines/tool-bridge";
@@ -107,7 +107,7 @@ async function main(): Promise<void> {
   }).listen({ hostname: config.host, port: config.port });
 
   log.info("server listening", { url: `http://${config.host}:${config.port}` });
-  setTimeout(safe.markHealthy, 60_000).unref();
+  setTimeout(safe.markHealthy, HEALTHY_AFTER_MS).unref();
 
   let shuttingDown = false;
   const shutdown = async (signal: string) => {
@@ -128,6 +128,7 @@ async function main(): Promise<void> {
     await stopLive().catch(() => {});
     await services.appData.closeAll();
     await db.close();
+    safe.markHealthy();
     process.exit(0);
   };
   process.on("SIGINT", () => void shutdown("SIGINT"));
