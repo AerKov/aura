@@ -39,6 +39,8 @@ import { realtimeModule } from "./modules/realtime";
 import type { EventHub } from "./modules/realtime/hub";
 import { sandboxModule } from "./modules/sandbox";
 import type { SandboxService } from "./modules/sandbox/service";
+import { shellModule } from "./modules/shell";
+import type { LayoutService } from "./modules/shell/service";
 import type { SkillService } from "./modules/skills/service";
 import { summariesModule } from "./modules/summaries";
 import type { ChatSummaryService } from "./modules/summaries/service";
@@ -74,6 +76,7 @@ export interface AppDeps extends HealthDeps {
   appearance: AppearanceService;
   extensions: ExtensionService;
   extensionBridge: ExtensionBridge;
+  layout: LayoutService;
   mcp: McpService;
   safeMode: SafeMode;
   appVersion: string;
@@ -102,6 +105,7 @@ export function createApp(deps: AppDeps) {
     .use(controlModule(deps))
     .use(opsModule(deps))
     .use(customizeModule(deps))
+    .use(shellModule(deps))
     .use(devicesModule(deps))
     .use(realtimeModule(deps));
 }

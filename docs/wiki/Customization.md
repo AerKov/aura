@@ -30,13 +30,13 @@ MCP servers work with every engine. Aura does not use the servers you set up in 
 
 > Make a panel for this project with a form that files a ticket in our tracker.
 
-Extensions are small JavaScript apps in `extensions/<id>/`. Open one next to a chat with **Apps** in
-the chat header: it appears in the side panel on the right and knows which chat and project it is
-next to. Extensions with a page are also in the rail on the left.
+Extensions are small JavaScript apps in `extensions/<id>/`. They open as tiles on
+[the screen](The-Screen), from their icon in the rail, and know which chat (and project) is open
+in Chats, so they can work next to it. **Apps** in a chat's header opens one next to that chat.
 
-**Project apps.** Pin an extension to a project with the pin button in the side panel, or ask the
-orchestrator for an app for a project. It then opens by itself whenever you enter that project's
-chat. Close the panel to hide it for now; unpin to stop it opening.
+**Project apps.** Pin an extension to a project with the pin button in its tile's bar while the
+project's chat is open, or ask the orchestrator for an app for a project. It then opens by itself
+next to that project's chat. Close its tile to hide it for now; unpin to stop it opening.
 
 Extensions run in a sandbox and can do only what you approved when you installed or enabled them:
 

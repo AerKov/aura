@@ -3,6 +3,7 @@
  * The client connects to `WS_PATH?token=<session token>`.
  */
 import type { Chat, Message } from "./chat";
+import type { Layout } from "./layout";
 
 export const WS_PATH = "/ws";
 
@@ -17,6 +18,8 @@ export type ServerEvent =
   | { type: "chat.updated"; chat: Chat }
   /** Theme, snippets or extensions changed; clients reload them. */
   | { type: "customize.updated" }
+  /** The shell's layout changed (the orchestrator or another window); clients show it. */
+  | { type: "layout.updated"; layout: Layout }
   /** Something that deserves the user's attention (shown when the app is in the background). */
   | { type: "notification"; title: string; body: string; chatId: string; tag: string };
 
@@ -34,6 +37,7 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "message.deleted",
   "chat.updated",
   "customize.updated",
+  "layout.updated",
   "notification",
 ]);
 

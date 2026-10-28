@@ -16,7 +16,6 @@ const SECTIONS: { kind: Chat["kind"]; label: string }[] = [
 export function Sidebar() {
   const chats = useChatStore((s) => s.chats);
   const activeChatId = useChatStore((s) => s.activeChatId);
-  const view = useChatStore((s) => s.view);
   const pane = useChatStore((s) => s.pane);
   const me = useChatStore((s) => s.me);
   const connection = useChatStore((s) => s.connection);
@@ -34,9 +33,8 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "bg-sidebar flex w-80 shrink-0 flex-col border-r max-md:w-full max-md:pb-16",
-        view !== "chat" && "md:hidden",
-        (pane === "main" || view !== "chat") && "max-md:hidden",
+        "bg-sidebar flex w-80 max-w-[45%] shrink-0 flex-col border-r max-md:w-full max-md:max-w-none",
+        pane === "main" && "max-md:hidden",
       )}
     >
       <header className="flex h-14 items-center justify-between border-b px-4">

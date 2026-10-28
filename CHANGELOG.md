@@ -5,6 +5,18 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.21.0] - 2026-10-28: The screen
+
+Aura becomes a shell for your apps (ADR 0024).
+
+- Apps open as tiles: side by side, stacked or as tabs, resizable, saved between launches. The
+  messenger (Chats) is the first app; the pages and installed extensions are apps too.
+- Shift-click an icon in the rail, or **+** in a tile's bar, to open an app on the right or below.
+- The orchestrator arranges the screen on request ("open Agents on the right").
+- A project's app opens as a tile next to its chat (it replaces the side panel).
+- First launch: Chats on the whole screen with a welcome from the orchestrator that explains Aura.
+- A phone shows one app at a time and leaves the computer's tiles alone.
+
 ## [0.20.0] - 2026-10-27: Budgets in tokens
 
 - Budgets are optional: new projects have no limit unless you set one.

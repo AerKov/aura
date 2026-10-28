@@ -2,6 +2,7 @@ import { type ClientEvent, parseServerEvent } from "@aura/shared";
 import { loadAppearance } from "@/features/customize/appearance";
 import { loadCustomize } from "@/features/customize/customize-view";
 import { showNotification } from "@/features/devices/push";
+import { loadLayout, receiveLayout } from "@/features/shell/layout";
 import { NeedsPairingError, resetSession, wsUrl } from "@/lib/api";
 import { loadTasks, refreshProjectsSoon, reportError, resync } from "./actions";
 import { appendDelta, getState, removeMessage, setState, upsertChat, upsertMessage } from "./store";
@@ -66,8 +67,12 @@ export function startRealtime(): () => void {
         case "customize.updated":
           void loadAppearance().catch(reportError);
           void loadCustomize().catch(reportError);
-          // A pack may have added agents.
+          // A pack may have added agents; a disabled extension leaves the layout.
           refreshProjectsSoon();
+          void loadLayout().catch(reportError);
+          break;
+        case "layout.updated":
+          receiveLayout(event.layout);
           break;
         case "notification":
           showNotification(event);

@@ -20,11 +20,11 @@ const V1_PERMISSIONS = { "chat.read": 1, "chat.write": 1, "ui.panel": 1, "alerts
 
 /** How to write an extension: the tool description is all the orchestrator sees of the API. */
 export const EXTENSION_GUIDE = [
-  "Propose a UI extension: a small app that opens in the side panel next to a chat (and in the rail). It runs in a sandboxed frame with no direct network.",
+  "Propose a UI extension: a small app that opens as a tile on the user's screen, next to the open chat. It runs in a sandboxed frame with no direct network.",
   "main.js must `export default function activate(ctx)`; use plain DOM, keep it small, style with styles.css.",
   "ctx API (each part needs its permission): ctx.ui.registerPanel({ title, render(el) }) (ui.panel);",
   "ctx.ui.form(el, { title, fields: [{ name, label, type: text|textarea|number|date|checkbox|select|email|url, options, placeholder, required, value }], submitLabel, onSubmit: async (values) => … }) and ctx.ui.button(el, label, async () => …) build themed controls;",
-  "await ctx.context() → { chatId, projectId } of the chat it is open next to (null in the rail);",
+  "await ctx.context() → { chatId, projectId } of the chat open in Chats (it changes: listen with ctx.events.on('context', …));",
   "await ctx.chat.list(), await ctx.chat.messages(chatId) (chat.read), await ctx.chat.post(chatId, markdown) (chat.write; does not wake agents);",
   "await ctx.agents.ask(agent, text, { chatId }) (agents.ask): posts a message from the user `@agent text` in the current chat (or chatId), which wakes the agent under normal budgets; use it for buttons and forms that ask an agent to do something;",
   "await ctx.storage.get(key), ctx.storage.set(key, jsonValue), ctx.storage.delete(key), ctx.storage.keys() (storage): the extension's own data, never in chat messages;",

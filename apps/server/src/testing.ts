@@ -36,6 +36,8 @@ export async function createTestApp(
     acpAgents?: ConstructorParameters<typeof EngineRegistry>[0]["acpAgents"];
     acpSpawn?: ConstructorParameters<typeof EngineRegistry>[0]["acpSpawn"];
     containers?: (dataDir: string, sandbox: SandboxService) => ContainerService;
+    /** The orchestrator's first-launch welcome in the direct chat (default off). */
+    welcome?: boolean;
   } = {},
 ) {
   const dataDir = mkdtempSync(join(tmpdir(), "aura-test-"));
@@ -74,6 +76,7 @@ export async function createTestApp(
     maxChainDepth: opts.maxChainDepth,
     triageDelayMs: 10,
     safeMode: opts.safeMode,
+    welcome: opts.welcome ?? false,
   });
   const stopRuntime = services.runtime.start();
   const sessions = new LocalSessions();

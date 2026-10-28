@@ -33,6 +33,8 @@ import { MemoryService } from "./modules/memory/service";
 import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
 import { SandboxService } from "./modules/sandbox/service";
+import { LayoutService } from "./modules/shell/service";
+import { shellTools } from "./modules/shell/tools";
 import { SkillService } from "./modules/skills/service";
 import { ChatSummaryService } from "./modules/summaries/service";
 import { TaskService } from "./modules/tasks/service";
@@ -68,11 +70,13 @@ export async function createServices(deps: {
   maxChainDepth?: number;
   triageDelayMs?: number;
   safeMode?: SafeMode;
+  /** Post the orchestrator's welcome on a new install (off in most tests). */
+  welcome?: boolean;
 }) {
   const safeMode: SafeMode = deps.safeMode ?? { on: false, reason: null };
   const repo = new ChatRepo(deps.db);
   const chat = new ChatService(repo);
-  const owner = await chat.bootstrap();
+  const owner = await chat.bootstrap({ welcome: deps.welcome });
   const runs = new RunRepo(deps.db);
   const sandbox = deps.sandbox ?? new SandboxService({ dataDir: deps.dataDir });
   const containers =
@@ -155,6 +159,7 @@ export async function createServices(deps: {
     projects,
     fetch: deps.fetch,
   });
+  const layout = new LayoutService({ db: deps.db, hub: deps.hub, extensions });
   const customize = { appearance, mcp, extensions };
   const catalog = new CatalogService({
     dataDir: deps.dataDir,
@@ -204,6 +209,7 @@ export async function createServices(deps: {
       // orchestrator had no such tools and claimed to have sent cards).
       ...(ctx.handle === "orchestrator"
         ? [
+            ...shellTools(layout),
             ...customizeTools(customize, { handle: ctx.handle, chatId: ctx.chat.id }),
             ...catalogTools(catalog, { handle: ctx.handle, chatId: ctx.chat.id }),
           ]
@@ -267,6 +273,7 @@ export async function createServices(deps: {
     mcp,
     extensions,
     extensionBridge,
+    layout,
     catalog,
     safeMode,
     appVersion: SERVER_VERSION,

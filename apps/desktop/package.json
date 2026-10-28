@@ -1,6 +1,6 @@
 {
   "name": "@aura/desktop",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -24,6 +24,7 @@
     "lucide-react": "1.61.0",
     "react": "19.3.1",
     "react-dom": "19.3.1",
+    "react-resizable-panels": "4.14.5",
     "streamdown": "2.7.1",
     "tailwind-merge": "3.7.0"
   },

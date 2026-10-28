@@ -12,7 +12,7 @@
     },
     "apps/desktop": {
       "name": "@aura/desktop",
-      "version": "0.9.0",
+      "version": "0.20.0",
       "dependencies": {
         "@aura/shared": "workspace:*",
         "@elysiajs/eden": "1.4.9",
@@ -25,6 +25,7 @@
         "lucide-react": "1.61.0",
         "react": "19.3.1",
         "react-dom": "19.3.1",
+        "react-resizable-panels": "4.14.5",
         "streamdown": "2.7.1",
         "tailwind-merge": "3.7.0",
       },
@@ -43,7 +44,7 @@
     },
     "apps/server": {
       "name": "@aura/server",
-      "version": "0.9.0",
+      "version": "0.20.0",
       "dependencies": {
         "@agentclientprotocol/sdk": "1.9.0",
         "@anthropic-ai/claude-agent-sdk": "0.3.311",
@@ -724,6 +725,8 @@
     "react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
 
     "react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
+
+    "react-resizable-panels": ["react-resizable-panels@4.14.5", "", { "peerDependencies": { "react": "^18.0.0 || ^19.0.0", "react-dom": "^18.0.0 || ^19.0.0" } }, "sha512-AoHgoq3sGOfciPn2ahddFrBCqsitZLse8cJIYWblvE3kQ9z39IrhdlHCjnVRrDL8XcWqvA0u/t9nLZTfWePJ5A=="],
 
     "regex": ["regex@6.1.0", "", { "dependencies": { "regex-utilities": "^2.3.0" } }, "sha512-6VwtthbV4o/7+OaAF9I5L5V3llLEsoPyq9P1JVXkedTP33c7MfCG0/5NOPcSJn0TzXcG9YUrR0gQSWioew3LDg=="],
 

@@ -1,11 +1,14 @@
-import type {
-  Appearance,
-  Chat,
-  CustomizeState,
-  Message,
-  Participant,
-  Project,
-  Task,
+import {
+  type Appearance,
+  type AppRef,
+  type Chat,
+  type CustomizeState,
+  defaultLayout,
+  type Layout,
+  type Message,
+  type Participant,
+  type Project,
+  type Task,
 } from "@aura/shared";
 import { useSyncExternalStore } from "react";
 
@@ -36,26 +39,15 @@ export interface ChatState {
   members: Record<string, Participant[]>;
   agents: Record<string, AgentInfo>;
   tasks: Record<string, Task[]>;
-  /** "ext:<id>" shows an extension panel. */
-  view:
-    | "chat"
-    | "skills"
-    | "memory"
-    | "catalog"
-    | "agents"
-    | "integrations"
-    | "jobs"
-    | "engines"
-    | "customize"
-    | "devices"
-    | `ext:${string}`;
-  /** On narrow screens only one pane is visible: the list or the content. */
+  /** The shell: which apps are open as tiles (ADR 0024). */
+  layout: Layout;
+  /** On a phone: the one app on screen (not saved; the tiles stay as the desktop left them). */
+  phoneApp: AppRef | null;
+  /** On narrow screens the messenger shows one pane: the chat list or a chat. */
   pane: "list" | "main";
   needsPairing: boolean;
   appearance: Appearance | null;
   customize: CustomizeState | null;
-  /** Extension open in the side panel per chat; null = closed, absent = the project's app. */
-  sideApp: Record<string, string | null>;
 }
 
 let state: ChatState = {
@@ -71,10 +63,10 @@ let state: ChatState = {
   members: {},
   agents: {},
   tasks: {},
-  view: "chat",
+  layout: defaultLayout(),
+  phoneApp: null,
   appearance: null,
   customize: null,
-  sideApp: {},
   pane: "list",
   needsPairing: false,
 };

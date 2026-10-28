@@ -1,3 +1,4 @@
+import { openAppRef } from "@/features/shell/layout";
 import { api, call, NeedsPairingError } from "@/lib/api";
 import { getState, mergeMessages, setState, upsertChat, upsertMessage } from "./store";
 
@@ -36,7 +37,8 @@ export async function sendMessage(
 }
 
 export function openChat(chatId: string): void {
-  setState(() => ({ activeChatId: chatId, view: "chat", pane: "main" }));
+  setState(() => ({ activeChatId: chatId, pane: "main" }));
+  openAppRef("messenger");
   if (!getState().messages[chatId]) void loadMessages(chatId).catch(reportError);
 }
 
@@ -69,7 +71,7 @@ export function refreshProjectsSoon(): void {
 export { upsertChat };
 
 export function showDevices(): void {
-  setState(() => ({ view: "devices", pane: "main" }));
+  openAppRef("page:devices");
 }
 
 export function showList(): void {
@@ -116,37 +118,37 @@ export async function setTaskStatus(
 }
 
 export function showSkills(): void {
-  setState(() => ({ view: "skills", pane: "main" }));
+  openAppRef("page:skills");
 }
 
 export function showJobs(): void {
-  setState(() => ({ view: "jobs", pane: "main" }));
+  openAppRef("page:jobs");
 }
 
 export function showMemory(): void {
-  setState(() => ({ view: "memory", pane: "main" }));
+  openAppRef("page:memory");
 }
 
 export function showAgents(): void {
-  setState(() => ({ view: "agents", pane: "main" }));
+  openAppRef("page:agents");
 }
 
 export function showIntegrations(): void {
-  setState(() => ({ view: "integrations", pane: "main" }));
+  openAppRef("page:integrations");
 }
 
 export function showCatalog(): void {
-  setState(() => ({ view: "catalog", pane: "main" }));
+  openAppRef("page:catalog");
 }
 
 export function showEngines(): void {
-  setState(() => ({ view: "engines", pane: "main" }));
+  openAppRef("page:engines");
 }
 
 export function showCustomize(): void {
-  setState(() => ({ view: "customize", pane: "main" }));
+  openAppRef("page:customize");
 }
 
 export function showExtension(id: string): void {
-  setState(() => ({ view: `ext:${id}`, pane: "main" }));
+  openAppRef(`ext:${id}`);
 }

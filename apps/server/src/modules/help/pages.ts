@@ -16,6 +16,7 @@ import Integrations from "../../../../../docs/wiki/Integrations.md" with { type:
 import Memory from "../../../../../docs/wiki/Memory.md" with { type: "text" };
 import Phone from "../../../../../docs/wiki/Phone.md" with { type: "text" };
 import Skills from "../../../../../docs/wiki/Skills.md" with { type: "text" };
+import TheScreen from "../../../../../docs/wiki/The-Screen.md" with { type: "text" };
 import Troubleshooting from "../../../../../docs/wiki/Troubleshooting.md" with { type: "text" };
 import YourData from "../../../../../docs/wiki/Your-Data.md" with { type: "text" };
 
@@ -40,6 +41,12 @@ export const HELP_PAGES: HelpPage[] = [
     title: "Getting Started",
     summary: "Install, pick an engine, first project",
     text: GettingStarted,
+  },
+  {
+    id: "the-screen",
+    title: "The screen",
+    summary: "Apps as tiles: opening, splitting, tabs, resizing; the phone",
+    text: TheScreen,
   },
   {
     id: "engines",

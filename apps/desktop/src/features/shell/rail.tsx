@@ -1,165 +1,82 @@
+import { type PageId, visibleApps } from "@aura/shared";
 import type { LucideIcon } from "lucide-react";
-import {
-  Bot,
-  Brain,
-  CalendarClock,
-  Cpu,
-  MessagesSquare,
-  Package,
-  Palette,
-  Plug,
-  Smartphone,
-  Sparkles,
-} from "lucide-react";
-import { useMemo } from "react";
+import { MessagesSquare } from "lucide-react";
 import { AuraLogo } from "@/components/logo";
-import {
-  showAgents,
-  showCatalog,
-  showCustomize,
-  showDevices,
-  showEngines,
-  showExtension,
-  showIntegrations,
-  showJobs,
-  showList,
-  showMemory,
-  showSkills,
-} from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
+import { PAGES, railApp, useExtensionApps } from "./apps";
+import { openAppRef, phoneAppOf } from "./layout";
 import { arrangeRail } from "./rail-layout";
+import { useIsPhone } from "./shell";
 
 export interface RailItem {
   key: string;
   label: string;
   icon: LucideIcon;
+  /** Open somewhere on the screen. */
   active: boolean;
-  onClick: () => void;
 }
 
 /** Setup pages stay on the desktop; the phone's tab bar keeps the daily ones. */
 const DESKTOP_ONLY = new Set(["integrations", "catalog", "engines", "customize", "devices"]);
 
+const PAGE_ORDER: PageId[] = ["skills", "memory", "agents", "integrations", "catalog", "jobs"];
+const PAGE_TAIL: PageId[] = ["engines", "customize", "devices"];
+
 /** Every rail item in its default order, before the user's layout is applied. */
 export function useRailItems(): RailItem[] {
-  const view = useChatStore((s) => s.view);
-  const customize = useChatStore((s) => s.customize);
-  const panels = useMemo(
-    () =>
-      customize?.safeMode.on
-        ? []
-        : (customize?.extensions ?? []).filter(
-            (e) => e.enabled && e.permissions.includes("ui.panel"),
-          ),
-    [customize],
-  );
-
+  const layout = useChatStore((s) => s.layout);
+  const phoneApp = useChatStore(phoneAppOf);
+  const phone = useIsPhone();
+  const extensions = useExtensionApps();
+  const open = new Set(phone ? [phoneApp] : visibleApps(layout));
+  const page = (id: PageId): RailItem => ({
+    key: id,
+    label: PAGES[id].label,
+    icon: PAGES[id].icon,
+    active: open.has(`page:${id}`),
+  });
   return [
-    {
-      key: "chats",
-      label: "Chats",
-      icon: MessagesSquare,
-      active: view === "chat",
-      onClick: () => {
-        setState(() => ({ view: "chat" }));
-        showList();
-      },
-    },
-    {
-      key: "skills",
-      label: "Skills",
-      icon: Sparkles,
-      active: view === "skills",
-      onClick: showSkills,
-    },
-    {
-      key: "memory",
-      label: "Memory",
-      icon: Brain,
-      active: view === "memory",
-      onClick: showMemory,
-    },
-    {
-      key: "agents",
-      label: "Agents",
-      icon: Bot,
-      active: view === "agents",
-      onClick: showAgents,
-    },
-    {
-      key: "integrations",
-      label: "Integrations",
-      icon: Plug,
-      active: view === "integrations",
-      onClick: showIntegrations,
-    },
-    {
-      key: "catalog",
-      label: "Catalog",
-      icon: Package,
-      active: view === "catalog",
-      onClick: showCatalog,
-    },
-    {
-      key: "jobs",
-      label: "Schedule",
-      icon: CalendarClock,
-      active: view === "jobs",
-      onClick: showJobs,
-    },
-    ...panels.map((ext) => ({
+    { key: "chats", label: "Chats", icon: MessagesSquare, active: open.has("messenger") },
+    ...PAGE_ORDER.map(page),
+    ...extensions.map((ext) => ({
       key: `ext:${ext.id}`,
       label: ext.name,
       icon: extensionIcon(ext.icon),
-      active: view === `ext:${ext.id}`,
-      onClick: () => showExtension(ext.id),
+      active: open.has(`ext:${ext.id}`),
     })),
-    {
-      key: "engines",
-      label: "Engines",
-      icon: Cpu,
-      active: view === "engines",
-      onClick: showEngines,
-    },
-    {
-      key: "customize",
-      label: "Customize",
-      icon: Palette,
-      active: view === "customize",
-      onClick: showCustomize,
-    },
-    {
-      key: "devices",
-      label: "Devices",
-      icon: Smartphone,
-      active: view === "devices",
-      onClick: showDevices,
-    },
+    ...PAGE_TAIL.map(page),
   ];
 }
 
 /**
  * Aura's navigation: a slim rail on the left on desktop, a tab bar at the bottom on phones.
- * Conversations are one place among others (skills, schedule, customize, devices, panels).
+ * It opens apps into the shell's tiles (ADR 0024); an item is lit while its app is on screen.
  * The user arranges it on the Customize page (order, hidden items).
  */
 export function Rail() {
-  const view = useChatStore((s) => s.view);
   const pane = useChatStore((s) => s.pane);
   const connection = useChatStore((s) => s.connection);
-  const layout = useChatStore((s) => s.appearance?.rail);
+  const current = useChatStore(phoneAppOf);
+  const rail = useChatStore((s) => s.appearance?.rail);
+  const phone = useIsPhone();
   const pendingApprovals = useChatStore(
     (s) =>
       Object.values(s.messages)
         .flat()
         .filter((m) => m.card?.type === "approval" && m.card.status === "pending").length,
   );
-  const items = arrangeRail(useRailItems(), layout);
+  const items = arrangeRail(useRailItems(), rail);
+
+  // Click: open in the focused tile (or show it if open). Shift-click: open in a tile to the right.
+  const open = (key: string, shift: boolean) => {
+    if (key === "chats" && phone) setState(() => ({ pane: "list" }));
+    openAppRef(railApp(key), shift && !phone ? "right" : "here");
+  };
 
   // On phones the tab bar hides inside a conversation, where the composer needs the space.
-  const hideOnPhone = view === "chat" && pane === "main";
+  const hideOnPhone = current === "messenger" && pane === "main";
 
   return (
     <nav
@@ -178,10 +95,10 @@ export function Rail() {
         <button
           key={item.key}
           type="button"
-          title={item.label}
+          title={`${item.label} (Shift-click: open on the right)`}
           aria-label={item.label}
           aria-current={item.active ? "page" : undefined}
-          onClick={item.onClick}
+          onClick={(e) => open(item.key, e.shiftKey)}
           className={cn(
             "group relative flex size-10 items-center justify-center rounded-xl transition-colors",
             item.active ? "bg-accent text-foreground" : "hover:bg-accent/70 hover:text-foreground",

@@ -7,6 +7,7 @@ import {
 } from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
 import { type ChatRepo, DIRECT_CHAT_ID, ORCHESTRATOR, SYSTEM_CHAT_ID } from "./repo";
+import { WELCOME } from "./welcome";
 
 export type ChatErrorCode = "not_found" | "invalid" | "forbidden";
 
@@ -44,7 +45,7 @@ export class ChatService {
   constructor(readonly repo: ChatRepo) {}
 
   /** Creates the owner and the always-present chats. Idempotent. */
-  async bootstrap(): Promise<{ id: string; name: string }> {
+  async bootstrap(opts: { welcome?: boolean } = {}): Promise<{ id: string; name: string }> {
     const owner = await this.repo.ensureOwner();
     const ownerMember = {
       participant: { kind: "user", id: owner.id } as Participant,
@@ -57,6 +58,13 @@ export class ChatService {
         title: "Orchestrator",
         members: [ownerMember, { participant: ORCHESTRATOR, role: "member" }],
       });
+      // First launch: the orchestrator explains Aura (no run, so it costs nothing).
+      if (opts.welcome !== false)
+        await this.repo.createMessage({
+          chatId: DIRECT_CHAT_ID,
+          author: ORCHESTRATOR,
+          body: WELCOME,
+        });
     }
     if (!(await this.repo.findChat(SYSTEM_CHAT_ID))) {
       await this.repo.createChat({

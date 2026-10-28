@@ -1,9 +1,11 @@
 import type { ChatSummary, Message } from "@aura/shared";
+import { tileOf } from "@aura/shared";
 import { Box, ChevronLeft, ListTodo, Monitor, PanelRight, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
-import { SidePanel, toggleApps, useApps, useOpenApp } from "@/features/customize/side-panel";
+import { useExtensionApps } from "@/features/shell/apps";
+import { closeAppRef, openBeside } from "@/features/shell/layout";
 import { loadMembers, reportError, showList } from "./actions";
 import { BudgetButton } from "./budget";
 import { ChatMark } from "./chat-mark";
@@ -13,12 +15,15 @@ import { MessageBubble } from "./message-bubble";
 import { isGrouped } from "./message-utils";
 import { chatSubtitle } from "./participants";
 import { SetupPanel } from "./setup-panel";
-import { useChatStore } from "./store";
+import { getState, useChatStore } from "./store";
 import { loadSummary, SummaryPanel } from "./summary-panel";
 import { TasksPanel } from "./tasks-panel";
 import { WebhookInfo } from "./webhook-info";
 
 const EMPTY: Message[] = [];
+
+/** Chats whose project app was opened this session; closing it then keeps it closed. */
+const autoOpened = new Set<string>();
 
 const GREETING: Record<"direct" | "system" | "group", { title: string; text: string }> = {
   direct: {
@@ -47,8 +52,17 @@ export function ChatView({ chatId }: { chatId: string }) {
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [panel, setPanel] = useState<"tasks" | "summary" | "isolation" | null>(null);
   const [summary, setSummary] = useState<ChatSummary | null>(null);
-  const apps = useApps();
-  const app = useOpenApp(chatId, project);
+  const apps = useExtensionApps();
+  // The app next to this chat: the project's own, else the first installed one.
+  const appId = project?.app ?? apps[0]?.id ?? null;
+  const appOpen = useChatStore((s) => (appId ? !!tileOf(s.layout, `ext:${appId}`) : false));
+
+  // A project's app opens by itself next to its chat, once per visit of the session.
+  useEffect(() => {
+    if (!project?.app || autoOpened.has(chatId)) return;
+    autoOpened.add(chatId);
+    if (!tileOf(getState().layout, `ext:${project.app}`)) openBeside(`ext:${project.app}`);
+  }, [chatId, project?.app]);
   const scroller = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
@@ -174,12 +188,14 @@ export function ChatView({ chatId }: { chatId: string }) {
                 {taskCount ? ` ${taskCount}` : ""}
               </Button>
             )}
-            {apps.length > 0 && (
+            {appId && (
               <Button
-                variant={app ? "secondary" : "ghost"}
+                variant={appOpen ? "secondary" : "ghost"}
                 size="sm"
-                title="Apps next to this chat"
-                onClick={() => toggleApps(chatId, project, apps)}
+                title={
+                  appOpen ? "Close the app next to this chat" : "Open the app next to this chat"
+                }
+                onClick={() => (appOpen ? closeAppRef(`ext:${appId}`) : openBeside(`ext:${appId}`))}
               >
                 <PanelRight /> <span className="max-sm:hidden">Apps</span>
               </Button>
@@ -238,7 +254,6 @@ export function ChatView({ chatId }: { chatId: string }) {
           onClose={() => setPanel(null)}
         />
       )}
-      {app && <SidePanel chatId={chatId} project={project} app={app} />}
     </div>
   );
 }

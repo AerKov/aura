@@ -33,7 +33,9 @@ Then press **Use for all agents** on that engine. Details: [Engines](Engines).
 
 ## 3. Talk to the orchestrator
 
-The first chat in the list is your **orchestrator**. Tell it what you want, in any language:
+Aura opens with **Chats** on the whole screen and a welcome from your **orchestrator**, the first
+chat in the list. It explains what Aura is; your apps will later sit next to it as tiles (see
+[The screen](The-Screen)). Tell it what you want, in any language:
 
 > I want a small CLI that converts temperatures, with tests.
 
@@ -54,5 +56,6 @@ right agent, reply to an agent's message to answer it, or type `@` to pick an ag
 ## Next
 
 - [Chats and agents](Chats-and-Agents) for how conversations and agents behave
+- [The screen](The-Screen) to open apps side by side, in tabs, and resize them
 - [Customization](Customization) to change the look or add tools by asking the orchestrator
 - [Phone](Phone) to keep an eye on things from your phone
