@@ -4,6 +4,7 @@ import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import type { ChatRepo } from "../chat/repo";
 import { ChatError } from "../chat/service";
+import type { ModuleService } from "../core/modules";
 import { ProjectError, type ProjectService } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
 import { AppearanceError, type AppearanceService } from "./appearance";
@@ -18,6 +19,7 @@ export interface CustomizeRouteDeps {
   extensions: ExtensionService;
   mcp: McpService;
   safeMode: SafeMode;
+  modules: ModuleService;
   hub: EventHub;
   appVersion: string;
   corsOrigins: string[];
@@ -81,6 +83,7 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
       async (): Promise<CustomizeState> => ({
         safeMode: deps.safeMode,
         appVersion: deps.appVersion,
+        modules: deps.modules.all(),
         extensions: await deps.extensions.list(),
         mcpServers: deps.mcp.list(),
       }),

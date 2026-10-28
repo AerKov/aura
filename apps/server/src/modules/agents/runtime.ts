@@ -37,6 +37,8 @@ export interface ProjectLookup {
 }
 
 export interface RuntimeDeps {
+  /** False while the Chats app is off (ADR 0027): no message wakes an agent. */
+  enabled?: () => boolean;
   chat: ChatService;
   repo: ChatRepo;
   runs: RunRepo;
@@ -186,6 +188,7 @@ export class AgentRuntime {
   }
 
   private async onMessage(message: Message, chat: Chat): Promise<void> {
+    if (this.deps.enabled?.() === false) return;
     this.dispatching++;
     try {
       await this.dispatch(message, chat);

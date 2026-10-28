@@ -35,8 +35,8 @@ Extensions are small JavaScript apps in `extensions/<id>/`. They open as tiles o
 in Chats, so they can work next to it. **Apps** in a chat's header opens one next to that chat.
 
 **Project apps.** Pin an extension to a project with the pin button in its tile's bar while the
-project's chat is open, or ask the orchestrator for an app for a project. It then opens by itself
-next to that project's chat. Close its tile to hide it for now; unpin to stop it opening.
+project's chat is open, or ask the orchestrator for an app for a project. **Apps** in that
+project's chat header then opens it beside the chat. Nothing opens by itself.
 
 Extensions run in a sandbox and can do only what you approved when you installed or enabled them:
 

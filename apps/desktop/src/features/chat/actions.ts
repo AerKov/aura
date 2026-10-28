@@ -3,8 +3,18 @@ import { openAppRef } from "@/features/shell/layout";
 import { api, call, NeedsPairingError } from "@/lib/api";
 import { getState, mergeMessages, setState, upsertChat, upsertMessage } from "./store";
 
+/** Loads who the user is and, while Chats is on (ADR 0027), the chat list. */
 export async function loadInitial(): Promise<void> {
-  const [me, chats] = await Promise.all([call(() => api.me.get()), call(() => api.chats.get())]);
+  let customize = getState().customize;
+  if (!customize) {
+    customize = await call(() => api.customize.get());
+    setState(() => ({ customize }));
+  }
+  const withChats = customize.modules.chats;
+  const [me, chats] = await Promise.all([
+    call(() => api.me.get()),
+    withChats ? call(() => api.chats.get()) : Promise.resolve([]),
+  ]);
   setState((s) => ({
     me,
     chats: Object.fromEntries(chats.map((c) => [c.id, c])),
@@ -28,6 +38,7 @@ export async function loadMessages(chatId: string, topic?: string | null): Promi
 /** After a reconnect: refresh chats and every chat whose messages are loaded. */
 export async function resync(): Promise<void> {
   await loadInitial();
+  if (getState().customize?.modules.chats === false) return;
   void loadProviderStatus().catch(reportError);
   void loadProjects().catch(reportError);
   await Promise.all(Object.keys(getState().messages).map((chatId) => loadMessages(chatId)));

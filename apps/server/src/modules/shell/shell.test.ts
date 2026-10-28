@@ -17,12 +17,12 @@ describe("shell (ADR 0024)", () => {
     t = undefined;
   });
 
-  test("a new install opens the messenger with the orchestrator's welcome", async () => {
+  test("a new install opens the home shelf; the orchestrator's chat has a welcome", async () => {
     t = await createTestApp({ welcome: true });
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
     const layout = (await api.layout.get()).data;
     if (!layout) throw new Error("no layout");
-    expect(visibleApps(layout)).toEqual(["messenger"]);
+    expect(visibleApps(layout)).toEqual(["home"]);
     const [welcome] = await t.repo.listMessages("direct", { limit: 5 });
     expect(welcome?.author).toEqual({ kind: "agent", id: "orchestrator" });
     expect(welcome?.body).toContain("Aura is a home for your own apps");
@@ -56,8 +56,8 @@ describe("shell (ADR 0024)", () => {
         dir: "row",
         sizes: [60, 40],
         children: [
-          { kind: "tile", id: "t1", tabs: ["messenger"], active: "messenger" },
-          { kind: "tile", id: "t2", tabs: ["ext:crm", "page:agents"], active: "ext:crm" },
+          { kind: "tile", id: "t1", app: "messenger" },
+          { kind: "tile", id: "t2", app: "ext:crm" },
         ],
       },
       focused: "t2",
@@ -67,7 +67,7 @@ describe("shell (ADR 0024)", () => {
 
     await t.extensions.setEnabled("crm", false);
     const after = (await api.layout.get()).data;
-    expect(after && visibleApps(after)).toEqual(["messenger", "page:agents"]);
+    expect(after && visibleApps(after)).toEqual(["messenger"]);
 
     expect((await api.layout.put({ root: { kind: "window" }, focused: "t1" })).status).toBe(400);
   });
@@ -86,7 +86,7 @@ describe("shell (ADR 0024)", () => {
     });
     const res = await set?.handler({ action: "open", app: "page:agents", where: "right" });
     off();
-    expect(res?.text).toContain("side by side([*messenger] | [*page:agents])");
+    expect(res?.text).toContain("side by side([home] | [*page:agents])");
     expect(events).toEqual(["layout.updated"]);
     expect((await set?.handler({ action: "open", app: "ext:missing" }))?.isError).toBe(true);
     expect((await set?.handler({ action: "open", app: "desktop" }))?.isError).toBe(true);

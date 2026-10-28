@@ -4,7 +4,7 @@ import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
 import type { LayoutService } from "./service";
 
-const APPS = `messenger (chats with you and agents), ${PAGE_IDS.map((p) => `page:${p}`).join(", ")}, or ext:<extension id> for an installed app`;
+const APPS = `home (the shelf of all apps), messenger (chats with you and agents), ${PAGE_IDS.map((p) => `page:${p}`).join(", ")}, or ext:<extension id> for an installed app`;
 
 /** The orchestrator arranges the user's screen (harmless and reversible, so no approval). */
 export function shellTools(layout: LayoutService): AgentTool[] {
@@ -19,7 +19,7 @@ export function shellTools(layout: LayoutService): AgentTool[] {
     },
     {
       name: "set_layout",
-      description: `Arrange the user's screen: open an app (in the focused tile, or in a new tile to the right or below) or close one. Apps: ${APPS}. Do it when the user asks to open, show, place or close something.`,
+      description: `Arrange the user's screen: open an app (in place of the focused tile's app, or in a new tile to the right or below) or close one. Each tile shows one app; there are no tabs. Apps: ${APPS}. Do it when the user asks to open, show, place or close something.`,
       inputSchema: {
         action: z.enum(["open", "close"]),
         app: z.string().describe("app reference, e.g. page:agents or ext:crm"),

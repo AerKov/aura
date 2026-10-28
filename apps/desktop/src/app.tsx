@@ -30,17 +30,21 @@ export function App() {
 
   const load = useCallback(() => {
     setStartError(null);
-    loadProviderStatus().catch(reportError);
     loadAppearance().catch(reportError);
-    loadCustomize().catch(reportError);
     loadLayout().catch(reportError);
-    loadInitial().catch((error: unknown) => {
-      reportError(error);
-      setStartError({
-        message: error instanceof Error ? error.message : String(error),
-        server: error instanceof ServerUnreachableError ? error.status : null,
+    // Which built-in apps are on decides what else loads (ADR 0027).
+    loadCustomize()
+      .then((state) => {
+        if (state.modules.chats) loadProviderStatus().catch(reportError);
+        return loadInitial();
+      })
+      .catch((error: unknown) => {
+        reportError(error);
+        setStartError({
+          message: error instanceof Error ? error.message : String(error),
+          server: error instanceof ServerUnreachableError ? error.status : null,
+        });
       });
-    });
   }, []);
 
   useEffect(() => {

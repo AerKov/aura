@@ -2,6 +2,7 @@
  * Chat domain types shared by server and client (docs/SPEC.md sections 2, 5 and 6).
  * Ids are the record keys without the table prefix.
  */
+import type { ModuleStates } from "./modules";
 
 export type ChatKind = "direct" | "group" | "system";
 
@@ -426,6 +427,8 @@ export interface McpServerInfo {
 export interface CustomizeState {
   safeMode: { on: boolean; reason: string | null };
   appVersion: string;
+  /** Built-in apps that are on (ADR 0027). */
+  modules: ModuleStates;
   extensions: ExtensionInfo[];
   mcpServers: McpServerInfo[];
 }

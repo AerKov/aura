@@ -1,8 +1,9 @@
 import {
   type AppRef,
   type LayoutNode,
+  MODULES,
+  moduleOfApp,
   PAGE_IDS,
-  type PackSummary,
   type Placement,
   type Project,
   type Tile,
@@ -15,10 +16,10 @@ import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { AgentsView } from "@/features/agents/agents-view";
 import { CatalogView } from "@/features/catalog/catalog-view";
-import { loadInitial, loadProjects, openChat, reportError } from "@/features/chat/actions";
+import { loadInitial, reportError } from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
 import { Sidebar } from "@/features/chat/sidebar";
-import { getState, setState, useChatStore } from "@/features/chat/store";
+import { setState, useChatStore } from "@/features/chat/store";
 import { CustomizeView, loadCustomize } from "@/features/customize/customize-view";
 import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
@@ -30,16 +31,9 @@ import { SkillsView } from "@/features/skills/skills-view";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { AppControls } from "./app-controls";
-import { appInfo, useExtensionApps } from "./apps";
-import {
-  closeAppRef,
-  closeTileId,
-  focusTile,
-  openAppRef,
-  PHONE_QUERY,
-  phoneAppOf,
-  resizeSplit,
-} from "./layout";
+import { appAvailable, appInfo, useExtensionApps, useModules } from "./apps";
+import { HomeView } from "./home";
+import { closeTileId, focusTile, openAppRef, PHONE_QUERY, phoneAppOf, resizeSplit } from "./layout";
 
 /** True on phone-sized screens, where the shell shows one app at a time. */
 export function useIsPhone(): boolean {
@@ -54,8 +48,8 @@ export function useIsPhone(): boolean {
 }
 
 /**
- * The shell (ADR 0024): the user's apps laid out as tiles, with tabs, split and resizable. On a
- * phone only the focused tile's app is shown.
+ * The shell (ADR 0024, ADR 0027): the user's apps laid out as tiles, one app each, split and
+ * resizable. On a phone only the focused tile's app is shown.
  */
 export function Shell() {
   const layout = useChatStore((s) => s.layout);
@@ -107,6 +101,13 @@ function NodeView({ node, focused, many }: { node: LayoutNode; focused: string; 
 
 function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many: boolean }) {
   const extensions = useExtensionApps();
+  const modules = useModules();
+  const { label, icon: Icon } = appInfo(tile.app, extensions);
+  const ext = tile.app.startsWith("ext:")
+    ? extensions.find((e) => e.id === tile.app.slice(4))
+    : undefined;
+  const chatOpen = useChatStore((s) => (ext?.app ? (s.appChat[ext.id] ?? false) : false));
+  const chatId = modules.chats && chatOpen ? ext?.app?.chatId : undefined;
   return (
     <section
       className="flex h-full min-h-0 min-w-0 flex-1 flex-col"
@@ -119,59 +120,38 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
           many && focused && "shadow-[inset_0_-2px_0_var(--primary)]",
         )}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto">
-          {tile.tabs.map((app) => {
-            const { label, icon: Icon } = appInfo(app, extensions);
-            const active = app === tile.active;
-            return (
-              <div
-                key={app}
-                className={cn(
-                  "group flex h-7 shrink-0 items-center rounded-lg text-xs",
-                  active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground",
-                )}
-              >
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 px-2"
-                  onClick={() => openAppRef(app)}
-                >
-                  <Icon className="size-3.5" />
-                  <span className="max-w-40 truncate">{label}</span>
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Close ${label}`}
-                  className="hover:bg-accent mr-1 rounded p-0.5 opacity-0 group-hover:opacity-100 focus:opacity-100"
-                  onClick={() => closeAppRef(app)}
-                >
-                  <X className="size-3" />
-                </button>
-              </div>
-            );
-          })}
+        <div className="flex min-w-0 flex-1 items-center gap-1.5 px-2 text-xs font-medium">
+          <Icon className="size-3.5 shrink-0" />
+          <span className="truncate">{label}</span>
         </div>
-        {tile.active.startsWith("ext:") &&
-          (() => {
-            const ext = extensions.find((e) => e.id === tile.active.slice(4));
-            return ext?.app ? <AppControls ext={ext} /> : <PinButton app={tile.active} />;
-          })()}
+        {ext &&
+          (ext.app ? (
+            <AppControls ext={ext} chat={modules.chats} />
+          ) : (
+            modules.chats && <PinButton app={tile.app} />
+          ))}
         <OpenMenu />
-        {many && (
+        {(many || tile.app !== "home") && (
           <Button
             size="icon"
             variant="ghost"
             className="size-7"
-            aria-label="Close this tile"
-            title="Close this tile"
+            aria-label={`Close ${label}`}
+            title={many ? `Close ${label}` : `Close ${label} and go home`}
             onClick={() => closeTileId(tile.id)}
           >
             <X />
           </Button>
         )}
       </header>
-      <div className="flex min-h-0 min-w-0 flex-1">
-        <AppView app={tile.active} />
+      <div className="relative flex min-h-0 min-w-0 flex-1">
+        <AppView app={tile.app} />
+        {chatId && (
+          // The app's chat, inside its tile (ADR 0027): use and change the app without leaving it.
+          <aside className="bg-background flex w-[min(440px,50%)] shrink-0 border-l max-md:absolute max-md:inset-0 max-md:w-full">
+            <ChatView key={chatId} chatId={chatId} inApp />
+          </aside>
+        )}
       </div>
     </section>
   );
@@ -183,6 +163,7 @@ function OpenMenu() {
   const [where, setWhere] = useState<Placement>("right");
   const box = useRef<HTMLDivElement>(null);
   const extensions = useExtensionApps();
+  const modules = useModules();
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent) => {
@@ -192,7 +173,9 @@ function OpenMenu() {
     return () => document.removeEventListener("mousedown", close);
   }, [open]);
   const yours: AppRef[] = extensions.map((e) => `ext:${e.id}` as AppRef);
-  const aura: AppRef[] = ["messenger", ...PAGE_IDS.map((p) => `page:${p}` as AppRef)];
+  const aura: AppRef[] = (
+    ["home", "messenger", ...PAGE_IDS.map((p) => `page:${p}`)] as AppRef[]
+  ).filter((app) => appAvailable(app, modules));
   const item = (app: AppRef) => {
     const { label, icon: Icon } = appInfo(app, extensions);
     return (
@@ -248,13 +231,11 @@ function OpenMenu() {
           </div>
           <div className="max-h-96 overflow-y-auto">
             <p className="kicker px-2 pt-1 pb-1">Your apps</p>
-            <NewApp onCreated={() => setOpen(false)} />
             {yours.length > 0 ? (
               <ul>{yours.map(item)}</ul>
             ) : (
               <p className="text-muted-foreground px-2 pb-2 text-xs">
-                None yet. Ask the orchestrator to make one (“a board for my clients”), or install
-                one from the Catalog.
+                None yet. Add one on the Home shelf.
               </p>
             )}
             <p className="kicker px-2 pt-2 pb-1">Aura</p>
@@ -262,121 +243,6 @@ function OpenMenu() {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-/**
- * A new app with its own chat (ADR 0024): empty, where @builder makes it from a description, or
- * from a template in the catalog (phase 26).
- */
-function NewApp({ onCreated }: { onCreated: () => void }) {
-  const [form, setForm] = useState(false);
-  const [templates, setTemplates] = useState<PackSummary[]>([]);
-  const [template, setTemplate] = useState<string | null>(null);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-  useEffect(() => {
-    if (!form) return;
-    call(() => api.catalog.get())
-      .then((packs) =>
-        setTemplates(packs.filter((p) => p.contents.apps.length === 1 && !p.installed)),
-      )
-      .catch(reportError);
-  }, [form]);
-  if (!form)
-    return (
-      <button
-        type="button"
-        className="text-primary hover:bg-accent flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
-        onClick={() => setForm(true)}
-      >
-        <Plus className="size-4" /> New app
-      </button>
-    );
-  const create = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      let chatId: string;
-      const pack = templates.find((p) => p.id === template);
-      if (pack) {
-        const preview = await call(() => api.catalog.preview.post({ id: pack.id }));
-        await call(() => api.catalog.install.post({ id: pack.id, sha256: preview.sha256 }));
-        await loadProjects();
-        const project = getState().projects[pack.contents.apps[0] ?? ""];
-        if (!project) throw new Error("The app was installed, but its chat is not there yet");
-        chatId = project.chatId;
-      } else {
-        chatId = (
-          await call(() =>
-            api.apps.post({ name: name.trim(), description: description.trim() || undefined }),
-          )
-        ).chatId;
-      }
-      onCreated();
-      // The new chat may not have arrived over the socket yet.
-      await loadInitial();
-      openChat(chatId);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-  return (
-    <div className="grid gap-1.5 px-2 pb-2">
-      <div className="flex flex-wrap gap-1 text-xs">
-        {[{ id: null, name: "Empty" }, ...templates.map((p) => ({ id: p.id, name: p.name }))].map(
-          (t) => (
-            <button
-              key={t.id ?? "empty"}
-              type="button"
-              aria-pressed={template === t.id}
-              onClick={() => setTemplate(t.id)}
-              className={cn(
-                "rounded-full border px-2 py-0.5",
-                template === t.id ? "border-primary bg-primary/10" : "hover:bg-accent",
-              )}
-            >
-              {t.name}
-            </button>
-          ),
-        )}
-      </div>
-      {template ? (
-        <p className="text-muted-foreground text-xs">
-          {templates.find((p) => p.id === template)?.description}
-        </p>
-      ) : (
-        <>
-          <input
-            aria-label="App name"
-            placeholder="Name, e.g. Clients"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="bg-background rounded-lg border px-2 py-1 text-sm"
-          />
-          <textarea
-            aria-label="What it should do"
-            placeholder="What it should do (optional: you can tell @builder in its chat)"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="bg-background resize-none rounded-lg border px-2 py-1 text-sm"
-          />
-        </>
-      )}
-      {error && <p className="text-destructive text-xs">{error}</p>}
-      <Button
-        size="sm"
-        disabled={busy || (!template && !name.trim())}
-        onClick={() => void create()}
-      >
-        Create
-      </Button>
     </div>
   );
 }
@@ -462,12 +328,38 @@ function AppUnavailable({ id }: { id: string }) {
   );
 }
 
+/** A built-in app whose module is off (ADR 0027): say so and offer to turn it on. */
+function ModuleOff({ app }: { app: AppRef }) {
+  const module = moduleOfApp(app);
+  const [error, setError] = useState<string | null>(null);
+  if (!module) return null;
+  const turnOn = () =>
+    call(() => api.modules({ moduleId: module }).put({ enabled: true }))
+      .then(() => loadCustomize())
+      .then(() => (module === "chats" ? loadInitial() : undefined))
+      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
+  return (
+    <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
+      <p className="text-muted-foreground max-w-sm text-sm">
+        {MODULES[module].name} is turned off.
+      </p>
+      <Button variant="outline" onClick={() => void turnOn()}>
+        Turn on {MODULES[module].name}
+      </Button>
+      {error && <p className="text-destructive text-sm">{error}</p>}
+    </div>
+  );
+}
+
 /** What an app shows inside its tile. */
 function AppView({ app }: { app: AppRef }) {
   const extensions = useExtensionApps();
   const chatId = useChatStore((s) => s.activeChatId);
   const projectId = useChatStore((s) => (chatId ? (s.chats[chatId]?.projectId ?? null) : null));
   const previewDraft = useChatStore((s) => s.previewDraft);
+  const modules = useModules();
+  if (app === "home") return <HomeView />;
+  if (!appAvailable(app, modules)) return <ModuleOff app={app} />;
   if (app === "messenger") return <Messenger />;
   if (app.startsWith("ext:")) {
     const ext = extensions.find((e) => e.id === app.slice(4));

@@ -21,7 +21,7 @@ export function isPhone(): boolean {
 
 /** The app on screen: on a phone its own choice, else the focused tile's. */
 export function phoneAppOf(s: { phoneApp: AppRef | null; layout: Layout }): AppRef {
-  return s.phoneApp ?? focusedTile(s.layout).active;
+  return s.phoneApp ?? focusedTile(s.layout).app;
 }
 
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -79,12 +79,4 @@ export function focusTile(tileId: string): void {
 
 export function resizeSplit(splitId: string, sizes: number[]): void {
   setLayout(resize(getState().layout, splitId, sizes));
-}
-
-/** Opens an app next to the focused tile without moving the focus there (a project's app). */
-export function openBeside(app: AppRef): void {
-  if (isPhone()) return;
-  const layout = getState().layout;
-  const next = openApp(layout, app, "right");
-  setLayout(focus(next, layout.focused));
 }

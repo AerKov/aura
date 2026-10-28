@@ -6,14 +6,15 @@ own chat**. Every change is shown to you first, and every version can be brought
 
 ## Make an app
 
-- **+** on any tile → **New app**: start from a template (**CRM**, **Tasks**, **Notes**), or empty:
-  give it a name and, if you like, say what it should do.
+- **Home** → **Add an app**: start from a template (**CRM**, **Tasks**, **Notes**), or empty:
+  give it a name and, if you like, say what it should do (an empty app needs Chats on).
 - Or ask the orchestrator: _"make me an app to track clients and deals"_. It proposes the app on a
   card; approve it.
 
 Aura creates the app's chat (under **Apps** in the chat list) with **@builder**, the agent that
-writes apps, and opens the app in a tile next to its chat. If you described it, @builder starts
-right away; otherwise it waits for you in the chat.
+writes apps, and opens the app. An empty app opens with its chat panel (**Chat** in the app's bar)
+so you can talk to @builder right there. If you described it, @builder starts right away;
+otherwise it waits for you in the chat.
 
 ## Change it
 

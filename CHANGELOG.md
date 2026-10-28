@@ -5,6 +5,17 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.29.0] - 2026-10-28: Home and built-in apps
+
+- **Home**: Aura opens on a shelf of your apps, with **Add an app** (templates, the catalog, an
+  empty app for @builder) and the built-in apps. The logo in the rail brings it back.
+- **No more tabs**: a tile shows one app. Clicking an app replaces the one in the focused tile;
+  Shift-click opens it beside.
+- An app's **Chat** opens as a panel inside the app, and nothing opens by itself next to a chat.
+- **Built-in apps can be turned off**: Chats (with the orchestrator and agents), Skills, Memory,
+  Schedule, Signals and Integrations. Off means off on the server too: no routes, no agent tools,
+  nothing running. Saved in `~/.aura/modules.json`.
+
 ## [0.27.2] - 2026-10-28: Apps and safe mode
 
 - An app's tile no longer stays empty: it says why the app is not shown (safe mode, turned off, a

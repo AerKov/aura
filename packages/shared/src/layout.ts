@@ -1,10 +1,10 @@
 /**
- * The shell's layout (ADR 0024): a tree of splits whose leaves are tiles with tabs, each tab an app.
+ * The shell's layout (ADR 0024, ADR 0027): a tree of splits whose leaves are tiles, one app each.
  * Pure functions, shared by the server (storage, the orchestrator's tool) and the client.
  */
 
-/** An app the shell can open: the messenger, a built-in page, or an extension. */
-export type AppRef = "messenger" | `page:${PageId}` | `ext:${string}`;
+/** An app the shell can open: the home shelf, the messenger, a built-in page, or an extension. */
+export type AppRef = "home" | "messenger" | `page:${PageId}` | `ext:${string}`;
 
 export const PAGE_IDS = [
   "skills",
@@ -22,9 +22,8 @@ export type PageId = (typeof PAGE_IDS)[number];
 export interface Tile {
   kind: "tile";
   id: string;
-  /** Apps open in this tile, as tabs. Never empty. */
-  tabs: AppRef[];
-  active: AppRef;
+  /** The app shown in this tile. An app is open in at most one tile. */
+  app: AppRef;
 }
 
 export interface Split {
@@ -53,26 +52,23 @@ const EXT_ID = /^[a-z][a-z0-9-]{1,47}$/;
 
 export function isAppRef(value: unknown): value is AppRef {
   if (typeof value !== "string") return false;
-  if (value === "messenger") return true;
+  if (value === "home" || value === "messenger") return true;
   if (value.startsWith("page:")) return (PAGE_IDS as readonly string[]).includes(value.slice(5));
   return value.startsWith("ext:") && EXT_ID.test(value.slice(4));
 }
 
-/** First launch: the messenger on the whole screen. */
+/** First launch and an empty screen: the home shelf. */
 export function defaultLayout(): Layout {
-  return {
-    root: { kind: "tile", id: "t1", tabs: ["messenger"], active: "messenger" },
-    focused: "t1",
-  };
+  return { root: { kind: "tile", id: "t1", app: "home" }, focused: "t1" };
 }
 
 export function tiles(node: LayoutNode): Tile[] {
   return node.kind === "tile" ? [node] : node.children.flatMap(tiles);
 }
 
-/** The tile showing `app`, if it is open anywhere (an app is open at most once). */
+/** The tile showing `app`, if it is open anywhere. */
 export function tileOf(layout: Layout, app: AppRef): Tile | undefined {
-  return tiles(layout.root).find((t) => t.tabs.includes(app));
+  return tiles(layout.root).find((t) => t.app === app);
 }
 
 export function focusedTile(layout: Layout): Tile {
@@ -80,9 +76,9 @@ export function focusedTile(layout: Layout): Tile {
   return all.find((t) => t.id === layout.focused) ?? (all[0] as Tile);
 }
 
-/** Apps visible right now: the active tab of every tile. */
+/** Apps visible right now, one per tile. */
 export function visibleApps(layout: Layout): AppRef[] {
-  return tiles(layout.root).map((t) => t.active);
+  return tiles(layout.root).map((t) => t.app);
 }
 
 function nextId(layout: Layout, prefix: "t" | "s"): string {
@@ -104,13 +100,13 @@ function mapNode(node: LayoutNode, fn: (n: LayoutNode) => LayoutNode): LayoutNod
   return { ...mapped, children: mapped.children.map((c) => mapNode(c, fn)) };
 }
 
-/** Removes empty tiles and splits with one child, and rescales sizes to 100. */
+/** Marks a tile for removal by `normalize`. */
+const GONE = null as unknown as AppRef;
+
+/** Removes closed tiles and splits with one child, and rescales sizes to 100. */
 export function normalize(layout: Layout): Layout {
   const clean = (node: LayoutNode): LayoutNode | null => {
-    if (node.kind === "tile") {
-      if (node.tabs.length === 0) return null;
-      return node.tabs.includes(node.active) ? node : { ...node, active: node.tabs[0] as AppRef };
-    }
+    if (node.kind === "tile") return node.app === GONE ? null : node;
     const kept: { child: LayoutNode; size: number }[] = [];
     node.children.forEach((c, i) => {
       const child = clean(c);
@@ -145,30 +141,25 @@ export function focus(layout: Layout, tileId: string): Layout {
 }
 
 /**
- * Opens an app: if it is open already, its tab becomes active and its tile focused; otherwise it
- * opens as a tab of the focused tile ("here") or in a new tile next to it ("right", "below").
+ * Opens an app. If it is open already, its tile is focused ("here") or it moves to a new tile
+ * ("right", "below"). Otherwise it replaces the app of the focused tile ("here") or opens in a new
+ * tile next to it. There are no tabs: a tile shows one app (ADR 0027).
  */
 export function openApp(layout: Layout, app: AppRef, where: Placement = "here"): Layout {
   const existing = tileOf(layout, app);
-  if (existing && where === "here") {
-    return {
-      root: mapNode(layout.root, (n) => (n.id === existing.id ? { ...existing, active: app } : n)),
-      focused: existing.id,
-    };
-  }
+  if (existing && where === "here") return { ...layout, focused: existing.id };
   // Moving an open app to a new tile: take it out of its old one first.
-  const base = existing ? closeApp(layout, app) : layout;
+  const base = existing && existing.id !== layout.focused ? closeApp(layout, app) : layout;
   const target = focusedTile(base);
-  if (where === "here") {
+  if (where === "here" || tiles(base.root).length >= MAX_TILES) {
+    if (target.app === app) return { ...base, focused: target.id };
     return {
-      root: mapNode(base.root, (n) =>
-        n.id === target.id ? { ...target, tabs: [...target.tabs, app], active: app } : n,
-      ),
+      root: mapNode(base.root, (n) => (n.id === target.id ? { ...target, app } : n)),
       focused: target.id,
     };
   }
-  if (tiles(base.root).length >= MAX_TILES) return openApp(base, app, "here");
-  const tile: Tile = { kind: "tile", id: nextId(base, "t"), tabs: [app], active: app };
+  if (target.app === app) return base;
+  const tile: Tile = { kind: "tile", id: nextId(base, "t"), app };
   const split: Split = {
     kind: "split",
     id: nextId(base, "s"),
@@ -182,14 +173,12 @@ export function openApp(layout: Layout, app: AppRef, where: Placement = "here"):
   });
 }
 
-/** Closes an app's tab; an emptied tile disappears, and an empty screen gets the messenger back. */
+/** Closes an app's tile; an empty screen gets the home shelf. */
 export function closeApp(layout: Layout, app: AppRef): Layout {
   return normalize({
     ...layout,
     root: mapNode(layout.root, (n) =>
-      n.kind === "tile" && n.tabs.includes(app)
-        ? { ...n, tabs: n.tabs.filter((t) => t !== app) }
-        : n,
+      n.kind === "tile" && n.app === app ? { ...n, app: GONE } : n,
     ),
   });
 }
@@ -198,7 +187,7 @@ export function closeTile(layout: Layout, tileId: string): Layout {
   return normalize({
     ...layout,
     root: mapNode(layout.root, (n) =>
-      n.id === tileId && n.kind === "tile" ? { ...n, tabs: [] } : n,
+      n.id === tileId && n.kind === "tile" ? { ...n, app: GONE } : n,
     ),
   });
 }
@@ -215,12 +204,12 @@ export function resize(layout: Layout, splitId: string, sizes: number[]): Layout
   };
 }
 
-/** Keeps only apps that exist now (an extension may have been removed or disabled). */
+/** Keeps only apps that exist now (an extension may have been removed, an app turned off). */
 export function prune(layout: Layout, exists: (app: AppRef) => boolean): Layout {
   return normalize({
     ...layout,
     root: mapNode(layout.root, (n) =>
-      n.kind === "tile" ? { ...n, tabs: n.tabs.filter(exists) } : n,
+      n.kind === "tile" && !exists(n.app) ? { ...n, app: GONE } : n,
     ),
   });
 }
@@ -229,7 +218,10 @@ export class LayoutError extends Error {
   override name = "LayoutError";
 }
 
-/** Validates a layout from storage or the network; unknown apps and duplicates are dropped. */
+/**
+ * Validates a layout from storage or the network; tiles with unknown or repeated apps are dropped.
+ * A layout saved with tabs (before ADR 0027) keeps each tile's active app.
+ */
 export function validateLayout(raw: unknown): Layout {
   const seen = new Set<string>();
   const ids = new Set<string>();
@@ -243,11 +235,15 @@ export function validateLayout(raw: unknown): Layout {
     ids.add(v.id);
     if (v.kind === "tile") {
       if (++count > MAX_TILES) throw new LayoutError(`at most ${MAX_TILES} tiles`);
-      const tabs = (Array.isArray(v.tabs) ? v.tabs : []).filter(
-        (t): t is AppRef => isAppRef(t) && !seen.has(t) && Boolean(seen.add(t)),
-      );
-      const active = isAppRef(v.active) && tabs.includes(v.active) ? v.active : tabs[0];
-      return { kind: "tile", id: v.id, tabs, active: (active ?? "messenger") as AppRef };
+      const legacy = Array.isArray(v.tabs) ? v.tabs.filter(isAppRef) : [];
+      const wanted = isAppRef(v.app)
+        ? v.app
+        : isAppRef(v.active) && legacy.includes(v.active)
+          ? v.active
+          : legacy[0];
+      const app = wanted && !seen.has(wanted) ? wanted : GONE;
+      if (app) seen.add(app);
+      return { kind: "tile", id: v.id, app };
     }
     if (v.kind === "split") {
       if (v.dir !== "row" && v.dir !== "column") throw new LayoutError("bad split direction");
@@ -270,11 +266,11 @@ export function validateLayout(raw: unknown): Layout {
   return normalize({ root, focused: typeof r.focused === "string" ? r.focused : "" });
 }
 
-/** A short description for the orchestrator: which apps are open and how. */
+/** A short description for the orchestrator: which apps are open and how; * marks the focused. */
 export function describeLayout(layout: Layout): string {
   const show = (n: LayoutNode): string =>
     n.kind === "tile"
-      ? `[${n.tabs.map((t) => (t === n.active ? `*${t}` : t)).join(", ")}]`
+      ? `[${n.id === layout.focused ? "*" : ""}${n.app}]`
       : `${n.dir === "row" ? "side by side" : "stacked"}(${n.children.map(show).join(" | ")})`;
   return show(layout.root);
 }

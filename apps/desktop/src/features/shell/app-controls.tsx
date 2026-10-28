@@ -2,7 +2,7 @@ import type { ExtensionInfo } from "@aura/shared";
 import { Database, Eye, EyeOff, History, MessagesSquare, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { openChat, reportError } from "@/features/chat/actions";
+import { reportError } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -10,26 +10,30 @@ import { cn } from "@/lib/utils";
 type Version = { hash: string; author: string; at: string; subject: string };
 
 /**
- * The bar of an app built in Aura (ADR 0024): its chat, a preview of changes waiting for approval,
- * and its versions.
+ * The bar of an app built in Aura (ADR 0024): its chat (a panel inside the tile, ADR 0027), a
+ * preview of changes waiting for approval, and its versions. `chat`: whether chats are on.
  */
-export function AppControls({ ext }: { ext: ExtensionInfo }) {
+export function AppControls({ ext, chat }: { ext: ExtensionInfo; chat: boolean }) {
   const preview = useChatStore((s) => s.previewDraft[ext.id] ?? false);
+  const chatOpen = useChatStore((s) => s.appChat[ext.id] ?? false);
   const app = ext.app;
   if (!app) return null;
   const togglePreview = () =>
     setState((s) => ({ previewDraft: { ...s.previewDraft, [ext.id]: !preview } }));
   return (
     <>
-      <Button
-        size="sm"
-        variant="ghost"
-        className="h-7 gap-1 px-2 text-xs"
-        title="The app's chat: use it and change it with @builder"
-        onClick={() => openChat(app.chatId)}
-      >
-        <MessagesSquare /> Chat
-      </Button>
+      {chat && (
+        <Button
+          size="sm"
+          variant={chatOpen ? "secondary" : "ghost"}
+          className="h-7 gap-1 px-2 text-xs"
+          aria-pressed={chatOpen}
+          title="The app's chat: use it and change it with @builder"
+          onClick={() => setAppChat(ext.id, !chatOpen)}
+        >
+          <MessagesSquare /> Chat
+        </Button>
+      )}
       {app.draft && (
         <>
           <Button
@@ -67,6 +71,11 @@ export function AppControls({ ext }: { ext: ExtensionInfo }) {
       <Versions appId={ext.id} />
     </>
   );
+}
+
+/** Opens or closes an app's chat panel inside its tile. */
+export function setAppChat(appId: string, open: boolean): void {
+  setState((s) => ({ appChat: { ...s.appChat, [appId]: open } }));
 }
 
 function Versions({ appId }: { appId: string }) {

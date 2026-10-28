@@ -16,7 +16,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { loadProjects, reportError } from "@/features/chat/actions";
-import { useChatStore } from "@/features/chat/store";
+import { getState, useChatStore } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
@@ -51,7 +51,8 @@ export function IntegrationsView() {
 
   useEffect(() => {
     void load();
-    loadProjects().catch(reportError);
+    // Projects (to pick where a variable set applies) come with Chats (ADR 0027).
+    if (getState().customize?.modules.chats !== false) loadProjects().catch(reportError);
   }, [load]);
 
   return (

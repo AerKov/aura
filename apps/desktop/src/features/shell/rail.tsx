@@ -5,7 +5,7 @@ import { AuraLogo } from "@/components/logo";
 import { setState, useChatStore } from "@/features/chat/store";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
-import { PAGES, railApp, useExtensionApps } from "./apps";
+import { appAvailable, PAGES, railApp, useExtensionApps, useModules } from "./apps";
 import { openAppRef, phoneAppOf } from "./layout";
 import { arrangeRail } from "./rail-layout";
 import { useIsPhone } from "./shell";
@@ -30,6 +30,7 @@ export function useRailItems(): RailItem[] {
   const phoneApp = useChatStore(phoneAppOf);
   const phone = useIsPhone();
   const extensions = useExtensionApps();
+  const modules = useModules();
   const open = new Set(phone ? [phoneApp] : visibleApps(layout));
   const page = (id: PageId): RailItem => ({
     key: id,
@@ -47,7 +48,7 @@ export function useRailItems(): RailItem[] {
       active: open.has(`ext:${ext.id}`),
     })),
     ...PAGE_TAIL.map(page),
-  ];
+  ].filter((item) => appAvailable(railApp(item.key), modules));
 }
 
 /**
@@ -68,6 +69,8 @@ export function Rail() {
         .filter((m) => m.card?.type === "approval" && m.card.status === "pending").length,
   );
   const items = arrangeRail(useRailItems(), rail);
+  const layout = useChatStore((s) => s.layout);
+  const homeOpen = phone ? current === "home" : visibleApps(layout).includes("home");
 
   // Click: open in the focused tile (or show it if open). Shift-click: open in a tile to the right.
   const open = (key: string, shift: boolean) => {
@@ -88,9 +91,16 @@ export function Rail() {
         hideOnPhone && "max-md:hidden",
       )}
     >
-      <div className="mb-2 hidden h-10 items-center justify-center md:flex" title="Aura">
+      <button
+        type="button"
+        title="Home: all your apps (Shift-click: open on the right)"
+        aria-label="Home"
+        aria-current={homeOpen ? "page" : undefined}
+        onClick={(e) => open("home", e.shiftKey)}
+        className="flex size-10 shrink-0 items-center justify-center rounded-xl md:mb-2"
+      >
         <AuraLogo className="size-8" />
-      </div>
+      </button>
       {items.map((item) => (
         <button
           key={item.key}

@@ -19,6 +19,7 @@ import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
 import { ContainerService, containerNote } from "./modules/containers/service";
+import { ModuleService } from "./modules/core/modules";
 import { AppearanceService } from "./modules/customize/appearance";
 import { ExtensionBridge } from "./modules/customize/bridge";
 import { ExtensionService } from "./modules/customize/extensions";
@@ -80,6 +81,7 @@ export async function createServices(deps: {
   /** Post the orchestrator's welcome on a new install (off in most tests). */
   welcome?: boolean;
 }) {
+  const modules = new ModuleService({ dataDir: deps.dataDir, hub: deps.hub });
   const safeMode: SafeMode = deps.safeMode ?? { on: false, reason: null };
   const repo = new ChatRepo(deps.db);
   const chat = new ChatService(repo);
@@ -110,7 +112,7 @@ export async function createServices(deps: {
     approvals,
   });
   const tasks = new TaskService({ db: deps.db, repo, chat });
-  const jobs = new JobService({ db: deps.db, repo, chat });
+  const jobs = new JobService({ db: deps.db, repo, chat, enabled: () => modules.enabled("jobs") });
   const alerts = new AlertService({
     db: deps.db,
     repo,
@@ -236,6 +238,7 @@ export async function createServices(deps: {
   });
   registerExecutors(toolDeps);
   const runtime = new AgentRuntime({
+    enabled: () => modules.enabled("chats"),
     chat,
     repo,
     runs,
@@ -243,48 +246,53 @@ export async function createServices(deps: {
     engines: deps.engines,
     agents: deps.agents,
     projects,
-    appTools: async (ctx) => [
-      ...toolsFor(toolDeps, ctx),
-      // In an app's chat, agents use the app through its actions (phase 25).
-      ...(ctx.chat.projectId && appService.isApp(ctx.chat.projectId)
-        ? await appActions.tools(ctx.chat.projectId, {
-            handle: ctx.handle,
-            chatId: ctx.chat.id,
-            topicId: ctx.topicId,
-          })
-        : []),
-      ...(ctx.handle === "orchestrator" ? [...integrationTools(integrations), ...helpTools()] : []),
-      // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
-      // orchestrator had no such tools and claimed to have sent cards).
-      ...(ctx.handle === "orchestrator"
-        ? [
-            ...shellTools(layout),
-            ...appTools(approvals, {
+    appTools: async (ctx) =>
+      modules.filterTools([
+        ...toolsFor(toolDeps, ctx),
+        // In an app's chat, agents use the app through its actions (phase 25).
+        ...(ctx.chat.projectId && appService.isApp(ctx.chat.projectId)
+          ? await appActions.tools(ctx.chat.projectId, {
               handle: ctx.handle,
               chatId: ctx.chat.id,
               topicId: ctx.topicId,
-            }),
-            ...customizeTools(customize, {
-              handle: ctx.handle,
-              chatId: ctx.chat.id,
-              topicId: ctx.topicId,
-            }),
-            ...catalogTools(catalog, {
-              handle: ctx.handle,
-              chatId: ctx.chat.id,
-              topicId: ctx.topicId,
-            }),
-          ]
-        : []),
-    ],
-    mcpServers: (handle) => mcp.forAgent(handle),
+            })
+          : []),
+        ...(ctx.handle === "orchestrator"
+          ? [...integrationTools(integrations), ...helpTools()]
+          : []),
+        // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
+        // orchestrator had no such tools and claimed to have sent cards).
+        ...(ctx.handle === "orchestrator"
+          ? [
+              ...shellTools(layout),
+              ...appTools(approvals, {
+                handle: ctx.handle,
+                chatId: ctx.chat.id,
+                topicId: ctx.topicId,
+              }),
+              ...customizeTools(customize, {
+                handle: ctx.handle,
+                chatId: ctx.chat.id,
+                topicId: ctx.topicId,
+              }),
+              ...catalogTools(catalog, {
+                handle: ctx.handle,
+                chatId: ctx.chat.id,
+                topicId: ctx.topicId,
+              }),
+            ]
+          : []),
+      ]),
+    mcpServers: (handle) => (modules.enabled("integrations") ? mcp.forAgent(handle) : {}),
     projectMcp: (project, servers) =>
       project.isolation === "container"
         ? containers.wrapMcp(project, servers)
         : Promise.resolve(servers),
     promptExtras: (profile) =>
-      skills.promptFor(profile) + (profile.handle === "orchestrator" ? AURA_GUIDE : ""),
-    memoryPrompt: (input) => memory.promptFor(input),
+      (modules.enabled("skills") ? skills.promptFor(profile) : "") +
+      (profile.handle === "orchestrator" ? AURA_GUIDE : ""),
+    memoryPrompt: (input) =>
+      modules.enabled("memory") ? memory.promptFor(input) : Promise.resolve(""),
     sandboxPolicy: (profile) => sandbox.policy(profile.network),
     webHosts: (profile) =>
       profile.network?.restrictWeb ? sandbox.hostsFor(profile.network) : undefined,
@@ -342,6 +350,7 @@ export async function createServices(deps: {
     layout,
     catalog,
     safeMode,
+    modules,
     appVersion: SERVER_VERSION,
     devices,
   };

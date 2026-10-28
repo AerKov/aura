@@ -10,8 +10,15 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
 import { useExtensionApps } from "@/features/shell/apps";
-import { closeAppRef, openBeside } from "@/features/shell/layout";
-import { loadMembers, loadTopics, moveToTopic, reportError, showList } from "./actions";
+import { closeAppRef, openAppRef } from "@/features/shell/layout";
+import {
+  loadMembers,
+  loadMessages,
+  loadTopics,
+  moveToTopic,
+  reportError,
+  showList,
+} from "./actions";
 import { BudgetButton } from "./budget";
 import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
@@ -28,9 +35,6 @@ import { WebhookInfo } from "./webhook-info";
 
 const EMPTY: Message[] = [];
 
-/** Chats whose project app was opened this session; closing it then keeps it closed. */
-const autoOpened = new Set<string>();
-
 const GREETING: Record<"direct" | "system" | "group", { title: string; text: string }> = {
   direct: {
     title: "What are we making?",
@@ -46,7 +50,11 @@ const GREETING: Record<"direct" | "system" | "group", { title: string; text: str
   },
 };
 
-export function ChatView({ chatId }: { chatId: string }) {
+/**
+ * A chat. `inApp`: shown as the panel inside its app's tile (ADR 0027), so without the back button
+ * and the button that opens the app.
+ */
+export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: boolean }) {
   const chat = useChatStore((s) => s.chats[chatId]);
   const all = useChatStore((s) => s.messages[chatId] ?? EMPTY);
   const topics = useChatStore((s) => s.topics[chatId]);
@@ -69,12 +77,10 @@ export function ChatView({ chatId }: { chatId: string }) {
   const appId = project?.app ?? apps[0]?.id ?? null;
   const appOpen = useChatStore((s) => (appId ? !!tileOf(s.layout, `ext:${appId}`) : false));
 
-  // A project's app opens by itself next to its chat, once per visit of the session.
+  // Nothing opens by itself next to a chat (ADR 0027): the user opens the app when they want it.
   useEffect(() => {
-    if (!project?.app || autoOpened.has(chatId)) return;
-    autoOpened.add(chatId);
-    if (!tileOf(getState().layout, `ext:${project.app}`)) openBeside(`ext:${project.app}`);
-  }, [chatId, project?.app]);
+    if (!getState().messages[chatId]) void loadMessages(chatId).catch(reportError);
+  }, [chatId]);
   const scroller = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
@@ -126,14 +132,16 @@ export function ChatView({ chatId }: { chatId: string }) {
     <div className="relative flex min-w-0 flex-1">
       <section className="chat-bg dot-grid flex min-w-0 flex-1 flex-col">
         <header className="bg-background flex h-14 items-center gap-3 border-b px-5 max-md:px-2">
-          <button
-            type="button"
-            aria-label="Back to chats"
-            onClick={showList}
-            className="text-muted-foreground md:hidden"
-          >
-            <ChevronLeft className="size-5" />
-          </button>
+          {!inApp && (
+            <button
+              type="button"
+              aria-label="Back to chats"
+              onClick={showList}
+              className="text-muted-foreground md:hidden"
+            >
+              <ChevronLeft className="size-5" />
+            </button>
+          )}
           <ChatMark chat={chat} size="md" working={working.length > 0} />
           <div className="min-w-0">
             <h1 className="truncate text-[17px] leading-tight font-semibold tracking-tight">
@@ -204,14 +212,16 @@ export function ChatView({ chatId }: { chatId: string }) {
                 {taskCount ? ` ${taskCount}` : ""}
               </Button>
             )}
-            {appId && (
+            {appId && !inApp && (
               <Button
                 variant={appOpen ? "secondary" : "ghost"}
                 size="sm"
                 title={
                   appOpen ? "Close the app next to this chat" : "Open the app next to this chat"
                 }
-                onClick={() => (appOpen ? closeAppRef(`ext:${appId}`) : openBeside(`ext:${appId}`))}
+                onClick={() =>
+                  appOpen ? closeAppRef(`ext:${appId}`) : openAppRef(`ext:${appId}`, "right")
+                }
               >
                 <PanelRight /> <span className="max-sm:hidden">Apps</span>
               </Button>

@@ -389,7 +389,7 @@ changeable at any time from the chat header and the agent's card, or proposed by
 replies show tokens (ADR 0023).
 
 **Phase 21: Shell**
-Aura opens on a bare screen with apps as tiles (splits, tabs, resize), saved and restored. The
+Aura opens on a bare screen with apps as tiles (splits, resize; one app per tile since ADR 0027), saved and restored. The
 messenger becomes the first app. First launch: the orchestrator's chat on the whole screen with an
 onboarding that explains Aura; the user then changes the layout by asking the orchestrator or by
 clicking (ADR 0024).
@@ -420,6 +420,15 @@ build reliable apps from data and views instead of raw DOM.
 **Phase 27: Community apps** (done, ADR 0026)
 Apps in the catalog: install, change in their chat, updates from the author merged with the user's
 changes.
+
+**Phase 28: Home and single-app tiles** (done, ADR 0027)
+The Home shelf (your apps, Add an app, built-in apps, a welcome card) on an empty screen. A tile
+shows one app, no tabs; an app's chat opens as a panel inside its tile; nothing opens by itself.
+
+**Phase 29: The core and built-in apps** (done, ADR 0027)
+Chats, Skills, Memory, Schedule, Signals and Integrations can be turned off on Home, with their
+dependencies; off means their routes, background work and agent tools are gone, without a restart.
+Config in `modules.json`.
 
 **Later**
 Pack signatures and a reviewed community index, multi-user.

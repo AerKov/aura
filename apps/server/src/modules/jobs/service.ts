@@ -51,7 +51,14 @@ export class JobService {
   private ticking = false;
 
   constructor(
-    private readonly deps: { db: Surreal; repo: ChatRepo; chat: ChatService; now?: () => Date },
+    private readonly deps: {
+      db: Surreal;
+      repo: ChatRepo;
+      chat: ChatService;
+      now?: () => Date;
+      /** False while the Schedule app is off (ADR 0027): nothing runs. */
+      enabled?: () => boolean;
+    },
   ) {}
 
   private now(): Date {
@@ -119,7 +126,7 @@ export class JobService {
 
   /** Runs every due job once and schedules its next run. Safe to call often. */
   async tick(): Promise<number> {
-    if (this.ticking) return 0;
+    if (this.ticking || this.deps.enabled?.() === false) return 0;
     this.ticking = true;
     try {
       const [rows] = await this.deps.db

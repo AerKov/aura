@@ -75,9 +75,12 @@ docs/
 
 1. **Local-first.** The server and SurrealDB run on the user's machine. Mobile is a thin client that
    connects to the user's desktop server; it cannot run the sidecar.
-2. **Every app has a chat.** Only three chat kinds: direct (user + orchestrator), group (a project or
-   an app), system (alerts). Chats have topics, one level, like Telegram forum topics. No
-   workspaces, channels or nested threads. Replies to a message, like Telegram.
+2. **The core and its apps (ADR 0027).** The core (DB, shell, app runtime, catalog, approvals) is
+   always on; built-in apps (chats, skills, memory, schedule, signals, integrations) can be turned
+   off, and off means no routes, tools or background work. **Every app has a chat.** Only three
+   chat kinds: direct (user + orchestrator), group (a project or an app), system (alerts). Chats
+   have topics, one level, like Telegram forum topics. No workspaces, channels or nested threads.
+   Replies to a message, like Telegram.
 3. **Config in files, state in DB.** Agents, skills, themes, extensions and app code are files in the
    user data directory (a git repo). Chats, messages, runs, tasks, approvals and memory live in
    SurrealDB. An app's data lives in the app's own store (its own datastore or its files), never in

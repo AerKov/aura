@@ -50,6 +50,8 @@ export interface ChatState {
   phoneApp: AppRef | null;
   /** Apps showing their changes that wait for approval instead of the live version. */
   previewDraft: Record<string, boolean>;
+  /** Apps whose chat is open as a panel inside their tile (ADR 0027). */
+  appChat: Record<string, boolean>;
   /** On narrow screens the messenger shows one pane: the chat list or a chat. */
   pane: "list" | "main";
   needsPairing: boolean;
@@ -75,6 +77,7 @@ let state: ChatState = {
   layout: defaultLayout(),
   phoneApp: null,
   previewDraft: {},
+  appChat: {},
   appearance: null,
   customize: null,
   pane: "list",
