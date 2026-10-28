@@ -52,7 +52,7 @@ export interface RuntimeDeps {
     depth: number;
     /** The topic the run answers in; its cards and posts go there too. */
     topicId: string | null;
-  }) => AgentTool[];
+  }) => AgentTool[] | Promise<AgentTool[]>;
   /** External MCP servers an agent may use (tier 2 customization). */
   mcpServers?: (handle: string) => Record<string, McpServerSpec>;
   /** Where a project's MCP servers run: moved into its container when it has one (ADR 0019). */
@@ -496,7 +496,7 @@ export class AgentRuntime {
         builtinTools,
         sandbox: sandbox ?? undefined,
         tools: [
-          ...this.deps.appTools({ handle, chat, depth, topicId: trigger.topicId }),
+          ...(await this.deps.appTools({ handle, chat, depth, topicId: trigger.topicId })),
           ...(shell ? [shell.tool] : []),
         ],
         mcpServers,

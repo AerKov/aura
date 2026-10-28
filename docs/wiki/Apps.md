@@ -36,6 +36,29 @@ The clock button on the app's tile lists its versions. **Restore** brings an old
 new version, so that can be undone too. The app's folder is `~/.aura/projects/<app>` (a git
 repository).
 
+## Its data
+
+An app keeps its data in **its own store**, never in Aura's database. The database button on the
+app's tile shows where and how much:
+
+- **Its own database** (the default): a database of its own in `~/.aura/state/apps/<app>`.
+- **Files in its folder**: JSON files in `~/.aura/projects/<app>/data`, easy to read and copy.
+
+Switching moves the data. **Export** saves everything as one JSON file; **Delete data** clears it.
+Restoring an older version of the app does not touch its data.
+
+## Use it from the chat
+
+An app can offer **actions**: _find clients_, _add a client_, _mark a deal won_. In the app's chat,
+agents use them for you: _"add Petrenko, a lead from the fair"_, _"how many deals did we win?"_.
+Deleting a record always asks you first, on a card.
+
+## Apps that work together
+
+An app can offer some of its actions to other apps (for example, a CRM offers _find clients_). Another
+app that wants to use them says so in its manifest, and the card you approve lists exactly which
+actions of which app it will call. It can call nothing else, and only what the first app still offers.
+
 ## What an app can do
 
 Apps run in a sandbox and use the [extension permissions](Customization): their own data, the

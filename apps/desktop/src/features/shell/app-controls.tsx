@@ -1,6 +1,6 @@
 import type { ExtensionInfo } from "@aura/shared";
-import { Eye, EyeOff, History, MessagesSquare, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { Database, Eye, EyeOff, History, MessagesSquare, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { openChat, reportError } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
@@ -63,6 +63,7 @@ export function AppControls({ ext }: { ext: ExtensionInfo }) {
           </Button>
         </>
       )}
+      <DataMenu appId={ext.id} />
       <Versions appId={ext.id} />
     </>
   );
@@ -127,6 +128,133 @@ function Versions({ appId }: { appId: string }) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type DataInfo = { store: "database" | "files"; collections: { name: string; count: number }[] };
+
+/** Where the app keeps its data and what it holds (ADR 0024, phase 24): never Aura's database. */
+function DataMenu({ appId }: { appId: string }) {
+  const [open, setOpen] = useState(false);
+  const [info, setInfo] = useState<DataInfo | null>(null);
+  const [confirm, setConfirm] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+  const load = useCallback(
+    () =>
+      call(() => api.apps({ appId }).data.get())
+        .then((d) => setInfo(d as DataInfo))
+        .catch(reportError),
+    [appId],
+  );
+  useEffect(() => {
+    if (!open) return;
+    void load();
+    const close = (e: MouseEvent) => {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open, load]);
+
+  const move = (store: DataInfo["store"]) =>
+    call(() => api.apps({ appId }).data.store.put({ store }))
+      .then((d) => setInfo(d as DataInfo))
+      .catch(reportError);
+  const exportData = async () => {
+    try {
+      const data = await call(() => api.apps({ appId }).data.export.get());
+      const url = URL.createObjectURL(
+        new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
+      );
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${appId}-data.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      reportError(error);
+    }
+  };
+
+  return (
+    <div className="relative" ref={box}>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="size-7"
+        aria-label="Data"
+        title="The app's data: where it is kept, export, delete"
+        onClick={() => setOpen(!open)}
+      >
+        <Database />
+      </Button>
+      {open && info && (
+        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-72 rounded-xl border p-3 text-sm shadow-lg">
+          <p className="kicker mb-1">Kept in</p>
+          <div className="mb-2 flex gap-1 text-xs">
+            {(
+              [
+                ["database", "Its own database"],
+                ["files", "Files in its folder"],
+              ] as const
+            ).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                aria-pressed={info.store === key}
+                onClick={() => void move(key)}
+                className={cn(
+                  "flex-1 rounded-lg border px-2 py-1",
+                  info.store === key ? "border-primary bg-primary/10" : "hover:bg-accent",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <p className="text-muted-foreground mb-2 text-xs">
+            {info.store === "files"
+              ? `JSON files in ~/.aura/projects/${appId}/data, easy to read and copy.`
+              : "A database of its own, apart from Aura's."}{" "}
+            Switching moves the data.
+          </p>
+          <ul className="mb-3 text-xs">
+            {info.collections.length === 0 && (
+              <li className="text-muted-foreground">No data yet.</li>
+            )}
+            {info.collections.map((c) => (
+              <li key={c.name} className="flex justify-between">
+                <span className="font-mono">{c.name}</span>
+                <span>{c.count}</span>
+              </li>
+            ))}
+          </ul>
+          <div className="flex gap-1.5">
+            <Button size="sm" variant="outline" onClick={() => void exportData()}>
+              Export
+            </Button>
+            {confirm ? (
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={() => {
+                  setConfirm(false);
+                  void call(() => api.apps({ appId }).data.delete())
+                    .then(load)
+                    .catch(reportError);
+                }}
+              >
+                Delete all its data?
+              </Button>
+            ) : (
+              <Button size="sm" variant="ghost" onClick={() => setConfirm(true)}>
+                Delete data
+              </Button>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@ import { join } from "node:path";
 import type { EngineId } from "@aura/shared";
 import type { Surreal } from "surrealdb";
 import { SERVER_VERSION } from "./config";
+import { openAppDatabase } from "./db/client";
 import { ensureRepo } from "./lib/git";
 import type { AgentDirectory } from "./modules/agents/directory";
 import { RunRepo } from "./modules/agents/runs";
@@ -9,6 +10,8 @@ import { AgentRuntime } from "./modules/agents/runtime";
 import { registerExecutors, toolsFor } from "./modules/agents/tools";
 import { AlertService, TriageLimiter } from "./modules/alerts/service";
 import { ApprovalService } from "./modules/approvals/service";
+import { AppActions } from "./modules/apps/actions";
+import { AppDataService } from "./modules/apps/data";
 import { AppService } from "./modules/apps/service";
 import { appTools } from "./modules/apps/tools";
 import { CatalogService } from "./modules/catalog/service";
@@ -72,6 +75,8 @@ export async function createServices(deps: {
   maxChainDepth?: number;
   triageDelayMs?: number;
   safeMode?: SafeMode;
+  /** Where an app's own datastore lives (tests use memory). */
+  appDbUrl?: (app: string) => string;
   /** Post the orchestrator's welcome on a new install (off in most tests). */
   welcome?: boolean;
 }) {
@@ -156,14 +161,6 @@ export async function createServices(deps: {
       await projects.setApp(slug, id);
     },
   });
-  const extensionBridge = new ExtensionBridge({
-    db: deps.db,
-    extensions,
-    secrets,
-    chat,
-    projects,
-    fetch: deps.fetch,
-  });
   apps = new AppService({
     projects,
     extensions: () => extensions,
@@ -174,6 +171,34 @@ export async function createServices(deps: {
   });
   await apps.load();
   const appService = apps;
+  // Each app's own data store (ADR 0024, phase 24) and its actions (phase 25).
+  const appData = new AppDataService({
+    hub: deps.hub,
+    dirOf: (id) => appService.sources().find((a) => a.id === id)?.dir ?? null,
+    kindOf: async (id) => (await projects.get(id))?.dataStore ?? "database",
+    saveKind: (id, kind) => projects.setDataStore(id, kind),
+    openDatabase: (id) =>
+      openAppDatabase(
+        deps.appDbUrl?.(id) ?? `surrealkv://${join(deps.dataDir, "state", "apps", id)}`,
+        id,
+      ),
+    contract: (id) => extensions.contract(id),
+  });
+  const appActions = new AppActions({
+    data: appData,
+    contract: (id) => extensions.contract(id),
+    grantedCalls: async (id) => (await extensions.grant(id, "apps.call"))?.calls ?? null,
+    approvals,
+  });
+  const extensionBridge = new ExtensionBridge({
+    db: deps.db,
+    extensions,
+    secrets,
+    chat,
+    projects,
+    fetch: deps.fetch,
+    apps: { isApp: (id) => appService.isApp(id), data: appData, actions: appActions },
+  });
   const layout = new LayoutService({ db: deps.db, hub: deps.hub, extensions });
   const customize = { appearance, mcp, extensions };
   const catalog = new CatalogService({
@@ -217,8 +242,16 @@ export async function createServices(deps: {
     engines: deps.engines,
     agents: deps.agents,
     projects,
-    appTools: (ctx) => [
+    appTools: async (ctx) => [
       ...toolsFor(toolDeps, ctx),
+      // In an app's chat, agents use the app through its actions (phase 25).
+      ...(ctx.chat.projectId && appService.isApp(ctx.chat.projectId)
+        ? await appActions.tools(ctx.chat.projectId, {
+            handle: ctx.handle,
+            chatId: ctx.chat.id,
+            topicId: ctx.topicId,
+          })
+        : []),
       ...(ctx.handle === "orchestrator" ? [...integrationTools(integrations), ...helpTools()] : []),
       // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
       // orchestrator had no such tools and claimed to have sent cards).
@@ -303,6 +336,8 @@ export async function createServices(deps: {
     extensions,
     extensionBridge,
     apps: appService,
+    appData,
+    appActions,
     layout,
     catalog,
     safeMode,

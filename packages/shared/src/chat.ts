@@ -60,7 +60,8 @@ export type ApprovalKind =
   | "agent_change"
   | "budget_change"
   | "app_create"
-  | "app_change";
+  | "app_change"
+  | "app_data_delete";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "failed";
 
 export interface ApprovalCard {
@@ -344,7 +345,8 @@ export type ExtensionPermission =
   | "storage"
   | "net"
   | "agents.ask"
-  | "files.read";
+  | "files.read"
+  | "apps.call";
 
 /** Icons an extension may name in its manifest (lucide names the app ships). */
 export const EXTENSION_ICONS = [

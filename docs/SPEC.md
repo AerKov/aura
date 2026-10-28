@@ -403,12 +403,12 @@ An app is a project whose workspace holds its code, with its own chat. In it age
 change it: diffs with approval, one commit per change, live reload, rollback. The orchestrator
 creates apps from an idea.
 
-**Phase 24: App data**
+**Phase 24: App data** (done, ADR 0025)
 Each app keeps data where the user decides: its own SurrealDB datastore (collections with a
 schema, live queries) or files in its folder. Never in the main database. Export, backup, delete
 per app.
 
-**Phase 25: Actions and contracts**
+**Phase 25: Actions and contracts** (done: declarative actions, ADR 0025)
 An app declares actions (exposed like MCP tools) and what it lets others read. Agents call them in
 the app's chat; another app calls them only with the user's permission for those actions.
 

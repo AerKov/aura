@@ -65,6 +65,7 @@ DEFINE FIELD OVERWRITE budget_tokens ON project TYPE option<int>;
 DEFINE FIELD OVERWRITE isolation ON project TYPE string DEFAULT "host" ASSERT $value IN ["host", "container"];
 DEFINE FIELD OVERWRITE app ON project TYPE option<string>;
 DEFINE FIELD OVERWRITE kind ON project TYPE option<string>;
+DEFINE FIELD OVERWRITE data_store ON project TYPE option<string>;
 DEFINE FIELD OVERWRITE created_at ON project TYPE datetime DEFAULT time::now();
 
 DEFINE TABLE OVERWRITE approval SCHEMAFULL;
@@ -126,6 +127,7 @@ DEFINE FIELD OVERWRITE granted_permissions ON extension_state TYPE array<string>
 DEFINE FIELD OVERWRITE errors ON extension_state TYPE int DEFAULT 0;
 DEFINE FIELD OVERWRITE granted_hosts ON extension_state TYPE array<string> DEFAULT [];
 DEFINE FIELD OVERWRITE granted_secrets ON extension_state TYPE array<string> DEFAULT [];
+DEFINE FIELD OVERWRITE granted_calls ON extension_state TYPE array<string> DEFAULT [];
 
 DEFINE TABLE OVERWRITE extension_data SCHEMAFULL;
 DEFINE FIELD OVERWRITE ext ON extension_data TYPE string;

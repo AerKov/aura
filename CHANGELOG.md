@@ -5,6 +5,17 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.25.0] - 2026-10-28: App data and actions
+
+- Each app keeps its data in its own store: a database of its own (default) or JSON files in its
+  folder. Switch, export or delete it from the database button on the app's tile. Nothing goes in
+  Aura's main database.
+- Apps declare collections (with field types) and see changes live, also those made by agents.
+- Actions: an app offers named operations (find, add, update, delete…). Agents in the app's chat use
+  them for you; deleting asks first.
+- Apps can use each other's actions only when one offers them and you approved the other's request,
+  shown on its card.
+
 ## [0.23.0] - 2026-10-28: Apps with chats
 
 - Apps: make one with **+ → New app** or by asking the orchestrator. Each app has its own chat

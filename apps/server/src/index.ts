@@ -126,6 +126,7 @@ async function main(): Promise<void> {
     ]);
     await app.stop();
     await stopLive().catch(() => {});
+    await services.appData.closeAll();
     await db.close();
     process.exit(0);
   };

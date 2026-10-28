@@ -18,6 +18,8 @@ export type ServerEvent =
   | { type: "chat.updated"; chat: Chat }
   /** A topic was created, renamed, closed or reopened. */
   | { type: "topic.updated"; topic: Topic }
+  /** An app's data changed ("*": everything); its frames refresh (ADR 0024). */
+  | { type: "app.data"; app: string; collection: string }
   /** Theme, snippets or extensions changed; clients reload them. */
   | { type: "customize.updated" }
   /** The shell's layout changed (the orchestrator or another window); clients show it. */
@@ -39,6 +41,7 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "message.deleted",
   "chat.updated",
   "topic.updated",
+  "app.data",
   "customize.updated",
   "layout.updated",
   "notification",

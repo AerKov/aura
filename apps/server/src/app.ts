@@ -8,6 +8,8 @@ import type { AlertService } from "./modules/alerts/service";
 import { controlModule } from "./modules/approvals";
 import type { ApprovalService } from "./modules/approvals/service";
 import { appsModule } from "./modules/apps";
+import type { AppActions } from "./modules/apps/actions";
+import type { AppDataService } from "./modules/apps/data";
 import type { AppService } from "./modules/apps/service";
 import { authModule } from "./modules/auth";
 import type { LocalSessions, SessionUser } from "./modules/auth/sessions";
@@ -80,6 +82,8 @@ export interface AppDeps extends HealthDeps {
   extensionBridge: ExtensionBridge;
   layout: LayoutService;
   apps: AppService;
+  appData: AppDataService;
+  appActions: AppActions;
   mcp: McpService;
   safeMode: SafeMode;
   appVersion: string;

@@ -36,6 +36,9 @@ const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
   "agents.ask": "agents.ask",
   "files.list": "files.read",
   "files.read": "files.read",
+  data: "storage",
+  "actions.run": "storage",
+  "apps.call": "apps.call",
   error: null,
 };
 
@@ -188,6 +191,37 @@ export function ExtensionFrame({
           );
           return reply(req.id, read ? result.content : result.entries);
         }
+        case "data": {
+          const { result } = await call(() =>
+            ext().data.post({
+              op: p.op as "list" | "count" | "get" | "insert" | "update" | "delete",
+              collection: String(p.collection ?? ""),
+              id: typeof p.id === "string" ? p.id : undefined,
+              record: p.record,
+              patch: p.patch,
+              query: (p.query ?? undefined) as Record<string, never> | undefined,
+            }),
+          );
+          return reply(req.id, result);
+        }
+        case "actions.run": {
+          const { result } = await call(() =>
+            ext()
+              .actions({ action: String(p.name ?? "") })
+              .post({ input: p.input }),
+          );
+          return reply(req.id, result);
+        }
+        case "apps.call": {
+          const { result } = await call(() =>
+            ext().call.post({
+              app: String(p.app ?? ""),
+              action: String(p.action ?? ""),
+              input: p.input,
+            }),
+          );
+          return reply(req.id, result);
+        }
         case "events.subscribe":
           if (p.name === "message.created" && !has("chat.read"))
             return reply(req.id, null, 'Permission "chat.read" was not granted');
@@ -215,6 +249,20 @@ export function ExtensionFrame({
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [extension]);
+
+  // An app's data changed (also by agents or other apps): it can refresh (phase 24).
+  useEffect(() => {
+    const onData = (e: Event) => {
+      const detail = (e as CustomEvent<{ app: string; collection: string }>).detail;
+      if (detail.app !== extension.id) return;
+      ref.current?.contentWindow?.postMessage(
+        { aura: 1, event: "data.changed", payload: { collection: detail.collection } },
+        "*",
+      );
+    };
+    window.addEventListener("aura:app-data", onData);
+    return () => window.removeEventListener("aura:app-data", onData);
+  }, [extension.id]);
 
   // Tell the extension when the chat next to it changes.
   useEffect(() => {

@@ -286,4 +286,85 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
           read: t.Optional(t.BooleanString()),
         }),
       },
+    )
+    // An app's collections, its own actions, and other apps' actions (ADR 0024, phases 24-25).
+    .post(
+      "/extensions/:extensionId/data",
+      async ({ params, body, status }) => {
+        try {
+          return { result: await deps.extensionBridge.data(params.extensionId, body) };
+        } catch (error) {
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      {
+        auth: true,
+        body: t.Object({
+          op: t.Union([
+            t.Literal("list"),
+            t.Literal("count"),
+            t.Literal("get"),
+            t.Literal("insert"),
+            t.Literal("update"),
+            t.Literal("delete"),
+          ]),
+          collection: t.String({ maxLength: 32 }),
+          id: t.Optional(t.String({ maxLength: 64 })),
+          record: t.Optional(t.Unknown()),
+          patch: t.Optional(t.Unknown()),
+          query: t.Optional(
+            t.Object({
+              where: t.Optional(t.Record(t.String(), t.Unknown())),
+              search: t.Optional(t.String({ maxLength: 200 })),
+              sort: t.Optional(t.String({ maxLength: 40 })),
+              limit: t.Optional(t.Number()),
+            }),
+          ),
+        }),
+      },
+    )
+    .post(
+      "/extensions/:extensionId/actions/:action",
+      async ({ params, body, status }) => {
+        try {
+          return {
+            result: await deps.extensionBridge.runAction(
+              params.extensionId,
+              params.action,
+              body.input,
+            ),
+          };
+        } catch (error) {
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      { auth: true, body: t.Object({ input: t.Optional(t.Unknown()) }) },
+    )
+    .post(
+      "/extensions/:extensionId/call",
+      async ({ params, body, status }) => {
+        try {
+          return {
+            result: await deps.extensionBridge.callApp(
+              params.extensionId,
+              body.app,
+              body.action,
+              body.input,
+            ),
+          };
+        } catch (error) {
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      {
+        auth: true,
+        body: t.Object({
+          app: t.String({ maxLength: 48 }),
+          action: t.String({ maxLength: 32 }),
+          input: t.Optional(t.Unknown()),
+        }),
+      },
     );

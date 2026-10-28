@@ -52,6 +52,8 @@ function scaffold(id: string, name: string): Record<string, string> {
     icon: "blocks",
   };
   return {
+    // An app's data (the "files" store) is not part of its code versions.
+    ".gitignore": "node_modules/\n.env\ndata/\n",
     "manifest.json": `${JSON.stringify(manifest, null, 2)}\n`,
     "main.js": `export default function activate(ctx) {
   ctx.ui.registerPanel({
@@ -116,6 +118,10 @@ export class AppService {
     this.cache = (await this.deps.projects.list())
       .filter((p) => p.kind === "app")
       .map((p) => ({ id: p.id, dir: p.workspace, chatId: p.chatId }));
+  }
+
+  isApp(id: string): boolean {
+    return this.cache.some((a) => a.id === id);
   }
 
   private source(id: string): AppSource | undefined {

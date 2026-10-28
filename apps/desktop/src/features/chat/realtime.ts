@@ -74,6 +74,9 @@ export function startRealtime(): () => void {
         case "topic.updated":
           upsertTopic(event.topic);
           break;
+        case "app.data":
+          window.dispatchEvent(new CustomEvent("aura:app-data", { detail: event }));
+          break;
         case "layout.updated":
           receiveLayout(event.layout);
           break;

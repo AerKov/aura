@@ -53,6 +53,19 @@ export async function connectDb(url: string): Promise<Db> {
   };
 }
 
+/**
+ * An app's own datastore (ADR 0024): a separate embedded SurrealDB, schemaless, apart from Aura's
+ * main database.
+ */
+export async function openAppDatabase(url: string, app: string): Promise<Surreal> {
+  ensureNativeAddonPath();
+  const { createNodeEngines } = await import("@surrealdb/node");
+  const surreal = new Surreal({ engines: { ...createRemoteEngines(), ...createNodeEngines() } });
+  await surreal.connect(url);
+  await surreal.use({ namespace: "app", database: app });
+  return surreal;
+}
+
 /** Removes credentials from a connection URL before logging it. */
 function redact(url: string): string {
   return url.replace(/\/\/[^@/]*@/, "//***@");

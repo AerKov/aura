@@ -9,6 +9,12 @@ import {
 import { RecordId, type Surreal } from "surrealdb";
 import { commitAll, git } from "../../lib/git";
 import type { ApprovalRecord, ApprovalService } from "../approvals/service";
+import {
+  type Contract,
+  describeContract,
+  EMPTY_CONTRACT,
+  validateContract,
+} from "../apps/contract";
 import type { EventHub } from "../realtime/hub";
 
 export class ExtensionError extends Error {
@@ -24,6 +30,7 @@ export const PERMISSIONS: Record<ExtensionPermission, string> = {
   net: "Reach the listed hosts (through Aura)",
   "agents.ask": "Ask agents for you (as your message, within budgets)",
   "files.read": "Read project files",
+  "apps.call": "Use other apps' actions listed below",
 };
 
 const ID = /^[a-z][a-z0-9-]{1,47}$/;
@@ -47,6 +54,8 @@ export interface Manifest {
   hosts?: string[];
   /** Stored secrets the server may substitute into its requests. */
   secrets?: string[];
+  /** An app's data and actions (phases 24-25). */
+  contract?: Contract;
 }
 
 export function compareVersions(a: string, b: string): number {
@@ -96,6 +105,14 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
     throw new ExtensionError('the "net" permission and a non-empty hosts list go together');
   if (secrets.length > 0 && hosts.length === 0)
     throw new ExtensionError("secrets are only used in requests to hosts; list the hosts");
+  let contract: Contract;
+  try {
+    contract = validateContract(m);
+  } catch (error) {
+    throw new ExtensionError(error instanceof Error ? error.message : String(error));
+  }
+  if (permissions.includes("apps.call") !== contract.uses.length > 0)
+    throw new ExtensionError('the "apps.call" permission and a non-empty uses list go together');
   return {
     id: m.id,
     name: m.name.trim(),
@@ -107,6 +124,7 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
     ...(m.icon ? { icon: m.icon as ExtensionIcon } : {}),
     ...(hosts.length ? { hosts: [...new Set(hosts)] } : {}),
     ...(secrets.length ? { secrets: [...new Set(secrets)] } : {}),
+    ...(Object.keys(contract.collections).length || contract.uses.length ? { contract } : {}),
   };
 }
 
@@ -126,6 +144,7 @@ export function describeManifest(m: Manifest): string[] {
     m.secrets?.length
       ? `- secrets put into those requests by Aura (the extension never sees them): ${m.secrets.map((s) => `\`${s}\``).join(", ")}`
       : "",
+    ...(m.contract ? describeContract(m.contract) : []),
   ].filter(Boolean);
 }
 
@@ -150,6 +169,8 @@ interface State {
   /** Hosts and secrets granted with the permissions; a later manifest edit does not widen them. */
   hosts: string[];
   secrets: string[];
+  /** Other apps' actions it may call ("app.action"), as approved. */
+  calls: string[];
   errors: number;
 }
 
@@ -157,6 +178,7 @@ const grants = (m: Manifest) => ({
   granted: m.permissions,
   hosts: m.hosts ?? [],
   secrets: m.secrets ?? [],
+  calls: m.contract?.uses ?? [],
 });
 
 /**
@@ -217,6 +239,7 @@ export class ExtensionService {
       granted: (row?.granted_permissions as ExtensionPermission[] | undefined) ?? [],
       hosts: (row?.granted_hosts as string[] | undefined) ?? [],
       secrets: (row?.granted_secrets as string[] | undefined) ?? [],
+      calls: (row?.granted_calls as string[] | undefined) ?? [],
       errors: Number(row?.errors ?? 0),
     };
   }
@@ -224,7 +247,7 @@ export class ExtensionService {
   private async saveState(id: string, version: string, state: State): Promise<void> {
     await this.deps.db
       .query(
-        "UPSERT $id CONTENT { version: $version, enabled: $enabled, granted_permissions: $granted, granted_hosts: $hosts, granted_secrets: $secrets, errors: $errors }",
+        "UPSERT $id CONTENT { version: $version, enabled: $enabled, granted_permissions: $granted, granted_hosts: $hosts, granted_secrets: $secrets, granted_calls: $calls, errors: $errors }",
         {
           id: new RecordId("extension_state", id),
           version,
@@ -232,6 +255,7 @@ export class ExtensionService {
           granted: state.granted,
           hosts: state.hosts,
           secrets: state.secrets,
+          calls: state.calls,
           errors: state.errors,
         },
       )
@@ -323,7 +347,7 @@ export class ExtensionService {
     const manifest = await this.readManifest(id);
     await this.saveState(id, manifest.version, {
       enabled,
-      ...(enabled ? grants(manifest) : { granted: [], hosts: [], secrets: [] }),
+      ...(enabled ? grants(manifest) : { granted: [], hosts: [], secrets: [], calls: [] }),
       errors: 0,
     });
     return this.info(id);
@@ -350,11 +374,17 @@ export class ExtensionService {
   async grant(
     id: string,
     permission: ExtensionPermission,
-  ): Promise<{ hosts: string[]; secrets: string[] } | null> {
+  ): Promise<{ hosts: string[]; secrets: string[]; calls: string[] } | null> {
     if (this.deps.safeMode() || !ID.test(id)) return null;
     const info = await this.info(id);
     if (!info.enabled || !info.permissions.includes(permission)) return null;
-    return { hosts: info.hosts, secrets: info.secrets };
+    const state = await this.state(id);
+    return { hosts: info.hosts, secrets: info.secrets, calls: state.calls };
+  }
+
+  /** The data and actions an app declares in its live (approved) manifest. */
+  async contract(id: string): Promise<Contract> {
+    return (await this.readManifest(id)).contract ?? EMPTY_CONTRACT;
   }
 
   async propose(
@@ -609,6 +639,20 @@ const BRIDGE = `(() => {
     }),
     net: Object.freeze({ fetch: (url, init) => call("net.fetch", { url, ...(init || {}) }) }),
     agents: Object.freeze({ ask: (agent, text, options) => call("agents.ask", { agent, text, ...(options || {}) }) }),
+    data: Object.freeze({
+      list: (collection, query) => call("data", { op: "list", collection, query: query || {} }),
+      count: (collection, query) => call("data", { op: "count", collection, query: query || {} }),
+      get: (collection, id) => call("data", { op: "get", collection, id }),
+      insert: (collection, record) => call("data", { op: "insert", collection, record }),
+      update: (collection, id, patch) => call("data", { op: "update", collection, id, patch }),
+      delete: (collection, id) => call("data", { op: "delete", collection, id }),
+      on: (collection, fn) => {
+        if (!listeners.has("data.changed")) listeners.set("data.changed", []);
+        listeners.get("data.changed").push((p) => { if (p && (p.collection === collection || p.collection === "*")) fn(p); });
+      },
+    }),
+    actions: Object.freeze({ run: (name, input) => call("actions.run", { name, input: input || {} }) }),
+    apps: Object.freeze({ call: (app, action, input) => call("apps.call", { app, action, input: input || {} }) }),
     files: Object.freeze({
       list: (path, options) => call("files.list", { path: path || "", ...(options || {}) }),
       read: (path, options) => call("files.read", { path, ...(options || {}) }),

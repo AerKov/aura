@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { join, relative, resolve, sep } from "node:path";
 import { HANDLE_PATTERN, type Message } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
+import { ActionError, type AppActions } from "../apps/actions";
+import { type AppDataService, DataError, type Query } from "../apps/data";
 import type { ChatService } from "../chat/service";
 import { redact } from "../integrations/env";
 import { hostAllowed } from "../integrations/service";
@@ -24,6 +26,15 @@ const FETCH_TIMEOUT_MS = 20_000;
 export const ASK_LIMIT = 10;
 const SECRET_REF = /\$\{secret:([A-Z_][A-Z0-9_]{0,63})\}/g;
 const METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]);
+
+export interface DataRequest {
+  op: "list" | "count" | "get" | "insert" | "update" | "delete";
+  collection: string;
+  id?: string;
+  record?: unknown;
+  patch?: unknown;
+  query?: Query;
+}
 
 export interface FetchRequest {
   url: string;
@@ -63,8 +74,15 @@ export class ExtensionBridge {
       projects: ProjectService;
       fetch?: typeof fetch;
       now?: () => number;
+      /** Apps built in Aura keep their data in their own store (ADR 0024). */
+      apps?: { isApp: (id: string) => boolean; data: AppDataService; actions: AppActions };
     },
   ) {}
+
+  private app(id: string) {
+    const apps = this.deps.apps;
+    return apps?.isApp(id) ? apps : null;
+  }
 
   private async need(id: string, permission: Parameters<ExtensionService["grant"]>[1]) {
     const grant = await this.deps.extensions.grant(id, permission);
@@ -76,6 +94,8 @@ export class ExtensionBridge {
 
   async storageGet(id: string, key: string): Promise<unknown> {
     await this.need(id, "storage");
+    const app = this.app(id);
+    if (app) return app.data.kvGet(id, this.key(key));
     const [rows] = await this.deps.db
       .query<[{ value?: string }[]]>("SELECT * FROM extension_data WHERE id = $id", {
         id: this.keyId(id, key),
@@ -89,6 +109,8 @@ export class ExtensionBridge {
     await this.need(id, "storage");
     const json = JSON.stringify(value ?? null);
     if (json.length > MAX_VALUE) throw new ExtensionError("value is larger than 256 KB");
+    const app = this.app(id);
+    if (app) return app.data.kvSet(id, this.key(key), value);
     const keys = await this.storageKeys(id);
     if (!keys.includes(key) && keys.length >= MAX_KEYS)
       throw new ExtensionError(`storage holds at most ${MAX_KEYS} keys`);
@@ -104,11 +126,15 @@ export class ExtensionBridge {
 
   async storageDelete(id: string, key: string): Promise<void> {
     await this.need(id, "storage");
+    const app = this.app(id);
+    if (app) return app.data.kvSet(id, this.key(key), null);
     await this.deps.db.query("DELETE $id", { id: this.keyId(id, key) }).collect();
   }
 
   async storageKeys(id: string): Promise<string[]> {
     await this.need(id, "storage");
+    const app = this.app(id);
+    if (app) return app.data.kvKeys(id);
     const [rows] = await this.deps.db
       .query<[{ key: string }[]]>("SELECT key FROM extension_data WHERE ext = $ext", { ext: id })
       .collect();
@@ -118,6 +144,63 @@ export class ExtensionBridge {
   /** Removes everything an extension stored (when it is removed). */
   async forget(id: string): Promise<void> {
     await this.deps.db.query("DELETE extension_data WHERE ext = $ext", { ext: id }).collect();
+  }
+
+  private key(key: string): string {
+    if (!key || key.length > MAX_KEY) throw new ExtensionError("key must be 1-200 characters");
+    return key;
+  }
+
+  // An app's collections and actions (ADR 0024, phases 24-25), with its storage permission.
+
+  async data(id: string, req: DataRequest): Promise<unknown> {
+    await this.need(id, "storage");
+    const app = this.app(id);
+    if (!app) throw new ExtensionDenied("Only apps built in Aura have collections");
+    try {
+      switch (req.op) {
+        case "list":
+          return await app.data.list(id, req.collection, req.query);
+        case "count":
+          return await app.data.count(id, req.collection, req.query);
+        case "get":
+          return await app.data.get(id, req.collection, req.id ?? "");
+        case "insert":
+          return await app.data.insert(id, req.collection, req.record);
+        case "update":
+          return await app.data.update(id, req.collection, req.id ?? "", req.patch);
+        case "delete":
+          return await app.data.remove(id, req.collection, req.id ?? "");
+      }
+    } catch (error) {
+      if (error instanceof DataError) throw new ExtensionError(error.message);
+      throw error;
+    }
+  }
+
+  async runAction(id: string, action: string, input: unknown): Promise<unknown> {
+    await this.need(id, "storage");
+    const app = this.app(id);
+    if (!app) throw new ExtensionDenied("Only apps built in Aura have actions");
+    return this.translate(() => app.actions.run(id, action, input));
+  }
+
+  /** Another app's action, through the contract both sides agreed to (phase 25). */
+  async callApp(id: string, target: string, action: string, input: unknown): Promise<unknown> {
+    await this.need(id, "apps.call");
+    const apps = this.deps.apps;
+    if (!apps?.isApp(target)) throw new ExtensionError(`There is no app "${target}"`);
+    return this.translate(() => apps.actions.callFrom(id, target, action, input));
+  }
+
+  private async translate<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      if (error instanceof ActionError) throw new ExtensionDenied(error.message);
+      if (error instanceof DataError) throw new ExtensionError(error.message);
+      throw error;
+    }
   }
 
   private keyId(id: string, key: string): RecordId {

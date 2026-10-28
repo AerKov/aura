@@ -25,6 +25,8 @@ export class ProjectError extends Error {
 
 export interface ProjectInfo extends Project {
   workspace: string;
+  /** Where an app keeps its data (ADR 0024); config, so it lives here, not the data itself. */
+  dataStore: "database" | "files";
 }
 
 export interface ProjectInput {
@@ -257,6 +259,12 @@ export class ProjectService {
     return project;
   }
 
+  async setDataStore(slug: string, store: "database" | "files"): Promise<void> {
+    await this.deps.db
+      .query("UPDATE $id SET data_store = $store", { id: new RecordId("project", slug), store })
+      .collect();
+  }
+
   /** Pins an extension as the project's app (ADR 0021), or unpins it with null. */
   async setApp(slug: string, extensionId: string | null): Promise<ProjectInfo> {
     if (!(await this.get(slug))) throw new ProjectError(`No project "${slug}"`);
@@ -287,6 +295,7 @@ export class ProjectService {
       isolation: row.isolation === "container" ? "container" : "host",
       app: typeof row.app === "string" ? row.app : null,
       kind: row.kind === "app" ? "app" : "project",
+      dataStore: row.data_store === "files" ? "files" : "database",
       createdAt: isoOf(row.created_at),
       workspace: String(row.repo_path),
     };

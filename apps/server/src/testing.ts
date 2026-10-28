@@ -77,6 +77,7 @@ export async function createTestApp(
     triageDelayMs: 10,
     safeMode: opts.safeMode,
     welcome: opts.welcome ?? false,
+    appDbUrl: () => "mem://",
   });
   const stopRuntime = services.runtime.start();
   const sessions = new LocalSessions();
@@ -120,6 +121,7 @@ export async function createTestApp(
       await services.summaries.whenIdle();
       if (app.server) await app.stop();
       await stopLive();
+      await services.appData.closeAll();
       await db.close();
       rmSync(dataDir, { recursive: true, force: true });
     },
