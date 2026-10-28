@@ -5,6 +5,7 @@ import {
   type Chat,
   type Project,
   type ProjectIsolation,
+  type ProjectKind,
   parseMentions,
   SLUG_PATTERN,
   slugify,
@@ -36,6 +37,12 @@ export interface ProjectInput {
   budgetTokens?: number | null;
   /** The agent the kickoff wakes; defaults to the first agent mentioned in the brief. */
   startWith?: string;
+  /** "app": an app's code (ADR 0024). */
+  kind?: ProjectKind;
+  /** Files written into the new workspace before its first commit (an app's scaffold). */
+  files?: Record<string, string>;
+  /** Post the brief and wake the starting agent (default true). */
+  kickoff?: boolean;
 }
 
 export interface ValidProject {
@@ -154,7 +161,13 @@ export class ProjectService {
     const workspace = this.workspaceOf(slug);
     await ensureRepo(workspace, "node_modules/\n.env\n");
     writeFileSync(join(workspace, "BRIEF.md"), `# ${name}\n\n${brief}\n`);
-    await commitAll(workspace, "docs: add project brief", ORCHESTRATOR_HANDLE);
+    for (const [file, content] of Object.entries(input.files ?? {}))
+      writeFileSync(join(workspace, file), content);
+    await commitAll(
+      workspace,
+      input.kind === "app" ? "feat: start the app" : "docs: add project brief",
+      ORCHESTRATOR_HANDLE,
+    );
 
     const chat = await this.deps.repo.createChat({
       kind: "group",
@@ -181,6 +194,7 @@ export class ProjectService {
           ...(budgetUsd !== null ? { budget_usd: budgetUsd } : {}),
           ...(budgetTokens !== null ? { budget_tokens: budgetTokens } : {}),
           isolation: this.deps.newProjectIsolation?.() ?? "host",
+          ...(input.kind === "app" ? { kind: "app", app: slug } : {}),
         },
       })
       .collect();
@@ -189,19 +203,21 @@ export class ProjectService {
       chatId: chat.id,
       author: { kind: "bot", id: "system" },
       kind: "system",
-      body: `Project created · budget: ${budgetText({ usd: budgetUsd, tokens: budgetTokens })} · team: ${agents.map((a) => `@${a}`).join(", ")}`,
+      body: `${input.kind === "app" ? "App" : "Project"} created · budget: ${budgetText({ usd: budgetUsd, tokens: budgetTokens })} · team: ${agents.map((a) => `@${a}`).join(", ")}`,
     });
 
     // The kickoff comes from the orchestrator and wakes only the agent who starts; the others
     // are mentioned in the brief for context and get handed off to later.
-    const kickoff = await this.deps.repo.createMessage({
-      chatId: chat.id,
-      author: { kind: "agent", id: ORCHESTRATOR_HANDLE },
-      body: brief,
-      mentions: [startWith],
-      chainDepth: 1,
-    });
-    this.deps.chat.notify(kickoff, chat);
+    if (input.kickoff !== false) {
+      const kickoff = await this.deps.repo.createMessage({
+        chatId: chat.id,
+        author: { kind: "agent", id: ORCHESTRATOR_HANDLE },
+        body: brief,
+        mentions: [startWith],
+        chainDepth: 1,
+      });
+      this.deps.chat.notify(kickoff, chat);
+    }
 
     const project = await this.get(slug);
     if (!project) throw new ProjectError("project was not saved");
@@ -270,6 +286,7 @@ export class ProjectService {
       spentTokens: spent.tokens,
       isolation: row.isolation === "container" ? "container" : "host",
       app: typeof row.app === "string" ? row.app : null,
+      kind: row.kind === "app" ? "app" : "project",
       createdAt: isoOf(row.created_at),
       workspace: String(row.repo_path),
     };

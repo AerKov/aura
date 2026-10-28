@@ -64,6 +64,7 @@ DEFINE FIELD OVERWRITE budget_usd ON project TYPE option<float>;
 DEFINE FIELD OVERWRITE budget_tokens ON project TYPE option<int>;
 DEFINE FIELD OVERWRITE isolation ON project TYPE string DEFAULT "host" ASSERT $value IN ["host", "container"];
 DEFINE FIELD OVERWRITE app ON project TYPE option<string>;
+DEFINE FIELD OVERWRITE kind ON project TYPE option<string>;
 DEFINE FIELD OVERWRITE created_at ON project TYPE datetime DEFAULT time::now();
 
 DEFINE TABLE OVERWRITE approval SCHEMAFULL;

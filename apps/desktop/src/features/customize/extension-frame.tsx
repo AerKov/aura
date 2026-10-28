@@ -73,11 +73,14 @@ export function ExtensionFrame({
   extension,
   context = NO_CONTEXT,
   variant = "page",
+  draft = false,
 }: {
   extension: ExtensionInfo;
   context?: ExtensionContext;
   /** "side": inside the side panel, which has its own header. */
   variant?: "page" | "side";
+  /** An app's changes that wait for approval (ADR 0024). */
+  draft?: boolean;
 }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const [title, setTitle] = useState(extension.name);
@@ -275,7 +278,7 @@ export function ExtensionFrame({
         ref={ref}
         title={title}
         sandbox="allow-scripts"
-        src={`${SERVER_URL}/extensions/${extension.id}/frame`}
+        src={`${SERVER_URL}/extensions/${extension.id}/frame${draft ? "?draft=1" : ""}`}
         className="flex-1 border-0"
         onLoad={sendTheme}
         onError={() => reportError(new Error(`extension ${extension.id} failed to load`))}

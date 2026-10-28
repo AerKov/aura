@@ -51,6 +51,10 @@ type Row = Record<string, unknown>;
  */
 export class ApprovalService {
   private readonly executors = new Map<ApprovalKind, ApprovalExecutor>();
+  private readonly rejectors = new Map<
+    ApprovalKind,
+    (payload: Record<string, unknown>) => Promise<void>
+  >();
   /** Approvals being decided right now, so concurrent clicks cannot run an effect twice. */
   private readonly deciding = new Set<string>();
 
@@ -61,6 +65,11 @@ export class ApprovalService {
 
   register(kind: ApprovalKind, executor: ApprovalExecutor): void {
     this.executors.set(kind, executor);
+  }
+
+  /** What to undo when the user rejects a request of this kind (e.g. an app's draft). */
+  onReject(kind: ApprovalKind, handler: (payload: Record<string, unknown>) => Promise<void>): void {
+    this.rejectors.set(kind, handler);
   }
 
   async request(input: {
@@ -138,6 +147,13 @@ export class ApprovalService {
 
       let status: ApprovalStatus = approve ? "approved" : "rejected";
       let result: string | null = null;
+      if (!approve) {
+        await this.rejectors
+          .get(record.kind)?.(record.payload)
+          .catch((error: unknown) =>
+            log.warn("reject handler failed", { approval: id, error: errorMessage(error) }),
+          );
+      }
       if (approve) {
         const executor = this.executors.get(record.kind);
         try {

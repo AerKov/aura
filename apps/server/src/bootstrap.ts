@@ -9,6 +9,8 @@ import { AgentRuntime } from "./modules/agents/runtime";
 import { registerExecutors, toolsFor } from "./modules/agents/tools";
 import { AlertService, TriageLimiter } from "./modules/alerts/service";
 import { ApprovalService } from "./modules/approvals/service";
+import { AppService } from "./modules/apps/service";
+import { appTools } from "./modules/apps/tools";
 import { CatalogService } from "./modules/catalog/service";
 import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
@@ -139,6 +141,8 @@ export async function createServices(deps: {
     safeMode: () => safeMode.on,
     secrets,
   });
+  // Apps built in Aura (ADR 0024) are served by the extension service; created just below.
+  let apps: AppService | undefined;
   const extensions = new ExtensionService({
     db: deps.db,
     dataDir: deps.dataDir,
@@ -146,6 +150,7 @@ export async function createServices(deps: {
     hub: deps.hub,
     appVersion: SERVER_VERSION,
     safeMode: () => safeMode.on,
+    apps: () => apps?.sources() ?? [],
     projectExists: async (slug) => (await projects.get(slug)) !== null,
     bindProject: async (slug, id) => {
       await projects.setApp(slug, id);
@@ -159,6 +164,16 @@ export async function createServices(deps: {
     projects,
     fetch: deps.fetch,
   });
+  apps = new AppService({
+    projects,
+    extensions: () => extensions,
+    approvals,
+    agents: deps.agents,
+    hub: deps.hub,
+    dataDir: deps.dataDir,
+  });
+  await apps.load();
+  const appService = apps;
   const layout = new LayoutService({ db: deps.db, hub: deps.hub, extensions });
   const customize = { appearance, mcp, extensions };
   const catalog = new CatalogService({
@@ -210,6 +225,11 @@ export async function createServices(deps: {
       ...(ctx.handle === "orchestrator"
         ? [
             ...shellTools(layout),
+            ...appTools(approvals, {
+              handle: ctx.handle,
+              chatId: ctx.chat.id,
+              topicId: ctx.topicId,
+            }),
             ...customizeTools(customize, {
               handle: ctx.handle,
               chatId: ctx.chat.id,
@@ -250,6 +270,7 @@ export async function createServices(deps: {
         : null,
     chatSummary: (chatId, topicId) => summaries.get(chatId, topicId),
     afterRun: (chat, topicId) => summaries.schedule(chat.id, topicId),
+    appRun: (project, run) => appService.afterRun(project, run),
     ownerName: owner.name,
     scratchDir,
     maxChainDepth: deps.maxChainDepth,
@@ -281,6 +302,7 @@ export async function createServices(deps: {
     mcp,
     extensions,
     extensionBridge,
+    apps: appService,
     layout,
     catalog,
     safeMode,

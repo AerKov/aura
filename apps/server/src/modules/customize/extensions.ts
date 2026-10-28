@@ -7,7 +7,7 @@ import {
   type ExtensionPermission,
 } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
-import { commitAll } from "../../lib/git";
+import { commitAll, git } from "../../lib/git";
 import type { ApprovalRecord, ApprovalService } from "../approvals/service";
 import type { EventHub } from "../realtime/hub";
 
@@ -129,6 +129,21 @@ export function describeManifest(m: Manifest): string[] {
   ].filter(Boolean);
 }
 
+export interface AppSource {
+  id: string;
+  dir: string;
+  chatId: string;
+}
+
+/** An app's live version and whether an agent left changes waiting for approval. */
+async function appState(source: AppSource): Promise<ExtensionInfo["app"]> {
+  const [revision, status] = await Promise.all([
+    git(source.dir, ["rev-parse", "--short", "HEAD"]).catch(() => ""),
+    git(source.dir, ["status", "--porcelain"]).catch(() => ""),
+  ]);
+  return { chatId: source.chatId, revision, draft: status.length > 0 };
+}
+
 interface State {
   enabled: boolean;
   granted: ExtensionPermission[];
@@ -158,6 +173,8 @@ export class ExtensionService {
       hub: EventHub;
       appVersion: string;
       safeMode: () => boolean;
+      /** Apps built in Aura (ADR 0024), whose code lives in a project workspace. */
+      apps?: () => AppSource[];
       /** Project apps (ADR 0021): checks a project and pins an extension to it. */
       projectExists?: (project: string) => Promise<boolean>;
       bindProject?: (project: string, extensionId: string) => Promise<void>;
@@ -169,7 +186,23 @@ export class ExtensionService {
   }
 
   private dirOf(id: string): string {
-    return join(this.deps.dataDir, "extensions", id);
+    return this.appOf(id)?.dir ?? join(this.deps.dataDir, "extensions", id);
+  }
+
+  /** An app built in Aura (ADR 0024): its code is a project's workspace. */
+  private appOf(id: string): AppSource | undefined {
+    return this.deps.apps?.().find((a) => a.id === id);
+  }
+
+  /**
+   * A file of an extension. An app runs its last approved version (its git HEAD); `draft` reads
+   * the working copy instead, with the changes an agent made and the user has not approved yet.
+   */
+  private async fileOf(id: string, name: string, draft = false): Promise<string | null> {
+    const app = this.appOf(id);
+    if (app && !draft) return git(app.dir, ["show", `HEAD:${name}`]).catch(() => null);
+    const file = join(this.dirOf(id), name);
+    return existsSync(file) ? readFileSync(file, "utf8") : null;
   }
 
   private async state(id: string): Promise<State> {
@@ -206,12 +239,12 @@ export class ExtensionService {
     this.deps.hub.publish({ type: "customize.updated" });
   }
 
-  private readManifest(id: string): Manifest {
-    const file = join(this.dirOf(id), "manifest.json");
-    if (!existsSync(file)) throw new ExtensionError("manifest.json is missing");
+  private async readManifest(id: string): Promise<Manifest> {
+    const text = await this.fileOf(id, "manifest.json");
+    if (text === null) throw new ExtensionError("manifest.json is missing");
     let parsed: unknown;
     try {
-      parsed = JSON.parse(readFileSync(file, "utf8"));
+      parsed = JSON.parse(text);
     } catch {
       throw new ExtensionError("manifest.json is not valid JSON");
     }
@@ -220,24 +253,27 @@ export class ExtensionService {
 
   async list(): Promise<ExtensionInfo[]> {
     const root = join(this.deps.dataDir, "extensions");
-    if (!existsSync(root)) return [];
-    const ids = readdirSync(root, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && ID.test(e.name))
-      .map((e) => e.name)
-      .sort();
+    const installed = existsSync(root)
+      ? readdirSync(root, { withFileTypes: true })
+          .filter((e) => e.isDirectory() && ID.test(e.name))
+          .map((e) => e.name)
+      : [];
+    const apps = (this.deps.apps?.() ?? []).map((a) => a.id);
+    const ids = [...new Set([...installed, ...apps])].sort();
     return Promise.all(ids.map((id) => this.info(id)));
   }
 
   async info(id: string): Promise<ExtensionInfo> {
     const state = await this.state(id);
     try {
-      const m = this.readManifest(id);
+      const m = await this.readManifest(id);
       const problem =
         compareVersions(m.minAppVersion, this.deps.appVersion) > 0
           ? `needs app ${m.minAppVersion} or newer (this is ${this.deps.appVersion})`
-          : !existsSync(join(this.dirOf(id), "main.js"))
+          : (await this.fileOf(id, "main.js")) === null
             ? "main.js is missing"
             : null;
+      const source = this.appOf(id);
       return {
         id: m.id,
         name: m.name,
@@ -249,6 +285,7 @@ export class ExtensionService {
         permissions: state.enabled ? state.granted : m.permissions,
         hosts: state.enabled ? state.hosts : (m.hosts ?? []),
         secrets: state.enabled ? state.secrets : (m.secrets ?? []),
+        app: source ? await appState(source) : null,
         problem,
       };
     } catch (error) {
@@ -262,6 +299,7 @@ export class ExtensionService {
         icon: null,
         hosts: [],
         secrets: [],
+        app: null,
         enabled: false,
         problem: error instanceof Error ? error.message : String(error),
       };
@@ -270,6 +308,8 @@ export class ExtensionService {
 
   /** User action: removes the extension's files (one commit, so it can be restored) and its state. */
   async remove(id: string, author = "owner"): Promise<void> {
+    if (this.appOf(id))
+      throw new ExtensionError("This is an app built in Aura: archive its project instead");
     if (!ID.test(id) || !existsSync(this.dirOf(id)))
       throw new ExtensionError(`No extension "${id}"`);
     rmSync(this.dirOf(id), { recursive: true, force: true });
@@ -280,7 +320,7 @@ export class ExtensionService {
 
   /** User action: enabling grants exactly the permissions the manifest requests (shown before). */
   async setEnabled(id: string, enabled: boolean): Promise<ExtensionInfo> {
-    const manifest = this.readManifest(id);
+    const manifest = await this.readManifest(id);
     await this.saveState(id, manifest.version, {
       enabled,
       ...(enabled ? grants(manifest) : { granted: [], hosts: [], secrets: [] }),
@@ -295,7 +335,7 @@ export class ExtensionService {
     if (!state.enabled) return { disabled: true };
     const errors = state.errors + 1;
     const disabled = errors >= ERROR_LIMIT;
-    const manifest = this.readManifest(id);
+    const manifest = await this.readManifest(id);
     await this.saveState(id, manifest.version, { ...state, enabled: !disabled, errors });
     return { disabled };
   }
@@ -367,6 +407,8 @@ export class ExtensionService {
 
   private async install(payload: Record<string, unknown>, author: string): Promise<string> {
     const manifest = validateManifest(payload.manifest);
+    if (this.appOf(manifest.id))
+      throw new ExtensionError(`"${manifest.id}" is an app built in Aura; choose another id`);
     const dir = this.dirOf(manifest.id);
     mkdirSync(dir, { recursive: true });
     writeFileSync(join(dir, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -391,14 +433,24 @@ export class ExtensionService {
   }
 
   /** HTML of the sandboxed frame, or null when the extension may not run. */
-  async frame(id: string): Promise<string | null> {
+  async frame(id: string, draft = false): Promise<string | null> {
     if (this.deps.safeMode()) return null;
     const info = await this.info(id);
     if (!info.enabled) return null;
-    const main = readFileSync(join(this.dirOf(id), "main.js"), "utf8");
-    const stylesFile = join(this.dirOf(id), "styles.css");
-    const styles = existsSync(stylesFile) ? readFileSync(stylesFile, "utf8") : "";
+    const main = await this.fileOf(id, "main.js", draft);
+    if (main === null) return null;
+    const styles = (await this.fileOf(id, "styles.css", draft)) ?? "";
     return frameHtml(info, main, styles);
+  }
+
+  /**
+   * After the user approved a change to an app: its manifest may ask for other permissions, which
+   * the approval card showed, so they are granted as they now are.
+   */
+  async regrant(id: string): Promise<void> {
+    const manifest = await this.readManifest(id);
+    const state = await this.state(id);
+    await this.saveState(id, manifest.version, { ...state, enabled: true, ...grants(manifest) });
   }
 }
 

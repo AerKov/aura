@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { AgentsView } from "@/features/agents/agents-view";
 import { CatalogView } from "@/features/catalog/catalog-view";
-import { reportError } from "@/features/chat/actions";
+import { openChat, reportError } from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
 import { Sidebar } from "@/features/chat/sidebar";
 import { setState, useChatStore } from "@/features/chat/store";
@@ -28,6 +28,7 @@ import { MemoryView } from "@/features/memory/memory-view";
 import { SkillsView } from "@/features/skills/skills-view";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { AppControls } from "./app-controls";
 import { appInfo, useExtensionApps } from "./apps";
 import {
   closeAppRef,
@@ -149,7 +150,11 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
             );
           })}
         </div>
-        {tile.active.startsWith("ext:") && <PinButton app={tile.active} />}
+        {tile.active.startsWith("ext:") &&
+          (() => {
+            const ext = extensions.find((e) => e.id === tile.active.slice(4));
+            return ext?.app ? <AppControls ext={ext} /> : <PinButton app={tile.active} />;
+          })()}
         <OpenMenu />
         {many && (
           <Button
@@ -242,6 +247,7 @@ function OpenMenu() {
           </div>
           <div className="max-h-96 overflow-y-auto">
             <p className="kicker px-2 pt-1 pb-1">Your apps</p>
+            <NewApp onCreated={() => setOpen(false)} />
             {yours.length > 0 ? (
               <ul>{yours.map(item)}</ul>
             ) : (
@@ -255,6 +261,63 @@ function OpenMenu() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** A new app with its own chat, where @builder makes it (ADR 0024). */
+function NewApp({ onCreated }: { onCreated: () => void }) {
+  const [form, setForm] = useState(false);
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!form)
+    return (
+      <button
+        type="button"
+        className="text-primary hover:bg-accent flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
+        onClick={() => setForm(true)}
+      >
+        <Plus className="size-4" /> New app
+      </button>
+    );
+  const create = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const { chatId } = await call(() =>
+        api.apps.post({ name: name.trim(), description: description.trim() || undefined }),
+      );
+      onCreated();
+      openChat(chatId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <div className="grid gap-1.5 px-2 pb-2">
+      <input
+        aria-label="App name"
+        placeholder="Name, e.g. Clients"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className="bg-background rounded-lg border px-2 py-1 text-sm"
+      />
+      <textarea
+        aria-label="What it should do"
+        placeholder="What it should do (optional: you can tell @builder in its chat)"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        rows={3}
+        className="bg-background resize-none rounded-lg border px-2 py-1 text-sm"
+      />
+      {error && <p className="text-destructive text-xs">{error}</p>}
+      <Button size="sm" disabled={busy || !name.trim()} onClick={() => void create()}>
+        Create
+      </Button>
     </div>
   );
 }
@@ -301,12 +364,21 @@ function AppView({ app }: { app: AppRef }) {
   const extensions = useExtensionApps();
   const chatId = useChatStore((s) => s.activeChatId);
   const projectId = useChatStore((s) => (chatId ? (s.chats[chatId]?.projectId ?? null) : null));
+  const previewDraft = useChatStore((s) => s.previewDraft);
   if (app === "messenger") return <Messenger />;
   if (app.startsWith("ext:")) {
     const ext = extensions.find((e) => e.id === app.slice(4));
     if (!ext) return null;
+    const draft = Boolean(ext.app?.draft && previewDraft[ext.id]);
     return (
-      <ExtensionFrame key={ext.id} extension={ext} variant="side" context={{ chatId, projectId }} />
+      <ExtensionFrame
+        // A new approved version or the draft preview reloads the frame.
+        key={`${ext.id}:${ext.app?.revision ?? ""}:${draft}`}
+        extension={ext}
+        variant="side"
+        draft={draft}
+        context={{ chatId, projectId }}
+      />
     );
   }
   switch (app.slice(5)) {

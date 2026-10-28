@@ -397,7 +397,8 @@ clicking (ADR 0024).
 Chats get topics: "General" plus topics the user creates, renames and closes. A topic shows only its
 messages; agents get only their topic as context; a message can be moved to another topic.
 
-**Phase 23: Apps with chats**
+**Phase 23: Apps with chats** (done: @builder, drafts served apart from the live HEAD, diff cards,
+versions; ADR 0024)
 An app is a project whose workspace holds its code, with its own chat. In it agents use the app and
 change it: diffs with approval, one commit per change, live reload, rollback. The orchestrator
 creates apps from an idea.

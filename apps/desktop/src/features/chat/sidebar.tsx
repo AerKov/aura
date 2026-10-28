@@ -6,10 +6,13 @@ import { ChatMark } from "./chat-mark";
 import { formatListTime } from "./participants";
 import { useChatStore } from "./store";
 
-const SECTIONS: { kind: Chat["kind"]; label: string }[] = [
-  { kind: "direct", label: "Orchestrator" },
-  { kind: "group", label: "Projects" },
-  { kind: "system", label: "Signals" },
+type Section = "direct" | "apps" | "projects" | "system";
+
+const SECTIONS: { key: Section; label: string }[] = [
+  { key: "direct", label: "Orchestrator" },
+  { key: "apps", label: "Apps" },
+  { key: "projects", label: "Projects" },
+  { key: "system", label: "Signals" },
 ];
 
 /** Conversations, grouped: the orchestrator, projects, and system signals. */
@@ -18,6 +21,14 @@ export function Sidebar() {
   const activeChatId = useChatStore((s) => s.activeChatId);
   const pane = useChatStore((s) => s.pane);
   const me = useChatStore((s) => s.me);
+  const projects = useChatStore((s) => s.projects);
+  // An app's chat is a project chat whose project is an app (ADR 0024).
+  const sectionOf = (chat: Chat): Section =>
+    chat.kind === "group"
+      ? chat.projectId && projects[chat.projectId]?.kind === "app"
+        ? "apps"
+        : "projects"
+      : chat.kind;
   const connection = useChatStore((s) => s.connection);
   const working = useChatStore((s) => {
     const ids: string[] = [];
@@ -51,11 +62,11 @@ export function Sidebar() {
         </span>
       </header>
       <nav className="flex-1 overflow-y-auto pb-3">
-        {SECTIONS.map(({ kind, label }) => {
-          const group = sorted.filter((c) => c.kind === kind);
+        {SECTIONS.map(({ key, label }) => {
+          const group = sorted.filter((c) => sectionOf(c) === key);
           if (group.length === 0) return null;
           return (
-            <section key={kind}>
+            <section key={key}>
               <h2 className="kicker px-4 pt-4 pb-1.5">{label}</h2>
               {group.map((chat) => {
                 const active = chat.id === activeChatId;

@@ -58,7 +58,9 @@ export type ApprovalKind =
   | "extension_install"
   | "pack_install"
   | "agent_change"
-  | "budget_change";
+  | "budget_change"
+  | "app_create"
+  | "app_change";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "failed";
 
 export interface ApprovalCard {
@@ -265,10 +267,17 @@ export interface Project {
   isolation: ProjectIsolation;
   /** Extension pinned as the project's app: it opens next to the project chat (ADR 0021). */
   app: string | null;
+  /** "app": the workspace is an app's code, changed through its chat with approval (ADR 0024). */
+  kind: ProjectKind;
   createdAt: string;
 }
 
 export type ProjectIsolation = "host" | "container";
+
+export type ProjectKind = "project" | "app";
+
+/** App ids are extension ids: a letter, then letters, digits and dashes. */
+export const APP_ID_PATTERN = /^[a-z][a-z0-9-]{1,47}$/;
 
 /** Engines billed by their API, where a dollar limit is real money (ADR 0023). */
 export const PAID_ENGINES = ["openrouter", "openai-compatible"] as const;
@@ -398,6 +407,8 @@ export interface ExtensionInfo {
   hosts: string[];
   /** Stored secrets the server may put into its requests, by name; values never reach it. */
   secrets: string[];
+  /** Set for an app built in Aura (ADR 0024): its chat, live version and unapproved changes. */
+  app: { chatId: string; revision: string; draft: boolean } | null;
   enabled: boolean;
   /** Why it cannot run, e.g. an invalid manifest or a newer minAppVersion. */
   problem: string | null;

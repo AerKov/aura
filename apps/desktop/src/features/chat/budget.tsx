@@ -172,7 +172,7 @@ export function BudgetButton({ project }: { project: Project }) {
             />
           )}
         </svg>
-        <div className="text-left text-xs leading-tight max-sm:hidden">
+        <div className="text-left text-xs leading-tight whitespace-nowrap max-sm:hidden">
           <div className="font-medium">
             {show(spent)}
             {byTokens ? " tok" : ""}

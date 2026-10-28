@@ -3,6 +3,7 @@
 **Use**
 - [Getting started](Getting-Started)
 - [The screen](The-Screen)
+- [Apps](Apps)
 - [Engines](Engines)
 - [Chats and agents](Chats-and-Agents)
 - [Approvals and safety](Approvals-and-Safety)

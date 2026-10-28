@@ -23,7 +23,7 @@ change it back with a click.
 
 Besides Chats, the built-in apps are Skills, Memory, Agents, Integrations, Catalog, Schedule,
 Engines, Customize and Devices. Apps you build with the orchestrator or install from the
-[Catalog](Catalog) open the same way; see [Customization](Customization).
+[Catalog](Catalog) open the same way; see [Apps](Apps) and [Customization](Customization).
 
 A project can have its own app: it opens in a tile next to the project's chat when you enter it.
 Close it and it stays closed until you open it again (**Apps** in the chat header).

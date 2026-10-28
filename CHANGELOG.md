@@ -5,6 +5,16 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.23.0] - 2026-10-28: Apps with chats
+
+- Apps: make one with **+ → New app** or by asking the orchestrator. Each app has its own chat
+  (listed under Apps) with @builder, the agent that writes it, and opens next to it.
+- Say what to change in the app's chat; the change comes as a diff on a card. Approve and the app
+  reloads; reject and it is thrown away. **Draft** on the app's tile tries the change first.
+- A change that asks for more permissions, hosts or secrets says so; nothing is granted before you
+  approve.
+- Versions: restore any earlier version of an app from its tile.
+
 ## [0.22.0] - 2026-10-28: Topics
 
 - Chats have topics, like Telegram forum topics: General plus your own (+ Topic under the chat

@@ -7,6 +7,7 @@ import AlertsandSchedules from "../../../../../docs/wiki/Alerts-and-Schedules.md
 import ApprovalsandSafety from "../../../../../docs/wiki/Approvals-and-Safety.md" with {
   type: "text",
 };
+import Apps from "../../../../../docs/wiki/Apps.md" with { type: "text" };
 import Catalog from "../../../../../docs/wiki/Catalog.md" with { type: "text" };
 import ChatsandAgents from "../../../../../docs/wiki/Chats-and-Agents.md" with { type: "text" };
 import Customization from "../../../../../docs/wiki/Customization.md" with { type: "text" };
@@ -47,6 +48,12 @@ export const HELP_PAGES: HelpPage[] = [
     title: "The screen",
     summary: "Apps as tiles: opening, splitting, tabs, resizing; the phone",
     text: TheScreen,
+  },
+  {
+    id: "apps",
+    title: "Apps",
+    summary: "Apps with their own chat: make, change with approval, versions",
+    text: Apps,
   },
   {
     id: "engines",

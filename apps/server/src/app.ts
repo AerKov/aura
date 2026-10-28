@@ -7,6 +7,8 @@ import { opsModule } from "./modules/alerts";
 import type { AlertService } from "./modules/alerts/service";
 import { controlModule } from "./modules/approvals";
 import type { ApprovalService } from "./modules/approvals/service";
+import { appsModule } from "./modules/apps";
+import type { AppService } from "./modules/apps/service";
 import { authModule } from "./modules/auth";
 import type { LocalSessions, SessionUser } from "./modules/auth/sessions";
 import { catalogModule } from "./modules/catalog";
@@ -77,6 +79,7 @@ export interface AppDeps extends HealthDeps {
   extensions: ExtensionService;
   extensionBridge: ExtensionBridge;
   layout: LayoutService;
+  apps: AppService;
   mcp: McpService;
   safeMode: SafeMode;
   appVersion: string;
@@ -106,6 +109,7 @@ export function createApp(deps: AppDeps) {
     .use(opsModule(deps))
     .use(customizeModule(deps))
     .use(shellModule(deps))
+    .use(appsModule(deps))
     .use(devicesModule(deps))
     .use(realtimeModule(deps));
 }

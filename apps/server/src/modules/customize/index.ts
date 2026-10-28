@@ -36,8 +36,11 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
   new Elysia({ name: "customize" })
     // The extension frame is loaded by an <iframe> (no session header). It only serves enabled
     // extensions, with a strict CSP and only into the app's own origins.
-    .get("/extensions/:extensionId/frame", async ({ params, set, status }) => {
-      const html = await deps.extensions.frame(params.extensionId).catch(() => null);
+    // `?draft=1` previews an app's changes that wait for approval (ADR 0024).
+    .get("/extensions/:extensionId/frame", async ({ params, query, set, status }) => {
+      const html = await deps.extensions
+        .frame(params.extensionId, query.draft === "1")
+        .catch(() => null);
       if (!html) return status(404, "Extension is not enabled");
       set.headers["content-type"] = "text/html; charset=utf-8";
       set.headers["content-security-policy"] =

@@ -94,6 +94,11 @@ export interface RuntimeDeps {
   redact?: (text: string) => string;
   /** Called after each run, e.g. to fold old messages into the summary. */
   afterRun?: (chat: Chat, topicId: string | null) => void;
+  /** After a run in an app's chat: offer the agent's changes for approval (ADR 0024). */
+  appRun?: (
+    project: ProjectInfo,
+    run: { handle: string; chatId: string; topicId: string | null; summary: string },
+  ) => Promise<void>;
   ownerName: string;
   /** Working directory for runs outside a project. */
   scratchDir: string;
@@ -547,7 +552,20 @@ export class AgentRuntime {
     const silent = isNoReply(rawBody) && !error;
     const body = silent ? "" : rawBody;
     let commit: string | null = null;
-    if (project) {
+    if (project?.kind === "app") {
+      // An app's code changes only with the user's approval: the edits wait as a draft and the
+      // user gets the diff on a card (ADR 0024).
+      await this.deps
+        .appRun?.(project, {
+          handle,
+          chatId: chat.id,
+          topicId: trigger.topicId,
+          summary: body || "Changes to the app",
+        })
+        .catch((e: unknown) =>
+          log.error("app change card failed", { project: project.id, error: errorMessage(e) }),
+        );
+    } else if (project) {
       try {
         // Only agents that can change files commit; the agent may also have committed itself.
         if (canWrite(toolsFor(profile, true))) {
