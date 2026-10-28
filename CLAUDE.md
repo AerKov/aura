@@ -1,7 +1,9 @@
 # CLAUDE.md
 
-Personal, open-source, local-first desktop app (mobile later): a Telegram-simple messenger where the user
-works with an AI **orchestrator** and a team of AI **agents**. Agents talk to each other in chats like
+Personal, open-source, local-first desktop app (mobile later): a shell for the user's own **apps**
+(written with agents or installed from the community), laid out as tiles. Each app has a chat where
+the user uses and changes it with agents (ADR 0024). The first app is a Telegram-simple messenger
+where the user works with an AI **orchestrator** and a team of AI **agents**. Agents talk to each other in chats like
 people, build projects, write code and files, handle monitoring alerts, and improve their own skills with
 approval. The user customizes the app itself by chatting with the orchestrator (Obsidian-style extensions).
 
@@ -73,10 +75,13 @@ docs/
 
 1. **Local-first.** The server and SurrealDB run on the user's machine. Mobile is a thin client that
    connects to the user's desktop server; it cannot run the sidecar.
-2. **Everything is a chat.** Only three chat kinds: direct (user + orchestrator), group (a project), system
-   (alerts). No workspaces, channels or nested threads. Replies to a message, like Telegram.
-3. **Config in files, state in DB.** Agents, skills, themes and extensions are files in the user data
-   directory (a git repo). Chats, messages, runs, tasks, approvals and memory live in SurrealDB.
+2. **Every app has a chat.** Only three chat kinds: direct (user + orchestrator), group (a project or
+   an app), system (alerts). Chats have topics, one level, like Telegram forum topics. No
+   workspaces, channels or nested threads. Replies to a message, like Telegram.
+3. **Config in files, state in DB.** Agents, skills, themes, extensions and app code are files in the
+   user data directory (a git repo). Chats, messages, runs, tasks, approvals and memory live in
+   SurrealDB. An app's data lives in the app's own store (its own datastore or its files), never in
+   the main database.
 4. **Never touch Claude credentials** (nor any other agent CLI's login). The app spawns the official Claude Code / Agent SDK, which reads its
    own login. Never read, store, proxy or forward tokens. Never implement a Claude.ai login.
 5. **LLM access only via `LLMProvider`.** Feature code never calls a model SDK directly.

@@ -7,6 +7,10 @@ team of AI agents. Agents communicate with each other like people in a messenger
 files, analysis), monitor systems they built and handle alerts. Each agent has skills it can improve,
 with approval. The user shapes the app itself by talking to the orchestrator.
 
+Since Phase 21 (ADR 0024) Aura is a shell for the user's apps: it opens on a bare screen with apps
+laid out as tiles, the messenger with the orchestrator is one of those apps, and every app has its
+own chat (with topics) where the user both uses it and changes it with agents.
+
 Principles:
 - **Telegram-simple**, not Slack. Few concepts, little navigation.
 - **Local-first and open source.** Runs on the user's machine with their own Claude account.
@@ -21,7 +25,10 @@ Principles:
 | Orchestrator | The main agent. Talks with the user, plans, creates agents and project chats, delegates, reviews, summarizes.          |
 | Agent        | An AI team member with a role, prompt, skills, tools, permissions and budget (e.g. `@coder`, `@reviewer`, `@analyst`). |
 | Bot          | A non-LLM participant that posts messages (monitoring, webhooks, schedules).                                           |
-| Chat         | `direct` (user + orchestrator), `group` (a project: user, orchestrator, agents), `system` (alerts).                    |
+| Chat         | `direct` (user + orchestrator), `group` (a project or an app: user, orchestrator, agents), `system` (alerts).          |
+| Topic        | A thread of a chat, like a Telegram forum topic: "General" plus topics the user creates. One level only.               |
+| App          | A tool the user runs in the shell (UI in a sandbox, its own data, actions); a project whose workspace is its code.     |
+| Layout       | Which apps are open as tiles and how the screen is split.                                                              |
 | Message      | Markdown text or a card. Can reply to another message and mention participants.                                        |
 | Card         | Structured message: approval, task, diff, alert, run, summary.                                                         |
 | Project      | A group chat plus a git workspace plus tasks and a budget.                                                             |
@@ -379,6 +386,38 @@ and for ACP fetches; editable on the agent's card or proposed by the orchestrato
 From alpha feedback: budgets are optional, in tokens (subscriptions) or dollars (paid APIs),
 changeable at any time from the chat header and the agent's card, or proposed by the orchestrator;
 replies show tokens (ADR 0023).
+
+**Phase 21: Shell**
+Aura opens on a bare screen with apps as tiles (splits, tabs, resize), saved and restored. The
+messenger becomes the first app. First launch: the orchestrator's chat on the whole screen with an
+onboarding that explains Aura; the user then changes the layout by asking the orchestrator or by
+clicking (ADR 0024).
+
+**Phase 22: Topics**
+Chats get topics: "General" plus topics the user creates, renames and closes. A topic shows only its
+messages; agents get only their topic as context; a message can be moved to another topic.
+
+**Phase 23: Apps with chats**
+An app is a project whose workspace holds its code, with its own chat. In it agents use the app and
+change it: diffs with approval, one commit per change, live reload, rollback. The orchestrator
+creates apps from an idea.
+
+**Phase 24: App data**
+Each app keeps data where the user decides: its own SurrealDB datastore (collections with a
+schema, live queries) or files in its folder. Never in the main database. Export, backup, delete
+per app.
+
+**Phase 25: Actions and contracts**
+An app declares actions (exposed like MCP tools) and what it lets others read. Agents call them in
+the app's chat; another app calls them only with the user's permission for those actions.
+
+**Phase 26: App kit**
+Themed components (table, form, board, card, chart) and templates (CRM, tasks, notes), so agents
+build reliable apps from data and views instead of raw DOM.
+
+**Phase 27: Community apps**
+Apps in the catalog: install, change in their chat, updates from the author merged with the user's
+changes.
 
 **Later**
 Pack signatures and a reviewed community index, multi-user.
