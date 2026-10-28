@@ -1,6 +1,8 @@
 import type { App } from "@aura/server";
 import { WS_PATH } from "@aura/shared";
 import { treaty } from "@elysiajs/eden";
+import { invoke, isTauri } from "@tauri-apps/api/core";
+import { isNoResponse, type ServerStatus, untilServerAnswers } from "./server-wait";
 
 const DEVICE_KEY = "aura.device";
 
@@ -58,14 +60,38 @@ export class NeedsPairingError extends Error {
   override name = "NeedsPairingError";
 }
 
+/** How long the window waits for the local server to answer at startup. */
+const SERVER_WAIT_MS = 30_000;
+
+/** The desktop shell's view of the server it started; null outside the desktop shell. */
+export async function serverStatus(): Promise<ServerStatus | null> {
+  if (IS_REMOTE || !isTauri()) return null;
+  try {
+    return await invoke<ServerStatus>("server_status");
+  } catch (error) {
+    console.warn("server_status failed", error);
+    return null;
+  }
+}
+
 /** Gets (or reuses) the session token. See docs/decisions/0003-local-session.md and 0009. */
 export function ensureSession(): Promise<string> {
   if (token) return Promise.resolve(token);
   if (IS_REMOTE) return Promise.reject(new NeedsPairingError("This device is not paired"));
   pending ??= (async () => {
     try {
-      const { data, error } = await api.session.local.post();
-      if (error) throw new ApiError(error.status, "Could not start a local session");
+      const data = await untilServerAnswers(
+        async (notYet) => {
+          const { data, error } = await api.session.local.post();
+          if (!error) return data;
+          if (isNoResponse(error)) return notYet;
+          throw new ApiError(
+            error.status,
+            `The server refused a local session: ${errorText(error.value)}`,
+          );
+        },
+        { timeoutMs: SERVER_WAIT_MS, status: serverStatus },
+      );
       token = data.token;
       return data.token;
     } finally {

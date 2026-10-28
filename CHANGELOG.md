@@ -5,6 +5,14 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.27.1] - 2026-10-28: Startup fix
+
+- The window waits up to 30 seconds for the server to start instead of failing at once with "Could
+  not start a local session" (the first start after an install can be slow while the new binary is
+  scanned).
+- If the server stops or cannot start, the window says so, shows its last output lines, and offers
+  **Try again**. A refused session now says why.
+
 ## [0.27.0] - 2026-10-28: App kit and community apps
 
 - App templates: **+ → New app** starts from CRM, Tasks or Notes, ready to use and to change in

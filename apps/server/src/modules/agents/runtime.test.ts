@@ -72,11 +72,13 @@ describe("AgentRuntime", () => {
         { type: "text-delta", text: " more" },
         { type: "done" },
       ],
-      30,
+      100,
     );
     t = await createTestApp({ provider });
     await t.chat.post({ chatId: "direct", author: owner, body: "go" });
-    await Bun.sleep(45);
+    // Time from when the provider has the run (deltas at 100 and 200 ms), not from the post.
+    while (provider.calls.length === 0) await Bun.sleep(5);
+    await Bun.sleep(150);
     const streaming = (await t.repo.listMessages("direct", { limit: 10 })).at(-1);
     expect(streaming?.status).toBe("streaming");
     expect(t.runtime.stop(streaming?.runId ?? "")).toBe(true);
