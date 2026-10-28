@@ -3,11 +3,11 @@ import { readFile } from "node:fs/promises";
 import { join, relative, resolve, sep } from "node:path";
 import { HANDLE_PATTERN, type Message } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
+import { hostAllowed } from "../../providers/hosts";
+import { redact } from "../agents/env";
 import { ActionError, type AppActions } from "../apps/actions";
 import { type AppDataService, DataError, type Query } from "../apps/data";
 import type { ChatService } from "../chat/service";
-import { redact } from "../integrations/env";
-import { hostAllowed } from "../integrations/service";
 import type { ProjectService } from "../projects/service";
 import { ExtensionError, type ExtensionService } from "./extensions";
 
@@ -69,7 +69,8 @@ export class ExtensionBridge {
     private readonly deps: {
       db: Surreal;
       extensions: ExtensionService;
-      secrets: { get(name: string): string | null };
+      /** Each app's own secrets (ADR 0030). */
+      secrets: { get(app: string, name: string): string | null };
       chat: ChatService;
       projects: ProjectService;
       fetch?: typeof fetch;
@@ -223,11 +224,9 @@ export class ExtensionBridge {
       text.replace(SECRET_REF, (_ref, name: string) => {
         if (!grant.secrets.includes(name))
           throw new ExtensionDenied(`Secret ${name} is not in the extension's manifest`);
-        const value = this.deps.secrets.get(name);
+        const value = this.deps.secrets.get(id, name);
         if (value === null)
-          throw new ExtensionError(
-            `Secret ${name} is not stored (add it on the Integrations page)`,
-          );
+          throw new ExtensionError(`Secret ${name} has no value: set it in the app's Secrets`);
         used.push(value);
         return value;
       });

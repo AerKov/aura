@@ -23,7 +23,7 @@ files and a local database.
 - [Skills](Skills): reusable know-how that agents improve over time
 - [Memory](Memory): what agents remember between runs, and how to review it
 - [Catalog](Catalog): ready-made teams, skills, themes and panels, and sharing your own
-- [Integrations](Integrations): tool servers, secrets and variables for agents, host checks
+- [Agents](Agents): each agent's card, tool servers (MCP) and agents' secrets
 - [Alerts and schedules](Alerts-and-Schedules): monitoring webhooks and recurring jobs
 - [Customization](Customization): themes, MCP servers and extensions, by asking the orchestrator
 - [Phone](Phone): use Aura from your phone, paired with your desktop

@@ -18,7 +18,7 @@ import {
 import { useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
-import { reportError, showIntegrations } from "@/features/chat/actions";
+import { reportError, showAgents } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
 import { useRailItems } from "@/features/shell/rail";
 import { arrangeRail, moveRailItem } from "@/features/shell/rail-layout";
@@ -218,12 +218,8 @@ export function CustomizeView() {
         <div className="space-y-2">
           <p className="text-muted-foreground text-sm">
             Add, test and assign them on the{" "}
-            <button
-              type="button"
-              className="text-primary hover:underline"
-              onClick={showIntegrations}
-            >
-              Integrations
+            <button type="button" className="text-primary hover:underline" onClick={showAgents}>
+              Agents
             </button>{" "}
             page.
           </p>

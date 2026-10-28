@@ -12,7 +12,7 @@ import { createTestApp } from "../../testing";
 import { ORCHESTRATOR_DEFAULT } from "../agents/defaults";
 import { MemoryAgentDirectory } from "../agents/directory";
 import { deniedReads, SandboxService } from "./service";
-import { parseSandbox, validDomains } from "./settings";
+import { parseSandbox } from "./settings";
 
 type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 
@@ -23,16 +23,12 @@ describe("command sandbox", () => {
     t = undefined;
   });
 
-  test("settings are validated; bad files fall back to safe defaults", () => {
-    expect(validDomains(["Example.com", "*.github.com", "example.com"])).toEqual([
-      "example.com",
-      "*.github.com",
-    ]);
-    for (const bad of ["*", "http://x.com", "x.com/path", "x.com:443", "*.com"]) {
-      expect(() => validDomains([bad])).toThrow();
-    }
-    expect(parseSandbox({ mode: "yolo", allowedDomains: ["*"] })).toMatchObject({ mode: "auto" });
-    expect(parseSandbox(null).allowedDomains).toContain("registry.npmjs.org");
+  test("settings are validated; bad files fall back to safe defaults, old fields are ignored", () => {
+    expect(parseSandbox({ mode: "yolo", allowedDomains: ["*"] })).toEqual({ mode: "auto" });
+    expect(parseSandbox({ mode: "required", container: { newProjects: true } })).toEqual({
+      mode: "required",
+    });
+    expect(parseSandbox(null)).toEqual({ mode: "auto" });
   });
 
   test("policy by mode and availability; credentials and app state are never readable", () => {
@@ -43,7 +39,8 @@ describe("command sandbox", () => {
         dataDir,
         support: () => (ok ? { ok: true } : { ok: false, reason: "no bubblewrap" }),
       });
-      expect(service.policy()).toMatchObject({ required: false });
+      // No network for agents' commands (ADR 0030).
+      expect(service.policy()).toMatchObject({ required: false, allowedDomains: [] });
       expect(service.policy()?.denyRead).toEqual(expect.arrayContaining([join(dataDir, "state")]));
       expect(deniedReads(dataDir, "/home/u")).toEqual(
         expect.arrayContaining([
@@ -101,10 +98,10 @@ describe("command sandbox", () => {
     };
 
     const on = await say("build it");
-    expect(on?.sandbox?.allowedDomains).toContain("registry.npmjs.org");
-    expect(on?.systemPrompt).toContain("## Shell sandbox");
+    expect(on?.sandbox?.allowedDomains).toEqual([]);
+    expect(on?.systemPrompt).toContain("there is no network");
 
-    expect((await api.sandbox.put({ allowedDomains: ["http://evil"] })).status).toBe(400);
+    expect((await api.sandbox.put({ mode: "sometimes" as "off" })).status).toBe(422);
     const updated = await api.sandbox.put({ mode: "off" });
     expect(updated.data).toMatchObject({ mode: "off", active: false, available: true });
     expect(JSON.parse(readFileSync(join(t.dataDir, "sandbox.json"), "utf8")).mode).toBe("off");
@@ -126,7 +123,7 @@ describe("command sandbox", () => {
         writeFileSync(join(secret, "token"), "s3cret");
         const [bash] = nativeTools(["Bash"], cwd, {
           required: true,
-          allowedDomains: ["registry.npmjs.org"],
+          allowedDomains: [],
           denyRead: [secret],
         });
         if (!bash) throw new Error("no Bash");

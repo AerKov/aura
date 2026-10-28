@@ -4,7 +4,6 @@ import { z } from "zod";
 import { errorMessage } from "../lib/log";
 import { proxyEnv } from "../lib/proxy";
 import { isInside } from "./confine";
-import { hostAllowed, webDenied } from "./hosts";
 import { SandboxUnavailableError, sandboxedShell } from "./shell-sandbox";
 import type { SandboxPolicy } from "./types";
 
@@ -127,8 +126,6 @@ export function nativeTools(
   cwd: string,
   sandbox?: SandboxPolicy,
   extraEnv: Record<string, string> = {},
-  /** When set, WebFetch reaches only these hosts (the agent's network rules, ADR 0022). */
-  webHosts?: string[],
 ): NativeTool[] {
   const all: NativeTool[] = [
     {
@@ -332,8 +329,6 @@ export function nativeTools(
           return { text: "Only http(s) URLs can be fetched", isError: true };
         if (isPrivateHost(url.hostname))
           return { text: "Local and private network addresses cannot be fetched", isError: true };
-        if (webHosts && !hostAllowed(url.hostname, webHosts))
-          return { text: webDenied(url.hostname, webHosts), isError: true };
         const res = await fetch(url, {
           signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]),
           redirect: "follow",
@@ -342,8 +337,6 @@ export function nativeTools(
         const landed = new URL(res.url || url.href).hostname;
         if (isPrivateHost(landed))
           return { text: "The page redirected to a private address", isError: true };
-        if (webHosts && !hostAllowed(landed, webHosts))
-          return { text: webDenied(landed, webHosts), isError: true };
         const body = (await res.text()).slice(0, MAX_READ_BYTES);
         const type = res.headers.get("content-type") ?? "";
         const text = clip(type.includes("html") ? htmlToText(body) : body, 40_000);

@@ -62,6 +62,7 @@ DEFINE FIELD OVERWRITE chat ON project TYPE record<chat>;
 DEFINE FIELD OVERWRITE repo_path ON project TYPE string;
 DEFINE FIELD OVERWRITE budget_usd ON project TYPE option<float>;
 DEFINE FIELD OVERWRITE budget_tokens ON project TYPE option<int>;
+-- Unused since project containers were removed (ADR 0030); kept so old rows stay valid.
 DEFINE FIELD OVERWRITE isolation ON project TYPE string DEFAULT "host" ASSERT $value IN ["host", "container"];
 DEFINE FIELD OVERWRITE app ON project TYPE option<string>;
 DEFINE FIELD OVERWRITE kind ON project TYPE option<string>;

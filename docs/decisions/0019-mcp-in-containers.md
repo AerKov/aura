@@ -1,6 +1,6 @@
 # 0019: MCP servers in project containers; agent apps stay on the host
 
-- Status: accepted
+- Status: superseded by 0030 (project containers removed)
 - Date: 2026-10-27
 - Phase: 16
 

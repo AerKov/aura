@@ -32,9 +32,9 @@ export interface RailItem {
 }
 
 /** Setup pages stay on the desktop; the phone's tab bar keeps the daily ones. */
-const DESKTOP_ONLY = new Set(["integrations", "catalog", "engines", "customize", "devices"]);
+const DESKTOP_ONLY = new Set(["catalog", "engines", "customize", "devices"]);
 
-const PAGE_ORDER: PageId[] = ["skills", "memory", "agents", "integrations", "catalog", "jobs"];
+const PAGE_ORDER: PageId[] = ["skills", "memory", "agents", "catalog", "jobs"];
 const PAGE_TAIL: PageId[] = ["engines", "customize", "devices"];
 
 /** Every rail item in its default order, before the user's layout is applied. */

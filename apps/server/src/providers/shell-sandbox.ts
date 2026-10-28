@@ -88,7 +88,7 @@ async function ensureStarted(policy: SandboxPolicy): Promise<void> {
 
 /**
  * The argv and environment that run `command` with bash in the sandbox: it may write only in `cwd`
- * (and the temp folder), not read `denyRead`, and reach only the allowed hosts. Call `release`
+ * (and the temp folder), not read `denyRead`, and reach only `allowedDomains` (none, ADR 0030). Call `release`
  * when the command has exited (or never started), so its host list stops applying.
  */
 export async function sandboxedShell(

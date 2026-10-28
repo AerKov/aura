@@ -12,7 +12,6 @@ import {
   type ToolKind,
 } from "@agentclientprotocol/sdk";
 import { errorMessage, log } from "../lib/log";
-import { hostAllowed, webDenied } from "./hosts";
 import { resolveInside } from "./native-tools";
 import type {
   AgentEvent,
@@ -79,8 +78,6 @@ export function decidePermission(
   toolCall: RequestPermissionRequest["toolCall"],
   granted: readonly string[],
   cwd: string | undefined,
-  /** When set, fetches may reach only these hosts (ADR 0022). */
-  webHosts?: readonly string[],
 ): PermissionDecision {
   const kind: ToolKind = toolCall.kind ?? "other";
   const rule = KIND_TOOLS[kind] ?? "deny";
@@ -90,18 +87,6 @@ export function decidePermission(
       allow: false,
       reason: `${toolCall.title ?? kind} needs ${rule[0]}, which this agent was not granted`,
     };
-  }
-  if (kind === "fetch" && webHosts) {
-    const raw = toolCall.rawInput as Record<string, unknown> | undefined;
-    let host: string | null = null;
-    try {
-      host = new URL(String(raw?.url ?? "")).hostname;
-    } catch {}
-    // A search names no host; a fetch whose host cannot be read is refused.
-    if (host && !hostAllowed(host, webHosts))
-      return { allow: false, reason: webDenied(host, webHosts) };
-    if (!host && raw?.url !== undefined)
-      return { allow: false, reason: "Cannot tell which host this fetch goes to" };
   }
   if (cwd) {
     for (const location of toolCall.locations ?? []) {
@@ -277,12 +262,7 @@ export class AcpProvider implements LLMProvider {
 
     const client: Client = {
       requestPermission: async (request) => {
-        const decision = decidePermission(
-          request.toolCall,
-          input.builtinTools,
-          confine,
-          input.webHosts,
-        );
+        const decision = decidePermission(request.toolCall, input.builtinTools, confine);
         if (!decision.allow) {
           log.warn("tool use denied", {
             run: input.runId,

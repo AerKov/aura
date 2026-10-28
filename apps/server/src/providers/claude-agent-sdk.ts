@@ -115,7 +115,6 @@ export class ClaudeAgentSdkProvider implements LLMProvider {
         allowedPrefixes,
         cwd: input.confineToCwd ? input.cwd : undefined,
         blockedPath,
-        webHosts: input.webHosts,
       });
       if (decision.allow) return { behavior: "allow", updatedInput: args };
       log.warn("tool use denied", { run: input.runId, tool: toolName, reason: decision.reason });

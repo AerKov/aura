@@ -119,7 +119,7 @@ export interface McpProbe {
   ms: number;
 }
 
-/** Explains a connection failure without a stack trace (Integrations page, alpha feedback B5). */
+/** Explains a connection failure without a stack trace (Agents page, alpha feedback B5). */
 export function explainMcpError(error: unknown, spec: McpServerSpec): string {
   const text = errorMessage(error);
   if (/ENOENT|not found|No such file/i.test(text) && spec.type === "stdio")

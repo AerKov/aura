@@ -16,7 +16,6 @@ import {
   MessagesSquare,
   Package,
   Palette,
-  Plug,
   Smartphone,
   Sparkles,
 } from "lucide-react";
@@ -28,7 +27,6 @@ export const PAGES: Record<PageId, { label: string; icon: LucideIcon }> = {
   skills: { label: "Skills", icon: Sparkles },
   memory: { label: "Memory", icon: Brain },
   agents: { label: "Agents", icon: Bot },
-  integrations: { label: "Integrations", icon: Plug },
   catalog: { label: "Catalog", icon: Package },
   jobs: { label: "Schedule", icon: CalendarClock },
   engines: { label: "Engines", icon: Cpu },

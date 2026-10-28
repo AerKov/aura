@@ -16,7 +16,7 @@ import type { ChatService } from "../chat/service";
 import type { EngineSelector } from "../engines/registry";
 import type { ProjectInfo } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
-import { sandboxNote, webNote } from "../sandbox/service";
+import { sandboxNote } from "../sandbox/service";
 import { buildPrompt, CONTEXT_WINDOW, SUMMARY_BATCH, userNote } from "./context";
 import { teamRules, wakeNote } from "./defaults";
 import type { AgentDirectory } from "./directory";
@@ -57,18 +57,10 @@ export interface RuntimeDeps {
   }) => AgentTool[] | Promise<AgentTool[]>;
   /** External MCP servers an agent may use (tier 2 customization). */
   mcpServers?: (handle: string) => Record<string, McpServerSpec>;
-  /** Where a project's MCP servers run: moved into its container when it has one (ADR 0019). */
-  projectMcp?: (
-    project: ProjectInfo,
-    servers: Record<string, McpServerSpec>,
-  ) => Promise<Record<string, McpServerSpec>>;
   /** Extra system prompt sections for an agent (its skills). */
   promptExtras?: (profile: AgentProfile) => string;
-  /** OS sandbox for shell commands, or null to run them without it (ADR 0015). */
-  /** The OS sandbox for this agent's commands, with its network rules (ADR 0015, 0022). */
+  /** The OS sandbox for shell commands (no network), or null to run them without it (ADR 0015). */
   sandboxPolicy?: (profile: AgentProfile) => SandboxPolicy | null;
-  /** Hosts WebFetch may reach for this agent, or undefined for any public page (ADR 0022). */
-  webHosts?: (profile: AgentProfile) => string[] | undefined;
   /** Notes the agent saved earlier that match this message (agent memory, ADR 0013). */
   memoryPrompt?: (input: {
     handle: string;
@@ -80,16 +72,6 @@ export interface RuntimeDeps {
     chatId: string,
     topicId: string | null,
   ) => Promise<{ text: string; upTo: string } | null>;
-  /**
-   * The project's container shell (ADR 0018), or null when its commands run on the host. Agents
-   * with Bash get this tool instead of the host shell.
-   */
-  projectShell?: (
-    project: ProjectInfo,
-    handle: string,
-    signal: AbortSignal,
-    env: Record<string, string>,
-  ) => { tool: AgentTool; note: string } | null;
   /** The agent's own variables for its commands, resolved, and the ones with no value (ADR 0020). */
   agentEnv?: (profile: AgentProfile) => { values: Record<string, string>; missing: string[] };
   /** Hides secret values in text shown in chat. */
@@ -433,14 +415,8 @@ export class AgentRuntime {
     const ownEnv = granted.includes("Bash")
       ? (this.deps.agentEnv?.(profile) ?? { values: {}, missing: [] })
       : { values: {}, missing: [] };
-    const shell =
-      project && granted.includes("Bash")
-        ? (this.deps.projectShell?.(project, handle, abort.signal, ownEnv.values) ?? null)
-        : null;
-    // In a container project the host shell is replaced, never offered alongside.
-    const builtinTools = shell ? granted.filter((t) => t !== "Bash") : granted;
-    const sandbox = shell ? null : (this.deps.sandboxPolicy?.(profile) ?? null);
-    const webHosts = builtinTools.includes("WebFetch") ? this.deps.webHosts?.(profile) : undefined;
+    const builtinTools = granted;
+    const sandbox = this.deps.sandboxPolicy?.(profile) ?? null;
     const memoryNotes =
       (await this.deps.memoryPrompt?.({
         handle,
@@ -448,11 +424,7 @@ export class AgentRuntime {
         query: trigger.body,
       })) ?? "";
 
-    const ownServers = this.deps.mcpServers?.(handle) ?? {};
-    const mcpServers =
-      project && this.deps.projectMcp
-        ? await this.deps.projectMcp(project, ownServers)
-        : ownServers;
+    const mcpServers = this.deps.mcpServers?.(handle) ?? {};
 
     const hide = (t: string) => this.deps.redact?.(t) ?? t;
     let text = "";
@@ -486,9 +458,7 @@ export class AgentRuntime {
         systemPrompt:
           systemPromptFor(profile, project !== null, team) +
           (this.deps.promptExtras?.(profile) ?? "") +
-          (sandbox && builtinTools.includes("Bash") ? sandboxNote(sandbox) : "") +
-          (webHosts ? webNote(webHosts) : "") +
-          (shell?.note ?? "") +
+          (sandbox && builtinTools.includes("Bash") ? sandboxNote() : "") +
           envNote(ownEnv) +
           memoryNotes +
           userNote(this.deps.ownerName, this.userLanguage),
@@ -498,15 +468,11 @@ export class AgentRuntime {
         confineToCwd: true,
         builtinTools,
         sandbox: sandbox ?? undefined,
-        tools: [
-          ...(await this.deps.appTools({ handle, chat, depth, topicId: trigger.topicId })),
-          ...(shell ? [shell.tool] : []),
-        ],
+        tools: [...(await this.deps.appTools({ handle, chat, depth, topicId: trigger.topicId }))],
         mcpServers,
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,
         env: ownEnv.values,
-        webHosts,
       },
       abort.signal,
     )) {
@@ -640,7 +606,7 @@ function envNote(env: { values: Record<string, string>; missing: string[] }): st
   return `
 
 ## Your environment
-${names.length > 0 ? `Your shell commands get these variables: ${names.join(", ")}. Use them by name (for example $${names[0]}); never print their values.` : ""}${env.missing.length > 0 ? ` These variables are configured but have no value: ${env.missing.join(", ")}. If you need them, ask the user to set them on the Integrations page.` : ""}`;
+${names.length > 0 ? `Your shell commands get these variables: ${names.join(", ")}. Use them by name (for example $${names[0]}); never print their values.` : ""}${env.missing.length > 0 ? ` These variables are configured but have no value: ${env.missing.join(", ")}. If you need them, ask the user to set them under Secrets on the Agents page.` : ""}`;
 }
 
 function systemPromptFor(profile: AgentProfile, inProject: boolean, team: string[]): string {

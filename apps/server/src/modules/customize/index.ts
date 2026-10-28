@@ -1,5 +1,6 @@
 import type { CustomizeState } from "@aura/shared";
 import { Elysia, t } from "elysia";
+import { AppSecretError, type AppSecrets } from "../apps/secrets";
 import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import type { ChatRepo } from "../chat/repo";
@@ -20,6 +21,7 @@ export interface CustomizeRouteDeps {
   mcp: McpService;
   safeMode: SafeMode;
   modules: ModuleService;
+  appSecrets: AppSecrets;
   hub: EventHub;
   appVersion: string;
   corsOrigins: string[];
@@ -122,6 +124,39 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         return { safeMode: deps.safeMode };
       },
       { auth: true, detail: { summary: "Leave automatic safe mode for this run" } },
+    )
+    // Each app's own secrets (ADR 0030): names it declares and whether each has a value.
+    .get(
+      "/extensions/:extensionId/secrets",
+      async ({ params, status }) => {
+        const info = await deps.extensions.info(params.extensionId).catch(() => null);
+        if (!info) return status(404, { error: "No such app" });
+        const set = new Set(deps.appSecrets.names(info.id));
+        return info.secrets.map((name) => ({ name, set: set.has(name) }));
+      },
+      { auth: true },
+    )
+    .put(
+      "/extensions/:extensionId/secrets/:name",
+      async ({ params, body, status }) => {
+        const info = await deps.extensions.info(params.extensionId).catch(() => null);
+        if (!info) return status(404, { error: "No such app" });
+        if (!info.secrets.includes(params.name))
+          return status(400, { error: `The app does not use a secret named ${params.name}` });
+        try {
+          deps.appSecrets.set(info.id, params.name, body.value);
+        } catch (error) {
+          if (error instanceof AppSecretError) return status(400, { error: error.message });
+          throw error;
+        }
+        const set = new Set(deps.appSecrets.names(info.id));
+        return info.secrets.map((name) => ({ name, set: set.has(name) }));
+      },
+      {
+        auth: true,
+        params: t.Object({ extensionId: t.String(), name: t.String({ maxLength: 64 }) }),
+        body: t.Object({ value: t.Nullable(t.String({ maxLength: 8000 })) }),
+      },
     )
     .post(
       "/extensions/:extensionId/enabled",

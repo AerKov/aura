@@ -5,7 +5,6 @@ describe("built-in apps (ADR 0027)", () => {
   test("turning one off turns off what needs it; turning one on turns on what it needs", () => {
     const off = switchModule(defaultModules(), "chats", false);
     expect(off.changed.sort()).toEqual(["alerts", "chats", "jobs", "memory", "skills"]);
-    expect(off.states.integrations).toBe(true);
     const on = switchModule(off.states, "memory", true);
     expect(on.changed.sort()).toEqual(["chats", "memory"]);
     expect(on.states.skills).toBe(false);

@@ -118,13 +118,20 @@ describe("extension API v2 (ADR 0021)", () => {
         });
       }) as typeof fetch,
     });
-    t.secrets.set("SERVICE_TOKEN", "tok-0123456789abcdef");
+    // Agents' secrets are not apps' (ADR 0030): the same name stored for agents is never used.
+    t.secrets.set("SERVICE_TOKEN", "agents-only-value");
     t.secrets.set("OTHER_TOKEN", "other-0123456789");
     await install(t, ["ui.panel", "net"], {
       hosts: ["api.example.com"],
       secrets: ["SERVICE_TOKEN"],
     });
     const ext = apiOf(t).extensions({ extensionId: "board" });
+    expect((await ext.secrets.get()).data).toEqual([{ name: "SERVICE_TOKEN", set: false }]);
+    const saved = await ext
+      .secrets({ name: "SERVICE_TOKEN" })
+      .put({ value: "tok-0123456789abcdef" });
+    expect(saved.data).toEqual([{ name: "SERVICE_TOKEN", set: true }]);
+    expect((await ext.secrets({ name: "OTHER_TOKEN" }).put({ value: "x" })).status).toBe(400);
     const ref = ["$", "{secret:SERVICE_TOKEN}"].join("");
 
     const res = await ext.fetch.post({

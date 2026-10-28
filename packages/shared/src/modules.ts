@@ -5,7 +5,7 @@
  */
 import type { AppRef } from "./layout";
 
-export const MODULE_IDS = ["chats", "skills", "memory", "jobs", "alerts", "integrations"] as const;
+export const MODULE_IDS = ["chats", "skills", "memory", "jobs", "alerts"] as const;
 export type ModuleId = (typeof MODULE_IDS)[number];
 
 export interface ModuleSpec {
@@ -29,11 +29,6 @@ export const MODULES: Record<ModuleId, ModuleSpec> = {
     name: "Signals",
     description: "Alerts from monitoring tools, triaged by the orchestrator.",
     requires: ["chats"],
-  },
-  integrations: {
-    name: "Integrations",
-    description: "MCP servers, secrets and variables for agents and apps.",
-    requires: [],
   },
 };
 
@@ -61,8 +56,6 @@ export function moduleOfApp(app: AppRef): ModuleId | null {
       return "memory";
     case "page:jobs":
       return "jobs";
-    case "page:integrations":
-      return "integrations";
     default:
       return null;
   }

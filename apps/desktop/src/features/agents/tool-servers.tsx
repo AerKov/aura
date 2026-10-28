@@ -2,7 +2,6 @@ import {
   Check,
   CircleAlert,
   CircleCheck,
-  Globe,
   KeyRound,
   Pencil,
   Play,
@@ -13,10 +12,9 @@ import {
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
-import { loadProjects, reportError } from "@/features/chat/actions";
-import { getState, useChatStore } from "@/features/chat/store";
+import { reportError } from "@/features/chat/actions";
+import { useChatStore } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
@@ -24,20 +22,18 @@ import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
 type Overview = Awaited<ReturnType<typeof loadOverview>>;
 type Server = Overview["servers"][number];
 type Probe = Awaited<ReturnType<typeof testServer>>;
-type HostResult = Awaited<ReturnType<typeof checkHost>>;
 
-const loadOverview = () => call(() => api.integrations.get());
-const testServer = (name: string) => call(() => api.integrations.mcp({ name }).test.post());
-const checkHost = (url: string) => call(() => api.integrations["check-host"].post({ url }));
+const loadOverview = () => call(() => api.agents.setup.get());
+const testServer = (name: string) => call(() => api.agents.setup.mcp({ name }).test.post());
 
 export const inputClass =
   "bg-background focus:border-primary/60 focus:ring-primary/15 rounded-xl border px-3 py-2 text-sm outline-none focus:ring-4";
 
 /**
- * Integrations (ADR 0020): MCP tool servers with their agents, the secrets they use, and a host
- * check, all managed here by the user. Changes apply from each agent's next run.
+ * The agents' tool servers (MCP) and the secrets their variables and servers use (ADR 0020,
+ * ADR 0030): part of the Agents page. Changes apply from each agent's next run.
  */
-export function IntegrationsView() {
+export function AgentToolServers() {
   const [data, setData] = useState<Overview | null>(null);
   const [editing, setEditing] = useState<Server | "new" | null>(null);
 
@@ -51,78 +47,67 @@ export function IntegrationsView() {
 
   useEffect(() => {
     void load();
-    // Projects (to pick where a variable set applies) come with Chats (ADR 0027).
-    if (getState().customize?.modules.chats !== false) loadProjects().catch(reportError);
   }, [load]);
 
   return (
-    <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
-      <div className="mx-auto max-w-3xl">
-        <PageHeader title="Integrations" icon={<Plug className="text-primary size-7" />}>
-          Tool servers (MCP) give agents new abilities: a tracker, a database, an internal API. Add
-          one here, choose which agents get it, keep its keys under Secrets, and test it. Changes
-          apply from each agent's next reply; nothing needs a restart.
-        </PageHeader>
-
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="kicker">MCP servers</h2>
-          {editing === null && (
-            <Button size="sm" className="rounded-full" onClick={() => setEditing("new")}>
-              <Plus /> Add server
-            </Button>
-          )}
-        </div>
-        {editing === "new" && (
-          <ServerForm
-            secrets={data?.secrets ?? []}
-            onDone={() => {
-              setEditing(null);
-              void load();
-            }}
-          />
+    <div className="mt-10">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="flex items-center gap-2 font-semibold">
+          <Plug className="size-4" /> Tool servers (MCP)
+        </h2>
+        {editing === null && (
+          <Button size="sm" className="rounded-full" onClick={() => setEditing("new")}>
+            <Plus /> Add server
+          </Button>
         )}
-        {data === null ? (
-          <p className="text-muted-foreground text-sm">Loading…</p>
-        ) : data.servers.length === 0 && editing === null ? (
-          <p className="text-muted-foreground mb-8 text-sm">
-            No servers yet. Add one with its command (for example{" "}
-            <code className="font-mono">python3 /path/to/server.py</code>) or its URL.
-          </p>
-        ) : (
-          <ul className="mb-8 grid gap-3">
-            {data.servers.map((server) =>
-              editing !== "new" && editing?.name === server.name ? (
-                <ServerForm
-                  key={server.name}
-                  server={server}
-                  secrets={data.secrets}
-                  onDone={() => {
-                    setEditing(null);
-                    void load();
-                  }}
-                />
-              ) : (
-                <ServerCard
-                  key={server.name}
-                  server={server}
-                  onEdit={() => setEditing(server)}
-                  onRemoved={() => void load()}
-                  onChanged={() => void load()}
-                />
-              ),
-            )}
-          </ul>
-        )}
-
-        <VariableSets
-          sets={data?.variableSets ?? []}
-          secrets={data?.secrets ?? []}
-          onChanged={() => void load()}
-        />
-        <Secrets names={data?.secrets ?? []} onChanged={() => void load()} />
-        <HostCheck />
       </div>
-    </section>
+      <p className="text-muted-foreground mb-3 text-sm">
+        They give agents new abilities: a tracker, a database, an internal API. Choose which agents
+        get each one, keep its keys under Secrets, and test it.
+      </p>
+      {editing === "new" && (
+        <ServerForm
+          secrets={data?.secrets ?? []}
+          onDone={() => {
+            setEditing(null);
+            void load();
+          }}
+        />
+      )}
+      {data === null ? (
+        <p className="text-muted-foreground text-sm">Loading…</p>
+      ) : data.servers.length === 0 && editing === null ? (
+        <p className="text-muted-foreground mb-8 text-sm">
+          No servers yet. Add one with its command (for example{" "}
+          <code className="font-mono">python3 /path/to/server.py</code>) or its URL.
+        </p>
+      ) : (
+        <ul className="mb-8 grid gap-3">
+          {data.servers.map((server) =>
+            editing !== "new" && editing?.name === server.name ? (
+              <ServerForm
+                key={server.name}
+                server={server}
+                secrets={data.secrets}
+                onDone={() => {
+                  setEditing(null);
+                  void load();
+                }}
+              />
+            ) : (
+              <ServerCard
+                key={server.name}
+                server={server}
+                onEdit={() => setEditing(server)}
+                onRemoved={() => void load()}
+                onChanged={() => void load()}
+              />
+            ),
+          )}
+        </ul>
+      )}
+      <Secrets names={data?.secrets ?? []} onChanged={() => void load()} />
+    </div>
   );
 }
 
@@ -160,7 +145,7 @@ function ServerCard({
       const env = Object.fromEntries(server.env.map((e) => [e.name, e.value]));
       for (const n of names) env[n] = ["$", "{secret:", n, "}"].join("");
       await call(() =>
-        api.integrations.mcp({ name: server.name }).put({
+        api.agents.setup.mcp({ name: server.name }).put({
           command: server.command ?? undefined,
           args: server.args,
           env,
@@ -180,7 +165,7 @@ function ServerCard({
   const remove = async () => {
     if (!window.confirm(`Remove the MCP server "${server.name}"?`)) return;
     try {
-      await call(() => api.integrations.mcp({ name: server.name }).delete());
+      await call(() => api.agents.setup.mcp({ name: server.name }).delete());
       onRemoved();
     } catch (error) {
       reportError(error);
@@ -340,10 +325,10 @@ function ServerForm({
     try {
       const { env: envMap, secrets: newSecrets } = envFromRows(env);
       for (const [secret, value] of Object.entries(newSecrets)) {
-        await call(() => api.integrations.secrets({ name: secret }).put({ value }));
+        await call(() => api.agents.setup.secrets({ name: secret }).put({ value }));
       }
       await call(() =>
-        api.integrations.mcp({ name: name.trim() }).put(
+        api.agents.setup.mcp({ name: name.trim() }).put(
           kind === "http"
             ? {
                 url: url.trim(),
@@ -507,7 +492,7 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
   const set = async (secret: string, next: string | null) => {
     setError(null);
     try {
-      await call(() => api.integrations.secrets({ name: secret }).put({ value: next }));
+      await call(() => api.agents.setup.secrets({ name: secret }).put({ value: next }));
       setName("");
       setValue("");
       onChanged();
@@ -588,105 +573,12 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
   );
 }
 
-function HostCheck() {
-  const [url, setUrl] = useState("");
-  const [result, setResult] = useState<HostResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const run = async () => {
-    setBusy(true);
-    setError(null);
-    setResult(null);
-    try {
-      setResult(await checkHost(url.trim()));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <section className="mb-8">
-      <h2 className="kicker mb-1">Check a host</h2>
-      <p className="text-muted-foreground mb-3 text-[13px]">
-        Can Aura reach a service, for example a tracker behind your VPN, and may agents' commands?
-      </p>
-      <div className="bg-card rounded-2xl border p-4">
-        <form
-          className="flex flex-wrap gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (url.trim()) void run();
-          }}
-        >
-          <label className="relative min-w-60 flex-1">
-            <Globe className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-            <input
-              className={cn(inputClass, "w-full pl-9 font-mono text-[13px]")}
-              placeholder="https://service.example.com"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-            />
-          </label>
-          <Button
-            type="submit"
-            variant="outline"
-            size="sm"
-            className="h-auto rounded-full"
-            disabled={busy || !url.trim()}
-          >
-            {busy ? <RefreshCw className="animate-spin" /> : <Play />} Check
-          </Button>
-        </form>
-        {error && <p className="text-destructive mt-2 text-xs">{error}</p>}
-        {result && (
-          <div className="mt-3 space-y-1 text-[13px]">
-            <p
-              className={cn(
-                "flex items-start gap-1.5",
-                result.ok ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
-              )}
-            >
-              {result.ok ? (
-                <CircleCheck className="mt-0.5 size-4 shrink-0" />
-              ) : (
-                <CircleAlert className="mt-0.5 size-4 shrink-0" />
-              )}
-              {result.ok
-                ? `${result.host} answers (HTTP ${result.status}, ${result.ms} ms).`
-                : `${result.host}: ${result.error}`}
-            </p>
-            {result.sandbox.active && !result.sandbox.allowed && (
-              <p className="text-amber-600 dark:text-amber-400">
-                {result.sandbox.agents.length > 0
-                  ? `Only the commands of ${result.sandbox.agents.map((a) => `@${a}`).join(", ")} may reach ${result.host}. `
-                  : `No agent's commands may reach ${result.host}. `}
-                Add it to an agent's hosts on the Agents page, or to the shared list in the Command
-                sandbox card on the Engines page. MCP servers are not limited by it.
-              </p>
-            )}
-            {result.sandbox.active && result.sandbox.allowed && (
-              <p className="text-muted-foreground">
-                It is on the shared list: the commands of agents that use the shared list may reach
-                it.
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
 interface HeaderRow {
   id: string;
   name: string;
   value: string;
 }
 
-/** Headers for a server at a URL; credentials come from stored secrets, never typed in here. */
 function HeadersEditor({
   rows,
   secrets,
@@ -755,227 +647,7 @@ function HeadersEditor({
   );
 }
 
-type VariableSet = Overview["variableSets"][number];
-
-/** Agents to give something to, as toggles. */
-function AgentPicker({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
-  const agentMap = useChatStore((s) => s.agents);
-  const agents = useMemo(
-    () => Object.values(agentMap).filter((a) => a.handle !== "orchestrator"),
-    [agentMap],
-  );
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {agents.map((a) => {
-        const on = value.includes(a.handle);
-        return (
-          <button
-            key={a.handle}
-            type="button"
-            aria-pressed={on}
-            onClick={() =>
-              onChange(on ? value.filter((x) => x !== a.handle) : [...value, a.handle])
-            }
-            className={cn(
-              "rounded-full border px-2.5 py-1 font-mono text-[12px] transition-colors",
-              on ? "border-primary bg-primary/10 text-primary" : "hover:bg-accent/60",
-            )}
-          >
-            @{a.handle}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /**
  * Variables for command-line tools and scripts (ADR 0020): a service's address and token, given to
  * the agents that use it. Each agent's own variables, on the Agents page, win on a clash.
  */
-function VariableSets({
-  sets,
-  secrets,
-  onChanged,
-}: {
-  sets: VariableSet[];
-  secrets: string[];
-  onChanged: () => void;
-}) {
-  const [editing, setEditing] = useState<VariableSet | "new" | null>(null);
-
-  const remove = async (name: string) => {
-    if (!window.confirm(`Remove the variables "${name}"?`)) return;
-    try {
-      await call(() => api.integrations.variables({ name }).delete());
-      onChanged();
-    } catch (error) {
-      reportError(error);
-    }
-  };
-
-  return (
-    <section className="mb-8">
-      <div className="mb-1 flex items-center justify-between">
-        <h2 className="kicker">Variables for commands</h2>
-        {editing === null && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="rounded-full"
-            onClick={() => setEditing("new")}
-          >
-            <Plus /> Add variables
-          </Button>
-        )}
-      </div>
-      <p className="text-muted-foreground mb-3 text-[13px]">
-        For command-line tools and scripts agents run with Bash (git hosts, trackers, databases,
-        your own scripts): a service's address and token, given to the agents that use it.
-      </p>
-      {editing === "new" && (
-        <VariableSetForm
-          secrets={secrets}
-          onDone={() => {
-            setEditing(null);
-            onChanged();
-          }}
-        />
-      )}
-      <ul className="grid gap-3">
-        {sets.map((set) =>
-          editing !== "new" && editing?.name === set.name ? (
-            <VariableSetForm
-              key={set.name}
-              set={set}
-              secrets={secrets}
-              onDone={() => {
-                setEditing(null);
-                onChanged();
-              }}
-            />
-          ) : (
-            <li key={set.name} className="bg-card flex items-start gap-3 rounded-2xl border p-4">
-              <div className="min-w-0 flex-1">
-                <div className="font-medium">{set.name}</div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  {set.env.map((e) => (
-                    <span
-                      key={e.name}
-                      title={e.set ? "Has a value" : "No value: set it under Secrets"}
-                      className={cn(
-                        "rounded-full border px-2 py-0.5 font-mono text-[11px]",
-                        !e.set && "border-amber-500/50 text-amber-600 dark:text-amber-400",
-                      )}
-                    >
-                      {e.name}
-                    </span>
-                  ))}
-                  {set.agents.length === 0 ? (
-                    <span className="text-xs text-amber-600 dark:text-amber-400">
-                      No agent has it yet
-                    </span>
-                  ) : (
-                    set.agents.map((a) => (
-                      <span
-                        key={a}
-                        className="bg-muted rounded-full px-2 py-0.5 font-mono text-[11px]"
-                      >
-                        @{a}
-                      </span>
-                    ))
-                  )}
-                </div>
-              </div>
-              <Button variant="ghost" size="icon" aria-label="Edit" onClick={() => setEditing(set)}>
-                <Pencil />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Remove"
-                onClick={() => void remove(set.name)}
-              >
-                <Trash2 />
-              </Button>
-            </li>
-          ),
-        )}
-      </ul>
-    </section>
-  );
-}
-
-function VariableSetForm({
-  set,
-  secrets,
-  onDone,
-}: {
-  set?: VariableSet;
-  secrets: string[];
-  onDone: () => void;
-}) {
-  const [name, setName] = useState(set?.name ?? "");
-  const [env, setEnv] = useState<EnvRow[]>(rowsFromEnv(set?.env ?? []));
-  const [agents, setAgents] = useState<string[]>(set?.agents ?? []);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
-
-  const save = async () => {
-    setBusy(true);
-    setError(null);
-    try {
-      const { env: envMap, secrets: newSecrets } = envFromRows(env);
-      for (const [secret, value] of Object.entries(newSecrets)) {
-        await call(() => api.integrations.secrets({ name: secret }).put({ value }));
-      }
-      await call(() =>
-        api.integrations.variables({ name: name.trim() }).put({ env: envMap, agents }),
-      );
-      onDone();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="bg-card mb-3 rounded-2xl border p-4">
-      <div className="grid gap-3">
-        <label className="block">
-          <span className="kicker mb-1 block">Name</span>
-          <input
-            className={cn(inputClass, "w-full font-mono text-[13px]")}
-            placeholder="git-host"
-            value={name}
-            disabled={Boolean(set)}
-            onChange={(e) => setName(e.target.value.toLowerCase())}
-          />
-        </label>
-        <div>
-          <span className="kicker mb-1 block">Variables</span>
-          <EnvEditor rows={env} secrets={secrets} onChange={setEnv} />
-        </div>
-        <div>
-          <span className="kicker mb-1 block">Agents whose commands get them</span>
-          <AgentPicker value={agents} onChange={setAgents} />
-        </div>
-      </div>
-      {error && <p className="text-destructive mt-3 text-xs">{error}</p>}
-      <div className="mt-4 flex gap-2">
-        <Button
-          size="sm"
-          className="rounded-full"
-          disabled={busy || !name.trim()}
-          onClick={() => void save()}
-        >
-          {busy ? <RefreshCw className="animate-spin" /> : <Check />} Save
-        </Button>
-        <Button variant="ghost" size="sm" className="rounded-full" onClick={onDone}>
-          <X /> Cancel
-        </Button>
-      </div>
-    </div>
-  );
-}

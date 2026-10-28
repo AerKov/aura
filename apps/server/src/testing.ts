@@ -7,7 +7,6 @@ import { createServices, prepareDataDir } from "./bootstrap";
 import { connectDb } from "./db/client";
 import { type AgentDirectory, MemoryAgentDirectory } from "./modules/agents/directory";
 import { LocalSessions } from "./modules/auth/sessions";
-import type { ContainerService } from "./modules/containers/service";
 import type { SafeMode } from "./modules/customize/safe-mode";
 import { EngineRegistry } from "./modules/engines/registry";
 import { ToolBridge } from "./modules/engines/tool-bridge";
@@ -35,7 +34,6 @@ export async function createTestApp(
     /** Fake agent CLIs for the ACP engines. */
     acpAgents?: ConstructorParameters<typeof EngineRegistry>[0]["acpAgents"];
     acpSpawn?: ConstructorParameters<typeof EngineRegistry>[0]["acpSpawn"];
-    containers?: (dataDir: string, sandbox: SandboxService) => ContainerService;
     /** The orchestrator's first-launch welcome in the direct chat (default off). */
     welcome?: boolean;
   } = {},
@@ -70,7 +68,6 @@ export async function createTestApp(
     summaries: () => engines.store.get().summaries,
     fetch: opts.fetch,
     sandbox,
-    containers: opts.containers?.(dataDir, sandbox),
     agents,
     dataDir,
     maxChainDepth: opts.maxChainDepth,

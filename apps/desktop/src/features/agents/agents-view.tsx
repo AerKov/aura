@@ -3,7 +3,6 @@ import {
   Check,
   CircleAlert,
   Gauge,
-  Globe,
   MessagesSquare,
   Plug,
   RefreshCw,
@@ -16,40 +15,13 @@ import { Button } from "@/components/ui/button";
 import { loadProjects, openChat, reportError } from "@/features/chat/actions";
 import { BudgetEditor } from "@/features/chat/budget";
 import { useChatStore } from "@/features/chat/store";
-import {
-  EnvEditor,
-  type EnvRow,
-  envFromRows,
-  rowsFromEnv,
-} from "@/features/integrations/env-editor";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
+import { AgentToolServers } from "./tool-servers";
 
 type Status = Awaited<ReturnType<typeof loadStatus>>;
 const loadStatus = (handle: string) => call(() => api.agents({ handle }).status.get());
-
-interface NetworkRules {
-  hosts: string[];
-  shared: boolean;
-  restrictWeb: boolean;
-}
-
-/** Hosts typed one per line (or separated by commas or spaces), lowercased, without duplicates. */
-function parseHosts(text: string): string[] {
-  return [
-    ...new Set(
-      text
-        .split(/[\s,]+/)
-        .map((h) => h.trim().toLowerCase())
-        .filter(Boolean),
-    ),
-  ];
-}
-
-const sameNetwork = (a: NetworkRules, b: NetworkRules) =>
-  a.shared === b.shared &&
-  a.restrictWeb === b.restrictWeb &&
-  JSON.stringify(a.hosts) === JSON.stringify(b.hosts);
 
 const TOOLS: { name: string; text: string }[] = [
   { name: "Read", text: "read files" },
@@ -63,8 +35,9 @@ const TOOLS: { name: string; text: string }[] = [
 ];
 
 /**
- * Every agent and what it can really do (ADR 0020): engine, tools on that engine, variables, tool
- * servers, chats, the last error and what stops it, editable in one place.
+ * Everything about agents in one place (ADR 0020, ADR 0030): each agent's engine, tools on that
+ * engine, variables, tool servers, chats, the last error and what stops it; then the tool servers
+ * (MCP) and the secrets agents use.
  */
 export function AgentsView() {
   const agentMap = useChatStore((s) => s.agents);
@@ -105,6 +78,7 @@ export function AgentsView() {
           ))}
         </div>
         <AgentCard key={current} handle={current} />
+        <AgentToolServers />
       </div>
     </section>
   );
@@ -116,12 +90,6 @@ function AgentCard({ handle }: { handle: string }) {
   const [tools, setTools] = useState<string[]>([]);
   const [env, setEnv] = useState<EnvRow[]>([]);
   const [secrets, setSecrets] = useState<string[]>([]);
-  const [network, setNetwork] = useState<NetworkRules>({
-    hosts: [],
-    shared: true,
-    restrictWeb: false,
-  });
-  const [hostsText, setHostsText] = useState("");
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -129,16 +97,13 @@ function AgentCard({ handle }: { handle: string }) {
     setStatus(s);
     setTools(s.tools);
     setEnv(rowsFromEnv(s.env));
-    const { hosts, shared, restrictWeb } = s.network;
-    setNetwork({ hosts, shared, restrictWeb });
-    setHostsText(hosts.join("\n"));
   }, []);
 
   useEffect(() => {
     loadStatus(handle)
       .then(apply)
       .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
-    call(() => api.integrations.get())
+    call(() => api.agents.setup.get())
       .then((o) => setSecrets(o.secrets))
       .catch(reportError);
   }, [handle, apply]);
@@ -146,9 +111,7 @@ function AgentCard({ handle }: { handle: string }) {
   if (error) return <p className="text-destructive text-sm">{error}</p>;
   if (!status) return <p className="text-muted-foreground text-sm">Loading…</p>;
 
-  const nextNetwork = { ...network, hosts: parseHosts(hostsText) };
   const dirty =
-    !sameNetwork(nextNetwork, status.network) ||
     JSON.stringify(tools) !== JSON.stringify(status.tools) ||
     JSON.stringify(envFromRows(env)) !== JSON.stringify(envFromRows(rowsFromEnv(status.env)));
 
@@ -158,13 +121,9 @@ function AgentCard({ handle }: { handle: string }) {
     try {
       const { env: envMap, secrets: newSecrets } = envFromRows(env);
       for (const [name, value] of Object.entries(newSecrets)) {
-        await call(() => api.integrations.secrets({ name }).put({ value }));
+        await call(() => api.agents.setup.secrets({ name }).put({ value }));
       }
-      apply(
-        await call(() =>
-          api.agents({ handle }).settings.put({ tools, env: envMap, network: nextNetwork }),
-        ),
-      );
+      apply(await call(() => api.agents({ handle }).settings.put({ tools, env: envMap })));
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     } catch (err) {
@@ -253,14 +212,14 @@ function AgentCard({ handle }: { handle: string }) {
 
         <h3 className="kicker mt-5 mb-1">Variables for its commands</h3>
         <p className="text-muted-foreground mb-2 text-xs">
-          Its commands (Bash) get these, on every engine and in project containers. Keys go in as
-          secrets: kept out of files and hidden in chat.
+          Its commands (Bash) get these on every engine. Keys go in as secrets: kept out of files
+          and hidden in chat. Its commands run in a sandbox without network.
         </p>
         <EnvEditor rows={env} secrets={secrets} onChange={setEnv} />
         {status.sharedEnv.length > 0 && (
           <div className="mt-3">
             <p className="text-muted-foreground mb-1 text-xs">
-              Also from variables on the Integrations page:
+              Also from its command tool servers:
             </p>
             <div className="flex flex-wrap gap-1.5">
               {status.sharedEnv.map((e) => (
@@ -280,44 +239,6 @@ function AgentCard({ handle }: { handle: string }) {
             </div>
           </div>
         )}
-
-        <h3 className="kicker mt-5 mb-1 flex items-center gap-1.5">
-          <Globe className="size-3.5" /> Network
-        </h3>
-        <p className="text-muted-foreground mb-2 text-xs">
-          Where its commands may connect. Give it only the hosts its work needs, for example your
-          tracker's address.
-        </p>
-        <label className="mb-2 flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={network.shared}
-            onChange={(e) => setNetwork({ ...network, shared: e.target.checked })}
-          />
-          The shared list (package registries, GitHub; Engines page)
-        </label>
-        <textarea
-          aria-label="Its own hosts"
-          value={hostsText}
-          onChange={(e) => setHostsText(e.target.value)}
-          placeholder={"Its own hosts, one per line:\napi.service.example.com\n*.example.org"}
-          rows={3}
-          className="bg-background w-full rounded-lg border px-3 py-2 font-mono text-xs"
-        />
-        <label className="mt-2 flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={network.restrictWeb}
-            onChange={(e) => setNetwork({ ...network, restrictWeb: e.target.checked })}
-          />
-          WebFetch only to these hosts too (otherwise any public page)
-        </label>
-        <p className="text-muted-foreground mt-2 text-xs">
-          {nextNetwork.shared || nextNetwork.hosts.length > 0
-            ? "Its commands reach the hosts above and nothing else."
-            : "Its commands reach no hosts at all."}
-          {status.network.notes.map((n) => ` ${n}`)}
-        </p>
 
         {error && <p className="text-destructive mt-3 text-xs">{error}</p>}
         <div className="mt-4">
@@ -352,7 +273,7 @@ function AgentCard({ handle }: { handle: string }) {
             <Plug className="size-3.5" /> Tool servers
           </h3>
           {status.mcpServers.length === 0 ? (
-            <p className="text-muted-foreground text-sm">None. Add one on the Integrations page.</p>
+            <p className="text-muted-foreground text-sm">None. Add one under Tool servers below.</p>
           ) : (
             <ul className="space-y-1 text-sm">
               {status.mcpServers.map((s) => (

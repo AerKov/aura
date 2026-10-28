@@ -1,5 +1,5 @@
 import type { ExtensionInfo } from "@aura/shared";
-import { Database, Eye, EyeOff, History, MessagesSquare, Trash2 } from "lucide-react";
+import { Database, Eye, EyeOff, History, KeyRound, MessagesSquare, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
@@ -264,6 +264,99 @@ function DataMenu({ appId }: { appId: string }) {
               </Button>
             )}
           </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+type SecretState = { name: string; set: boolean };
+
+/**
+ * An app's own secrets (ADR 0030): the names its manifest uses, set or cleared here. Values go to
+ * the server only; nobody (not the app, not other apps, not agents) can read them back.
+ */
+export function AppSecretsMenu({ appId }: { appId: string }) {
+  const [open, setOpen] = useState(false);
+  const [list, setList] = useState<SecretState[]>([]);
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    call(() => api.extensions({ extensionId: appId }).secrets.get())
+      .then((l) => setList(l as SecretState[]))
+      .catch(reportError);
+    const close = (e: MouseEvent) => {
+      if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [open, appId]);
+  const save = (name: string, value: string | null) =>
+    call(() => api.extensions({ extensionId: appId }).secrets({ name }).put({ value }))
+      .then((l) => {
+        setList(l as SecretState[]);
+        setDrafts((d) => ({ ...d, [name]: "" }));
+      })
+      .catch(reportError);
+  return (
+    <div className="relative" ref={box}>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="size-7"
+        aria-label="Secrets"
+        title="The app's secrets: keys it puts into its requests; only it can use them"
+        onClick={() => setOpen(!open)}
+      >
+        <KeyRound />
+      </Button>
+      {open && (
+        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-80 rounded-xl border p-3 text-sm shadow-lg">
+          <p className="kicker mb-1">Secrets</p>
+          <p className="text-muted-foreground mb-2 text-xs">
+            Only this app can use them, in requests to its approved hosts. Values are never shown.
+          </p>
+          <ul className="grid gap-2">
+            {list.map((s) => (
+              <li key={s.name} className="grid gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs">{s.name}</span>
+                  <span className={cn("text-xs", s.set ? "text-emerald-600" : "text-amber-600")}>
+                    {s.set ? "set" : "no value"}
+                  </span>
+                </div>
+                <div className="flex gap-1">
+                  <input
+                    type="password"
+                    aria-label={`Value of ${s.name}`}
+                    placeholder={s.set ? "New value" : "Value"}
+                    value={drafts[s.name] ?? ""}
+                    onChange={(e) => setDrafts((d) => ({ ...d, [s.name]: e.target.value }))}
+                    className="bg-background min-w-0 flex-1 rounded-lg border px-2 py-1 text-xs"
+                  />
+                  <Button
+                    size="sm"
+                    className="h-7"
+                    disabled={!drafts[s.name]}
+                    onClick={() => void save(s.name, drafts[s.name] ?? "")}
+                  >
+                    Save
+                  </Button>
+                  {s.set && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7"
+                      onClick={() => void save(s.name, null)}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

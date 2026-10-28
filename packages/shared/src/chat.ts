@@ -266,16 +266,12 @@ export interface Project {
   spentUsd: number;
   /** Input and output tokens of all runs, the measure that matters under a subscription. */
   spentTokens: number;
-  /** Where agents' shell commands run: the host (with the OS sandbox) or the project's container. */
-  isolation: ProjectIsolation;
-  /** Extension pinned as the project's app: it opens next to the project chat (ADR 0021). */
+  /** Extension pinned as the project's app; the chat's Apps button opens it (ADR 0021). */
   app: string | null;
   /** "app": the workspace is an app's code, changed through its chat with approval (ADR 0024). */
   kind: ProjectKind;
   createdAt: string;
 }
-
-export type ProjectIsolation = "host" | "container";
 
 export type ProjectKind = "project" | "app";
 

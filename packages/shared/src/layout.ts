@@ -10,7 +10,6 @@ export const PAGE_IDS = [
   "skills",
   "memory",
   "agents",
-  "integrations",
   "catalog",
   "jobs",
   "engines",

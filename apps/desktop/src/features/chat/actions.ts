@@ -191,10 +191,6 @@ export function showAgents(): void {
   openAppRef("page:agents");
 }
 
-export function showIntegrations(): void {
-  openAppRef("page:integrations");
-}
-
 export function showCatalog(): void {
   openAppRef("page:catalog");
 }

@@ -11,7 +11,7 @@ Click the logo at the top of the rail to open Home. It shows:
 - **Your apps:** the apps you built or installed. Click one to open it.
 - **Add an app:** start from a template (CRM, Tasks, Notes), browse the [Catalog](Catalog), or, with
   Chats on, start an empty app that @builder makes from your description.
-- **Built in:** Chats, Skills, Memory, Schedule, Signals and Integrations, each with a switch.
+- **Built in:** Chats, Skills, Memory, Schedule and Signals, each with a switch.
 - **Aura:** Catalog, Customize and Devices, which are always there.
 
 ## Tiles

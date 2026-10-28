@@ -6,9 +6,9 @@ import { errorMessage, log } from "../../lib/log";
 import { proxyEnv } from "../../lib/proxy";
 import type { McpServerSpec } from "../../providers/types";
 import type { AgentDirectory } from "../agents/directory";
+import { resolveEnv, resolveTemplates, validateEnvMap, validateHeaders } from "../agents/env";
+import type { SecretStore } from "../agents/secrets";
 import type { ApprovalRecord, ApprovalService } from "../approvals/service";
-import { resolveEnv, resolveTemplates, validateEnvMap, validateHeaders } from "../integrations/env";
-import type { SecretStore } from "../integrations/secrets";
 
 export class McpError extends Error {
   override name = "McpError";
@@ -167,7 +167,7 @@ export class McpService {
       preview: [
         config.url
           ? `**Connects to:** \`${config.url}\``
-          : "**Runs this command on your computer** (inside the project's container in container projects):",
+          : "**Runs this command on your computer**:",
         config.url ? "" : `\`\`\`sh\n${target}\n\`\`\``,
         `**For:** ${config.agents.map((a) => `@${a}`).join(", ") || "no agents"}`,
         Object.keys(config.env ?? {}).length
@@ -186,7 +186,7 @@ export class McpService {
     return this.save(String(payload.name), payload.config, author);
   }
 
-  /** Writes a server (a user action on the Integrations page, or an approved proposal). */
+  /** Writes a server (a user action on the Agents page, or an approved proposal). */
   async save(name: string, raw: unknown, author = "owner"): Promise<string> {
     const config = validateServer(name, raw);
     for (const handle of config.agents) {

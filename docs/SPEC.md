@@ -184,11 +184,8 @@ login ourselves.
   directory (ADR 0005).
 - Level 1 (ADR 0015): shell commands of Claude Code and Aura's own agent run in an OS sandbox
   (bubblewrap on Linux, Seatbelt on macOS): writes only in the project folder, no credentials,
-  network only to allowed hosts. Modes `auto`, `required`, `off` in `sandbox.json`.
-- Level 2 (ADR 0018): per project, shell commands run in the project's own container (Docker or
-  Podman) that mounts only the project folder; no capabilities, limited memory, CPU and processes,
-  optional network. Stdio MCP servers of such projects run in the container too (ADR 0019);
-  agent apps stay on the host because they need their own logins.
+  no network (ADR 0030). Modes `auto`, `required`, `off` in `sandbox.json`.
+- Project containers (ADR 0018, 0019) were removed in ADR 0030: Aura is local only.
 
 ## 8. Conversation rules
 
@@ -344,7 +341,7 @@ answer before sending (ADR 0014).
 
 **Phase 12: Command sandbox**
 Agents' shell commands run in an OS sandbox (Claude Code's own, and the same runtime for Aura's
-agent): writes only in the project, no credentials, network only to allowed hosts; a card on the
+agent): writes only in the project, no credentials, no network (ADR 0030); a card on the
 Engines page; new Aura mark (ADR 0015, 0010).
 
 **Phase 13: Catalog**
@@ -357,16 +354,16 @@ Older messages are folded into a rolling summary per chat that agents get with t
 messages; it counts towards budgets, can be read and cleared from the chat, and turned off on the
 Memory page (ADR 0017).
 
-**Phase 15: Project containers**
+**Phase 15: Project containers (removed in phase 32, ADR 0030)**
 Sandbox level 2: a project can run its agents' shell commands in its own container that sees only
 the project folder; set per project in its chat, defaults on the Engines page (ADR 0018).
 
-**Phase 16: MCP servers in containers**
+**Phase 16: MCP servers in containers (removed in phase 32, ADR 0030)**
 In container projects, stdio MCP servers start inside the project's container, with secrets passed
 as environment; they never fall back to the host. Agent apps stay on the host because of their
 logins (ADR 0019).
 
-**Phase 17: Integrations and diagnostics**
+**Phase 17: Integrations and diagnostics** (the page became part of Agents in phase 32)
 From the alpha feedback: an Integrations page for MCP servers with a connection test, secrets kept
 by Aura, variables for agents' commands, an Agents page that shows what stops an agent, a host
 check, no silent agents, read-only setup inspection for the orchestrator, the user guide built in
@@ -378,7 +375,7 @@ context, project apps that open by themselves, extension storage, network to app
 secrets filled in by the server, asking agents as the user, reading project files, extension icons,
 form and button helpers, and an arrangeable rail (ADR 0021).
 
-**Phase 19: Per-agent network rules**
+**Phase 19: Per-agent network rules (removed in phase 32, ADR 0030)**
 Each agent can have its own allowed hosts on top of (or instead of) the shared list, and WebFetch
 limited to them; enforced per command in the OS sandbox, in Claude Code's sandbox and tool checks,
 and for ACP fetches; editable on the agent's card or proposed by the orchestrator (ADR 0022).
@@ -426,7 +423,7 @@ The Home shelf (your apps, Add an app, built-in apps, a welcome card) on an empt
 shows one app, no tabs; an app's chat opens as a panel inside its tile; nothing opens by itself.
 
 **Phase 29: The core and built-in apps** (done, ADR 0027)
-Chats, Skills, Memory, Schedule, Signals and Integrations can be turned off on Home, with their
+Chats, Skills, Memory, Schedule and Signals (and Integrations, until ADR 0030) can be turned off on Home, with their
 dependencies; off means their routes, background work and agent tools are gone, without a restart.
 Config in `modules.json`.
 
@@ -438,6 +435,10 @@ chosen Mod key, Home as a launcher in any number of tiles.
 **Phase 31: The bar as an app** (done, ADR 0029)
 The bar is built in, the user's own bar app (code changed in its chat with approval and
 versions, `ctx.bar`), or off; the built-in bar stands in when the bar app fails.
+
+**Phase 32: Local only** (done, ADR 0030)
+No project containers, host lists or Integrations page; agents' commands have no network; MCP
+servers and agents' secrets are on the Agents page; each app keeps its own secrets.
 
 **Later**
 Pack signatures and a reviewed community index, multi-user.

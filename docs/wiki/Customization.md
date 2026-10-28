@@ -19,7 +19,7 @@ Themes change CSS variables such as `--background`, `--foreground`, `--primary` 
 
 > Connect a GitHub MCP server for @coder.
 
-MCP servers give agents new tools. Add them yourself on the [Integrations](Integrations) page, or
+MCP servers give agents new tools. Add them yourself on the [Agents](Agents) page, under Tool servers, or
 ask the orchestrator and approve its card, which shows the exact command that will run. They are
 listed in `mcp/servers.json` and granted per agent. Secrets are never written to the file.
 
@@ -53,7 +53,7 @@ Extensions run in a sandbox and can do only what you approved when you installed
 
 **Network and keys.** An extension cannot reach the internet by itself. With `net`, Aura makes the
 request for it, only to the hosts shown on the install card. If it needs a key, the card also names
-the secret; store it on the [Integrations](Integrations) page under Secrets. Aura puts the key into
+the secret; store it in the app's **Secrets** (the key button on its tile). Aura puts the key into
 the request and hides it in the answer, so the extension never sees it.
 
 **Asking agents.** A button or form that asks an agent posts a message from you, so the agent must

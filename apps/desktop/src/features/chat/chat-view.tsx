@@ -5,7 +5,7 @@ import {
   type Topic,
   tileOf,
 } from "@aura/shared";
-import { Box, ChevronLeft, Monitor, PanelRight, ScrollText } from "lucide-react";
+import { ChevronLeft, PanelRight, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import {
 import { BudgetButton } from "./budget";
 import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
-import { IsolationPanel } from "./isolation-panel";
 import { MessageBubble } from "./message-bubble";
 import { isGrouped } from "./message-utils";
 import { chatSubtitle } from "./participants";
@@ -66,7 +65,7 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
   const members = useChatStore((s) => s.members[chatId]);
   const project = useChatStore((s) => (chat?.projectId ? s.projects[chat.projectId] : undefined));
   const [replyTo, setReplyTo] = useState<Message | null>(null);
-  const [panel, setPanel] = useState<"summary" | "isolation" | null>(null);
+  const [panel, setPanel] = useState<"summary" | null>(null);
   const [summary, setSummary] = useState<ChatSummary | null>(null);
   const apps = useExtensionApps();
   // The chat's app: the app itself (an app's chat) or the one pinned to its project. Never another
@@ -187,19 +186,6 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
                 <ScrollText /> <span className="max-sm:hidden">Summary</span>
               </Button>
             )}
-            {project && (
-              <Button
-                variant={panel === "isolation" ? "secondary" : "ghost"}
-                size="sm"
-                title="Where this project's commands run"
-                onClick={() => setPanel(panel === "isolation" ? null : "isolation")}
-              >
-                {project.isolation === "container" ? <Box /> : <Monitor />}
-                <span className="max-sm:hidden">
-                  {project.isolation === "container" ? "Container" : "Host"}
-                </span>
-              </Button>
-            )}
             {appId && !inApp && (
               <Button
                 variant={appOpen ? "secondary" : "ghost"}
@@ -259,9 +245,6 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
           placeholder={chat.kind === "direct" ? "What do you have in mind?" : undefined}
         />
       </section>
-      {panel === "isolation" && project && (
-        <IsolationPanel project={project} onClose={() => setPanel(null)} />
-      )}
       {panel === "summary" && summary && (
         <SummaryPanel
           summary={summary}

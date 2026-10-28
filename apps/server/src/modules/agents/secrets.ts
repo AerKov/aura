@@ -8,7 +8,8 @@ export class SecretError extends Error {
 }
 
 /**
- * Values for `${secret:NAME}` (ADR 0020): `<dataDir>/state/integration-secrets.json`, readable only by
+ * Agents' secrets, values for `${secret:NAME}` (ADR 0020, ADR 0030): `<dataDir>/state/
+ * integration-secrets.json` (its name from before the Agents page held them), readable only by
  * the user (0600) and outside git. Values never leave the server except into the processes that
  * use them; the API returns names only.
  */
@@ -33,7 +34,7 @@ export class SecretStore {
           }
         }
       } catch (error) {
-        log.warn("integration secrets are unreadable", { error: errorMessage(error) });
+        log.warn("agent secrets are unreadable", { error: errorMessage(error) });
       }
     }
     this.cache = out;
@@ -64,6 +65,6 @@ export class SecretStore {
     writeFileSync(this.file, `${JSON.stringify(next, null, 2)}\n`, { mode: 0o600 });
     chmodSync(this.file, 0o600);
     this.cache = next;
-    log.info("integration secret updated", { name, set: value !== null });
+    log.info("agent secret updated", { name, set: value !== null });
   }
 }

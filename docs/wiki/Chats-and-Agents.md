@@ -26,7 +26,7 @@ with a list of what stops it from working. You can change its tools and variable
 is read on every reply, so changes need no restart.
 
 Built-in tools are `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`, `WebSearch` and `WebFetch`. Tools
-from MCP servers are granted on the [Integrations](Integrations) page, not in this list.
+from MCP servers are granted on the [Agents](Agents) page, under Tool servers, not in this list.
 
 ## Who answers when
 

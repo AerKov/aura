@@ -1,6 +1,5 @@
 import { realpathSync } from "node:fs";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
-import { hostAllowed, webDenied } from "./hosts";
 
 /** Input fields that carry file paths in Claude Code's built-in tools. */
 const PATH_FIELDS = ["file_path", "path", "notebook_path"] as const;
@@ -47,24 +46,12 @@ export function decideToolUse(input: {
   allowedPrefixes?: string[];
   cwd: string | undefined;
   blockedPath?: string;
-  /** When set, WebFetch may reach only these hosts (ADR 0022). */
-  webHosts?: string[];
 }): Decision {
   const { tool, args, granted, appTools, cwd, blockedPath } = input;
   if (appTools.includes(tool)) return { allow: true };
   if (input.allowedPrefixes?.some((prefix) => tool.startsWith(prefix))) return { allow: true };
   if (!granted.includes(tool))
     return { allow: false, reason: `${tool} is not granted to this agent` };
-  if (tool === "WebFetch" && input.webHosts) {
-    let host = "";
-    try {
-      host = new URL(String(args.url ?? "")).hostname;
-    } catch {
-      return { allow: false, reason: "WebFetch needs a valid URL" };
-    }
-    if (!hostAllowed(host, input.webHosts))
-      return { allow: false, reason: webDenied(host, input.webHosts) };
-  }
   if (!cwd) return { allow: true };
   // Claude Code names the path that made it ask (with the sandbox on, also paths inside cwd).
   if (blockedPath && !isInsideReal(cwd, blockedPath))

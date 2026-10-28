@@ -51,12 +51,10 @@ export interface AgentRunInput {
   maxTurns?: number;
   /** Hard stop for this run, in USD. */
   maxBudgetUsd?: number;
-  /** Run shell commands in an OS sandbox: writes only in `cwd`, network only to allowed hosts. */
+  /** Run shell commands in an OS sandbox: writes only in `cwd`, no network (ADR 0030). */
   sandbox?: SandboxPolicy;
   /** Extra environment for the agent's shell commands (its own variables, ADR 0020). */
   env?: Record<string, string>;
-  /** When set, WebFetch may reach only these hosts (the agent's network rules, ADR 0022). */
-  webHosts?: string[];
 }
 
 export type AgentEvent =

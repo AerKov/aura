@@ -31,10 +31,7 @@ describe("built-in apps on and off (ADR 0027)", () => {
     // The core: layout, catalog, customize, approvals.
     expect((await api.layout.get()).status).toBe(200);
     expect((await api.catalog.get()).status).toBe(200);
-    expect((await api.customize.get()).data?.modules).toMatchObject({
-      chats: false,
-      integrations: true,
-    });
+    expect((await api.customize.get()).data?.modules).toMatchObject({ chats: false });
     expect((await api.approvals.get()).status).toBe(200);
 
     // Config in files, every change a commit.

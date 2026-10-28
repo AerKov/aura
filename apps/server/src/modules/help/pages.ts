@@ -1,6 +1,7 @@
 /// <reference path="../../providers/vendor-files.d.ts" />
 // The user guide (docs/wiki), embedded in the server so agents can read how Aura works.
 
+import Agents from "../../../../../docs/wiki/Agents.md" with { type: "text" };
 import AlertsandSchedules from "../../../../../docs/wiki/Alerts-and-Schedules.md" with {
   type: "text",
 };
@@ -13,7 +14,6 @@ import ChatsandAgents from "../../../../../docs/wiki/Chats-and-Agents.md" with {
 import Customization from "../../../../../docs/wiki/Customization.md" with { type: "text" };
 import Engines from "../../../../../docs/wiki/Engines.md" with { type: "text" };
 import GettingStarted from "../../../../../docs/wiki/Getting-Started.md" with { type: "text" };
-import Integrations from "../../../../../docs/wiki/Integrations.md" with { type: "text" };
 import Memory from "../../../../../docs/wiki/Memory.md" with { type: "text" };
 import Phone from "../../../../../docs/wiki/Phone.md" with { type: "text" };
 import Skills from "../../../../../docs/wiki/Skills.md" with { type: "text" };
@@ -69,15 +69,15 @@ export const HELP_PAGES: HelpPage[] = [
     text: ChatsandAgents,
   },
   {
-    id: "integrations",
-    title: "Integrations",
-    summary: "MCP servers, secrets, variables for agents' commands, host checks",
-    text: Integrations,
+    id: "agents",
+    title: "Agents",
+    summary: "Each agent's card, tool servers (MCP), agents' secrets",
+    text: Agents,
   },
   {
     id: "approvals-and-safety",
     title: "Approvals and Safety",
-    summary: "What needs approval, command sandbox, project containers",
+    summary: "What needs approval, the command sandbox",
     text: ApprovalsandSafety,
   },
   { id: "skills", title: "Skills", summary: "Reusable know-how attached to agents", text: Skills },

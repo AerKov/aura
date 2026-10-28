@@ -5,6 +5,7 @@ import {
   isEngineId,
   MODEL_ID_PATTERN,
 } from "@aura/shared";
+import { validateEnvMap } from "./env";
 
 /** An agent profile, stored as `<dataDir>/agents/<handle>/agent.md` (docs/SPEC.md section 5). */
 export interface AgentProfile {
@@ -25,48 +26,6 @@ export interface AgentProfile {
   skills: string[];
   /** Environment for the agent's commands: values or `${secret:…}` / `${env:…}` refs (ADR 0020). */
   env?: Record<string, string>;
-  /** Where the agent's commands (and optionally WebFetch) may connect (ADR 0022). */
-  network?: AgentNetwork;
-}
-
-/** Per-agent network rules. Absent means the shared list only, and WebFetch to any public page. */
-export interface AgentNetwork {
-  /** Hosts this agent may reach in addition to (or, without `shared`, instead of) the shared list. */
-  hosts: string[];
-  /** Include the shared list of allowed hosts (Engines page → Command sandbox). */
-  shared: boolean;
-  /** WebFetch reaches only the allowed hosts too. */
-  restrictWeb: boolean;
-}
-
-export const DEFAULT_NETWORK: AgentNetwork = { hosts: [], shared: true, restrictWeb: false };
-
-import { validateEnvMap } from "../integrations/env";
-import { SandboxSettingsError, validDomains } from "../sandbox/settings";
-
-/** Validates network rules from a file or a tool call; the default comes back as undefined. */
-export function validateNetwork(raw: unknown): AgentNetwork | undefined {
-  if (raw === undefined || raw === null) return undefined;
-  if (!isRecord(raw)) throw new ProfileError("network must be a mapping");
-  let hosts: string[];
-  try {
-    hosts = raw.hosts === undefined ? [] : validDomains(raw.hosts);
-  } catch (error) {
-    throw new ProfileError(
-      `network hosts: ${error instanceof SandboxSettingsError ? error.message : String(error)}`,
-    );
-  }
-  if (hosts.length > 100) throw new ProfileError("network hosts: at most 100");
-  for (const key of ["shared", "restrictWeb"] as const)
-    if (raw[key] !== undefined && typeof raw[key] !== "boolean")
-      throw new ProfileError(`network ${key} must be true or false`);
-  const network: AgentNetwork = {
-    hosts: [...new Set(hosts)],
-    shared: raw.shared !== false,
-    restrictWeb: raw.restrictWeb === true,
-  };
-  const isDefault = network.hosts.length === 0 && network.shared && !network.restrictWeb;
-  return isDefault ? undefined : network;
 }
 
 export const SKILL_NAME_PATTERN = /^[a-z][a-z0-9-]{1,47}$/;
@@ -126,11 +85,9 @@ export function validateProfile(input: {
   budgetTokens?: unknown;
   skills?: unknown;
   env?: unknown;
-  network?: unknown;
 }): AgentProfile {
   const { handle, name, role, engine, model, systemPrompt, tools, budgetUsd, skills } = input;
   const env = validateEnvMap(input.env, (message) => new ProfileError(message));
-  const network = validateNetwork(input.network);
   if (typeof handle !== "string" || !HANDLE_PATTERN.test(handle)) {
     throw new ProfileError(
       "handle must be 2-32 chars: lowercase letters, digits, - or _, starting with a letter",
@@ -196,7 +153,6 @@ export function validateProfile(input: {
     ...(budgetTokens !== null ? { budgetTokens } : {}),
     skills: [...new Set(skillList as string[])],
     ...(Object.keys(env).length > 0 ? { env } : {}),
-    ...(network ? { network } : {}),
   };
 }
 
@@ -225,8 +181,8 @@ export function parseAgentFile(handle: string, text: string): AgentProfile {
     budgetUsd: meta.budget_usd,
     budgetTokens: meta.budget_tokens,
     skills: meta.skills,
+    // An old "network" field (ADR 0022, removed in ADR 0030) is ignored.
     env: meta.env,
-    network: meta.network,
   });
 }
 
@@ -245,7 +201,6 @@ export function serializeAgentFile(profile: AgentProfile): string {
     ...(profile.env && Object.keys(profile.env).length > 0
       ? [`env: ${JSON.stringify(profile.env)}`]
       : []),
-    ...(profile.network ? [`network: ${JSON.stringify(profile.network)}`] : []),
     "---",
     "",
     profile.systemPrompt,

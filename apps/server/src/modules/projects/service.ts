@@ -4,7 +4,6 @@ import {
   budgetText,
   type Chat,
   type Project,
-  type ProjectIsolation,
   type ProjectKind,
   parseMentions,
   SLUG_PATTERN,
@@ -81,8 +80,6 @@ export class ProjectService {
       repo: ChatRepo;
       runs: RunRepo;
       agents: AgentDirectory;
-      /** Isolation for new projects (sandbox settings, ADR 0018). */
-      newProjectIsolation?: () => ProjectIsolation;
       /** Called after a user-facing project setting changed (to refresh clients). */
       onChange?: (project: Project) => void;
     },
@@ -195,7 +192,6 @@ export class ProjectService {
           repo_path: workspace,
           ...(budgetUsd !== null ? { budget_usd: budgetUsd } : {}),
           ...(budgetTokens !== null ? { budget_tokens: budgetTokens } : {}),
-          isolation: this.deps.newProjectIsolation?.() ?? "host",
           ...(input.kind === "app" ? { kind: "app", app: slug } : {}),
         },
       })
@@ -224,20 +220,6 @@ export class ProjectService {
     const project = await this.get(slug);
     if (!project) throw new ProjectError("project was not saved");
     return { project, chat };
-  }
-
-  /** User action only: agents cannot change where their commands run. */
-  async setIsolation(slug: string, isolation: ProjectIsolation): Promise<ProjectInfo> {
-    if (!(await this.get(slug))) throw new ProjectError(`No project "${slug}"`);
-    await this.deps.db
-      .query("UPDATE $id SET isolation = $isolation", {
-        id: new RecordId("project", slug),
-        isolation,
-      })
-      .collect();
-    const project = await this.get(slug);
-    if (!project) throw new ProjectError(`No project "${slug}"`);
-    return project;
   }
 
   /** User action (or an approved request): changes or removes the project's limits. */
@@ -292,7 +274,6 @@ export class ProjectService {
       budgetTokens: typeof row.budget_tokens === "number" ? row.budget_tokens : null,
       spentUsd: spent.usd,
       spentTokens: spent.tokens,
-      isolation: row.isolation === "container" ? "container" : "host",
       app: typeof row.app === "string" ? row.app : null,
       kind: row.kind === "app" ? "app" : "project",
       dataStore: row.data_store === "files" ? "files" : "database",

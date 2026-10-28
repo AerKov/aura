@@ -17,12 +17,11 @@ const MODES: { value: Mode; label: string; text: string }[] = [
 
 /**
  * The OS sandbox for agents' shell commands (ADR 0015): writes only in the project folder, no
- * credentials, network only to the listed hosts.
+ * credentials, no network (ADR 0030).
  */
 export function SandboxCard() {
   const [status, setStatus] = useState<Status | null>(null);
   const [mode, setMode] = useState<Mode>("auto");
-  const [domains, setDomains] = useState("");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -31,24 +30,18 @@ export function SandboxCard() {
       .then((s) => {
         setStatus(s);
         setMode(s.mode);
-        setDomains(s.allowedDomains.join("\n"));
       })
       .catch(reportError);
   }, []);
 
   if (!status) return null;
-  const list = domains
-    .split(/[\s,]+/)
-    .map((d) => d.trim())
-    .filter(Boolean);
-  const dirty = mode !== status.mode || list.join("\n") !== status.allowedDomains.join("\n");
+  const dirty = mode !== status.mode;
 
   const save = async () => {
     setError(null);
     try {
-      const next = await call(() => api.sandbox.put({ mode, allowedDomains: list }));
+      const next = await call(() => api.sandbox.put({ mode }));
       setStatus(next);
-      setDomains(next.allowedDomains.join("\n"));
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     } catch (err) {
@@ -62,7 +55,7 @@ export function SandboxCard() {
       <h2 className="kicker">Command sandbox</h2>
       <p className="text-muted-foreground mt-1 mb-4 text-sm">
         Shell commands from Claude Code and Aura's own agent run in an OS sandbox: they write only
-        in the project folder, cannot read credentials, and reach only the hosts below.
+        in the project folder, cannot read credentials, and have no network.
       </p>
       <div className="bg-card rounded-2xl border p-5">
         <p className="mb-4 flex items-start gap-2 text-[13px]">
@@ -98,16 +91,6 @@ export function SandboxCard() {
             </button>
           ))}
         </div>
-        <label className="block">
-          <span className="kicker mb-1 block">
-            Allowed hosts (one per line, *.example.com for subdomains)
-          </span>
-          <textarea
-            className="bg-background focus:border-primary/60 focus:ring-primary/15 h-40 w-full rounded-xl border px-3 py-2 font-mono text-[13px] outline-none focus:ring-4"
-            value={domains}
-            onChange={(e) => setDomains(e.target.value)}
-          />
-        </label>
         {error && <p className="text-destructive mt-2 text-xs">{error}</p>}
         <div className="mt-3 flex items-center gap-3">
           <Button size="sm" className="rounded-full" disabled={!dirty} onClick={() => void save()}>

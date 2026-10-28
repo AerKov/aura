@@ -1,6 +1,6 @@
 # 0022: Per-agent network rules
 
-- Status: accepted
+- Status: superseded by 0030 (no network for agents' commands)
 - Date: 2026-10-27
 - Phase: 19
 

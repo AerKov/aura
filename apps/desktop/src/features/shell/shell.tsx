@@ -24,13 +24,12 @@ import { CustomizeView, loadCustomize } from "@/features/customize/customize-vie
 import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
 import { EnginesView } from "@/features/engines/engines-view";
-import { IntegrationsView } from "@/features/integrations/integrations-view";
 import { JobsView } from "@/features/jobs/jobs-view";
 import { MemoryView } from "@/features/memory/memory-view";
 import { SkillsView } from "@/features/skills/skills-view";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { AppControls } from "./app-controls";
+import { AppControls, AppSecretsMenu } from "./app-controls";
 import { appAvailable, appInfo, useExtensionApps, useModules } from "./apps";
 import { HomeView } from "./home";
 import { closeTileId, focusTile, openAppRef, PHONE_QUERY, phoneAppOf, resizeSplit } from "./layout";
@@ -149,6 +148,7 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
           <span className="truncate">{label}</span>
         </div>
         <div className={cn("flex items-center gap-0.5", hoverOnly)}>
+          {ext && ext.secrets.length > 0 && <AppSecretsMenu appId={ext.id} />}
           {ext &&
             (ext.app ? (
               <AppControls ext={ext} chat={modules.chats} />
@@ -409,8 +409,6 @@ function AppView({ app }: { app: AppRef }) {
       return <MemoryView />;
     case "agents":
       return <AgentsView />;
-    case "integrations":
-      return <IntegrationsView />;
     case "catalog":
       return <CatalogView />;
     case "jobs":

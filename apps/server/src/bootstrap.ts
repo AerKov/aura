@@ -5,20 +5,24 @@ import { SERVER_VERSION } from "./config";
 import { openAppDatabase } from "./db/client";
 import { ensureRepo } from "./lib/git";
 import type { AgentDirectory } from "./modules/agents/directory";
+import { redact, resolveEnv } from "./modules/agents/env";
 import { RunRepo } from "./modules/agents/runs";
 import { AgentRuntime } from "./modules/agents/runtime";
+import { SecretStore } from "./modules/agents/secrets";
+import { AgentSetupService } from "./modules/agents/setup";
+import { agentSetupTools } from "./modules/agents/setup-tools";
 import { registerExecutors, toolsFor } from "./modules/agents/tools";
 import { AlertService, TriageLimiter } from "./modules/alerts/service";
 import { ApprovalService } from "./modules/approvals/service";
 import { AppActions } from "./modules/apps/actions";
 import { AppDataService } from "./modules/apps/data";
+import { AppSecrets } from "./modules/apps/secrets";
 import { AppService } from "./modules/apps/service";
 import { appTools, barTools } from "./modules/apps/tools";
 import { CatalogService } from "./modules/catalog/service";
 import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
-import { ContainerService, containerNote } from "./modules/containers/service";
 import { ModuleService } from "./modules/core/modules";
 import { AppearanceService } from "./modules/customize/appearance";
 import { ExtensionBridge } from "./modules/customize/bridge";
@@ -29,11 +33,6 @@ import { customizeTools } from "./modules/customize/tools";
 import { DeviceService } from "./modules/devices/service";
 import type { EngineSelector } from "./modules/engines/registry";
 import { AURA_GUIDE, helpTools } from "./modules/help/tools";
-import { redact, resolveEnv } from "./modules/integrations/env";
-import { SecretStore } from "./modules/integrations/secrets";
-import { IntegrationsService } from "./modules/integrations/service";
-import { integrationTools } from "./modules/integrations/tools";
-import { VariableSets } from "./modules/integrations/variables";
 import { JobService } from "./modules/jobs/service";
 import { MemoryService } from "./modules/memory/service";
 import { ProjectService } from "./modules/projects/service";
@@ -61,8 +60,6 @@ export async function createServices(deps: {
   engines: EngineSelector;
   /** OS sandbox for agents' shell commands; created from the data dir when absent. */
   sandbox?: SandboxService;
-  /** Project containers (ADR 0018); created from the sandbox settings when absent. */
-  containers?: ContainerService;
   /** Network for packs installed from a URL (replaced in tests). */
   fetch?: typeof fetch;
   /** Embedding model for semantic memory search; keyword search when absent. */
@@ -88,12 +85,6 @@ export async function createServices(deps: {
   const owner = await chat.bootstrap({ welcome: deps.welcome });
   const runs = new RunRepo(deps.db);
   const sandbox = deps.sandbox ?? new SandboxService({ dataDir: deps.dataDir });
-  const containers =
-    deps.containers ??
-    new ContainerService({
-      dataDir: deps.dataDir,
-      settings: () => sandbox.store.get().container,
-    });
   const projects = new ProjectService({
     db: deps.db,
     dataDir: deps.dataDir,
@@ -101,7 +92,6 @@ export async function createServices(deps: {
     repo,
     runs,
     agents: deps.agents,
-    newProjectIsolation: () => (sandbox.store.get().container.newProjects ? "container" : "host"),
     onChange: () => deps.hub.publish({ type: "customize.updated" }),
   });
   const approvals = new ApprovalService(deps.db, repo);
@@ -140,7 +130,6 @@ export async function createServices(deps: {
     hub: deps.hub,
   });
   const secrets = new SecretStore(deps.dataDir);
-  const variables = new VariableSets({ dataDir: deps.dataDir, agents: deps.agents });
   const mcp = new McpService({
     dataDir: deps.dataDir,
     agents: deps.agents,
@@ -192,10 +181,16 @@ export async function createServices(deps: {
     grantedCalls: async (id) => (await extensions.grant(id, "apps.call"))?.calls ?? null,
     approvals,
   });
+  const appSecrets = new AppSecrets(deps.dataDir);
+  // Shared secrets apps were granted before ADR 0030 move into their own stores once.
+  appSecrets.migrate(
+    (await extensions.list()).map((e) => ({ app: e.id, secrets: e.secrets })),
+    secrets,
+  );
   const extensionBridge = new ExtensionBridge({
     db: deps.db,
     extensions,
-    secrets,
+    secrets: appSecrets,
     chat,
     projects,
     fetch: deps.fetch,
@@ -212,7 +207,7 @@ export async function createServices(deps: {
     fetch: deps.fetch,
   });
   const devices = new DeviceService({ db: deps.db, owner });
-  const integrations = new IntegrationsService({
+  const agentSetup = new AgentSetupService({
     dataDir: deps.dataDir,
     mcp,
     secrets,
@@ -221,8 +216,6 @@ export async function createServices(deps: {
     engineStatus: deps.engineStatus,
     runs,
     repo,
-    sandbox,
-    variables,
   });
   const scratchDir = join(deps.dataDir, "state", "scratch");
   const summaries = new ChatSummaryService({
@@ -257,9 +250,7 @@ export async function createServices(deps: {
               topicId: ctx.topicId,
             })
           : []),
-        ...(ctx.handle === "orchestrator"
-          ? [...integrationTools(integrations), ...helpTools()]
-          : []),
+        ...(ctx.handle === "orchestrator" ? [...agentSetupTools(agentSetup), ...helpTools()] : []),
         // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
         // orchestrator had no such tools and claimed to have sent cards).
         ...(ctx.handle === "orchestrator"
@@ -287,33 +278,20 @@ export async function createServices(deps: {
             ]
           : []),
       ]),
-    mcpServers: (handle) => (modules.enabled("integrations") ? mcp.forAgent(handle) : {}),
-    projectMcp: (project, servers) =>
-      project.isolation === "container"
-        ? containers.wrapMcp(project, servers)
-        : Promise.resolve(servers),
+    mcpServers: (handle) => mcp.forAgent(handle),
     promptExtras: (profile) =>
       (modules.enabled("skills") ? skills.promptFor(profile) : "") +
       (profile.handle === "orchestrator" ? AURA_GUIDE : ""),
     memoryPrompt: (input) =>
       modules.enabled("memory") ? memory.promptFor(input) : Promise.resolve(""),
-    sandboxPolicy: (profile) => sandbox.policy(profile.network),
-    webHosts: (profile) =>
-      profile.network?.restrictWeb ? sandbox.hostsFor(profile.network) : undefined,
-    // Shared variable sets first; the agent's own variables win on a clash.
+    sandboxPolicy: () => sandbox.policy(),
+    // Variables its command tool servers share first; the agent's own win on a clash.
     agentEnv: (profile) =>
       resolveEnv(
-        { ...integrations.sharedEnvFor(profile.handle).env, ...(profile.env ?? {}) },
+        { ...agentSetup.sharedEnvFor(profile.handle).env, ...(profile.env ?? {}) },
         { secret: (n) => secrets.get(n), env: process.env },
       ),
-    redact: (text) => redact(text, secrets.values()),
-    projectShell: (project, handle, signal, env) =>
-      project.isolation === "container"
-        ? {
-            tool: containers.bashTool(project, handle, signal, env),
-            note: containerNote(sandbox.store.get().container),
-          }
-        : null,
+    redact: (text) => redact(text, [...secrets.values(), ...appSecrets.values()]),
     chatSummary: (chatId, topicId) => summaries.get(chatId, topicId),
     afterRun: (chat, topicId) => summaries.schedule(chat.id, topicId),
     appRun: (project, run) => appService.afterRun(project, run),
@@ -341,9 +319,9 @@ export async function createServices(deps: {
     memory,
     summaries,
     sandbox,
-    containers,
     secrets,
-    integrations,
+    appSecrets,
+    agentSetup,
     appearance,
     mcp,
     extensions,

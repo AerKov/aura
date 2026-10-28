@@ -4,8 +4,8 @@ import type { AgentTool } from "../../providers/types";
 import { createTestApp } from "../../testing";
 import { ORCHESTRATOR_DEFAULT } from "../agents/defaults";
 import { MemoryAgentDirectory } from "../agents/directory";
+import { secretRef } from "../agents/env";
 import type { AgentProfile } from "../agents/profiles";
-import { secretRef } from "../integrations/env";
 import { HELP_PAGES } from "./pages";
 import { helpTools } from "./tools";
 
@@ -38,15 +38,15 @@ describe("the orchestrator knows Aura", () => {
   });
 
   test("the user guide is embedded and searchable", async () => {
-    expect(HELP_PAGES.map((p) => p.id)).toContain("integrations");
+    expect(HELP_PAGES.map((p) => p.id)).toContain("agents");
     for (const page of HELP_PAGES) expect(page.text.length).toBeGreaterThan(200);
     const [docs] = helpTools();
-    expect(await run(docs, {})).toContain("- integrations: MCP servers, secrets");
-    const integrations = await run(docs, { topic: "integrations" });
-    expect(integrations).toContain("## Secrets");
+    expect(await run(docs, {})).toContain("- agents: Each agent's card, tool servers");
+    const agents = await run(docs, { topic: "agents" });
+    expect(agents).toContain("## Secrets");
     // Wiki links become topic hints.
-    expect(integrations).toContain('(topic "approvals-and-safety")');
-    expect(await run(docs, { search: "proxy settings" })).toContain("[integrations]");
+    expect(agents).toContain('(topic "approvals-and-safety")');
+    expect(await run(docs, { search: "claude mcp list" })).toContain("[agents]");
     expect(await run(docs, { topic: "nope" })).toContain("No topic");
   });
 
@@ -62,7 +62,7 @@ describe("the orchestrator knows Aura", () => {
     for (const name of [
       "aura_docs",
       "inspect_setup",
-      "test_integration",
+      "test_mcp_server",
       "propose_agent_change",
       "add_agent_to_project",
       "propose_mcp_server",

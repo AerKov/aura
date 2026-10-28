@@ -7,13 +7,13 @@ import type { AgentTool } from "../../providers/types";
 import type { ApprovalService } from "../approvals/service";
 import { type ChatRepo, SYSTEM_CHAT_ID } from "../chat/repo";
 import type { ChatService } from "../chat/service";
-import { secretRef } from "../integrations/env";
 import type { JobInput, JobService } from "../jobs/service";
 import type { MemoryOwner, MemoryService } from "../memory/service";
 import { type ProjectInput, type ProjectService, validBudget } from "../projects/service";
 import type { SkillService } from "../skills/service";
 import { TASK_STATUSES, type TaskService } from "../tasks/service";
 import type { AgentDirectory } from "./directory";
+import { secretRef } from "./env";
 import {
   type AgentProfile,
   BUILTIN_TOOLS,
@@ -72,21 +72,7 @@ const agentShape = {
     .record(z.string(), z.string())
     .optional()
     .describe(
-      `variables for the agent's commands: plain values, or ${secretRef("NAME")} for keys the user stores on the Integrations page. Never put a key's value here.`,
-    ),
-  network: z
-    .object({
-      hosts: z
-        .array(z.string())
-        .describe("hosts its commands may reach: api.example.com or *.example.com"),
-      shared: z
-        .boolean()
-        .describe("also the shared list of allowed hosts (package registries, GitHub…)"),
-      restrictWeb: z.boolean().describe("WebFetch only to these hosts too"),
-    })
-    .optional()
-    .describe(
-      "network rules; omit for the shared list. Give an agent only the hosts its work needs.",
+      `variables for the agent's commands: plain values, or ${secretRef("NAME")} for keys the user stores under Secrets on the Agents page. Never put a key's value here.`,
     ),
 };
 
@@ -103,7 +89,6 @@ function profileFrom(input: Record<string, unknown>): AgentProfile {
     budgetTokens: input.budget_tokens,
     skills: [],
     env: input.env,
-    network: input.network,
   });
 }
 
@@ -111,10 +96,7 @@ function describeAgent(p: AgentProfile, isNew: boolean): string {
   const limit = budgetText({ usd: p.budgetUsd, tokens: p.budgetTokens ?? null });
   const budget = limit === "no limit" ? "" : ` · limit ${limit}`;
   const engine = p.engine ? ` · engine: ${p.engine}${p.model ? ` / ${p.model}` : ""}` : "";
-  const net = p.network
-    ? ` · network: ${[p.network.shared ? "shared list" : "", ...p.network.hosts].filter(Boolean).join(", ") || "none"}${p.network.restrictWeb ? " (web too)" : ""}`
-    : "";
-  return `- **@${p.handle}**${isNew ? " (new)" : ""}: ${p.role} · tools: ${p.builtinTools.join(", ") || "none"}${engine}${budget}${net}`;
+  return `- **@${p.handle}**${isNew ? " (new)" : ""}: ${p.role} · tools: ${p.builtinTools.join(", ") || "none"}${engine}${budget}`;
 }
 
 /** An existing profile with the fields an agent_change request sets. */
@@ -131,7 +113,6 @@ function changedProfile(current: AgentProfile, change: Record<string, unknown>):
     budgetTokens: current.budgetTokens,
     skills: current.skills,
     env: change.env ?? current.env,
-    network: change.network ?? current.network,
   });
 }
 
@@ -347,7 +328,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
     },
     {
       name: "propose_agent_change",
-      description: `Ask the user to approve a change to an existing agent: its tools, the variables its commands get, where it may connect (network), its role or its instructions. The card shows the exact diff of its agent.md. Only the fields you pass change. Secret values never go here: use ${secretRef("NAME")} and ask the user to store the value on the Integrations page.`,
+      description: `Ask the user to approve a change to an existing agent: its tools, the variables its commands get, its role or its instructions. The card shows the exact diff of its agent.md. Only the fields you pass change. Secret values never go here: use ${secretRef("NAME")} and ask the user to store the value under Secrets on the Agents page.`,
       inputSchema: {
         agent: z.string().describe("handle without @"),
         tools: z
@@ -355,7 +336,6 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
           .optional()
           .describe("the full new list of built-in tools"),
         env: agentShape.env,
-        network: agentShape.network,
         role: z.string().optional(),
         system_prompt: z.string().optional().describe("the full new instructions"),
         why: z.string().describe("one sentence for the user"),
@@ -377,7 +357,6 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
           const changed = [
             input.tools !== undefined ? "tools" : "",
             input.env !== undefined ? "variables" : "",
-            input.network !== undefined ? "network" : "",
             input.role !== undefined ? "role" : "",
             input.system_prompt !== undefined ? "instructions" : "",
           ].filter(Boolean);
@@ -395,7 +374,6 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
               summary,
               ...(input.tools !== undefined ? { tools: input.tools } : {}),
               ...(input.env !== undefined ? { env: input.env } : {}),
-              ...(input.network !== undefined ? { network: input.network } : {}),
               ...(input.role !== undefined ? { role: input.role } : {}),
               ...(input.system_prompt !== undefined ? { system_prompt: input.system_prompt } : {}),
             },

@@ -1,6 +1,6 @@
 # 0018: A container per project (sandbox level 2)
 
-- Status: accepted
+- Status: superseded by 0030 (project containers removed)
 - Date: 2026-10-27
 - Phase: 15
 

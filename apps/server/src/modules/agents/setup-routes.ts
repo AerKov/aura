@@ -1,41 +1,43 @@
 import { Elysia, t } from "elysia";
-import { ProfileError } from "../agents/profiles";
 import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import { McpError } from "../customize/mcp";
+import { ProfileError } from "./profiles";
 import { SecretError } from "./secrets";
-import { IntegrationError, type IntegrationsService } from "./service";
-import { VariableSetError } from "./variables";
-
-export interface IntegrationsDeps {
-  sessions: LocalSessions;
-  integrations: IntegrationsService;
-}
+import { AgentSetupError, type AgentSetupService } from "./setup";
 
 const NAME = t.String({ pattern: "^[a-z][a-z0-9_-]{1,31}$" });
 const HANDLE = t.String({ pattern: "^[a-z][a-z0-9_-]{1,31}$" });
 const ENV = t.Record(t.String({ maxLength: 64 }), t.String({ maxLength: 2000 }));
 
 function userError(error: unknown): string | null {
-  return error instanceof IntegrationError ||
+  return error instanceof AgentSetupError ||
     error instanceof McpError ||
     error instanceof SecretError ||
-    error instanceof ProfileError ||
-    error instanceof VariableSetError
+    error instanceof ProfileError
     ? error.message
     : null;
 }
 
-/** Integrations and agent status (ADR 0020). Everything here is a user action. */
-export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps) =>
-  new Elysia({ name: "integrations" })
+/**
+ * The Agents page (ADR 0020, ADR 0030): each agent's status and settings, its MCP tool servers and
+ * the secrets its variables use. Everything here is a user action.
+ */
+export const agentSetupModule = ({
+  sessions,
+  setup,
+}: {
+  sessions: LocalSessions;
+  setup: AgentSetupService;
+}) =>
+  new Elysia({ name: "agent-setup" })
     .use(authGuard(sessions))
-    .get("/integrations", () => integrations.overview(), { auth: true })
+    .get("/agents/setup", () => setup.overview(), { auth: true })
     .put(
-      "/integrations/mcp/:name",
+      "/agents/setup/mcp/:name",
       async ({ params, body, status }) => {
         try {
-          return { result: await integrations.saveServer(params.name, body) };
+          return { result: await setup.saveServer(params.name, body) };
         } catch (error) {
           const message = userError(error);
           if (message !== null) return status(400, { error: message });
@@ -57,42 +59,10 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
       },
     )
     .delete(
-      "/integrations/mcp/:name",
+      "/agents/setup/mcp/:name",
       async ({ params, status }) => {
         try {
-          await integrations.removeServer(params.name);
-          return { ok: true };
-        } catch (error) {
-          const message = userError(error);
-          if (message !== null) return status(400, { error: message });
-          throw error;
-        }
-      },
-      { auth: true, params: t.Object({ name: NAME }) },
-    )
-    .put(
-      "/integrations/variables/:name",
-      async ({ params, body, status }) => {
-        try {
-          await integrations.saveVariables(params.name, body);
-          return { ok: true };
-        } catch (error) {
-          const message = userError(error);
-          if (message !== null) return status(400, { error: message });
-          throw error;
-        }
-      },
-      {
-        auth: true,
-        params: t.Object({ name: NAME }),
-        body: t.Object({ env: ENV, agents: t.Array(HANDLE, { maxItems: 50 }) }),
-      },
-    )
-    .delete(
-      "/integrations/variables/:name",
-      async ({ params, status }) => {
-        try {
-          await integrations.removeVariables(params.name);
+          await setup.removeServer(params.name);
           return { ok: true };
         } catch (error) {
           const message = userError(error);
@@ -103,10 +73,10 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
       { auth: true, params: t.Object({ name: NAME }) },
     )
     .post(
-      "/integrations/mcp/:name/test",
+      "/agents/setup/mcp/:name/test",
       async ({ params, status }) => {
         try {
-          return await integrations.testServer(params.name);
+          return await setup.testServer(params.name);
         } catch (error) {
           const message = userError(error);
           if (message !== null) return status(400, { error: message });
@@ -119,11 +89,11 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
       },
     )
     .put(
-      "/integrations/secrets/:name",
+      "/agents/setup/secrets/:name",
       ({ params, body, status }) => {
         try {
-          integrations.setSecret(params.name, body.value);
-          return { names: integrations.secretNames() };
+          setup.setSecret(params.name, body.value);
+          return { names: setup.secretNames() };
         } catch (error) {
           const message = userError(error);
           if (message !== null) return status(400, { error: message });
@@ -136,24 +106,11 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
         body: t.Object({ value: t.Nullable(t.String({ maxLength: 8000 })) }),
       },
     )
-    .post(
-      "/integrations/check-host",
-      async ({ body, status }) => {
-        try {
-          return await integrations.checkHost(body.url);
-        } catch (error) {
-          const message = userError(error);
-          if (message !== null) return status(400, { error: message });
-          throw error;
-        }
-      },
-      { auth: true, body: t.Object({ url: t.String({ maxLength: 500 }) }) },
-    )
     .get(
       "/agents/:handle/status",
       async ({ params, status }) => {
         try {
-          return await integrations.agentStatus(params.handle);
+          return await setup.agentStatus(params.handle);
         } catch (error) {
           const message = userError(error);
           if (message !== null) return status(404, { error: message });
@@ -166,7 +123,7 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
       "/agents/:handle/settings",
       async ({ params, body, status }) => {
         try {
-          return await integrations.updateAgent(params.handle, body);
+          return await setup.updateAgent(params.handle, body);
         } catch (error) {
           const message = userError(error);
           if (message !== null) return status(400, { error: message });
@@ -179,13 +136,6 @@ export const integrationsModule = ({ sessions, integrations }: IntegrationsDeps)
         body: t.Object({
           tools: t.Optional(t.Array(t.String({ maxLength: 20 }), { maxItems: 20 })),
           env: t.Optional(ENV),
-          network: t.Optional(
-            t.Object({
-              hosts: t.Array(t.String({ maxLength: 253 }), { maxItems: 100 }),
-              shared: t.Boolean(),
-              restrictWeb: t.Boolean(),
-            }),
-          ),
           budget: t.Optional(
             t.Object({ usd: t.Nullable(t.Number()), tokens: t.Nullable(t.Integer()) }),
           ),

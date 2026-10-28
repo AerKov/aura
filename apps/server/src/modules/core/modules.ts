@@ -21,7 +21,7 @@ const FILE = "modules.json";
  */
 const ROUTES: [RegExp, ModuleId][] = [
   [
-    /^\/(chats|messages|agents|engines|provider|projects|tasks|runs|containers|sandbox|mcp\/runs)(\/|$)/,
+    /^\/(chats|messages|agents|engines|provider|projects|tasks|runs|sandbox|mcp\/runs)(\/|$)/,
     "chats",
   ],
   // An app posting to or asking in chats.
@@ -32,7 +32,6 @@ const ROUTES: [RegExp, ModuleId][] = [
   [/^\/memory(\/|$)/, "memory"],
   [/^\/jobs(\/|$)/, "jobs"],
   [/^\/hooks(\/|$)/, "alerts"],
-  [/^\/integrations(\/|$)/, "integrations"],
 ];
 
 /** Agent tools that belong to a module; agents lose them while it is off. */
@@ -43,8 +42,6 @@ const TOOLS: Record<string, ModuleId> = {
   forget: "memory",
   list_jobs: "jobs",
   schedule_job: "jobs",
-  inspect_setup: "integrations",
-  test_integration: "integrations",
 };
 
 export function moduleOfRoute(path: string): ModuleId | null {

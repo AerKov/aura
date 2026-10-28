@@ -5,6 +5,16 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-10-28: Local only
+
+- **Integrations is gone.** Tool servers (MCP) and agents' secrets are on the **Agents** page now,
+  under each agent's card. Variable sets and the host check are removed (WISH-4).
+- **No project containers and no host lists** (WISH-6): agents' commands run in the sandbox with no
+  network; agents use the web through their engine's own web tools. Old network settings in agent
+  files are ignored.
+- **Each app has its own secrets**: the key button on its tile. Only that app can use them, in its
+  requests to its approved hosts; keys it was given before are copied over once. Apps keep `net`.
+
 ## [0.31.1] - 2026-10-28: Feedback fixes
 
 - Your own bar on the top edge no longer covers the tiles' buttons, and its CSS can no longer make

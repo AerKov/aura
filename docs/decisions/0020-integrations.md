@@ -1,6 +1,6 @@
 # 0020: Integrations, secrets, agent variables and status
 
-- Status: accepted
+- Status: partly superseded by 0030 (the page is now part of Agents; variable sets and the host check removed)
 - Date: 2026-10-27
 - Phase: 17
 

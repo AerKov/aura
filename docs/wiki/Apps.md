@@ -49,6 +49,14 @@ app's tile shows where and how much:
 Switching moves the data. **Export** saves everything as one JSON file; **Delete data** clears it.
 Restoring an older version of the app does not touch its data.
 
+## Its secrets
+
+An app that talks to a service (a weather API, your tracker) gets its key from **its own
+secrets**: the key button on its tile lists the names its manifest uses; type a value and save.
+Only that app can use it, and only in its requests to the hosts you approved for it: the app's code
+never sees the value, other apps and agents cannot read it, and Aura never shows it again. Agents'
+secrets are separate (see [Agents](Agents)).
+
 ## Use it from the chat
 
 An app can offer **actions**: _find clients_, _add a client_, _mark a deal won_. In the app's chat,

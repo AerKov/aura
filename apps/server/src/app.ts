@@ -3,6 +3,8 @@ import { Elysia } from "elysia";
 import { agentsModule } from "./modules/agents";
 import type { AgentDirectory } from "./modules/agents/directory";
 import type { AgentRuntime } from "./modules/agents/runtime";
+import type { AgentSetupService } from "./modules/agents/setup";
+import { agentSetupModule } from "./modules/agents/setup-routes";
 import { opsModule } from "./modules/alerts";
 import type { AlertService } from "./modules/alerts/service";
 import { controlModule } from "./modules/approvals";
@@ -10,6 +12,7 @@ import type { ApprovalService } from "./modules/approvals/service";
 import { appsModule } from "./modules/apps";
 import type { AppActions } from "./modules/apps/actions";
 import type { AppDataService } from "./modules/apps/data";
+import type { AppSecrets } from "./modules/apps/secrets";
 import type { AppService } from "./modules/apps/service";
 import { authModule } from "./modules/auth";
 import type { LocalSessions, SessionUser } from "./modules/auth/sessions";
@@ -18,8 +21,6 @@ import type { CatalogService } from "./modules/catalog/service";
 import { chatModule } from "./modules/chat";
 import type { ChatRepo } from "./modules/chat/repo";
 import type { ChatService } from "./modules/chat/service";
-import { containersModule } from "./modules/containers";
-import type { ContainerService } from "./modules/containers/service";
 import { modulesModule } from "./modules/core";
 import type { ModuleService } from "./modules/core/modules";
 import { customizeModule } from "./modules/customize";
@@ -34,8 +35,6 @@ import { enginesModule } from "./modules/engines";
 import type { EngineRegistry } from "./modules/engines/registry";
 import type { ToolBridge } from "./modules/engines/tool-bridge";
 import { type HealthDeps, healthModule } from "./modules/health";
-import { integrationsModule } from "./modules/integrations";
-import type { IntegrationsService } from "./modules/integrations/service";
 import type { JobService } from "./modules/jobs/service";
 import { memoryModule } from "./modules/memory";
 import type { MemoryService } from "./modules/memory/service";
@@ -64,8 +63,8 @@ export interface AppDeps extends HealthDeps {
   memory: MemoryService;
   catalog: CatalogService;
   summaries: ChatSummaryService;
-  containers: ContainerService;
-  integrations: IntegrationsService;
+  agentSetup: AgentSetupService;
+  appSecrets: AppSecrets;
   sandbox: SandboxService;
   dataDir: string;
   runtime: AgentRuntime;
@@ -110,8 +109,7 @@ export function createApp(deps: AppDeps) {
     .use(sandboxModule(deps))
     .use(catalogModule(deps))
     .use(summariesModule(deps))
-    .use(containersModule(deps))
-    .use(integrationsModule(deps))
+    .use(agentSetupModule({ sessions: deps.sessions, setup: deps.agentSetup }))
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(opsModule(deps))

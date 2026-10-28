@@ -43,8 +43,7 @@ files in a git repository you own.
 - **Talk like in a messenger.** Type `@` to pick an agent, reply to a message to answer its author,
   or just write: the orchestrator passes it to the right agent.
 - **Sandboxed shell.** Agents' commands write only in the project, cannot read your credentials, and
-  reach only the hosts you allow. With Docker or Podman, a project can run them in its own
-  container that sees nothing but the project folder.
+  have no network.
 - **Safe by default.** Agents stay inside their project folder, wake each other only by mention, stop at
   their budget and treat web pages, alerts and files as data, never as instructions.
 - **Alerts and schedules.** Monitoring webhooks wake the orchestrator for triage; recurring jobs run

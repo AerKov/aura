@@ -27,7 +27,6 @@ const MODULE_APP: Record<ModuleId, AppRef> = {
   memory: "page:memory",
   jobs: "page:jobs",
   alerts: "messenger",
-  integrations: "page:integrations",
 };
 
 /** The core's own apps: always there. */

@@ -4,25 +4,17 @@ import { errorMessage } from "../../lib/log";
 import { type McpProbe, probeMcpServer } from "../../providers/mcp-client";
 import { NATIVE_BUILTINS } from "../../providers/native-tools";
 import type { ProviderStatus } from "../../providers/types";
-import type { AgentDirectory } from "../agents/directory";
-import {
-  type AgentNetwork,
-  BUILTIN_TOOLS,
-  type BuiltinTool,
-  DEFAULT_NETWORK,
-  validateProfile,
-} from "../agents/profiles";
-import type { RunRepo } from "../agents/runs";
 import type { ChatRepo } from "../chat/repo";
 import type { McpService } from "../customize/mcp";
 import { type EngineSelector, engineKind, engineLabel } from "../engines/registry";
-import type { SandboxService } from "../sandbox/service";
-import { looksSecret, redact, resolveTemplates } from "./env";
+import type { AgentDirectory } from "./directory";
+import { redact, resolveTemplates } from "./env";
+import { BUILTIN_TOOLS, type BuiltinTool, validateProfile } from "./profiles";
+import type { RunRepo } from "./runs";
 import type { SecretStore } from "./secrets";
-import type { VariableSets } from "./variables";
 
-export class IntegrationError extends Error {
-  override name = "IntegrationError";
+export class AgentSetupError extends Error {
+  override name = "AgentSetupError";
 }
 
 export interface EnvEntry {
@@ -44,47 +36,25 @@ export interface AgentStatus {
   unsupported: string[];
   /** The agent's own variables. */
   env: EnvEntry[];
-  /** Variables from shared sets on the Integrations page; the agent's own win on a clash. */
+  /** Variables shared by its command tool servers; the agent's own win on a clash. */
   sharedEnv: (EnvEntry & { from: string })[];
   mcpServers: { name: string; target: string }[];
   chats: { id: string; title: string }[];
   lastRun: { status: string; error: string | null; at: string } | null;
   /** Its limits (null = none) and what it used; dollars are API-price estimates (ADR 0023). */
   budget: { usd: number | null; tokens: number | null; spentUsd: number; spentTokens: number };
-  /** Where its commands and WebFetch may connect (ADR 0022). */
-  network: AgentNetwork & {
-    /** Hosts its commands reach in the end: the shared list (unless off) and its own. */
-    effective: string[];
-    /** Where the rules do not apply, in plain words. */
-    notes: string[];
-  };
   /** Things that stop the agent from working as configured, in plain words. */
   warnings: string[];
 }
 
-export interface HostCheck {
-  url: string;
-  host: string;
-  ok: boolean;
-  status: number | null;
-  ms: number;
-  error: string | null;
-  /** Whether agents' sandboxed commands may reach this host: the shared list, and which agents. */
-  sandbox: { active: boolean; allowed: boolean; agents: string[] };
-}
-
-/** Whether `host` matches an allowlist entry (`example.com` or `*.example.com`). */
-import { hostAllowed } from "../../providers/hosts";
-
-export { hostAllowed };
-
 const REF = /^\$\{(env|secret):([A-Z_][A-Z0-9_]*)\}$/;
 
 /**
- * Integrations and diagnostics (ADR 0020): MCP servers and secrets managed by the user, a
- * connection test, a host check and each agent's status, so nothing fails without a reason.
+ * Everything about agents for the Agents page (ADR 0020, ADR 0030): each agent's status and
+ * settings, the MCP tool servers they use, and the secrets their variables refer to, so nothing
+ * fails without a reason.
  */
-export class IntegrationsService {
+export class AgentSetupService {
   constructor(
     private readonly deps: {
       dataDir: string;
@@ -95,8 +65,6 @@ export class IntegrationsService {
       engineStatus?: (engine: EngineId) => Promise<ProviderStatus>;
       runs: RunRepo;
       repo: ChatRepo;
-      sandbox: SandboxService;
-      variables: VariableSets;
       env?: Record<string, string | undefined>;
     },
   ) {}
@@ -128,27 +96,15 @@ export class IntegrationsService {
     }));
   }
 
-  /**
-   * Variables an agent's commands get besides its own: from command servers that share theirs,
-   * then from variable sets (later wins).
-   */
+  /** Variables an agent's commands get besides its own: from command servers that share theirs. */
   sharedEnvFor(handle: string): { env: Record<string, string>; from: Record<string, string> } {
-    const servers = this.deps.mcp.sharedEnvFor(handle);
-    const sets = this.deps.variables.forAgent(handle);
-    return {
-      env: { ...servers.env, ...sets.env },
-      from: { ...servers.from, ...sets.from },
-    };
+    return this.deps.mcp.sharedEnvFor(handle);
   }
 
+  /** The tool servers and the secrets' names (never values), for the Agents page. */
   overview() {
     const servers = this.deps.mcp.servers();
     return {
-      variableSets: Object.entries(this.deps.variables.list()).map(([name, set]) => ({
-        name,
-        env: this.envEntries(set.env),
-        agents: set.agents,
-      })),
       servers: Object.entries(servers).map(([name, s]) => ({
         name,
         kind: s.url ? ("http" as const) : ("stdio" as const),
@@ -188,14 +144,6 @@ export class IntegrationsService {
     return this.deps.mcp.save(name, config, "owner");
   }
 
-  saveVariables(name: string, input: { env: Record<string, string>; agents: string[] }) {
-    return this.deps.variables.save(name, input, "owner");
-  }
-
-  removeVariables(name: string): Promise<void> {
-    return this.deps.variables.remove(name, "owner");
-  }
-
   removeServer(name: string): Promise<void> {
     return this.deps.mcp.remove(name, "owner");
   }
@@ -203,7 +151,7 @@ export class IntegrationsService {
   /** Starts the server once, as an agent's run would, and reports its tools or what failed. */
   async testServer(name: string): Promise<McpProbe & { missing: string[]; unpassed: string[] }> {
     const found = this.deps.mcp.specOf(name);
-    if (!found) throw new IntegrationError(`No MCP server "${name}"`);
+    if (!found) throw new AgentSetupError(`No MCP server "${name}"`);
     const probe = await probeMcpServer(found.spec);
     const secrets = this.deps.secrets.values();
     // Stored secrets the server talks about (in its log or error) but was not given: the usual
@@ -239,70 +187,10 @@ export class IntegrationsService {
     this.deps.secrets.set(name, value);
   }
 
-  /** Can this computer reach `url`, and may agents' sandboxed commands? (alpha feedback B9) */
-  async checkHost(raw: string): Promise<HostCheck> {
-    let url: URL;
-    try {
-      url = new URL(raw.trim());
-    } catch {
-      throw new IntegrationError(`"${raw}" is not a URL like https://service.example.com`);
-    }
-    if (url.protocol !== "http:" && url.protocol !== "https:")
-      throw new IntegrationError("Only http(s) addresses can be checked");
-    const status = this.deps.sandbox.status();
-    const agents: string[] = [];
-    for (const profile of await this.deps.agents.list())
-      if (hostAllowed(url.hostname, this.deps.sandbox.hostsFor(profile.network)))
-        agents.push(profile.handle);
-    const sandbox = {
-      active: status.active,
-      allowed: hostAllowed(url.hostname, status.allowedDomains),
-      agents,
-    };
-    const started = Date.now();
-    try {
-      const res = await fetch(url, {
-        method: "GET",
-        redirect: "manual",
-        signal: AbortSignal.timeout(8000),
-      });
-      await res.body?.cancel().catch(() => {});
-      return {
-        url: url.href,
-        host: url.hostname,
-        ok: true,
-        status: res.status,
-        ms: Date.now() - started,
-        error: null,
-        sandbox,
-      };
-    } catch (error) {
-      const text = errorMessage(error);
-      const explained = /ENOTFOUND|getaddrinfo|resolve/i.test(text)
-        ? "The host name was not found. Check the address, or connect to the VPN it needs."
-        : /ECONNREFUSED|refused/i.test(text)
-          ? "The host answered, but nothing listens on that port."
-          : /timed? ?out|abort/i.test(text)
-            ? "No answer in 8 seconds. A firewall or VPN may be in the way."
-            : /certificate|SSL|TLS/i.test(text)
-              ? "The secure connection failed (certificate problem)."
-              : text.slice(0, 300);
-      return {
-        url: url.href,
-        host: url.hostname,
-        ok: false,
-        status: null,
-        ms: Date.now() - started,
-        error: explained,
-        sandbox,
-      };
-    }
-  }
-
   async agentStatus(handle: string): Promise<AgentStatus> {
     const profile = await this.deps.agents.get(handle);
     if (!profile)
-      throw new IntegrationError(
+      throw new AgentSetupError(
         `@${handle} has no valid profile. Check agents/${handle}/agent.md for errors.`,
       );
     const { engine, model } = this.deps.engines.pick(profile);
@@ -352,35 +240,9 @@ export class IntegrationsService {
         "On Ollama, tools work only with models that support tool calling (qwen3, llama3.1…).",
       );
     for (const e of env.filter((x) => !x.set))
-      warnings.push(`${e.name} has no value: set it under Secrets on the Integrations page.`);
+      warnings.push(`${e.name} has no value: set it under Secrets below.`);
     if (env.length > 0 && !profile.builtinTools.includes("Bash"))
       warnings.push("The agent has variables but no Bash, so no command can use them.");
-    const sandbox = this.deps.sandbox.status();
-    const rules = profile.network ?? DEFAULT_NETWORK;
-    const effective = this.deps.sandbox.hostsFor(rules);
-    const notes: string[] = [];
-    if (profile.builtinTools.includes("Bash")) {
-      if (!sandbox.active)
-        notes.push("The command sandbox is off, so commands are not limited to these hosts.");
-      if (kind === "acp")
-        notes.push(
-          `${engineLabel(engine)} runs commands with its own shell, so Aura cannot limit where they connect.`,
-        );
-      notes.push("In container projects, the project's container network setting applies instead.");
-    }
-    if (profile.builtinTools.includes("Bash") && sandbox.active) {
-      for (const e of env) {
-        if (REF.test(e.value) || looksSecret(e.name)) continue;
-        let host: string | null = null;
-        try {
-          host = new URL(e.value).hostname;
-        } catch {}
-        if (host && !hostAllowed(host, effective))
-          warnings.push(
-            `${e.name} points to ${host}, which this agent's commands cannot reach. Add it to the agent's hosts below.`,
-          );
-      }
-    }
     if (chats.length === 0)
       warnings.push("The agent is not in any chat yet, so nobody can reach it.");
     if (lastRun?.status === "error" && lastRun.error)
@@ -398,7 +260,6 @@ export class IntegrationsService {
       sharedEnv,
       mcpServers: servers,
       chats,
-      network: { ...rules, effective, notes },
       budget: {
         usd: profile.budgetUsd,
         tokens: profile.budgetTokens ?? null,
@@ -423,12 +284,11 @@ export class IntegrationsService {
     patch: {
       tools?: string[];
       env?: Record<string, string>;
-      network?: AgentNetwork;
       budget?: { usd: number | null; tokens: number | null };
     },
   ): Promise<AgentStatus> {
     const profile = await this.deps.agents.get(handle);
-    if (!profile) throw new IntegrationError(`No agent @${handle}`);
+    if (!profile) throw new AgentSetupError(`No agent @${handle}`);
     const next = validateProfile({
       handle,
       name: profile.name,
@@ -441,7 +301,6 @@ export class IntegrationsService {
       budgetTokens: patch.budget ? patch.budget.tokens : profile.budgetTokens,
       skills: profile.skills,
       env: patch.env ?? profile.env,
-      network: patch.network ?? profile.network,
     });
     await this.deps.agents.update(next);
     // The card sends every field; the commit names only what changed.
@@ -450,7 +309,6 @@ export class IntegrationsService {
     const what = [
       differs(next.builtinTools, profile.builtinTools) ? "tools" : "",
       differs(next.env, profile.env) ? "environment" : "",
-      differs(next.network, profile.network) ? "network" : "",
       differs([next.budgetUsd, next.budgetTokens], [profile.budgetUsd, profile.budgetTokens])
         ? "budget"
         : "",
