@@ -3,7 +3,7 @@
  * Ids are the record keys without the table prefix.
  */
 import type { ModuleStates } from "./modules";
-import type { BarEdge, WindowStyle } from "./wm";
+import type { BarEdge, BarMode, WindowStyle } from "./wm";
 
 export type ChatKind = "direct" | "group" | "system";
 
@@ -338,6 +338,8 @@ export interface RailLayout {
   hidden: string[];
   /** The screen edge the bar sits on (ADR 0028). */
   edge: BarEdge;
+  /** Aura's own bar, the user's bar app (its code, ADR 0029), or no bar. */
+  mode: BarMode;
 }
 
 /** Rail items that cannot be hidden, so the user can always get back to the settings. */
@@ -347,6 +349,8 @@ export type ExtensionPermission =
   | "chat.read"
   | "chat.write"
   | "ui.panel"
+  /** Be Aura's bar (only the app "bar", ADR 0029). */
+  | "ui.bar"
   | "alerts.read"
   | "storage"
   | "net"

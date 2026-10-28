@@ -1,0 +1,96 @@
+body {
+  padding: 0;
+  height: 100vh;
+  overflow: hidden;
+}
+.bar {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  gap: 4px;
+  box-sizing: border-box;
+}
+.bar.vertical {
+  flex-direction: column;
+  padding: 8px 0;
+}
+.bar.horizontal {
+  flex-direction: row;
+  padding: 0 8px;
+}
+.apps {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  align-items: center;
+}
+.vertical .apps {
+  flex-direction: column;
+}
+.item {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted-foreground, GrayText);
+  cursor: pointer;
+}
+.item:hover {
+  background: var(--accent, Canvas);
+  color: var(--foreground, CanvasText);
+}
+.item.active {
+  background: var(--accent, Canvas);
+  color: var(--foreground, CanvasText);
+  box-shadow: inset 0 0 0 1px var(--primary, AccentColor);
+}
+.item svg {
+  width: 20px;
+  height: 20px;
+}
+.status {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font:
+    11px ui-monospace,
+    monospace;
+  color: var(--muted-foreground, GrayText);
+}
+.vertical .status {
+  flex-direction: column;
+}
+.clock {
+  white-space: pre;
+  text-align: center;
+  line-height: 1.2;
+}
+.badge {
+  font: inherit;
+  border: 0;
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: var(--primary, AccentColor);
+  color: var(--primary-foreground, Canvas);
+  cursor: pointer;
+}
+.working {
+  color: var(--primary, AccentColor);
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #f43f5e;
+}
+.dot.open {
+  background: #34d399;
+}
+.dot.connecting {
+  background: #fbbf24;
+}

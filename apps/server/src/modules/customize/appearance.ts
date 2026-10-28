@@ -3,7 +3,9 @@ import { join } from "node:path";
 import {
   type Appearance,
   BAR_EDGES,
+  BAR_MODES,
   type BarEdge,
+  type BarMode,
   normalizeWindowStyle,
   RAIL_PINNED,
   type RailLayout,
@@ -109,6 +111,9 @@ export class AppearanceService {
         edge: BAR_EDGES.includes(row?.rail?.edge as BarEdge)
           ? (row?.rail?.edge as BarEdge)
           : "left",
+        mode: BAR_MODES.includes(row?.rail?.mode as BarMode)
+          ? (row?.rail?.mode as BarMode)
+          : "builtin",
       },
       wm: normalizeWindowStyle(row?.wm),
     };
@@ -151,8 +156,10 @@ export class AppearanceService {
         (k) => !RAIL_PINNED.includes(k),
       ),
       edge: input.rail?.edge ?? current.rail.edge,
+      mode: input.rail?.mode ?? current.rail.mode,
     };
     if (!BAR_EDGES.includes(rail.edge)) throw new AppearanceError(`"${rail.edge}" is not an edge`);
+    if (!BAR_MODES.includes(rail.mode)) throw new AppearanceError(`"${rail.mode}" is not a bar`);
     const wm = normalizeWindowStyle({ ...current.wm, ...input.wm }, current.wm);
     await this.deps.db
       .query("UPSERT $id CONTENT { theme: $theme, snippets: $snippets, rail: $rail, wm: $wm }", {

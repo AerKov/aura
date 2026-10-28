@@ -53,6 +53,21 @@ They work while the focus is outside an app's own frame (click the tile's title 
 desktop around the tiles first). In a text field Mod+arrows keep moving by word. You can also ask
 the orchestrator: _"make it look like i3 with the bar on top"_.
 
+## Your own bar
+
+**Customize → Window manager → Bar** chooses the bar:
+
+- **Built-in**: Aura's own bar.
+- **Your own (code)**: the bar becomes an app you can change completely: other widgets, another
+  look, other behaviour. It starts looking like the built-in one. Change it in its chat (**Change it
+  in its chat**) or ask the orchestrator (_"add the weather to the bar"_); @builder writes the code
+  and you approve the change as a diff. **Try the change waiting for approval** shows it before you
+  decide, and **Versions** brings back any earlier bar.
+- **Off**: no bar. Use Home (Mod+H) and the keyboard. Phones keep their tab bar.
+
+If your bar fails (an error, or it does not start), Aura shows the built-in bar instead and
+Customize says why; fix it or restore a version, then **try again**.
+
 ## An app's chat
 
 Every app you build or install has a chat, where you use it and change it with @builder (see

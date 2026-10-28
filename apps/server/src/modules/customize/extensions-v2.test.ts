@@ -280,6 +280,7 @@ describe("extension API v2 (ADR 0021)", () => {
       order: ["ext:board", "chats"],
       hidden: ["memory"],
       edge: "left",
+      mode: "builtin",
     });
     // Theme changes keep the layout.
     await api.appearance.put({ snippets: [] });

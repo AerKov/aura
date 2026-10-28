@@ -78,7 +78,7 @@ export function setAppChat(appId: string, open: boolean): void {
   setState((s) => ({ appChat: { ...s.appChat, [appId]: open } }));
 }
 
-function Versions({ appId }: { appId: string }) {
+export function Versions({ appId }: { appId: string }) {
   const [open, setOpen] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
   const box = useRef<HTMLDivElement>(null);

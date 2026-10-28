@@ -139,6 +139,10 @@ export function customizeTools(
         rail_order: z.array(z.string()).optional().describe("rail keys, top first"),
         rail_hidden: z.array(z.string()).optional().describe("rail keys to hide"),
         bar_edge: z.enum(["left", "right", "top", "bottom"]).optional(),
+        bar_mode: z
+          .enum(["builtin", "app", "off"])
+          .optional()
+          .describe("Aura's built-in bar, the user's bar app (change it with change_bar), or none"),
         preset: z.enum(["hyprland", "i3"]).optional().describe("applied before the values below"),
         gaps: z.number().int().min(0).max(24).optional(),
         radius: z.number().int().min(0).max(24).optional(),
@@ -155,8 +159,15 @@ export function customizeTools(
             rail:
               Array.isArray(input.rail_order) ||
               Array.isArray(input.rail_hidden) ||
-              typeof input.bar_edge === "string"
+              typeof input.bar_edge === "string" ||
+              typeof input.bar_mode === "string"
                 ? {
+                    mode:
+                      input.bar_mode === "builtin" ||
+                      input.bar_mode === "app" ||
+                      input.bar_mode === "off"
+                        ? input.bar_mode
+                        : undefined,
                     edge: isBarEdge(input.bar_edge) ? input.bar_edge : undefined,
                     order: Array.isArray(input.rail_order)
                       ? input.rail_order.map(String)
@@ -168,7 +179,7 @@ export function customizeTools(
                 : undefined,
           });
           return ok(
-            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.edge}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}.`,
+            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.mode} on the ${a.rail.edge}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}.`,
           );
         } catch (error) {
           return fail(error);

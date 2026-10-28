@@ -1,4 +1,4 @@
-import type { ExtensionInfo, ExtensionPermission, Message } from "@aura/shared";
+import type { ExtensionInfo, ExtensionPermission, Message, Placement } from "@aura/shared";
 import { useEffect, useRef, useState } from "react";
 import { reportError } from "@/features/chat/actions";
 import { getState, useChatStore } from "@/features/chat/store";
@@ -39,8 +39,18 @@ const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
   data: "storage",
   "actions.run": "storage",
   "apps.call": "apps.call",
+  "bar.state": "ui.bar",
+  "bar.open": "ui.bar",
+  "bar.menu": "ui.bar",
   error: null,
 };
+
+/** What the bar app sees and can do (ADR 0029); the host is the shell's bar. */
+export interface BarHost {
+  state: () => unknown;
+  open: (key: string, where: Placement) => void;
+  menu: (items: { label: string; value: string }[]) => Promise<string | null>;
+}
 
 /** The chat the extension is open next to (side panel), or nothing (a page in the rail). */
 export interface ExtensionContext {
@@ -77,14 +87,29 @@ export function ExtensionFrame({
   context = NO_CONTEXT,
   variant = "page",
   draft = false,
+  bar,
+  barState,
+  onReady,
+  onError,
 }: {
   extension: ExtensionInfo;
   context?: ExtensionContext;
-  /** "side": inside the side panel, which has its own header. */
-  variant?: "page" | "side";
+  /** "side": inside a tile, which has its own header; "bar": the shell's bar. */
+  variant?: "page" | "side" | "bar";
   /** An app's changes that wait for approval (ADR 0024). */
   draft?: boolean;
+  /** For the bar app: what it sees and can do, and its state to push on changes. */
+  bar?: BarHost;
+  barState?: unknown;
+  /** The frame asked for its state (the bar is alive). */
+  onReady?: () => void;
+  /** The frame reported an error. */
+  onError?: (message: string) => void;
 }) {
+  const barRef = useRef(bar);
+  barRef.current = bar;
+  const callbacks = useRef({ onReady, onError });
+  callbacks.current = { onReady, onError };
   const ref = useRef<HTMLIFrameElement>(null);
   const [title, setTitle] = useState(extension.name);
   const subscribed = useRef(new Set<string>());
@@ -230,8 +255,30 @@ export function ExtensionFrame({
         case "ui.setTitle":
           setTitle(String(p.title ?? extension.name).slice(0, 60));
           return reply(req.id, true);
+        case "bar.state": {
+          const host = barRef.current;
+          if (!host) return reply(req.id, null, "Not the bar");
+          callbacks.current.onReady?.();
+          return reply(req.id, host.state());
+        }
+        case "bar.open": {
+          const where = p.where === "right" || p.where === "below" ? p.where : "here";
+          barRef.current?.open(String(p.key ?? ""), where);
+          return reply(req.id, true);
+        }
+        case "bar.menu": {
+          const items = (Array.isArray(p.items) ? p.items : []).slice(0, 30).map((i: unknown) => {
+            const item = (i ?? {}) as Record<string, unknown>;
+            return {
+              label: String(item.label ?? "").slice(0, 80),
+              value: String(item.value ?? ""),
+            };
+          });
+          return reply(req.id, (await barRef.current?.menu(items)) ?? null);
+        }
         case "error":
           console.warn(`extension ${extension.id} error:`, p.message);
+          callbacks.current.onError?.(String(p.message ?? "error"));
           await call(() => ext().error.post());
           return;
       }
@@ -263,6 +310,15 @@ export function ExtensionFrame({
     window.addEventListener("aura:app-data", onData);
     return () => window.removeEventListener("aura:app-data", onData);
   }, [extension.id]);
+
+  // The bar app gets its state again whenever it changes (ADR 0029).
+  useEffect(() => {
+    if (barState === undefined) return;
+    ref.current?.contentWindow?.postMessage(
+      { aura: 1, event: "bar.state", payload: barState },
+      "*",
+    );
+  }, [barState]);
 
   // Tell the extension when the chat next to it changes.
   useEffect(() => {

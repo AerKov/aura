@@ -1,7 +1,8 @@
+/// <reference path="../../providers/vendor-files.d.ts" />
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { APP_ID_PATTERN, type Chat, slugify } from "@aura/shared";
+import { APP_ID_PATTERN, BAR_APP_ID, type Chat, slugify } from "@aura/shared";
 import { commitAll, git } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
 import type { AgentDirectory } from "../agents/directory";
@@ -12,6 +13,9 @@ import { describeManifest, validateManifest } from "../customize/extensions";
 import { EXTENSION_GUIDE } from "../customize/tools";
 import type { ProjectInfo, ProjectService } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
+import barMain from "./bar/main.js.txt" with { type: "text" };
+import barReadme from "./bar/README.md" with { type: "text" };
+import barStyles from "./bar/styles.css" with { type: "text" };
 
 export class AppError extends Error {
   override name = "AppError";
@@ -78,6 +82,24 @@ function scaffold(id: string, name: string): Record<string, string> {
 }
 `,
     "styles.css": ".hint { color: var(--muted-foreground); }\n",
+  };
+}
+
+/** The bar app's first files (ADR 0029): the same bar as the built-in one, now the user's code. */
+function barFiles(): Record<string, string> {
+  const manifest = {
+    id: BAR_APP_ID,
+    name: "Bar",
+    version: "0.1.0",
+    minAppVersion: "0.31.0",
+    permissions: ["ui.bar", "storage"],
+    author: "you",
+  };
+  return {
+    "manifest.json": `${JSON.stringify(manifest, null, 2)}\n`,
+    "main.js": barMain,
+    "styles.css": barStyles,
+    "README.md": barReadme,
   };
 }
 
@@ -149,6 +171,8 @@ export class AppService {
     description?: string;
     /** The app's code from a pack (phase 27) instead of the empty scaffold. */
     files?: Record<string, string>;
+    /** The first message of its chat, instead of the usual one. */
+    brief?: string;
   }): Promise<{ project: ProjectInfo; chat: Chat }> {
     const name = input.name.trim();
     if (!name || name.length > 60) throw new AppError("name is required (max 60 chars)");
@@ -165,9 +189,11 @@ export class AppService {
       kind: "app",
       files: { ...scaffold(id, name), ...(input.files ?? {}) },
       agents: [BUILDER_HANDLE],
-      brief: description
-        ? `@${BUILDER_HANDLE} Build this app: ${description}`
-        : `@${BUILDER_HANDLE} This is the chat of the app "${name}". Wait for the user to say what it should do.`,
+      brief: input.brief
+        ? input.brief
+        : description
+          ? `@${BUILDER_HANDLE} Build this app: ${description}`
+          : `@${BUILDER_HANDLE} This is the chat of the app "${name}". Wait for the user to say what it should do.`,
       kickoff: description.length > 0,
     });
     await this.load();
@@ -176,6 +202,22 @@ export class AppService {
     // The user created it (or approved the pack): it runs with what its manifest asks for.
     await this.deps.extensions().regrant(id);
     return { project, chat };
+  }
+
+  /**
+   * The bar app (ADR 0029), created with the built-in bar's look the first time the user (or the
+   * orchestrator) wants a bar of their own. Returns its chat.
+   */
+  async ensureBar(): Promise<{ id: string; chatId: string; created: boolean }> {
+    const existing = this.source(BAR_APP_ID);
+    if (existing) return { id: existing.id, chatId: existing.chatId, created: false };
+    const { chat } = await this.create({
+      name: "Bar",
+      id: BAR_APP_ID,
+      files: barFiles(),
+      brief: `@${BUILDER_HANDLE} This is the chat of Aura's bar, the strip on the edge of the screen with the apps and the status. Its code is in this folder; README.md describes ctx.bar. Wait for the user to say how to change it.`,
+    });
+    return { id: BAR_APP_ID, chatId: chat.id, created: true };
   }
 
   private async ensureBuilder(): Promise<void> {

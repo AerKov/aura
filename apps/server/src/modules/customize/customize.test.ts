@@ -222,7 +222,7 @@ describe("customization", () => {
     const tool = provider.calls[0]?.tools.find((x) => x.name === "set_appearance");
     const res = await tool?.handler({ preset: "i3", bar_edge: "bottom", titles: "none" });
     expect(res?.text).toContain(
-      "bar: bottom; tiles: gaps 0, radius 0, border 1, titles none; mod: ctrl-alt",
+      "bar: builtin on the bottom; tiles: gaps 0, radius 0, border 1, titles none; mod: ctrl-alt",
     );
   });
 

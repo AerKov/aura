@@ -1,12 +1,21 @@
-import { type ModKey, type PageId, visibleApps } from "@aura/shared";
+import {
+  BAR_APP_ID,
+  type BarEdge,
+  type ExtensionInfo,
+  type ModKey,
+  type PageId,
+  visibleApps,
+} from "@aura/shared";
 import type { LucideIcon } from "lucide-react";
-import { Bot, MessagesSquare, ShieldCheck } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { Bot, LayoutGrid, MessagesSquare, ShieldCheck } from "lucide-react";
+import { createElement, useCallback, useEffect, useMemo, useState } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { AuraLogo } from "@/components/logo";
 import { setState, useChatStore } from "@/features/chat/store";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
 import { appAvailable, PAGES, railApp, useExtensionApps, useModules } from "./apps";
+import { BarFrame } from "./bar-frame";
 import { openAppRef, phoneAppOf } from "./layout";
 import { arrangeRail } from "./rail-layout";
 import { useIsPhone } from "./shell";
@@ -128,67 +137,143 @@ export function Rail() {
   // On phones the tab bar hides inside a conversation, where the composer needs the space.
   const hideOnPhone = current === "messenger" && pane === "main";
 
+  // Which bar on the desktop (ADR 0029): the built-in one, the user's bar app, or none. The
+  // built-in one stands in while the bar app is missing, off, failed or in safe mode.
+  const mode = rail?.mode ?? "builtin";
+  const barApp = useBarApp();
+  const failed = useChatStore((s) => s.barFailed);
+  const barVersion = `${barApp?.app?.revision ?? ""}:${mode}`;
+  // A new version of the bar (or switching to it) gets another chance.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset when the version changes
+  useEffect(() => setState(() => ({ barFailed: null })), [barVersion]);
+  const appBar = mode === "app" && barApp && !failed && !phone ? barApp : null;
+  const builtinOnDesktop = mode === "builtin" || (mode === "app" && !appBar);
+  const barState = useBarState(items, homeOpen, rail?.edge ?? "left", vertical, mod);
+
   return (
-    <nav
-      aria-label="Main"
-      className={cn(
-        "bg-rail text-rail-foreground z-20 flex shrink-0 items-center gap-1 max-md:border-t",
-        edge.bar,
-        "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:h-16 max-md:justify-around max-md:px-2 max-md:pb-[env(safe-area-inset-bottom)]",
-        hideOnPhone && "max-md:hidden",
+    <>
+      {appBar && (
+        <BarFrame
+          ext={appBar}
+          edge={rail?.edge ?? "left"}
+          state={barState}
+          open={(key, where) => openAppRef(railApp(key), where)}
+        />
       )}
-    >
-      <button
-        type="button"
-        title="Home: all your apps (Shift-click: open on the right)"
-        aria-label="Home"
-        aria-current={homeOpen ? "page" : undefined}
-        onClick={(e) => openAppRef("home", e.shiftKey && !phone ? "right" : "here")}
+      <nav
+        aria-label="Main"
         className={cn(
-          "flex size-10 shrink-0 items-center justify-center rounded-xl",
-          vertical ? "md:mb-2" : "md:mr-2",
+          "bg-rail text-rail-foreground z-20 flex shrink-0 items-center gap-1 max-md:border-t",
+          edge.bar,
+          "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:h-16 max-md:justify-around max-md:px-2 max-md:pb-[env(safe-area-inset-bottom)]",
+          hideOnPhone && "max-md:hidden",
+          !builtinOnDesktop && "md:hidden",
         )}
       >
-        <AuraLogo className="size-8" />
-      </button>
-      {items.map((item, index) => (
         <button
-          key={item.key}
           type="button"
-          title={`${item.label}${index < 9 ? ` (${modLabel(mod)}+${index + 1})` : ""}; Shift-click: open on the right`}
-          aria-label={item.label}
-          aria-current={item.active ? "page" : undefined}
-          onClick={(e) => open(item.key, e.shiftKey)}
+          title="Home: all your apps (Shift-click: open on the right)"
+          aria-label="Home"
+          aria-current={homeOpen ? "page" : undefined}
+          onClick={(e) => openAppRef("home", e.shiftKey && !phone ? "right" : "here")}
           className={cn(
-            "group relative flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-            item.active ? "bg-accent text-foreground" : "hover:bg-accent/70 hover:text-foreground",
-            item.key === "customize" && edge.end,
-            DESKTOP_ONLY.has(item.key) && "max-md:hidden",
+            "flex size-10 shrink-0 items-center justify-center rounded-xl",
+            vertical ? "md:mb-2" : "md:mr-2",
           )}
         >
-          <item.icon className="size-5" />
-          {item.key === "chats" && pendingApprovals > 0 && (
-            <span
-              className="bg-primary absolute top-1.5 right-1.5 size-2 rounded-full md:hidden"
-              title="Approvals waiting"
-            />
-          )}
-          {item.active && (
-            <span className={cn("bg-primary absolute hidden rounded-full md:block", edge.mark)} />
-          )}
-          <span
+          <AuraLogo className="size-8" />
+        </button>
+        {items.map((item, index) => (
+          <button
+            key={item.key}
+            type="button"
+            title={`${item.label}${index < 9 ? ` (${modLabel(mod)}+${index + 1})` : ""}; Shift-click: open on the right`}
+            aria-label={item.label}
+            aria-current={item.active ? "page" : undefined}
+            onClick={(e) => open(item.key, e.shiftKey)}
             className={cn(
-              "bg-foreground text-background pointer-events-none absolute z-30 hidden rounded-lg px-2 py-1 font-mono text-[11px] whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100 md:block",
-              edge.tip,
+              "group relative flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
+              item.active
+                ? "bg-accent text-foreground"
+                : "hover:bg-accent/70 hover:text-foreground",
+              item.key === "customize" && edge.end,
+              DESKTOP_ONLY.has(item.key) && "max-md:hidden",
             )}
           >
-            {item.label}
-          </span>
-        </button>
-      ))}
-      <Status vertical={vertical} />
-    </nav>
+            <item.icon className="size-5" />
+            {item.key === "chats" && pendingApprovals > 0 && (
+              <span
+                className="bg-primary absolute top-1.5 right-1.5 size-2 rounded-full md:hidden"
+                title="Approvals waiting"
+              />
+            )}
+            {item.active && (
+              <span className={cn("bg-primary absolute hidden rounded-full md:block", edge.mark)} />
+            )}
+            <span
+              className={cn(
+                "bg-foreground text-background pointer-events-none absolute z-30 hidden rounded-lg px-2 py-1 font-mono text-[11px] whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100 md:block",
+                edge.tip,
+              )}
+            >
+              {item.label}
+            </span>
+          </button>
+        ))}
+        <Status vertical={vertical} />
+      </nav>
+    </>
   );
+}
+
+/** The bar app, when it is installed, enabled and allowed to be the bar (not in safe mode). */
+function useBarApp(): ExtensionInfo | null {
+  const customize = useChatStore((s) => s.customize);
+  return useMemo(() => {
+    if (!customize || customize.safeMode.on) return null;
+    const ext = customize.extensions.find((e) => e.id === BAR_APP_ID);
+    return ext?.enabled && ext.permissions.includes("ui.bar") ? ext : null;
+  }, [customize]);
+}
+
+const svgCache = new Map<LucideIcon, string>();
+/** An icon as SVG markup, for the bar app's frame. */
+function svgOf(icon: LucideIcon): string {
+  let svg = svgCache.get(icon);
+  if (!svg) {
+    svg = renderToStaticMarkup(createElement(icon, { size: 24 }));
+    svgCache.set(icon, svg);
+  }
+  return svg;
+}
+
+/** What the bar app sees (README.md of the bar app documents it). */
+function useBarState(
+  items: RailItem[],
+  homeOpen: boolean,
+  edge: BarEdge,
+  vertical: boolean,
+  mod: ModKey,
+) {
+  const connection = useChatStore((s) => s.connection);
+  const approvals = usePendingApprovals();
+  const working = useChatStore((s) => Object.keys(s.streaming).length);
+  // The items are a new array every render; the state changes only when its content does.
+  const json = JSON.stringify({
+    edge,
+    vertical,
+    mod,
+    home: { key: "home", label: "Home", svg: svgOf(LayoutGrid), active: homeOpen },
+    items: items.map((item, i) => ({
+      key: item.key,
+      label: item.label,
+      svg: svgOf(item.icon),
+      active: item.active,
+      shortcut: i < 9 ? `${modLabel(mod)}+${i + 1}` : null,
+    })),
+    status: { approvals, working, connection },
+  });
+  return useMemo(() => JSON.parse(json) as unknown, [json]);
 }
 
 function usePendingApprovals(): number {

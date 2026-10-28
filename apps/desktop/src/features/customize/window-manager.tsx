@@ -1,5 +1,8 @@
 import {
+  BAR_APP_ID,
   BAR_EDGES,
+  BAR_MODES,
+  type BarMode,
   MOD_KEYS,
   type ModKey,
   TITLE_STYLES,
@@ -7,11 +10,104 @@ import {
   WM_PRESETS,
   type WmPreset,
 } from "@aura/shared";
+import { MessagesSquare } from "lucide-react";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { useChatStore } from "@/features/chat/store";
+import { Button } from "@/components/ui/button";
+import { openChat, reportError } from "@/features/chat/actions";
+import { setState, useChatStore } from "@/features/chat/store";
+import { Versions } from "@/features/shell/app-controls";
+import { useModules } from "@/features/shell/apps";
 import { modLabel } from "@/features/shell/rail";
+import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { setAppearance } from "./appearance";
+import { loadCustomize } from "./customize-view";
+
+const MODE_LABEL = { builtin: "Built-in", app: "Your own (code)", off: "Off" } as const;
+
+/**
+ * Which bar shows (ADR 0029). "Your own" makes the bar an app whose code is changed in its chat,
+ * with approval and versions; the built-in bar stands in when it fails.
+ */
+function BarChoice({ onError }: { onError: (message: string | null) => void }) {
+  const mode = useChatStore((s) => s.appearance?.rail.mode ?? "builtin");
+  const failed = useChatStore((s) => s.barFailed);
+  const bar = useChatStore((s) => s.customize?.extensions.find((e) => e.id === BAR_APP_ID));
+  const preview = useChatStore((s) => s.previewDraft[BAR_APP_ID] ?? false);
+  const chats = useModules().chats;
+  const choose = async (next: BarMode) => {
+    onError(null);
+    try {
+      if (next === "app") await call(() => api.bar.post());
+      await setAppearance({ rail: { mode: next } });
+      await loadCustomize();
+    } catch (error) {
+      onError(error instanceof Error ? error.message : String(error));
+    }
+  };
+  return (
+    <>
+      <Choice
+        label="Bar"
+        value={mode}
+        options={BAR_MODES}
+        names={(m) => MODE_LABEL[m]}
+        onChange={(m) => void choose(m)}
+      />
+      {mode === "off" && (
+        <p className="text-muted-foreground py-1 pl-31 text-xs">
+          No bar: use Home (Mod+H) and the keyboard. Phones keep their tab bar.
+        </p>
+      )}
+      {mode === "app" && bar?.app && (
+        <div className="flex flex-wrap items-center gap-2 py-1.5 pl-31 text-xs">
+          {chats && (
+            <Button size="sm" variant="outline" onClick={() => openChat(bar.app?.chatId ?? "")}>
+              <MessagesSquare /> Change it in its chat
+            </Button>
+          )}
+          {bar.app.draft && (
+            <Button
+              size="sm"
+              variant={preview ? "secondary" : "outline"}
+              onClick={() =>
+                setState((s) => ({
+                  previewDraft: { ...s.previewDraft, [BAR_APP_ID]: !preview },
+                }))
+              }
+            >
+              {preview ? "Show the live bar" : "Try the change waiting for approval"}
+            </Button>
+          )}
+          <span className="text-muted-foreground">Versions</span>
+          <Versions appId={BAR_APP_ID} />
+        </div>
+      )}
+      {mode === "app" && (failed || (bar && !bar.enabled)) && (
+        <p className="py-1 pl-31 text-xs text-amber-600 dark:text-amber-400">
+          Your bar {failed ? `failed (${failed})` : "is turned off after errors"}, so the built-in
+          bar is shown. Fix it in its chat or restore a version, then{" "}
+          <button
+            type="button"
+            className="underline"
+            onClick={() => {
+              setState(() => ({ barFailed: null }));
+              if (bar && !bar.enabled)
+                void call(() =>
+                  api.extensions({ extensionId: BAR_APP_ID }).enabled.post({ enabled: true }),
+                )
+                  .then(() => loadCustomize())
+                  .catch(reportError);
+            }}
+          >
+            try again
+          </button>
+          .
+        </p>
+      )}
+    </>
+  );
+}
 
 const TITLE_LABEL = { full: "Full", minimal: "Thin", none: "Hidden" } as const;
 const EDGE_LABEL = { left: "Left", right: "Right", top: "Top", bottom: "Bottom" } as const;
@@ -179,8 +275,9 @@ export function WindowManagerSettings({ onError }: { onError: (message: string |
         names={(t) => TITLE_LABEL[t]}
         onChange={(titles) => save({ wm: { titles } })}
       />
+      <BarChoice onError={onError} />
       <Choice
-        label="Bar"
+        label="Bar edge"
         value={appearance.rail.edge}
         options={BAR_EDGES}
         names={(e) => EDGE_LABEL[e]}

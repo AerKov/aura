@@ -2,6 +2,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  BAR_APP_ID,
   EXTENSION_ICONS,
   type ExtensionIcon,
   type ExtensionInfo,
@@ -27,6 +28,7 @@ export const PERMISSIONS: Record<ExtensionPermission, string> = {
   "chat.read": "Read chats and messages",
   "chat.write": "Post messages (as the extension)",
   "ui.panel": "Show a panel in the app",
+  "ui.bar": "Be Aura's bar: list and open apps, see the screen and the status",
   "alerts.read": "Read alerts",
   storage: "Keep its own data",
   net: "Reach the listed hosts (through Aura)",
@@ -95,6 +97,9 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
   if (typeof m.author !== "string" || !m.author.trim())
     throw new ExtensionError("author is required");
   const permissions = [...new Set(m.permissions as ExtensionPermission[])];
+  // Only the bar app may be the bar (ADR 0029).
+  if (permissions.includes("ui.bar") && m.id !== BAR_APP_ID)
+    throw new ExtensionError(`only the app "${BAR_APP_ID}" may ask for ui.bar`);
   if (m.icon !== undefined && !(EXTENSION_ICONS as readonly unknown[]).includes(m.icon))
     throw new ExtensionError(`icon must be one of ${EXTENSION_ICONS.join(", ")}`);
   const hosts = stringList(m.hosts, "hosts").map((h) => h.toLowerCase());
@@ -700,6 +705,16 @@ const BRIDGE = `(() => {
       post: (chatId, body) => call("chat.post", { chatId, body }),
     }),
     alerts: Object.freeze({ recent: () => call("alerts.recent") }),
+    // Only for the bar app (ui.bar, ADR 0029).
+    bar: Object.freeze({
+      state: () => call("bar.state"),
+      open: (key, where) => call("bar.open", { key, where: where || "here" }),
+      menu: (items) => call("bar.menu", { items: items || [] }),
+      on: (fn) => {
+        if (!listeners.has("bar.state")) listeners.set("bar.state", []);
+        listeners.get("bar.state").push(fn);
+      },
+    }),
     events: Object.freeze({
       on: (name, fn) => {
         if (!listeners.has(name)) { listeners.set(name, []); call("events.subscribe", { name }); }

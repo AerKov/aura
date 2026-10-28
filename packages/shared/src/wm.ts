@@ -8,6 +8,16 @@ import type { Layout, LayoutNode, Tile } from "./layout";
 export type BarEdge = "left" | "right" | "top" | "bottom";
 export const BAR_EDGES: readonly BarEdge[] = ["left", "right", "top", "bottom"];
 
+/**
+ * Which bar shows (ADR 0029): Aura's built-in one, the user's bar app (code they change in its
+ * chat, with approval and versions; the built-in one stands in when it fails), or none.
+ */
+export type BarMode = "builtin" | "app" | "off";
+export const BAR_MODES: readonly BarMode[] = ["builtin", "app", "off"];
+
+/** The id of the app that can be the bar. */
+export const BAR_APP_ID = "bar";
+
 /** A tile's title bar: full, a thin strip whose buttons show on hover, or none (hover overlay). */
 export type TitleStyle = "full" | "minimal" | "none";
 export const TITLE_STYLES: readonly TitleStyle[] = ["full", "minimal", "none"];

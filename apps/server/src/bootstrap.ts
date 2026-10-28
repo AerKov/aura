@@ -13,7 +13,7 @@ import { ApprovalService } from "./modules/approvals/service";
 import { AppActions } from "./modules/apps/actions";
 import { AppDataService } from "./modules/apps/data";
 import { AppService } from "./modules/apps/service";
-import { appTools } from "./modules/apps/tools";
+import { appTools, barTools } from "./modules/apps/tools";
 import { CatalogService } from "./modules/catalog/service";
 import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
@@ -270,6 +270,10 @@ export async function createServices(deps: {
                 chatId: ctx.chat.id,
                 topicId: ctx.topicId,
               }),
+              ...barTools(
+                { apps: appService, appearance, chat },
+                { handle: ctx.handle, depth: ctx.depth },
+              ),
               ...customizeTools(customize, {
                 handle: ctx.handle,
                 chatId: ctx.chat.id,

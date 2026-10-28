@@ -435,5 +435,9 @@ Tiles with gaps, corners, borders and title bars set by the user (presets Hyprla
 on any edge with status (approvals, working agents, clock, connection), keyboard shortcuts with a
 chosen Mod key, Home as a launcher in any number of tiles.
 
+**Phase 31: The bar as an app** (done, ADR 0029)
+The bar is built in, the user's own bar app (code changed in its chat with approval and
+versions, `ctx.bar`), or off; the built-in bar stands in when the bar app fails.
+
 **Later**
 Pack signatures and a reviewed community index, multi-user.

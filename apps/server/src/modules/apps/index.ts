@@ -39,6 +39,11 @@ export const appsModule = (deps: {
         }),
       },
     )
+    // The bar app (ADR 0029): created the first time the user wants a bar of their own.
+    .post("/bar", () => deps.apps.ensureBar(), {
+      auth: true,
+      detail: { summary: "Create the bar app if needed; returns its chat" },
+    })
     .get(
       "/apps/:appId/history",
       async ({ params, status }) => {

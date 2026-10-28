@@ -52,6 +52,8 @@ export interface ChatState {
   previewDraft: Record<string, boolean>;
   /** Apps whose chat is open as a panel inside their tile (ADR 0027). */
   appChat: Record<string, boolean>;
+  /** Why the bar app is not shown (it failed), so the built-in bar stands in (ADR 0029). */
+  barFailed: string | null;
   /** On narrow screens the messenger shows one pane: the chat list or a chat. */
   pane: "list" | "main";
   needsPairing: boolean;
@@ -78,6 +80,7 @@ let state: ChatState = {
   phoneApp: null,
   previewDraft: {},
   appChat: {},
+  barFailed: null,
   appearance: null,
   customize: null,
   pane: "list",

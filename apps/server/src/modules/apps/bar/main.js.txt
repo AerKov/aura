@@ -1,0 +1,71 @@
+// Aura's bar (ADR 0029): this code is yours. Change it in the bar's chat with @builder; every
+// change waits for your approval and every version can be restored. See README.md for ctx.bar.
+export default async function activate(ctx) {
+  const root = document.getElementById("root");
+  const bar = document.createElement("nav");
+  bar.className = "bar";
+  root.append(bar);
+
+  const button = (item, onClick) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "item" + (item.active ? " active" : "");
+    b.title = item.shortcut ? `${item.label} (${item.shortcut})` : item.label;
+    b.setAttribute("aria-label", item.label);
+    b.innerHTML = item.svg;
+    b.addEventListener("click", (event) => onClick(event.shiftKey ? "right" : "here"));
+    return b;
+  };
+
+  const clock = () => {
+    const now = new Date();
+    const two = (n) => String(n).padStart(2, "0");
+    return `${two(now.getHours())}:${two(now.getMinutes())}`;
+  };
+
+  const render = (state) => {
+    bar.className = `bar ${state.vertical ? "vertical" : "horizontal"}`;
+    bar.replaceChildren();
+    bar.append(button(state.home, (where) => ctx.bar.open("home", where)));
+    const apps = document.createElement("div");
+    apps.className = "apps";
+    for (const item of state.items) apps.append(button(item, (where) => ctx.bar.open(item.key, where)));
+    bar.append(apps);
+
+    const status = document.createElement("div");
+    status.className = "status";
+    if (state.status.approvals > 0) {
+      const a = document.createElement("button");
+      a.type = "button";
+      a.className = "badge";
+      a.title = `${state.status.approvals} waiting for your approval`;
+      a.textContent = `✓ ${state.status.approvals}`;
+      a.addEventListener("click", () => ctx.bar.open("chats"));
+      status.append(a);
+    }
+    if (state.status.working > 0) {
+      const w = document.createElement("span");
+      w.className = "working";
+      w.title = `${state.status.working} agent(s) working`;
+      w.textContent = `● ${state.status.working}`;
+      status.append(w);
+    }
+    const time = document.createElement("span");
+    time.className = "clock";
+    time.textContent = state.vertical ? clock().replace(":", "\n") : clock();
+    status.append(time);
+    const dot = document.createElement("span");
+    dot.className = `dot ${state.status.connection}`;
+    dot.title = state.status.connection;
+    status.append(dot);
+    bar.append(status);
+  };
+
+  let state = await ctx.bar.state();
+  render(state);
+  ctx.bar.on((next) => {
+    state = next;
+    render(state);
+  });
+  setInterval(() => render(state), 15000);
+}

@@ -5,6 +5,14 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-10-28: Your own bar
+
+- The bar can be **your own code**: an app you change in its chat with @builder (or by asking the
+  orchestrator), with each change approved as a diff, a draft to try and versions to go back to.
+  It starts as a copy of the built-in bar.
+- The bar can be turned **off**: Home (Mod+H) and the keyboard remain.
+- If your bar breaks, the built-in bar takes over and Customize says why.
+
 ## [0.30.0] - 2026-10-28: A tiling window manager
 
 - Tiles look like a tiling window manager: gaps, round corners, a coloured border on the focused
