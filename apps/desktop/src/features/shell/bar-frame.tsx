@@ -9,18 +9,23 @@ const START_TIMEOUT_MS = 8000;
 
 type MenuItem = { label: string; value: string };
 
-const SIZE: Record<BarEdge, string> = {
-  left: "w-14 border-r",
-  right: "w-14 border-l",
-  top: "h-12 w-full border-b",
-  bottom: "h-12 w-full border-t",
+const BORDER: Record<BarEdge, string> = {
+  left: "border-r",
+  right: "border-l",
+  top: "w-full border-b",
+  bottom: "w-full border-t",
 };
 
+/** The bar's thickness in px: the user's choice, or 56 on the sides and 48 on top or bottom. */
+export function barThickness(edge: BarEdge, size: number | null): number {
+  return size ?? (edge === "left" || edge === "right" ? 56 : 48);
+}
+
 const MENU_AT: Record<BarEdge, string> = {
-  left: "left-16 top-2",
-  right: "right-16 top-2",
-  top: "top-14 left-2",
-  bottom: "bottom-14 left-2",
+  left: "left-full top-2 ml-2",
+  right: "right-full top-2 mr-2",
+  top: "top-full left-2 mt-2",
+  bottom: "bottom-full left-2 mb-2",
 };
 
 /** The built-in bar takes over and says why (ADR 0029). */
@@ -36,11 +41,13 @@ export function failBar(reason: string): void {
 export function BarFrame({
   ext,
   edge,
+  size,
   state,
   open,
 }: {
   ext: ExtensionInfo;
   edge: BarEdge;
+  size: number | null;
   state: unknown;
   open: (key: string, where: Placement) => void;
 }) {
@@ -97,19 +104,29 @@ export function BarFrame({
   };
 
   return (
-    <div className={cn("bg-rail relative z-20 flex shrink-0 max-md:hidden", SIZE[edge])}>
-      <ExtensionFrame
-        key={revision}
-        extension={ext}
-        variant="bar"
-        draft={draft}
-        bar={host}
-        barState={state}
-        onReady={() => {
-          ready.current = true;
-        }}
-        onError={(message) => failBar(message)}
-      />
+    <div
+      className={cn("bg-rail relative z-20 flex shrink-0 max-md:hidden", BORDER[edge])}
+      style={
+        edge === "left" || edge === "right"
+          ? { width: barThickness(edge, size) }
+          : { height: barThickness(edge, size) }
+      }
+    >
+      {/* Its content can never grow over the tiles, whatever its CSS does (BUG-1, BUG-2). */}
+      <div className="flex h-full w-full overflow-hidden [contain:strict]">
+        <ExtensionFrame
+          key={revision}
+          extension={ext}
+          variant="bar"
+          draft={draft}
+          bar={host}
+          barState={state}
+          onReady={() => {
+            ready.current = true;
+          }}
+          onError={(message) => failBar(message)}
+        />
+      </div>
       {menu && (
         <>
           <button

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { reportError } from "@/features/chat/actions";
 import { getState, useChatStore } from "@/features/chat/store";
 import { api, call, SERVER_URL } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 const THEME_TOKENS = [
   "--background",
@@ -369,7 +370,13 @@ export function ExtensionFrame({
   useEffect(sendTheme, [appearance]);
 
   return (
-    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+    <section
+      className={cn(
+        "flex min-h-0 min-w-0 flex-1 flex-col",
+        // The bar's frame is exactly its strip: an iframe is 150 px high by default (BUG-1).
+        variant === "bar" && "h-full w-full overflow-hidden",
+      )}
+    >
       {variant === "page" && (
         <header className="flex items-center gap-3 border-b px-4 py-3">
           <h1 className="font-semibold">{title}</h1>
@@ -383,7 +390,7 @@ export function ExtensionFrame({
         title={title}
         sandbox="allow-scripts"
         src={`${SERVER_URL}/extensions/${extension.id}/frame${draft ? "?draft=1" : ""}`}
-        className="flex-1 border-0"
+        className={cn("flex-1 border-0", variant === "bar" && "h-full min-h-0 w-full min-w-0")}
         onLoad={sendTheme}
         onError={() => reportError(new Error(`extension ${extension.id} failed to load`))}
       />

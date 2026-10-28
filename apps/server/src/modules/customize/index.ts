@@ -82,6 +82,7 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
                 ]),
               ),
               mode: t.Optional(t.Union([t.Literal("builtin"), t.Literal("app"), t.Literal("off")])),
+              size: t.Optional(t.Nullable(t.Integer({ minimum: 24, maximum: 96 }))),
             }),
           ),
           wm: t.Optional(

@@ -340,6 +340,8 @@ export interface RailLayout {
   edge: BarEdge;
   /** Aura's own bar, the user's bar app (its code, ADR 0029), or no bar. */
   mode: BarMode;
+  /** Its thickness in px (BAR_SIZE); null: 56 on the sides, 48 on top or bottom. */
+  size: number | null;
 }
 
 /** Rail items that cannot be hidden, so the user can always get back to the settings. */

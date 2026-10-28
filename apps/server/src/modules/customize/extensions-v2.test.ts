@@ -281,6 +281,7 @@ describe("extension API v2 (ADR 0021)", () => {
       hidden: ["memory"],
       edge: "left",
       mode: "builtin",
+      size: null,
     });
     // Theme changes keep the layout.
     await api.appearance.put({ snippets: [] });

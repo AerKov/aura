@@ -4,6 +4,7 @@ import {
   type Appearance,
   BAR_EDGES,
   BAR_MODES,
+  BAR_SIZE,
   type BarEdge,
   type BarMode,
   normalizeWindowStyle,
@@ -114,6 +115,7 @@ export class AppearanceService {
         mode: BAR_MODES.includes(row?.rail?.mode as BarMode)
           ? (row?.rail?.mode as BarMode)
           : "builtin",
+        size: typeof row?.rail?.size === "number" ? row.rail.size : null,
       },
       wm: normalizeWindowStyle(row?.wm),
     };
@@ -157,7 +159,10 @@ export class AppearanceService {
       ),
       edge: input.rail?.edge ?? current.rail.edge,
       mode: input.rail?.mode ?? current.rail.mode,
+      size: input.rail?.size === undefined ? current.rail.size : input.rail.size,
     };
+    if (rail.size !== null)
+      rail.size = Math.min(BAR_SIZE.max, Math.max(BAR_SIZE.min, Math.round(rail.size)));
     if (!BAR_EDGES.includes(rail.edge)) throw new AppearanceError(`"${rail.edge}" is not an edge`);
     if (!BAR_MODES.includes(rail.mode)) throw new AppearanceError(`"${rail.mode}" is not a bar`);
     const wm = normalizeWindowStyle({ ...current.wm, ...input.wm }, current.wm);

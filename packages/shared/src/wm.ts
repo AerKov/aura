@@ -15,6 +15,9 @@ export const BAR_EDGES: readonly BarEdge[] = ["left", "right", "top", "bottom"];
 export type BarMode = "builtin" | "app" | "off";
 export const BAR_MODES: readonly BarMode[] = ["builtin", "app", "off"];
 
+/** The bar's thickness in px, when the user sets it; Aura's own bar needs at least 44. */
+export const BAR_SIZE = { min: 24, max: 96, builtinMin: 44 } as const;
+
 /** The id of the app that can be the bar. */
 export const BAR_APP_ID = "bar";
 

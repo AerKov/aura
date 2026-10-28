@@ -139,6 +139,14 @@ export function customizeTools(
         rail_order: z.array(z.string()).optional().describe("rail keys, top first"),
         rail_hidden: z.array(z.string()).optional().describe("rail keys to hide"),
         bar_edge: z.enum(["left", "right", "top", "bottom"]).optional(),
+        bar_size: z
+          .number()
+          .int()
+          .min(24)
+          .max(96)
+          .nullable()
+          .optional()
+          .describe("the bar's thickness in px; null for the default (56 on the sides, 48 on top)"),
         bar_mode: z
           .enum(["builtin", "app", "off"])
           .optional()
@@ -160,8 +168,15 @@ export function customizeTools(
               Array.isArray(input.rail_order) ||
               Array.isArray(input.rail_hidden) ||
               typeof input.bar_edge === "string" ||
-              typeof input.bar_mode === "string"
+              typeof input.bar_mode === "string" ||
+              input.bar_size !== undefined
                 ? {
+                    size:
+                      input.bar_size === null
+                        ? null
+                        : typeof input.bar_size === "number"
+                          ? input.bar_size
+                          : undefined,
                     mode:
                       input.bar_mode === "builtin" ||
                       input.bar_mode === "app" ||
@@ -179,7 +194,7 @@ export function customizeTools(
                 : undefined,
           });
           return ok(
-            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.mode} on the ${a.rail.edge}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}.`,
+            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.mode} on the ${a.rail.edge}${a.rail.size ? `, ${a.rail.size}px` : ""}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}.`,
           );
         } catch (error) {
           return fail(error);

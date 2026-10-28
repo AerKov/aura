@@ -2,6 +2,7 @@ import {
   BAR_APP_ID,
   BAR_EDGES,
   BAR_MODES,
+  BAR_SIZE,
   type BarMode,
   MOD_KEYS,
   type ModKey,
@@ -106,6 +107,53 @@ function BarChoice({ onError }: { onError: (message: string | null) => void }) {
         </p>
       )}
     </>
+  );
+}
+
+/** The bar's thickness (WISH-1): the default, or a number of px. */
+function BarSize() {
+  const rail = useChatStore((s) => s.appearance?.rail);
+  const [local, setLocal] = useState<number | null>(rail?.size ?? null);
+  useEffect(() => setLocal(rail?.size ?? null), [rail?.size]);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  if (!rail) return null;
+  const fallback = rail.edge === "left" || rail.edge === "right" ? 56 : 48;
+  const save = (size: number | null) => {
+    setLocal(size);
+    clearTimeout(timer.current);
+    timer.current = setTimeout(
+      () => void setAppearance({ rail: { size } }).catch(reportError),
+      300,
+    );
+  };
+  return (
+    <Row label="Bar thickness">
+      <input
+        type="range"
+        min={BAR_SIZE.min}
+        max={BAR_SIZE.max}
+        value={local ?? fallback}
+        aria-label="Bar thickness"
+        onChange={(e) => save(Number(e.target.value))}
+        className="accent-primary w-48"
+      />
+      <span className="w-10 font-mono text-xs tabular-nums">{local ?? fallback}px</span>
+      {local !== null && (
+        <button
+          type="button"
+          className="text-muted-foreground text-xs underline"
+          onClick={() => save(null)}
+        >
+          Default
+        </button>
+      )}
+      {local !== null && local < BAR_SIZE.builtinMin && rail.mode !== "app" && (
+        <span className="text-muted-foreground text-xs">
+          The built-in bar needs {BAR_SIZE.builtinMin}px; thinner sizes are for your own bar.
+        </span>
+      )}
+    </Row>
   );
 }
 
@@ -283,6 +331,7 @@ export function WindowManagerSettings({ onError }: { onError: (message: string |
         names={(e) => EDGE_LABEL[e]}
         onChange={(edge) => save({ edge })}
       />
+      <BarSize />
       <Choice
         label="Mod key"
         value={wm.mod}

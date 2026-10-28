@@ -5,7 +5,7 @@ import {
   type Topic,
   tileOf,
 } from "@aura/shared";
-import { Box, ChevronLeft, ListTodo, Monitor, PanelRight, ScrollText } from "lucide-react";
+import { Box, ChevronLeft, Monitor, PanelRight, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,6 @@ import { chatSubtitle } from "./participants";
 import { SetupPanel } from "./setup-panel";
 import { getState, useChatStore } from "./store";
 import { loadSummary, SummaryPanel } from "./summary-panel";
-import { TasksPanel } from "./tasks-panel";
 import { TopicBar } from "./topic-bar";
 import { WebhookInfo } from "./webhook-info";
 
@@ -66,15 +65,14 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
   const streaming = useChatStore((s) => s.streaming);
   const members = useChatStore((s) => s.members[chatId]);
   const project = useChatStore((s) => (chat?.projectId ? s.projects[chat.projectId] : undefined));
-  const taskCount = useChatStore((s) =>
-    chat?.projectId ? (s.tasks[chat.projectId]?.length ?? 0) : 0,
-  );
   const [replyTo, setReplyTo] = useState<Message | null>(null);
-  const [panel, setPanel] = useState<"tasks" | "summary" | "isolation" | null>(null);
+  const [panel, setPanel] = useState<"summary" | "isolation" | null>(null);
   const [summary, setSummary] = useState<ChatSummary | null>(null);
   const apps = useExtensionApps();
-  // The app next to this chat: the project's own, else the first installed one.
-  const appId = project?.app ?? apps[0]?.id ?? null;
+  // The chat's app: the app itself (an app's chat) or the one pinned to its project. Never another
+  // chat's or the first installed one (BUG-3).
+  const ownApp = project?.kind === "app" ? project.id : (project?.app ?? null);
+  const appId = ownApp && apps.some((a) => a.id === ownApp) ? ownApp : null;
   const appOpen = useChatStore((s) => (appId ? !!tileOf(s.layout, `ext:${appId}`) : false));
 
   // Nothing opens by itself next to a chat (ADR 0027): the user opens the app when they want it.
@@ -202,16 +200,6 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
                 </span>
               </Button>
             )}
-            {project && (
-              <Button
-                variant={panel === "tasks" ? "secondary" : "ghost"}
-                size="sm"
-                onClick={() => setPanel(panel === "tasks" ? null : "tasks")}
-              >
-                <ListTodo /> <span className="max-sm:hidden">Tasks</span>
-                {taskCount ? ` ${taskCount}` : ""}
-              </Button>
-            )}
             {appId && !inApp && (
               <Button
                 variant={appOpen ? "secondary" : "ghost"}
@@ -271,9 +259,6 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
           placeholder={chat.kind === "direct" ? "What do you have in mind?" : undefined}
         />
       </section>
-      {panel === "tasks" && chat.projectId && (
-        <TasksPanel projectId={chat.projectId} onClose={() => setPanel(null)} />
-      )}
       {panel === "isolation" && project && (
         <IsolationPanel project={project} onClose={() => setPanel(null)} />
       )}

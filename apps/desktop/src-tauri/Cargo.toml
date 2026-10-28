@@ -1,6 +1,6 @@
 [package]
 name = "aura-desktop"
-version = "0.31.0"
+version = "0.31.1"
 description = "Aura desktop shell"
 edition = "2021"
 license = "MIT"

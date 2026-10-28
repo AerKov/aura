@@ -215,6 +215,9 @@ describe("customization", () => {
     expect(set.data?.rail.edge).toBe("top");
     expect(set.data?.wm).toMatchObject({ gaps: 4, radius: 12, mod: "ctrl-alt" });
     expect((await api.appearance.put({ wm: { gaps: 99 } })).status).toBe(422);
+    expect((await api.appearance.put({ rail: { size: 32 } })).data?.rail.size).toBe(32);
+    expect((await api.appearance.put({ rail: { size: 200 } })).status).toBe(422);
+    expect((await api.appearance.put({ rail: { size: null } })).data?.rail.size).toBeNull();
 
     await t.chat.post({ chatId: "direct", author: { kind: "user", id: "owner" }, body: "hi" });
     await Bun.sleep(20);

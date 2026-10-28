@@ -68,6 +68,11 @@ the orchestrator: _"make it look like i3 with the bar on top"_.
 If your bar fails (an error, or it does not start), Aura shows the built-in bar instead and
 Customize says why; fix it or restore a version, then **try again**.
 
+**Bar thickness** (Customize → Window manager) sets how thick the bar is, 24–96 px (the built-in
+bar needs at least 44). Your own bar can use the same permissions as other apps: `storage` for its
+settings, `net` with the hosts it needs (a weather widget, for example); see the README in its
+folder. Whatever its CSS does, the bar stays inside its strip.
+
 ## An app's chat
 
 Every app you build or install has a chat, where you use it and change it with @builder (see

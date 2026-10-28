@@ -1,5 +1,6 @@
 import {
   BAR_APP_ID,
+  BAR_SIZE,
   type BarEdge,
   type ExtensionInfo,
   type ModKey,
@@ -15,7 +16,7 @@ import { setState, useChatStore } from "@/features/chat/store";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
 import { appAvailable, PAGES, railApp, useExtensionApps, useModules } from "./apps";
-import { BarFrame } from "./bar-frame";
+import { BarFrame, barThickness } from "./bar-frame";
 import { openAppRef, phoneAppOf } from "./layout";
 import { arrangeRail } from "./rail-layout";
 import { useIsPhone } from "./shell";
@@ -148,7 +149,14 @@ export function Rail() {
   useEffect(() => setState(() => ({ barFailed: null })), [barVersion]);
   const appBar = mode === "app" && barApp && !failed && !phone ? barApp : null;
   const builtinOnDesktop = mode === "builtin" || (mode === "app" && !appBar);
-  const barState = useBarState(items, homeOpen, rail?.edge ?? "left", vertical, mod);
+  const barState = useBarState(
+    items,
+    homeOpen,
+    rail?.edge ?? "left",
+    barThickness(rail?.edge ?? "left", rail?.size ?? null),
+    vertical,
+    mod,
+  );
 
   return (
     <>
@@ -156,6 +164,7 @@ export function Rail() {
         <BarFrame
           ext={appBar}
           edge={rail?.edge ?? "left"}
+          size={rail?.size ?? null}
           state={barState}
           open={(key, where) => openAppRef(railApp(key), where)}
         />
@@ -169,6 +178,13 @@ export function Rail() {
           hideOnPhone && "max-md:hidden",
           !builtinOnDesktop && "md:hidden",
         )}
+        style={
+          rail?.size && !phone
+            ? vertical
+              ? { width: Math.max(rail.size, BAR_SIZE.builtinMin) }
+              : { height: Math.max(rail.size, BAR_SIZE.builtinMin) }
+            : undefined
+        }
       >
         <button
           type="button"
@@ -252,6 +268,7 @@ function useBarState(
   items: RailItem[],
   homeOpen: boolean,
   edge: BarEdge,
+  size: number,
   vertical: boolean,
   mod: ModKey,
 ) {
@@ -261,6 +278,7 @@ function useBarState(
   // The items are a new array every render; the state changes only when its content does.
   const json = JSON.stringify({
     edge,
+    size,
     vertical,
     mod,
     home: { key: "home", label: "Home", svg: svgOf(LayoutGrid), active: homeOpen },

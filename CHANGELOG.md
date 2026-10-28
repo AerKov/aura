@@ -5,6 +5,18 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.31.1] - 2026-10-28: Feedback fixes
+
+- Your own bar on the top edge no longer covers the tiles' buttons, and its CSS can no longer make
+  it taller or push the tiles down: the bar stays inside its strip (BUG-1, BUG-2).
+- **Bar thickness** in Customize → Window manager, 24–96 px; your bar gets it as `state().size`
+  (WISH-1).
+- A chat's **Apps** button shows only for an app's chat or a project with its own app; it no longer
+  opens the first installed app (BUG-3).
+- The **Tasks** button is gone from chats (WISH-5).
+- The bar's README says which permissions it may use (`net` with hosts for a weather widget…)
+  (WISH-3).
+
 ## [0.31.0] - 2026-10-28: Your own bar
 
 - The bar can be **your own code**: an app you change in its chat with @builder (or by asking the
