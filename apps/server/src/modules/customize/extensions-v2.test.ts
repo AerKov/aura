@@ -276,7 +276,11 @@ describe("extension API v2 (ADR 0021)", () => {
     const res = await api.appearance.put({
       rail: { order: ["ext:board", "chats"], hidden: ["memory", "chats", "customize"] },
     });
-    expect(res.data?.rail).toEqual({ order: ["ext:board", "chats"], hidden: ["memory"] });
+    expect(res.data?.rail).toEqual({
+      order: ["ext:board", "chats"],
+      hidden: ["memory"],
+      edge: "left",
+    });
     // Theme changes keep the layout.
     await api.appearance.put({ snippets: [] });
     expect((await api.appearance.get()).data?.rail.hidden).toEqual(["memory"]);

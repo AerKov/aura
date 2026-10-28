@@ -3,6 +3,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { treaty } from "@elysiajs/eden";
 import { decideToolUse } from "../../providers/confine";
+import { FakeProvider } from "../../providers/fake";
 import { createTestApp } from "../../testing";
 import { compareVersions, ExtensionError, validateManifest } from "./extensions";
 import { McpError, validateServer } from "./mcp";
@@ -197,6 +198,32 @@ describe("customization", () => {
     // The user leaves it: MCP servers come back without a restart.
     expect((await api.customize["safe-mode"].off.post()).data?.safeMode.on).toBe(false);
     expect(Object.keys(t.mcp.forAgent("coder"))).toEqual(["web"]);
+  });
+
+  test("the window manager: bar edge and tile style, from the page and the orchestrator", async () => {
+    const provider = new FakeProvider();
+    t = await createTestApp({ provider });
+    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
+    const initial = (await api.appearance.get()).data;
+    expect(initial?.rail.edge).toBe("left");
+    expect(initial?.wm).toEqual({ gaps: 8, radius: 12, border: 2, titles: "minimal", mod: "alt" });
+
+    const set = await api.appearance.put({
+      rail: { edge: "top" },
+      wm: { gaps: 4, mod: "ctrl-alt" },
+    });
+    expect(set.data?.rail.edge).toBe("top");
+    expect(set.data?.wm).toMatchObject({ gaps: 4, radius: 12, mod: "ctrl-alt" });
+    expect((await api.appearance.put({ wm: { gaps: 99 } })).status).toBe(422);
+
+    await t.chat.post({ chatId: "direct", author: { kind: "user", id: "owner" }, body: "hi" });
+    await Bun.sleep(20);
+    await t.runtime.whenIdle();
+    const tool = provider.calls[0]?.tools.find((x) => x.name === "set_appearance");
+    const res = await tool?.handler({ preset: "i3", bar_edge: "bottom", titles: "none" });
+    expect(res?.text).toContain(
+      "bar: bottom; tiles: gaps 0, radius 0, border 1, titles none; mod: ctrl-alt",
+    );
   });
 
   test("safe mode forced by the env flag cannot be left from the app", async () => {

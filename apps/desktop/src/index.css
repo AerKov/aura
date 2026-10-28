@@ -14,6 +14,10 @@
  */
 :root {
   --radius: 0.875rem;
+  /* The tiles (ADR 0028), set from the appearance settings; themes may override them. */
+  --wm-gap: 8px;
+  --wm-radius: 12px;
+  --wm-border: 2px;
   --background: oklch(0.985 0.003 247);
   --foreground: oklch(0.22 0.02 258);
   --card: oklch(1 0 0);

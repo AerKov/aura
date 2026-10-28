@@ -5,6 +5,17 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-10-28: A tiling window manager
+
+- Tiles look like a tiling window manager: gaps, round corners, a coloured border on the focused
+  tile, thin or hidden title bars. Presets **Hyprland** (default) and **i3**, or set each value on
+  **Customize → Window manager**.
+- The bar goes on any edge (left, right, top, bottom) and shows approvals waiting, agents at work,
+  the clock and the connection.
+- Keyboard: Mod+arrows to move between tiles, Mod+Shift+arrows to swap them, Mod+Enter for a new
+  tile, Mod+Q to close, Mod+H for Home, Mod+1…9 for the bar's apps. Mod is Alt, Ctrl+Alt or Super.
+- Home can be open in several tiles, like a launcher.
+
 ## [0.29.0] - 2026-10-28: Home and built-in apps
 
 - **Home**: Aura opens on a shelf of your apps, with **Add an app** (templates, the catalog, an

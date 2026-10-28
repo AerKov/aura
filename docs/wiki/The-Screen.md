@@ -22,12 +22,36 @@ Click the logo at the top of the rail to open Home. It shows:
 - **Side by side:** **Shift-click** an icon to open it in a new tile on the right, or use **+** in a
   tile's bar and choose **Here**, **Right** or **Below**.
 - **Close:** the **×** at the end of a tile's bar. Closing the last tile brings Home back.
+- **Home is a launcher:** it can be open in several tiles; opening an app from one replaces it.
 - **Resize:** drag the line between two tiles (or focus it and use the arrow keys).
 - The screen is saved as you change it and comes back the same next time.
 
 You can also ask the orchestrator: _"open Agents on the right"_, _"close Skills"_,
 _"what is on my screen?"_. Arranging the screen needs no approval: nothing is deleted, and you can
 change it back with a click.
+
+## Look and keys, like a tiling window manager
+
+**Customize → Window manager** sets how it looks: the **Hyprland** preset (gaps, round corners, a
+coloured border on the focused tile, thin title bars) or **i3** (no gaps, square, full title bars),
+then gaps, corners, borders and title bars one by one (**Thin** and **Hidden** show a tile's buttons
+when you point at it). **Bar** puts the bar on the left, right, top or bottom. The bar ends with the
+status: approvals waiting, agents at work, the clock and the connection.
+
+Keyboard, with **Mod** set to Alt (default), Ctrl+Alt (best on macOS) or Super:
+
+| Keys                        | Does                                    |
+| --------------------------- | --------------------------------------- |
+| Mod+←↑→↓                    | focus the tile in that direction        |
+| Mod+Shift+←↑→↓              | swap the tile with that one             |
+| Mod+Enter / Mod+Shift+Enter | new tile with Home on the right / below |
+| Mod+Q                       | close the tile                          |
+| Mod+H                       | Home                                    |
+| Mod+1…9                     | the bar's apps, in order                |
+
+They work while the focus is outside an app's own frame (click the tile's title bar or the
+desktop around the tiles first). In a text field Mod+arrows keep moving by word. You can also ask
+the orchestrator: _"make it look like i3 with the bar on top"_.
 
 ## An app's chat
 

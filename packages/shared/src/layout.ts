@@ -22,7 +22,7 @@ export type PageId = (typeof PAGE_IDS)[number];
 export interface Tile {
   kind: "tile";
   id: string;
-  /** The app shown in this tile. An app is open in at most one tile. */
+  /** The app shown in this tile. An app is open in at most one tile, except Home. */
   app: AppRef;
 }
 
@@ -66,7 +66,7 @@ export function tiles(node: LayoutNode): Tile[] {
   return node.kind === "tile" ? [node] : node.children.flatMap(tiles);
 }
 
-/** The tile showing `app`, if it is open anywhere. */
+/** The tile showing `app`, if it is open anywhere (the first one, for Home). */
 export function tileOf(layout: Layout, app: AppRef): Tile | undefined {
   return tiles(layout.root).find((t) => t.app === app);
 }
@@ -146,7 +146,8 @@ export function focus(layout: Layout, tileId: string): Layout {
  * tile next to it. There are no tabs: a tile shows one app (ADR 0027).
  */
 export function openApp(layout: Layout, app: AppRef, where: Placement = "here"): Layout {
-  const existing = tileOf(layout, app);
+  // Home is a launcher, like a new terminal: a new tile always gets a fresh one (ADR 0028).
+  const existing = app === "home" && where !== "here" ? undefined : tileOf(layout, app);
   if (existing && where === "here") return { ...layout, focused: existing.id };
   // Moving an open app to a new tile: take it out of its old one first.
   const base = existing && existing.id !== layout.focused ? closeApp(layout, app) : layout;
@@ -158,7 +159,7 @@ export function openApp(layout: Layout, app: AppRef, where: Placement = "here"):
       focused: target.id,
     };
   }
-  if (target.app === app) return base;
+  if (target.app === app && app !== "home") return base;
   const tile: Tile = { kind: "tile", id: nextId(base, "t"), app };
   const split: Split = {
     kind: "split",
@@ -241,7 +242,8 @@ export function validateLayout(raw: unknown): Layout {
         : isAppRef(v.active) && legacy.includes(v.active)
           ? v.active
           : legacy[0];
-      const app = wanted && !seen.has(wanted) ? wanted : GONE;
+      // Only Home may show in several tiles.
+      const app = wanted && (wanted === "home" || !seen.has(wanted)) ? wanted : GONE;
       if (app) seen.add(app);
       return { kind: "tile", id: v.id, app };
     }

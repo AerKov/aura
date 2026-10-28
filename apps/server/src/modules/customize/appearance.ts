@@ -1,6 +1,14 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { type Appearance, RAIL_PINNED, type RailLayout } from "@aura/shared";
+import {
+  type Appearance,
+  BAR_EDGES,
+  type BarEdge,
+  normalizeWindowStyle,
+  RAIL_PINNED,
+  type RailLayout,
+  type WindowStyle,
+} from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 import { unifiedDiff } from "../../lib/diff";
 import { commitAll } from "../../lib/git";
@@ -84,23 +92,30 @@ export class AppearanceService {
     theme: string | null;
     snippets: string[];
     rail: RailLayout;
+    wm: WindowStyle;
   }> {
     const [rows] = await this.deps.db
-      .query<[{ theme?: string | null; snippets?: string[]; rail?: Partial<RailLayout> }[]]>(
-        "SELECT * FROM setting WHERE id = $id",
-        { id: SETTING },
-      )
+      .query<
+        [{ theme?: string | null; snippets?: string[]; rail?: Partial<RailLayout>; wm?: unknown }[]]
+      >("SELECT * FROM setting WHERE id = $id", { id: SETTING })
       .collect();
     const row = rows?.[0];
     return {
       theme: row?.theme ?? null,
       snippets: row?.snippets ?? [],
-      rail: { order: row?.rail?.order ?? [], hidden: row?.rail?.hidden ?? [] },
+      rail: {
+        order: row?.rail?.order ?? [],
+        hidden: row?.rail?.hidden ?? [],
+        edge: BAR_EDGES.includes(row?.rail?.edge as BarEdge)
+          ? (row?.rail?.edge as BarEdge)
+          : "left",
+      },
+      wm: normalizeWindowStyle(row?.wm),
     };
   }
 
   async get(): Promise<Appearance> {
-    const { theme, snippets, rail } = await this.settings();
+    const { theme, snippets, rail, wm } = await this.settings();
     const themes = this.themes();
     const available = this.snippets();
     const css: { name: string; css: string }[] = [];
@@ -109,14 +124,18 @@ export class AppearanceService {
     for (const s of snippets.filter((n) => available.includes(n))) {
       css.push({ name: `snippet:${s}`, css: sanitizeCss(this.read("snippet", s) ?? "") });
     }
-    return { theme, snippets, themes, availableSnippets: available, css, rail };
+    return { theme, snippets, themes, availableSnippets: available, css, rail, wm };
   }
 
-  /** Switches the theme and snippets among files that already exist. Harmless and reversible. */
+  /**
+   * Switches the theme and snippets among files that already exist, arranges the bar and sets how
+   * tiles look (ADR 0028). Harmless and reversible.
+   */
   async set(input: {
     theme?: string | null;
     snippets?: string[];
     rail?: Partial<RailLayout>;
+    wm?: Partial<WindowStyle>;
   }): Promise<Appearance> {
     const current = await this.settings();
     const theme = input.theme === undefined ? current.theme : input.theme;
@@ -131,13 +150,17 @@ export class AppearanceService {
       hidden: railKeys(input.rail?.hidden ?? current.rail.hidden).filter(
         (k) => !RAIL_PINNED.includes(k),
       ),
+      edge: input.rail?.edge ?? current.rail.edge,
     };
+    if (!BAR_EDGES.includes(rail.edge)) throw new AppearanceError(`"${rail.edge}" is not an edge`);
+    const wm = normalizeWindowStyle({ ...current.wm, ...input.wm }, current.wm);
     await this.deps.db
-      .query("UPSERT $id CONTENT { theme: $theme, snippets: $snippets, rail: $rail }", {
+      .query("UPSERT $id CONTENT { theme: $theme, snippets: $snippets, rail: $rail, wm: $wm }", {
         id: SETTING,
         theme,
         snippets,
         rail,
+        wm,
       })
       .collect();
     this.deps.hub.publish({ type: "customize.updated" });

@@ -7,7 +7,7 @@ import { RAIL_PINNED, type RailLayout } from "@aura/shared";
  */
 export function arrangeRail<T extends { key: string }>(
   items: T[],
-  layout: RailLayout | undefined,
+  layout: Pick<RailLayout, "order" | "hidden"> | undefined,
   { withHidden = false } = {},
 ): T[] {
   const order = layout?.order ?? [];

@@ -17,6 +17,7 @@ import { Rail } from "@/features/shell/rail";
 import { Shell } from "@/features/shell/shell";
 import { SERVER_URL } from "@/lib/api";
 import { type ServerStatus, ServerUnreachableError } from "@/lib/server-wait";
+import { cn } from "@/lib/utils";
 
 interface StartError {
   message: string;
@@ -26,6 +27,7 @@ interface StartError {
 export function App() {
   const activeChatId = useChatStore((s) => s.activeChatId);
   const needsPairing = useChatStore((s) => s.needsPairing);
+  const edge = useChatStore((s) => s.appearance?.rail.edge ?? "left");
   const [startError, setStartError] = useState<StartError | null>(null);
 
   const load = useCallback(() => {
@@ -60,7 +62,18 @@ export function App() {
 
   // The shell (ADR 0024): the rail, and the user's apps as tiles.
   return (
-    <div className="flex h-dvh overflow-hidden">
+    <div
+      className={cn(
+        "flex h-dvh overflow-hidden",
+        // The bar's edge (ADR 0028); phones keep it at the bottom.
+        {
+          left: "",
+          right: "md:flex-row-reverse",
+          top: "md:flex-col",
+          bottom: "md:flex-col-reverse",
+        }[edge],
+      )}
+    >
       <Rail />
       {startError ? (
         <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">

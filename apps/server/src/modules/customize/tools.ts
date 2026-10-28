@@ -1,4 +1,11 @@
-import { EXTENSION_ICONS, type ExtensionPermission } from "@aura/shared";
+import {
+  BAR_EDGES,
+  type BarEdge,
+  EXTENSION_ICONS,
+  type ExtensionPermission,
+  type WindowStyle,
+  WM_PRESETS,
+} from "@aura/shared";
 import { z } from "zod";
 import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
@@ -41,6 +48,24 @@ export const EXTENSION_GUIDE = [
 ].join(" ");
 
 /** Orchestrator tools to change the app itself by chat (docs/SPEC.md section 3, "Customization"). */
+function isBarEdge(value: unknown): value is BarEdge {
+  return typeof value === "string" && (BAR_EDGES as readonly string[]).includes(value);
+}
+
+/** The tool's window-style fields as a change: a preset first, then single values over it. */
+function windowInput(input: Record<string, unknown>): Partial<WindowStyle> | undefined {
+  const preset =
+    input.preset === "hyprland" || input.preset === "i3" ? WM_PRESETS[input.preset] : undefined;
+  const change: Partial<WindowStyle> = { ...preset };
+  for (const key of ["gaps", "radius", "border"] as const)
+    if (typeof input[key] === "number") change[key] = input[key];
+  if (input.titles === "full" || input.titles === "minimal" || input.titles === "none")
+    change.titles = input.titles;
+  if (input.mod === "alt" || input.mod === "ctrl-alt" || input.mod === "meta")
+    change.mod = input.mod;
+  return Object.keys(change).length > 0 ? change : undefined;
+}
+
 export function customizeTools(
   deps: CustomizeDeps,
   ctx: { handle: string; chatId: string; topicId?: string | null },
@@ -107,21 +132,32 @@ export function customizeTools(
     {
       name: "set_appearance",
       description:
-        "Switch the theme or the enabled snippets among existing ones, or arrange the navigation rail (no approval needed). theme null = default. Rail keys: chats, skills, memory, agents, integrations, catalog, jobs, engines, customize, devices, ext:<extension id>; chats and customize cannot be hidden.",
+        "Switch the theme or the enabled snippets among existing ones, arrange the bar (its items and the screen edge it sits on), or set how tiles look like a tiling window manager (no approval needed). theme null = default. Rail keys: chats, skills, memory, agents, integrations, catalog, jobs, engines, customize, devices, ext:<extension id>; chats and customize cannot be hidden. Window styles: preset hyprland (gaps 8, radius 12, border 2, minimal titles) or i3 (no gaps, square, border 1, full titles), then gaps/radius 0-24 px, border 0-4 px, titles full|minimal|none, mod (the shortcuts' modifier) alt|ctrl-alt|meta.",
       inputSchema: {
         theme: z.string().nullable().optional(),
         snippets: z.array(z.string()).optional(),
         rail_order: z.array(z.string()).optional().describe("rail keys, top first"),
         rail_hidden: z.array(z.string()).optional().describe("rail keys to hide"),
+        bar_edge: z.enum(["left", "right", "top", "bottom"]).optional(),
+        preset: z.enum(["hyprland", "i3"]).optional().describe("applied before the values below"),
+        gaps: z.number().int().min(0).max(24).optional(),
+        radius: z.number().int().min(0).max(24).optional(),
+        border: z.number().int().min(0).max(4).optional(),
+        titles: z.enum(["full", "minimal", "none"]).optional(),
+        mod: z.enum(["alt", "ctrl-alt", "meta"]).optional(),
       },
       async handler(input) {
         try {
           const a = await deps.appearance.set({
             theme: input.theme === undefined ? undefined : (input.theme as string | null),
             snippets: Array.isArray(input.snippets) ? input.snippets.map(String) : undefined,
+            wm: windowInput(input),
             rail:
-              Array.isArray(input.rail_order) || Array.isArray(input.rail_hidden)
+              Array.isArray(input.rail_order) ||
+              Array.isArray(input.rail_hidden) ||
+              typeof input.bar_edge === "string"
                 ? {
+                    edge: isBarEdge(input.bar_edge) ? input.bar_edge : undefined,
                     order: Array.isArray(input.rail_order)
                       ? input.rail_order.map(String)
                       : undefined,
@@ -132,7 +168,7 @@ export function customizeTools(
                 : undefined,
           });
           return ok(
-            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}.`,
+            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.edge}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}.`,
           );
         } catch (error) {
           return fail(error);

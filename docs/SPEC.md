@@ -430,5 +430,10 @@ Chats, Skills, Memory, Schedule, Signals and Integrations can be turned off on H
 dependencies; off means their routes, background work and agent tools are gone, without a restart.
 Config in `modules.json`.
 
+**Phase 30: A tiling window manager** (done, ADR 0028)
+Tiles with gaps, corners, borders and title bars set by the user (presets Hyprland and i3), the bar
+on any edge with status (approvals, working agents, clock, connection), keyboard shortcuts with a
+chosen Mod key, Home as a launcher in any number of tiles.
+
 **Later**
 Pack signatures and a reviewed community index, multi-user.

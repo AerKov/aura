@@ -73,6 +73,27 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
             t.Object({
               order: t.Optional(t.Array(t.String({ maxLength: 52 }), { maxItems: 64 })),
               hidden: t.Optional(t.Array(t.String({ maxLength: 52 }), { maxItems: 64 })),
+              edge: t.Optional(
+                t.Union([
+                  t.Literal("left"),
+                  t.Literal("right"),
+                  t.Literal("top"),
+                  t.Literal("bottom"),
+                ]),
+              ),
+            }),
+          ),
+          wm: t.Optional(
+            t.Object({
+              gaps: t.Optional(t.Integer({ minimum: 0, maximum: 24 })),
+              radius: t.Optional(t.Integer({ minimum: 0, maximum: 24 })),
+              border: t.Optional(t.Integer({ minimum: 0, maximum: 4 })),
+              titles: t.Optional(
+                t.Union([t.Literal("full"), t.Literal("minimal"), t.Literal("none")]),
+              ),
+              mod: t.Optional(
+                t.Union([t.Literal("alt"), t.Literal("ctrl-alt"), t.Literal("meta")]),
+              ),
             }),
           ),
         }),

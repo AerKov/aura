@@ -3,6 +3,7 @@
  * Ids are the record keys without the table prefix.
  */
 import type { ModuleStates } from "./modules";
+import type { BarEdge, WindowStyle } from "./wm";
 
 export type ChatKind = "direct" | "group" | "system";
 
@@ -327,12 +328,16 @@ export interface Appearance {
   /** Sanitized CSS to inject, in order: theme, then snippets. */
   css: { name: string; css: string }[];
   rail: RailLayout;
+  /** How tiles look and the shortcuts' Mod key (ADR 0028). */
+  wm: WindowStyle;
 }
 
 /** Order and visibility of the navigation rail's items, by key ("skills", "ext:<id>", …). */
 export interface RailLayout {
   order: string[];
   hidden: string[];
+  /** The screen edge the bar sits on (ADR 0028). */
+  edge: BarEdge;
 }
 
 /** Rail items that cannot be hidden, so the user can always get back to the settings. */

@@ -63,7 +63,8 @@ export function Shell() {
     );
   }
   return (
-    <div className="flex min-h-0 min-w-0 flex-1">
+    // The desktop behind the tiles; its padding and the handles make the gaps (ADR 0028).
+    <div className="bg-sidebar flex min-h-0 min-w-0 flex-1 p-[var(--wm-gap)]">
       <NodeView node={layout.root} focused={layout.focused} many={tiles(layout.root).length > 1} />
     </div>
   );
@@ -89,7 +90,9 @@ function NodeView({ node, focused, many }: { node: LayoutNode; focused: string; 
     >
       {node.children.map((child, i) => (
         <Fragment key={child.id}>
-          {i > 0 && <ResizableHandle />}
+          {i > 0 && (
+            <ResizableHandle className="hover:bg-primary/40 aria-[orientation=horizontal]:min-h-px aria-[orientation=horizontal]:h-[var(--wm-gap)] min-w-px w-[var(--wm-gap)] rounded-full bg-transparent" />
+          )}
           <ResizablePanel id={child.id} minSize="12%" className="flex min-h-0 min-w-0">
             <NodeView node={child} focused={focused} many={many} />
           </ResizablePanel>
@@ -102,47 +105,70 @@ function NodeView({ node, focused, many }: { node: LayoutNode; focused: string; 
 function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many: boolean }) {
   const extensions = useExtensionApps();
   const modules = useModules();
+  const titles = useChatStore((s) => s.appearance?.wm.titles ?? "minimal");
   const { label, icon: Icon } = appInfo(tile.app, extensions);
   const ext = tile.app.startsWith("ext:")
     ? extensions.find((e) => e.id === tile.app.slice(4))
     : undefined;
   const chatOpen = useChatStore((s) => (ext?.app ? (s.appChat[ext.id] ?? false) : false));
   const chatId = modules.chats && chatOpen ? ext?.app?.chatId : undefined;
+  // Buttons show on hover in the thin and hidden title bars, and always in the full one.
+  const hoverOnly =
+    titles !== "full" &&
+    "opacity-0 transition-opacity group-hover/tile:opacity-100 focus-within:opacity-100";
   return (
     <section
-      className="flex h-full min-h-0 min-w-0 flex-1 flex-col"
+      data-tile-id={tile.id}
+      aria-label={label}
+      className={cn(
+        "group/tile bg-background relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-solid",
+        focused && (many || titles !== "full") ? "border-primary" : "border-border",
+      )}
+      style={{ borderWidth: "var(--wm-border)", borderRadius: "var(--wm-radius)" }}
       onMouseDownCapture={() => focusTile(tile.id)}
       onFocusCapture={() => focusTile(tile.id)}
     >
       <header
         className={cn(
-          "bg-sidebar flex h-9 shrink-0 items-center gap-0.5 border-b px-1",
-          many && focused && "shadow-[inset_0_-2px_0_var(--primary)]",
+          "flex shrink-0 items-center gap-0.5 px-1",
+          titles === "full" && "bg-sidebar h-9 border-b",
+          titles === "minimal" && "h-7",
+          titles === "none" &&
+            "bg-background/90 absolute inset-x-0 top-0 z-20 h-9 border-b opacity-0 backdrop-blur transition-opacity group-hover/tile:opacity-100 focus-within:opacity-100",
+          titles === "full" && many && focused && "shadow-[inset_0_-2px_0_var(--primary)]",
         )}
       >
-        <div className="flex min-w-0 flex-1 items-center gap-1.5 px-2 text-xs font-medium">
+        <div
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-1.5 px-2 font-medium",
+            titles === "minimal" ? "text-muted-foreground text-[11px]" : "text-xs",
+            titles === "minimal" && focused && "text-foreground",
+          )}
+        >
           <Icon className="size-3.5 shrink-0" />
           <span className="truncate">{label}</span>
         </div>
-        {ext &&
-          (ext.app ? (
-            <AppControls ext={ext} chat={modules.chats} />
-          ) : (
-            modules.chats && <PinButton app={tile.app} />
-          ))}
-        <OpenMenu />
-        {(many || tile.app !== "home") && (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-7"
-            aria-label={`Close ${label}`}
-            title={many ? `Close ${label}` : `Close ${label} and go home`}
-            onClick={() => closeTileId(tile.id)}
-          >
-            <X />
-          </Button>
-        )}
+        <div className={cn("flex items-center gap-0.5", hoverOnly)}>
+          {ext &&
+            (ext.app ? (
+              <AppControls ext={ext} chat={modules.chats} />
+            ) : (
+              modules.chats && <PinButton app={tile.app} />
+            ))}
+          <OpenMenu />
+          {(many || tile.app !== "home") && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-7"
+              aria-label={`Close ${label}`}
+              title={many ? `Close ${label}` : `Close ${label} and go home`}
+              onClick={() => closeTileId(tile.id)}
+            >
+              <X />
+            </Button>
+          )}
+        </div>
       </header>
       <div className="relative flex min-h-0 min-w-0 flex-1">
         <AppView app={tile.app} />

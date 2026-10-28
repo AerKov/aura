@@ -8,6 +8,7 @@ import {
   EyeOff,
   Globe,
   KeyRound,
+  LayoutDashboard,
   Menu,
   Palette,
   Plug,
@@ -25,6 +26,7 @@ import { api, call } from "@/lib/api";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
 import { setAppearance } from "./appearance";
+import { WindowManagerSettings } from "./window-manager";
 
 const PERMISSION_TEXT: Record<string, string> = {
   "chat.read": "Read chats and messages",
@@ -201,6 +203,11 @@ export function CustomizeView() {
         </div>
 
         <h2 className="mb-2 flex items-center gap-2 font-semibold">
+          <LayoutDashboard className="size-4" /> Window manager
+        </h2>
+        <WindowManagerSettings onError={setError} />
+
+        <h2 className="mb-2 flex items-center gap-2 font-semibold">
           <Menu className="size-4" /> Navigation
         </h2>
         <RailEditor onError={setError} />
@@ -256,7 +263,7 @@ function RailEditor({ onError }: { onError: (message: string | null) => void }) 
   return (
     <div className="mb-8 rounded-xl border p-2">
       <p className="text-muted-foreground px-2 pt-1 pb-2 text-xs">
-        Order of the icons on the left (items after Customize sit at the bottom). Hidden pages stay
+        Order of the icons in the bar (items after Customize sit at its end). Hidden pages stay
         reachable from here.
       </p>
       <ul>
