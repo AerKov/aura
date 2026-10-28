@@ -17,6 +17,9 @@ curl -X POST "http://127.0.0.1:4517/hooks/alerts/uptime?token=<your token>" \
 - **Warning** and **critical** alerts wake the orchestrator. It summarizes, tells you what matters,
   or passes the problem to the right project agent. Alert text is treated as data, never as
   instructions.
+- **Apps can post alerts too**, with the `alerts.write` permission: a check you built, a test
+  button. Their cards look like a monitoring system's, with the source `app:<app id>`, and follow the
+  same rules (repeats count up, warnings wake the orchestrator); an app may post at most 30 an hour.
 - To receive alerts from the internet, expose the server through a tunnel and set `AURA_PUBLIC_URL`
   to the tunnel's URL so Aura shows the right webhook address. The token is required either way.
 

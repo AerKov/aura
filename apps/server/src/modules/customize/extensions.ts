@@ -30,6 +30,8 @@ export const PERMISSIONS: Record<ExtensionPermission, string> = {
   "ui.panel": "Show a panel in the app",
   "ui.bar": "Be Aura's bar: list and open apps, see the screen and the status",
   "alerts.read": "Read alerts",
+  "alerts.write":
+    "Post alert cards to the Signals chat (as itself; warnings wake the orchestrator)",
   storage: "Keep its own data",
   net: "Reach the listed hosts (through Aura)",
   "agents.ask": "Ask agents for you (as your message, within budgets)",
@@ -595,6 +597,12 @@ const BRIDGE = `(() => {
       }
       return;
     }
+    if (data.event === "snapshot") {
+      // An agent looks at the app (WISH-2): an outline of what is on the page, and recent errors.
+      const r = data.payload || {};
+      call("snapshot.result", { requestId: r.requestId, width: innerWidth, height: innerHeight, outline: outline(), errors: errors.slice(-20) }).catch(() => {});
+      return;
+    }
     if (data.event) {
       for (const fn of listeners.get(data.event) ?? []) {
         try { fn(data.payload); } catch (error) { report(error); }
@@ -606,7 +614,41 @@ const BRIDGE = `(() => {
     pending.delete(data.id);
     if (data.error) entry.reject(new Error(data.error)); else entry.resolve(data.result);
   });
-  const report = (error) => parent.postMessage({ aura: 1, method: "error", params: { message: String(error && error.message || error) } }, "*");
+  const errors = [];
+  const report = (error) => {
+    const message = String(error && error.message || error);
+    errors.push(message);
+    if (errors.length > 50) errors.shift();
+    parent.postMessage({ aura: 1, method: "error", params: { message } }, "*");
+  };
+  // A compact text outline of the visible page, for agents (WISH-2).
+  const outline = () => {
+    const lines = [];
+    const visible = (el) => { const s = getComputedStyle(el); return s.display !== "none" && s.visibility !== "hidden"; };
+    const say = (depth, text) => { const t = String(text).replace(/\\s+/g, " ").trim(); if (t) lines.push("  ".repeat(Math.min(depth, 8)) + t.slice(0, 200)); };
+    const walk = (node, depth) => {
+      if (lines.length > 400) return;
+      if (node.nodeType === 3) { say(depth, node.textContent); return; }
+      if (node.nodeType !== 1 || !visible(node)) return;
+      const tag = node.tagName.toLowerCase();
+      if (tag === "script" || tag === "style") return;
+      if (/^h[1-6]$/.test(tag)) return say(depth, "#".repeat(Number(tag[1])) + " " + node.textContent);
+      if (tag === "button") return say(depth, "[button: " + (node.textContent.trim() || node.getAttribute("aria-label") || node.title) + "]" + (node.disabled ? " (disabled)" : ""));
+      if (tag === "input" || tag === "textarea" || tag === "select") {
+        const own = node.labels && node.labels[0] ? [...node.labels[0].childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(" ") : "";
+        const label = own.trim() || node.placeholder || node.name;
+        const value = node.type === "password" ? "•••" : node.type === "checkbox" ? (node.checked ? "checked" : "unchecked") : node.value;
+        return say(depth, "[" + (node.type || tag) + (label ? " " + label.trim() : "") + (value ? " = " + value : "") + "]");
+      }
+      if (tag === "img") return say(depth, "[image " + (node.alt || "") + "]");
+      if (tag === "table") { say(depth, "[table, " + node.rows.length + " rows]"); for (const row of [...node.rows].slice(0, 8)) say(depth + 1, [...row.cells].map((c) => c.textContent.trim()).join(" | ")); return; }
+      // A label's own text is said by its field; its other elements are walked.
+      if (tag === "label") { for (const child of node.children) walk(child, depth + 1); return; }
+      for (const child of node.childNodes) walk(child, depth + 1);
+    };
+    walk(document.body, 0);
+    return lines.join("\\n");
+  };
   addEventListener("error", (event) => report(event.error || event.message));
   addEventListener("unhandledrejection", (event) => report(event.reason));
   // Themed controls for agents' forms and buttons. No <form> submit: sandboxed frames cannot submit.
@@ -704,7 +746,10 @@ const BRIDGE = `(() => {
       messages: (chatId) => call("chat.messages", { chatId }),
       post: (chatId, body) => call("chat.post", { chatId, body }),
     }),
-    alerts: Object.freeze({ recent: () => call("alerts.recent") }),
+    alerts: Object.freeze({
+      recent: () => call("alerts.recent"),
+      post: (alert) => call("alerts.post", alert || {}),
+    }),
     // Only for the bar app (ui.bar, ADR 0029).
     bar: Object.freeze({
       state: () => call("bar.state"),

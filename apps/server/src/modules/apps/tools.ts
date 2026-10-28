@@ -5,6 +5,7 @@ import type { ApprovalService } from "../approvals/service";
 import type { ChatService } from "../chat/service";
 import type { AppearanceService } from "../customize/appearance";
 import { type AppService, BUILDER_HANDLE } from "./service";
+import { type AppSnapshots, describeSnapshot } from "./snapshots";
 
 /** The orchestrator turns an idea into an app (with the user's approval). */
 export function appTools(
@@ -98,4 +99,17 @@ export function barTools(
       },
     },
   ];
+}
+
+/** Agents in an app's chat look at the app as the user sees it (WISH-2). */
+export function snapshotTool(snapshots: AppSnapshots, app: string): AgentTool {
+  return {
+    name: "app_snapshot",
+    description:
+      "See this app as the user sees it right now: its size, an outline of its page (headings, buttons, fields, tables, text) and its recent errors. Use it after a change to check the result. It works while the app is open on the user's screen; your change shows only while they preview its draft.",
+    inputSchema: {},
+    async handler() {
+      return { text: describeSnapshot(app, await snapshots.request(app)) };
+    },
+  };
 }

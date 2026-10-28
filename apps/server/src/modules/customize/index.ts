@@ -1,6 +1,7 @@
 import type { CustomizeState } from "@aura/shared";
 import { Elysia, t } from "elysia";
 import { AppSecretError, type AppSecrets } from "../apps/secrets";
+import type { AppSnapshots } from "../apps/snapshots";
 import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import type { ChatRepo } from "../chat/repo";
@@ -22,6 +23,7 @@ export interface CustomizeRouteDeps {
   safeMode: SafeMode;
   modules: ModuleService;
   appSecrets: AppSecrets;
+  appSnapshots: AppSnapshots;
   hub: EventHub;
   appVersion: string;
   corsOrigins: string[];
@@ -325,6 +327,45 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
           chatId: t.String({ maxLength: 64 }),
           agent: t.String({ maxLength: 40 }),
           text: t.String({ minLength: 1, maxLength: 8000 }),
+        }),
+      },
+    )
+    // A client's snapshot of an app an agent asked to see (WISH-2).
+    .post(
+      "/extensions/:extensionId/snapshots/:requestId",
+      ({ params, body, status }) =>
+        deps.appSnapshots.answer(params.extensionId, params.requestId, body)
+          ? { ok: true }
+          : status(404, { error: "Nobody is waiting for this snapshot" }),
+      {
+        auth: true,
+        body: t.Object({
+          draft: t.Boolean(),
+          width: t.Number(),
+          height: t.Number(),
+          outline: t.String({ maxLength: 50_000 }),
+          errors: t.Array(t.String({ maxLength: 2000 }), { maxItems: 50 }),
+        }),
+      },
+    )
+    // An app's alert card in the Signals chat (WISH-7).
+    .post(
+      "/extensions/:extensionId/alerts",
+      async ({ params, body, status }) => {
+        try {
+          return await deps.extensionBridge.postAlert(params.extensionId, body);
+        } catch (error) {
+          const e = bridgeError(error);
+          return status(e.code, { error: e.error });
+        }
+      },
+      {
+        auth: true,
+        body: t.Object({
+          severity: t.Optional(t.UnionEnum(["info", "warning", "critical"])),
+          title: t.String({ minLength: 1, maxLength: 200 }),
+          summary: t.Optional(t.String({ maxLength: 2000 })),
+          fingerprint: t.Optional(t.String({ maxLength: 200 })),
         }),
       },
     )

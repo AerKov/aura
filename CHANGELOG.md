@@ -5,6 +5,15 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-10-28: Alerts from apps, relays, a look at the app
+
+- Apps can post **alert cards** to the Signals chat with the new `alerts.write` permission
+  (`ctx.alerts.post`), handled like a monitoring system's (WISH-7).
+- Ask the orchestrator to **pass a message into another chat** it is in; it posts as itself, marked as
+  sent at your request, and only when you ask (WISH-8).
+- **@builder can look at the app** it changes: an outline of the page and its errors, while the app is
+  open on your screen (Draft shows its change) (WISH-2).
+
 ## [0.32.0] - 2026-10-28: Local only
 
 - **Integrations is gone.** Tool servers (MCP) and agents' secrets are on the **Agents** page now,

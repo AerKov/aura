@@ -350,6 +350,8 @@ export type ExtensionPermission =
   /** Be Aura's bar (only the app "bar", ADR 0029). */
   | "ui.bar"
   | "alerts.read"
+  /** Post alert cards to the Signals chat (WISH-7). */
+  | "alerts.write"
   | "storage"
   | "net"
   | "agents.ask"

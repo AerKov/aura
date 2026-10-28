@@ -26,6 +26,7 @@ const ROUTES: [RegExp, ModuleId][] = [
   ],
   // An app posting to or asking in chats.
   [/^\/extensions\/[^/]+\/(ask|messages)$/, "chats"],
+  [/^\/extensions\/[^/]+\/alerts$/, "alerts"],
   // A new empty app is made by @builder in its chat.
   [/^\/apps$/, "chats"],
   [/^\/skills(\/|$)/, "skills"],

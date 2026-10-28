@@ -83,4 +83,10 @@ change waiting for your approval, decide on that first.
 
 Apps run in a sandbox and use the [extension permissions](Customization): their own data, the
 hosts you allowed (with keys kept by Aura), asking agents for you, reading project files, forms
-and buttons. A new app starts with a panel and its own data only.
+and buttons, posting alert cards to the Signals chat (`alerts.write`, see
+[Alerts](Alerts-and-Schedules)). A new app starts with a panel and its own data only.
+
+**@builder can look at the app.** After a change it can ask to see the app as you see it: an outline
+of the page (headings, buttons, fields, tables) and its recent errors. This works while the app is
+open on your screen; to let it see a change before you approve it, click **Draft** on the app's
+tile.

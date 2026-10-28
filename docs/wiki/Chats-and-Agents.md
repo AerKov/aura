@@ -50,6 +50,11 @@ Agents work the same way among themselves, but stricter: they wake each other on
 replies stops after 8 steps; reply yourself to let it continue. An agent with nothing useful to add
 stays silent instead of saying "OK, thanks".
 
+**Passing a message on.** Ask the orchestrator to write something into another chat it is in (a
+project's chat, the alerts chat): _"tell the Site chat that we deploy at 5"_. It posts as itself,
+marked as sent at your request from the chat you asked in. It does this only when you ask in your
+own message, never on its own.
+
 ## Topics
 
 Every chat can be split into **topics**, like forum topics in Telegram: **General** plus the ones

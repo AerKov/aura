@@ -77,6 +77,9 @@ export function startRealtime(): () => void {
         case "app.data":
           window.dispatchEvent(new CustomEvent("aura:app-data", { detail: event }));
           break;
+        case "app.snapshot":
+          window.dispatchEvent(new CustomEvent("aura:app-snapshot", { detail: event }));
+          break;
         case "layout.updated":
           receiveLayout(event.layout);
           break;

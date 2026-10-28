@@ -440,5 +440,9 @@ versions, `ctx.bar`), or off; the built-in bar stands in when the bar app fails.
 No project containers, host lists or Integrations page; agents' commands have no network; MCP
 servers and agents' secrets are on the Agents page; each app keeps its own secrets.
 
+**Phase 33: Alerts from apps, relays, app snapshots** (done, ADR 0031)
+Apps post alert cards with `alerts.write`; the orchestrator passes a message into another of its
+chats only on the user's request; agents in an app's chat see the app as the user sees it.
+
 **Later**
 Pack signatures and a reviewed community index, multi-user.

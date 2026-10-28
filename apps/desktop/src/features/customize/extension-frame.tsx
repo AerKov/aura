@@ -26,6 +26,7 @@ const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
   "chat.messages": "chat.read",
   "chat.post": "chat.write",
   "alerts.recent": "alerts.read",
+  "alerts.post": "alerts.write",
   // Checked per event below: "context" needs nothing, "message.created" needs chat.read.
   "events.subscribe": null,
   "ui.setTitle": "ui.panel",
@@ -40,6 +41,7 @@ const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
   data: "storage",
   "actions.run": "storage",
   "apps.call": "apps.call",
+  "snapshot.result": null,
   "bar.state": "ui.bar",
   "bar.open": "ui.bar",
   "bar.menu": "ui.bar",
@@ -109,6 +111,8 @@ export function ExtensionFrame({
 }) {
   const barRef = useRef(bar);
   barRef.current = bar;
+  const draftRef = useRef(draft);
+  draftRef.current = draft;
   const callbacks = useRef({ onReady, onError });
   callbacks.current = { onReady, onError };
   const ref = useRef<HTMLIFrameElement>(null);
@@ -166,6 +170,19 @@ export function ExtensionFrame({
             ),
           );
         }
+        case "alerts.post":
+          return reply(
+            req.id,
+            await call(() =>
+              ext().alerts.post({
+                title: String(p.title ?? ""),
+                summary: typeof p.summary === "string" ? p.summary : undefined,
+                severity:
+                  p.severity === "info" || p.severity === "critical" ? p.severity : "warning",
+                fingerprint: typeof p.fingerprint === "string" ? p.fingerprint : undefined,
+              }),
+            ),
+          );
         case "context.get":
           return reply(req.id, contextRef.current);
         case "storage.get": {
@@ -256,6 +273,19 @@ export function ExtensionFrame({
         case "ui.setTitle":
           setTitle(String(p.title ?? extension.name).slice(0, 60));
           return reply(req.id, true);
+        case "snapshot.result":
+          await call(() =>
+            ext()
+              .snapshots({ requestId: String(p.requestId ?? "") })
+              .post({
+                draft: draftRef.current,
+                width: Number(p.width ?? 0),
+                height: Number(p.height ?? 0),
+                outline: String(p.outline ?? "").slice(0, 50_000),
+                errors: (Array.isArray(p.errors) ? p.errors : []).map(String).slice(-50),
+              }),
+          );
+          return;
         case "bar.state": {
           const host = barRef.current;
           if (!host) return reply(req.id, null, "Not the bar");
@@ -297,6 +327,20 @@ export function ExtensionFrame({
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, [extension]);
+
+  // An agent asks how the app looks (WISH-2): the frame makes the snapshot itself.
+  useEffect(() => {
+    const onAsk = (e: Event) => {
+      const detail = (e as CustomEvent<{ app: string; requestId: string }>).detail;
+      if (detail.app !== extension.id) return;
+      ref.current?.contentWindow?.postMessage(
+        { aura: 1, event: "snapshot", payload: { requestId: detail.requestId } },
+        "*",
+      );
+    };
+    window.addEventListener("aura:app-snapshot", onAsk);
+    return () => window.removeEventListener("aura:app-snapshot", onAsk);
+  }, [extension.id]);
 
   // An app's data changed (also by agents or other apps): it can refresh (phase 24).
   useEffect(() => {

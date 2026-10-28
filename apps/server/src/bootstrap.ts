@@ -18,7 +18,8 @@ import { AppActions } from "./modules/apps/actions";
 import { AppDataService } from "./modules/apps/data";
 import { AppSecrets } from "./modules/apps/secrets";
 import { AppService } from "./modules/apps/service";
-import { appTools, barTools } from "./modules/apps/tools";
+import { AppSnapshots } from "./modules/apps/snapshots";
+import { appTools, barTools, snapshotTool } from "./modules/apps/tools";
 import { CatalogService } from "./modules/catalog/service";
 import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
@@ -181,6 +182,7 @@ export async function createServices(deps: {
     grantedCalls: async (id) => (await extensions.grant(id, "apps.call"))?.calls ?? null,
     approvals,
   });
+  const appSnapshots = new AppSnapshots({ hub: deps.hub });
   const appSecrets = new AppSecrets(deps.dataDir);
   // Shared secrets apps were granted before ADR 0030 move into their own stores once.
   appSecrets.migrate(
@@ -195,6 +197,10 @@ export async function createServices(deps: {
     projects,
     fetch: deps.fetch,
     apps: { isApp: (id) => appService.isApp(id), data: appData, actions: appActions },
+    alerts: {
+      ingest: (source, payload) => alerts.ingest(source, payload),
+      enabled: () => modules.enabled("alerts"),
+    },
   });
   const layout = new LayoutService({ db: deps.db, hub: deps.hub, extensions });
   const customize = { appearance, mcp, extensions };
@@ -242,13 +248,16 @@ export async function createServices(deps: {
     appTools: async (ctx) =>
       modules.filterTools([
         ...toolsFor(toolDeps, ctx),
-        // In an app's chat, agents use the app through its actions (phase 25).
+        // In an app's chat, agents use the app through its actions (phase 25) and can look at it.
         ...(ctx.chat.projectId && appService.isApp(ctx.chat.projectId)
-          ? await appActions.tools(ctx.chat.projectId, {
-              handle: ctx.handle,
-              chatId: ctx.chat.id,
-              topicId: ctx.topicId,
-            })
+          ? [
+              ...(await appActions.tools(ctx.chat.projectId, {
+                handle: ctx.handle,
+                chatId: ctx.chat.id,
+                topicId: ctx.topicId,
+              })),
+              snapshotTool(appSnapshots, ctx.chat.projectId),
+            ]
           : []),
         ...(ctx.handle === "orchestrator" ? [...agentSetupTools(agentSetup), ...helpTools()] : []),
         // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
@@ -321,6 +330,7 @@ export async function createServices(deps: {
     sandbox,
     secrets,
     appSecrets,
+    appSnapshots,
     agentSetup,
     appearance,
     mcp,

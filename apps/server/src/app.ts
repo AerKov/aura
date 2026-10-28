@@ -14,6 +14,7 @@ import type { AppActions } from "./modules/apps/actions";
 import type { AppDataService } from "./modules/apps/data";
 import type { AppSecrets } from "./modules/apps/secrets";
 import type { AppService } from "./modules/apps/service";
+import type { AppSnapshots } from "./modules/apps/snapshots";
 import { authModule } from "./modules/auth";
 import type { LocalSessions, SessionUser } from "./modules/auth/sessions";
 import { catalogModule } from "./modules/catalog";
@@ -65,6 +66,7 @@ export interface AppDeps extends HealthDeps {
   summaries: ChatSummaryService;
   agentSetup: AgentSetupService;
   appSecrets: AppSecrets;
+  appSnapshots: AppSnapshots;
   sandbox: SandboxService;
   dataDir: string;
   runtime: AgentRuntime;

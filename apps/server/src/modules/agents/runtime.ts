@@ -54,6 +54,8 @@ export interface RuntimeDeps {
     depth: number;
     /** The topic the run answers in; its cards and posts go there too. */
     topicId: string | null;
+    /** The run answers the user's own message (not an agent, an alert or a schedule). */
+    byUser: boolean;
   }) => AgentTool[] | Promise<AgentTool[]>;
   /** External MCP servers an agent may use (tier 2 customization). */
   mcpServers?: (handle: string) => Record<string, McpServerSpec>;
@@ -468,7 +470,15 @@ export class AgentRuntime {
         confineToCwd: true,
         builtinTools,
         sandbox: sandbox ?? undefined,
-        tools: [...(await this.deps.appTools({ handle, chat, depth, topicId: trigger.topicId }))],
+        tools: [
+          ...(await this.deps.appTools({
+            handle,
+            chat,
+            depth,
+            topicId: trigger.topicId,
+            byUser: trigger.author.kind === "user",
+          })),
+        ],
         mcpServers,
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,
