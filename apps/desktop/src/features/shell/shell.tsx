@@ -2,6 +2,7 @@ import {
   type AppRef,
   type LayoutNode,
   PAGE_IDS,
+  type PackSummary,
   type Placement,
   type Project,
   type Tile,
@@ -14,10 +15,10 @@ import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { AgentsView } from "@/features/agents/agents-view";
 import { CatalogView } from "@/features/catalog/catalog-view";
-import { openChat, reportError } from "@/features/chat/actions";
+import { loadInitial, loadProjects, openChat, reportError } from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
 import { Sidebar } from "@/features/chat/sidebar";
-import { setState, useChatStore } from "@/features/chat/store";
+import { getState, setState, useChatStore } from "@/features/chat/store";
 import { CustomizeView } from "@/features/customize/customize-view";
 import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
@@ -265,13 +266,26 @@ function OpenMenu() {
   );
 }
 
-/** A new app with its own chat, where @builder makes it (ADR 0024). */
+/**
+ * A new app with its own chat (ADR 0024): empty, where @builder makes it from a description, or
+ * from a template in the catalog (phase 26).
+ */
 function NewApp({ onCreated }: { onCreated: () => void }) {
   const [form, setForm] = useState(false);
+  const [templates, setTemplates] = useState<PackSummary[]>([]);
+  const [template, setTemplate] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (!form) return;
+    call(() => api.catalog.get())
+      .then((packs) =>
+        setTemplates(packs.filter((p) => p.contents.apps.length === 1 && !p.installed)),
+      )
+      .catch(reportError);
+  }, [form]);
   if (!form)
     return (
       <button
@@ -286,10 +300,25 @@ function NewApp({ onCreated }: { onCreated: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      const { chatId } = await call(() =>
-        api.apps.post({ name: name.trim(), description: description.trim() || undefined }),
-      );
+      let chatId: string;
+      const pack = templates.find((p) => p.id === template);
+      if (pack) {
+        const preview = await call(() => api.catalog.preview.post({ id: pack.id }));
+        await call(() => api.catalog.install.post({ id: pack.id, sha256: preview.sha256 }));
+        await loadProjects();
+        const project = getState().projects[pack.contents.apps[0] ?? ""];
+        if (!project) throw new Error("The app was installed, but its chat is not there yet");
+        chatId = project.chatId;
+      } else {
+        chatId = (
+          await call(() =>
+            api.apps.post({ name: name.trim(), description: description.trim() || undefined }),
+          )
+        ).chatId;
+      }
       onCreated();
+      // The new chat may not have arrived over the socket yet.
+      await loadInitial();
       openChat(chatId);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -299,23 +328,53 @@ function NewApp({ onCreated }: { onCreated: () => void }) {
   };
   return (
     <div className="grid gap-1.5 px-2 pb-2">
-      <input
-        aria-label="App name"
-        placeholder="Name, e.g. Clients"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        className="bg-background rounded-lg border px-2 py-1 text-sm"
-      />
-      <textarea
-        aria-label="What it should do"
-        placeholder="What it should do (optional: you can tell @builder in its chat)"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        rows={3}
-        className="bg-background resize-none rounded-lg border px-2 py-1 text-sm"
-      />
+      <div className="flex flex-wrap gap-1 text-xs">
+        {[{ id: null, name: "Empty" }, ...templates.map((p) => ({ id: p.id, name: p.name }))].map(
+          (t) => (
+            <button
+              key={t.id ?? "empty"}
+              type="button"
+              aria-pressed={template === t.id}
+              onClick={() => setTemplate(t.id)}
+              className={cn(
+                "rounded-full border px-2 py-0.5",
+                template === t.id ? "border-primary bg-primary/10" : "hover:bg-accent",
+              )}
+            >
+              {t.name}
+            </button>
+          ),
+        )}
+      </div>
+      {template ? (
+        <p className="text-muted-foreground text-xs">
+          {templates.find((p) => p.id === template)?.description}
+        </p>
+      ) : (
+        <>
+          <input
+            aria-label="App name"
+            placeholder="Name, e.g. Clients"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="bg-background rounded-lg border px-2 py-1 text-sm"
+          />
+          <textarea
+            aria-label="What it should do"
+            placeholder="What it should do (optional: you can tell @builder in its chat)"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            className="bg-background resize-none rounded-lg border px-2 py-1 text-sm"
+          />
+        </>
+      )}
       {error && <p className="text-destructive text-xs">{error}</p>}
-      <Button size="sm" disabled={busy || !name.trim()} onClick={() => void create()}>
+      <Button
+        size="sm"
+        disabled={busy || (!template && !name.trim())}
+        onClick={() => void create()}
+      >
         Create
       </Button>
     </div>

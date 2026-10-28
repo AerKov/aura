@@ -28,7 +28,7 @@ const SECRET_REF = /\$\{secret:([A-Z_][A-Z0-9_]{0,63})\}/g;
 const METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]);
 
 export interface DataRequest {
-  op: "list" | "count" | "get" | "insert" | "update" | "delete";
+  op: "list" | "count" | "get" | "insert" | "update" | "delete" | "schema";
   collection: string;
   id?: string;
   record?: unknown;
@@ -159,6 +159,11 @@ export class ExtensionBridge {
     if (!app) throw new ExtensionDenied("Only apps built in Aura have collections");
     try {
       switch (req.op) {
+        case "schema":
+          // The collection's fields, for forms and tables built by the kit.
+          return (
+            (await this.deps.extensions.contract(id)).collections[req.collection]?.fields ?? null
+          );
         case "list":
           return await app.data.list(id, req.collection, req.query);
         case "count":

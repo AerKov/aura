@@ -9,6 +9,15 @@ import alertsMain from "./alerts-panel/extensions/alerts-today/main.js.txt" with
 import alertsManifest from "./alerts-panel/extensions/alerts-today/manifest.json";
 import alertsStyles from "./alerts-panel/extensions/alerts-today/styles.css" with { type: "text" };
 import alertsPack from "./alerts-panel/pack.json";
+import crmMain from "./app-crm/apps/crm/main.js.txt" with { type: "text" };
+import crmManifest from "./app-crm/apps/crm/manifest.json";
+import crmPack from "./app-crm/pack.json";
+import notesMain from "./app-notes/apps/notes/main.js.txt" with { type: "text" };
+import notesManifest from "./app-notes/apps/notes/manifest.json";
+import notesPack from "./app-notes/pack.json";
+import tasksMain from "./app-tasks/apps/tasks/main.js.txt" with { type: "text" };
+import tasksManifest from "./app-tasks/apps/tasks/manifest.json";
+import tasksPack from "./app-tasks/pack.json";
 import coder from "./dev-team/agents/coder/agent.md" with { type: "text" };
 import reviewer from "./dev-team/agents/reviewer/agent.md" with { type: "text" };
 import devPack from "./dev-team/pack.json";
@@ -35,7 +44,22 @@ export interface RawPack {
   files: Record<string, string>;
 }
 
+const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`;
+
 export const BUILTIN_PACKS: RawPack[] = [
+  // App templates (phase 26): apps built on the kit, installed with their own chat.
+  {
+    manifest: crmPack,
+    files: { "apps/crm/manifest.json": json(crmManifest), "apps/crm/main.js": crmMain },
+  },
+  {
+    manifest: tasksPack,
+    files: { "apps/tasks/manifest.json": json(tasksManifest), "apps/tasks/main.js": tasksMain },
+  },
+  {
+    manifest: notesPack,
+    files: { "apps/notes/manifest.json": json(notesManifest), "apps/notes/main.js": notesMain },
+  },
   {
     manifest: devPack,
     files: {

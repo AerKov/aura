@@ -51,7 +51,7 @@ export function validatePackManifest(raw: unknown): PackManifest {
   for (const path of files) {
     if (typeof path !== "string" || !isPackFilePath(path)) {
       throw new PackError(
-        `"${String(path)}" is not allowed: packs install agents/, skills/, themes/, snippets/ and extensions/ files only`,
+        `"${String(path)}" is not allowed: packs install agents/, skills/, themes/, snippets/, extensions/ and apps/ files only`,
       );
     }
   }
@@ -84,18 +84,22 @@ export function validatePack(manifest: unknown, files: Record<string, string>): 
     try {
       if (parts[0] === "agents") parseAgentFile(parts[1] ?? "", content);
       if (parts[0] === "skills") parseSkill(parts[1] ?? "", content);
-      if (parts[0] === "extensions" && parts[2] === "manifest.json") {
+      if ((parts[0] === "extensions" || parts[0] === "apps") && parts[2] === "manifest.json") {
         validateManifest(JSON.parse(content), parts[1]);
       }
     } catch (error) {
       throw new PackError(`${path}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-  for (const id of contentsOf(m.files).extensions) {
-    for (const required of ["manifest.json", "main.js"]) {
-      if (!m.files.includes(`extensions/${id}/${required}`))
-        throw new PackError(`extension ${id} needs ${required}`);
-    }
+  const contents = contentsOf(m.files);
+  for (const [folder, ids] of [
+    ["extensions", contents.extensions],
+    ["apps", contents.apps],
+  ] as const) {
+    for (const id of ids)
+      for (const required of ["manifest.json", "main.js"])
+        if (!m.files.includes(`${folder}/${id}/${required}`))
+          throw new PackError(`${folder === "apps" ? "app" : "extension"} ${id} needs ${required}`);
   }
   const extra = Object.keys(files).filter((p) => !m.files.includes(p));
   if (extra.length > 0) throw new PackError(`files not listed in pack.json: ${extra.join(", ")}`);
@@ -122,6 +126,7 @@ export function contentsOf(paths: readonly string[]): PackContents {
     themes: names("themes"),
     snippets: names("snippets"),
     extensions: names("extensions"),
+    apps: names("apps"),
   };
 }
 

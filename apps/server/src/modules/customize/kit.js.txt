@@ -1,0 +1,268 @@
+// Aura app kit (ADR 0024, phase 26): themed views bound to an app's collections, live.
+// Runs inside the sandboxed frame, before the bridge; the bridge passes it the app's API.
+window.__auraKit = (aura, report) => {
+  const h = (tag, cls, text) => {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (text !== undefined && text !== null) el.textContent = String(text);
+    return el;
+  };
+  const schemas = new Map();
+  const schema = (collection) => {
+    if (!schemas.has(collection)) schemas.set(collection, aura.data.schema(collection).then((s) => s || {}));
+    return schemas.get(collection);
+  };
+  const label = (name) => name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, " ");
+  const show = (value, type) => {
+    if (value === undefined || value === null || value === "") return "";
+    if (type === "boolean") return value ? "✓" : "";
+    if (type === "date") { const d = new Date(value); return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString(); }
+    if (typeof value === "object") return JSON.stringify(value);
+    return String(value);
+  };
+  const live = (collection, refresh) => {
+    aura.data.on(collection, () => refresh().catch(report));
+    refresh().catch(report);
+  };
+  const confirmButton = (text, onYes) => {
+    const wrap = h("span", "aura-kit-confirm");
+    const ask = h("button", "aura-kit-link", text);
+    ask.type = "button";
+    ask.addEventListener("click", () => {
+      wrap.replaceChildren();
+      const yes = h("button", "aura-kit-link aura-kit-danger", "Yes");
+      const no = h("button", "aura-kit-link", "No");
+      yes.type = "button"; no.type = "button";
+      yes.addEventListener("click", () => Promise.resolve(onYes()).catch(report));
+      no.addEventListener("click", () => wrap.replaceChildren(ask));
+      wrap.append(h("span", "aura-kit-muted", "Sure? "), yes, no);
+    });
+    wrap.append(ask);
+    return wrap;
+  };
+
+  /** A form for a collection's record, built from its schema; saves (insert or update). */
+  const form = async (el, opts) => {
+    // Its place is kept now, so it shows where it was called even though the schema loads later.
+    const box = h("div", "aura-kit-card");
+    el.append(box);
+    const fields = await schema(opts.collection);
+    const names = opts.fields || Object.keys(fields);
+    const record = opts.id ? await aura.data.get(opts.collection, opts.id) : null;
+    const types = { string: "text", number: "number", boolean: "checkbox", date: "date", json: "textarea" };
+    const spec = names.map((name) => {
+      const f = fields[name] || { type: "string", optional: true };
+      const options = opts.options && opts.options[name];
+      let value = record ? record[name] : opts.defaults && opts.defaults[name];
+      if (f.type === "date" && value) value = String(value).slice(0, 10);
+      return {
+        name,
+        label: (opts.labels && opts.labels[name]) || label(name),
+        type: options ? "select" : (opts.multiline || []).includes(name) ? "textarea" : types[f.type] || "text",
+        options,
+        required: !f.optional && f.type !== "boolean",
+        value: value === null ? undefined : value,
+      };
+    });
+    return aura.ui.form(box, {
+      title: opts.title,
+      fields: spec,
+      submitLabel: opts.submitLabel || (record ? "Save" : "Add"),
+      reset: !record,
+      onSubmit: async (values) => {
+        const clean = {};
+        for (const [k, v] of Object.entries(values)) {
+          const f = fields[k];
+          if (v === "" || v === null) { if (record) clean[k] = null; continue; }
+          clean[k] = f && f.type === "json" && typeof v === "string" ? JSON.parse(v) : v;
+        }
+        const saved = record
+          ? await aura.data.update(opts.collection, record.id, clean)
+          : await aura.data.insert(opts.collection, clean);
+        if (opts.onSaved) await opts.onSaved(saved);
+      },
+    });
+  };
+
+  /** A table of records with search, sorting by column, edit and delete. */
+  const table = (el, opts) => {
+    const box = h("div", "aura-kit-card");
+    const bar = h("div", "aura-kit-bar");
+    const search = h("input", "aura-kit-search");
+    search.placeholder = "Search";
+    bar.append(search);
+    const tableEl = h("table", "aura-kit-table");
+    const editor = h("div");
+    box.append(bar, tableEl, editor);
+    el.append(box);
+    let sort = opts.sort || null;
+    const refresh = async () => {
+      const fields = await schema(opts.collection);
+      const columns = opts.columns || Object.keys(fields).map((field) => ({ field }));
+      const rows = await aura.data.list(opts.collection, { ...(opts.query || {}), search: search.value, sort: sort || undefined, limit: opts.limit || 200 });
+      tableEl.replaceChildren();
+      const head = h("tr");
+      for (const c of columns) {
+        const th = h("th", "", (c.label || label(c.field)) + (sort === c.field ? " ↑" : sort === "-" + c.field ? " ↓" : ""));
+        th.addEventListener("click", () => { sort = sort === c.field ? "-" + c.field : c.field; refresh().catch(report); });
+        head.append(th);
+      }
+      head.append(h("th"));
+      tableEl.append(head);
+      if (rows.length === 0) {
+        const tr = h("tr"); const td = h("td", "aura-kit-muted", opts.empty || "Nothing yet.");
+        td.colSpan = columns.length + 1; tr.append(td); tableEl.append(tr);
+      }
+      for (const row of rows) {
+        const tr = h("tr");
+        for (const c of columns) tr.append(h("td", "", show(row[c.field], (fields[c.field] || {}).type)));
+        const actions = h("td", "aura-kit-actions");
+        if (opts.edit !== false) {
+          const edit = h("button", "aura-kit-link", "Edit");
+          edit.type = "button";
+          edit.addEventListener("click", () => {
+            editor.replaceChildren();
+            form(editor, { collection: opts.collection, id: row.id, fields: opts.formFields, options: opts.options, onSaved: () => editor.replaceChildren() }).catch(report);
+          });
+          actions.append(edit);
+        }
+        if (opts.remove !== false) actions.append(confirmButton("Delete", () => aura.data.delete(opts.collection, row.id)));
+        tr.append(actions);
+        if (opts.onOpen) tr.addEventListener("dblclick", () => opts.onOpen(row));
+        tableEl.append(tr);
+      }
+    };
+    search.addEventListener("input", () => refresh().catch(report));
+    live(opts.collection, refresh);
+    return { refresh };
+  };
+
+  /** A board: one column per value of a field; drag a card to another column to change it. */
+  const board = (el, opts) => {
+    const box = h("div", "aura-kit-board");
+    el.append(box);
+    const refresh = async () => {
+      const rows = await aura.data.list(opts.collection, { ...(opts.query || {}), limit: 500 });
+      const groups = opts.groups || [...new Set(rows.map((r) => r[opts.groupBy]).filter(Boolean))];
+      box.replaceChildren();
+      for (const group of groups) {
+        const column = h("div", "aura-kit-column");
+        const items = rows.filter((r) => r[opts.groupBy] === group);
+        column.append(h("div", "aura-kit-column-title", (opts.labels && opts.labels[group]) || label(String(group)) + " · " + items.length));
+        column.addEventListener("dragover", (e) => { e.preventDefault(); column.classList.add("aura-kit-over"); });
+        column.addEventListener("dragleave", () => column.classList.remove("aura-kit-over"));
+        column.addEventListener("drop", (e) => {
+          e.preventDefault();
+          column.classList.remove("aura-kit-over");
+          const id = e.dataTransfer.getData("text/plain");
+          if (id) aura.data.update(opts.collection, id, { [opts.groupBy]: group }).catch(report);
+        });
+        for (const row of items) {
+          const card = h("div", "aura-kit-item");
+          card.draggable = true;
+          card.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", row.id));
+          card.append(h("div", "aura-kit-item-title", row[opts.title] || "(untitled)"));
+          if (opts.subtitle && row[opts.subtitle] !== undefined) card.append(h("div", "aura-kit-muted", show(row[opts.subtitle])));
+          if (opts.onOpen) card.addEventListener("click", () => opts.onOpen(row));
+          column.append(card);
+        }
+        box.append(column);
+      }
+    };
+    live(opts.collection, refresh);
+    return { refresh };
+  };
+
+  /** Cards in a grid: a title, a line of text, a tag. */
+  const cards = (el, opts) => {
+    const grid = h("div", "aura-kit-grid");
+    el.append(grid);
+    const refresh = async () => {
+      const rows = await aura.data.list(opts.collection, { ...(opts.query || {}), sort: opts.sort, limit: opts.limit || 200 });
+      grid.replaceChildren();
+      if (rows.length === 0) grid.append(h("p", "aura-kit-muted", opts.empty || "Nothing yet."));
+      for (const row of rows) {
+        const card = h("div", "aura-kit-card aura-kit-tile");
+        card.append(h("div", "aura-kit-item-title", row[opts.title] || "(untitled)"));
+        if (opts.body && row[opts.body]) card.append(h("p", "aura-kit-body", String(row[opts.body]).slice(0, 400)));
+        if (opts.tag && row[opts.tag]) card.append(h("span", "aura-kit-tag", row[opts.tag]));
+        if (opts.remove !== false) card.append(confirmButton("Delete", () => aura.data.delete(opts.collection, row.id)));
+        if (opts.onOpen) card.addEventListener("dblclick", () => opts.onOpen(row));
+        grid.append(card);
+      }
+    };
+    live(opts.collection, refresh);
+    return { refresh };
+  };
+
+  /** A bar chart: records counted (or a number field summed) per value of a field. */
+  const chart = (el, opts) => {
+    const box = h("div", "aura-kit-card");
+    if (opts.title) box.append(h("div", "aura-kit-item-title", opts.title));
+    const bars = h("div", "aura-kit-chart");
+    box.append(bars);
+    el.append(box);
+    const refresh = async () => {
+      const rows = await aura.data.list(opts.collection, { ...(opts.query || {}), limit: 500 });
+      const totals = new Map();
+      for (const r of rows) {
+        const key = r[opts.groupBy] === undefined || r[opts.groupBy] === null ? "—" : String(r[opts.groupBy]);
+        totals.set(key, (totals.get(key) || 0) + (opts.value ? Number(r[opts.value]) || 0 : 1));
+      }
+      const max = Math.max(1, ...totals.values());
+      bars.replaceChildren();
+      for (const [key, total] of totals) {
+        const row = h("div", "aura-kit-chart-row");
+        const bar = h("div", "aura-kit-chart-bar");
+        bar.style.width = Math.max(2, (total / max) * 100) + "%";
+        row.append(h("span", "aura-kit-chart-label", key), bar, h("span", "aura-kit-muted", total.toLocaleString()));
+        bars.append(row);
+      }
+      if (totals.size === 0) bars.append(h("p", "aura-kit-muted", "No data yet."));
+    };
+    live(opts.collection, refresh);
+    return { refresh };
+  };
+
+  /** A number: how many records match (or a field's sum). */
+  const stat = (el, opts) => {
+    const box = h("div", "aura-kit-card aura-kit-stat");
+    const value = h("div", "aura-kit-stat-value", "…");
+    box.append(value, h("div", "aura-kit-muted", opts.label || label(opts.collection)));
+    el.append(box);
+    const refresh = async () => {
+      if (opts.sum) {
+        const rows = await aura.data.list(opts.collection, { ...(opts.query || {}), limit: 500 });
+        value.textContent = rows.reduce((s, r) => s + (Number(r[opts.sum]) || 0), 0).toLocaleString();
+      } else value.textContent = String(await aura.data.count(opts.collection, opts.query || {}));
+    };
+    live(opts.collection, refresh);
+    return { refresh };
+  };
+
+  /** Tabs: each renders into its own panel the first time it is opened. */
+  const tabs = (el, list) => {
+    const bar = h("div", "aura-kit-tabs");
+    const panel = h("div");
+    el.append(bar, panel);
+    const panels = list.map(() => h("div"));
+    const rendered = new Set();
+    const open = (i) => {
+      [...bar.children].forEach((b, j) => b.classList.toggle("aura-kit-active", i === j));
+      panel.replaceChildren(panels[i]);
+      if (!rendered.has(i)) { rendered.add(i); Promise.resolve(list[i].render(panels[i])).catch(report); }
+    };
+    list.forEach((tab, i) => {
+      const b = h("button", "aura-kit-tab", tab.label);
+      b.type = "button";
+      b.addEventListener("click", () => open(i));
+      bar.append(b);
+    });
+    if (list.length > 0) open(0);
+  };
+
+  /** A row of small blocks side by side (stats, charts). */
+  const row = (el) => { const r = h("div", "aura-kit-row"); el.append(r); return r; };
+
+  return { form, table, board, cards, chart, stat, tabs, row };
+};

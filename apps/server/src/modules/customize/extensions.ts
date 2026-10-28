@@ -1,3 +1,4 @@
+/// <reference path="../../providers/vendor-files.d.ts" />
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -16,6 +17,7 @@ import {
   validateContract,
 } from "../apps/contract";
 import type { EventHub } from "../realtime/hub";
+import kitSource from "./kit.js.txt" with { type: "text" };
 
 export class ExtensionError extends Error {
   override name = "ExtensionError";
@@ -515,8 +517,39 @@ body { margin: 0; padding: 12px; background: transparent; color: var(--foregroun
   border: 0; border-radius: calc(var(--radius, 8px) - 2px); padding: 6px 12px;
 }
 .aura-button:disabled { opacity: .6; cursor: default; }
+.aura-kit-card { background: var(--card, Canvas); border: 1px solid var(--border, GrayText); border-radius: var(--radius, 10px); padding: 12px; margin-bottom: 12px; }
+.aura-kit-muted { color: var(--muted-foreground, GrayText); font-size: 12px; }
+.aura-kit-bar { display: flex; gap: 8px; margin-bottom: 8px; }
+.aura-kit-search { flex: 1; font: inherit; color: inherit; background: var(--background, Canvas); border: 1px solid var(--border, GrayText); border-radius: calc(var(--radius, 8px) - 2px); padding: 5px 8px; }
+.aura-kit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.aura-kit-table th { text-align: left; font-weight: 500; color: var(--muted-foreground, GrayText); cursor: pointer; padding: 6px; border-bottom: 1px solid var(--border, GrayText); white-space: nowrap; }
+.aura-kit-table td { padding: 6px; border-bottom: 1px solid var(--border, GrayText); vertical-align: top; }
+.aura-kit-actions { text-align: right; white-space: nowrap; }
+.aura-kit-link { font: inherit; font-size: 12px; background: none; border: 0; color: var(--primary, LinkText); cursor: pointer; padding: 0 4px; }
+.aura-kit-danger { color: #e11d48; }
+.aura-kit-board { display: flex; gap: 10px; overflow-x: auto; align-items: flex-start; }
+.aura-kit-column { flex: 0 0 220px; background: var(--muted, Canvas); border-radius: var(--radius, 10px); padding: 8px; min-height: 80px; }
+.aura-kit-column.aura-kit-over { outline: 2px dashed var(--primary, AccentColor); }
+.aura-kit-column-title { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--muted-foreground, GrayText); }
+.aura-kit-item { background: var(--card, Canvas); border: 1px solid var(--border, GrayText); border-radius: calc(var(--radius, 8px) - 2px); padding: 8px; margin-bottom: 6px; cursor: grab; }
+.aura-kit-item-title { font-weight: 600; font-size: 13px; }
+.aura-kit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.aura-kit-tile { margin: 0; }
+.aura-kit-body { margin: 6px 0; font-size: 13px; white-space: pre-wrap; }
+.aura-kit-tag { display: inline-block; font-size: 11px; border: 1px solid var(--border, GrayText); border-radius: 999px; padding: 1px 8px; margin-right: 6px; }
+.aura-kit-chart-row { display: grid; grid-template-columns: 110px 1fr auto; gap: 8px; align-items: center; margin: 4px 0; font-size: 12px; }
+.aura-kit-chart-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aura-kit-chart-bar { height: 10px; border-radius: 999px; background: var(--primary, AccentColor); }
+.aura-kit-stat { min-width: 120px; flex: 1; }
+.aura-kit-stat-value { font-size: 24px; font-weight: 600; }
+.aura-kit-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.aura-kit-row > * { flex: 1; }
+.aura-kit-tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--border, GrayText); }
+.aura-kit-tab { font: inherit; font-size: 13px; background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 10px; cursor: pointer; color: var(--muted-foreground, GrayText); }
+.aura-kit-tab.aura-kit-active { color: var(--foreground, CanvasText); border-bottom-color: var(--primary, AccentColor); }
 </style>
 <style>${inert(styles)}</style>
+<script>${inert(KIT)}</script>
 <script>${inert(BRIDGE)}</script>
 </head><body><div id="root"></div>
 <script type="module">
@@ -532,6 +565,9 @@ try {
 </script>
 </body></html>`;
 }
+
+/** The app kit (phase 26), loaded before the bridge. */
+const KIT: string = kitSource;
 
 /** Runs inside the frame: the only way an extension can talk to the app. */
 const BRIDGE = `(() => {
@@ -629,7 +665,7 @@ const BRIDGE = `(() => {
     el.append(root);
     return { element: root, values };
   };
-  window.aura = Object.freeze({
+  const api = {
     context: () => call("context.get"),
     storage: Object.freeze({
       get: (key) => call("storage.get", { key }),
@@ -646,6 +682,7 @@ const BRIDGE = `(() => {
       insert: (collection, record) => call("data", { op: "insert", collection, record }),
       update: (collection, id, patch) => call("data", { op: "update", collection, id, patch }),
       delete: (collection, id) => call("data", { op: "delete", collection, id }),
+      schema: (collection) => call("data", { op: "schema", collection }),
       on: (collection, fn) => {
         if (!listeners.has("data.changed")) listeners.set("data.changed", []);
         listeners.get("data.changed").push((p) => { if (p && (p.collection === collection || p.collection === "*")) fn(p); });
@@ -678,7 +715,10 @@ const BRIDGE = `(() => {
       button,
     }),
     __reportError: report,
-  });
+  };
+  // The app kit (themed views bound to collections) is built on the same API.
+  api.kit = Object.freeze(window.__auraKit ? window.__auraKit(api, report) : {});
+  window.aura = Object.freeze(api);
 })();`;
 
 export const FRAME_CSP =

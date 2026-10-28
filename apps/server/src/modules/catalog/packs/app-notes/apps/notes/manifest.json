@@ -1,0 +1,19 @@
+{
+  "id": "notes",
+  "name": "Notes",
+  "version": "1.0.0",
+  "minAppVersion": "0.25.0",
+  "permissions": ["ui.panel", "storage"],
+  "author": "Aura",
+  "icon": "notebook-pen",
+  "collections": {
+    "notes": { "fields": { "title": "string", "body": "string", "tag": "string?" } }
+  },
+  "actions": {
+    "find_notes": { "kind": "list", "collection": "notes", "description": "Find notes by text or tag" },
+    "add_note": { "kind": "insert", "collection": "notes", "description": "Write a note" },
+    "update_note": { "kind": "update", "collection": "notes", "description": "Change a note" },
+    "remove_note": { "kind": "delete", "collection": "notes", "description": "Delete a note" }
+  },
+  "provides": ["find_notes"]
+}

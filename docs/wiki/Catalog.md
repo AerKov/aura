@@ -1,6 +1,7 @@
 # Catalog
 
-The **Catalog** page (the box icon in the rail) installs ready-made **packs**: agents with their
+The **Catalog** page (the box icon in the rail) installs ready-made **packs**: [apps](Apps) (CRM,
+Tasks, Notes and apps others publish), agents with their
 prompts, skills, themes, CSS snippets and panel extensions.
 
 ## Built-in packs

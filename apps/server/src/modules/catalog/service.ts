@@ -42,6 +42,15 @@ export class CatalogService {
       dataDir: string;
       approvals: ApprovalService;
       extensions: ExtensionService;
+      /** Apps with their own chat (phase 27). */
+      apps?: {
+        isApp: (id: string) => boolean;
+        installFromPack: (
+          id: string,
+          files: Record<string, string>,
+          pack: { id: string; version: string },
+        ) => Promise<string>;
+      };
       hub: EventHub;
       fetch?: typeof fetch;
     },
@@ -126,6 +135,28 @@ export class CatalogService {
     ];
     for (const path of m.files) {
       const content = pack.files[path] ?? "";
+      if (path.startsWith("apps/")) {
+        // An app becomes a project with its own chat; an installed one is updated by merging.
+        const id = path.split("/")[1] ?? "";
+        if (!path.endsWith("/manifest.json")) {
+          lines.push(`- \`${path}\``);
+          continue;
+        }
+        const manifest = validateManifest(JSON.parse(content), id);
+        const exists = this.deps.apps?.isApp(id) ?? false;
+        lines.push(
+          `- \`${path}\`: ${exists ? "updates" : "new"} app **${manifest.name}** with its own chat, asks for: ${manifest.permissions.map((p) => `\`${p}\``).join(", ") || "nothing"}`,
+        );
+        if (exists)
+          warnings.push(
+            `The app ${manifest.name} is updated: your own changes to it are kept; where you and the author changed the same lines, the author's version is used (its versions can restore yours).`,
+          );
+        if (manifest.hosts?.length)
+          warnings.push(`App ${manifest.name} can reach ${manifest.hosts.join(", ")}.`);
+        if (manifest.contract?.uses.length)
+          warnings.push(`App ${manifest.name} calls ${manifest.contract.uses.join(", ")}.`);
+        continue;
+      }
       const target = join(this.deps.dataDir, path);
       const before = existsSync(target) ? readFileSync(target, "utf8") : null;
       if (before === content) {
@@ -224,7 +255,20 @@ export class CatalogService {
     author: string,
   ): Promise<string> {
     const m = pack.manifest;
+    const c = contentsOf(m.files);
+    // Apps first: one may refuse (a change waiting for approval), and then nothing is written.
+    const apps: string[] = [];
+    for (const id of c.apps) {
+      if (!this.deps.apps) throw new PackError("This version cannot install apps");
+      const files = Object.fromEntries(
+        m.files
+          .filter((p) => p.startsWith(`apps/${id}/`))
+          .map((p) => [p.slice(`apps/${id}/`.length), pack.files[p] ?? ""]),
+      );
+      apps.push(await this.deps.apps.installFromPack(id, files, { id: m.id, version: m.version }));
+    }
     for (const path of m.files) {
+      if (path.startsWith("apps/")) continue;
       const target = join(this.deps.dataDir, path);
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, pack.files[path] ?? "");
@@ -237,8 +281,8 @@ export class CatalogService {
     for (const id of contentsOf(m.files).extensions)
       await this.deps.extensions.setEnabled(id, true);
     this.deps.hub.publish({ type: "customize.updated" });
-    const c = contentsOf(m.files);
     const parts = [
+      ...apps,
       c.agents.length ? `agents ${c.agents.map((a) => `@${a}`).join(", ")}` : "",
       c.skills.length ? `skills ${c.skills.join(", ")}` : "",
       c.themes.length ? `themes ${c.themes.join(", ")}` : "",

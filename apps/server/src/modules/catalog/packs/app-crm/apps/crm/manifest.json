@@ -1,0 +1,41 @@
+{
+  "id": "crm",
+  "name": "CRM",
+  "version": "1.0.0",
+  "minAppVersion": "0.25.0",
+  "permissions": ["ui.panel", "storage"],
+  "author": "Aura",
+  "icon": "users",
+  "collections": {
+    "clients": {
+      "fields": {
+        "name": "string",
+        "company": "string?",
+        "email": "string?",
+        "phone": "string?",
+        "status": "string",
+        "note": "string?"
+      }
+    },
+    "deals": {
+      "fields": {
+        "title": "string",
+        "client": "string?",
+        "amount": "number?",
+        "stage": "string",
+        "due": "date?"
+      }
+    }
+  },
+  "actions": {
+    "find_clients": { "kind": "list", "collection": "clients", "description": "Find clients by name, company, email or status" },
+    "add_client": { "kind": "insert", "collection": "clients", "description": "Add a client (status: lead, active or past)" },
+    "update_client": { "kind": "update", "collection": "clients", "description": "Change a client's details or status" },
+    "remove_client": { "kind": "delete", "collection": "clients", "description": "Delete a client" },
+    "find_deals": { "kind": "list", "collection": "deals", "description": "Find deals by title, client or stage" },
+    "add_deal": { "kind": "insert", "collection": "deals", "description": "Add a deal (stage: lead, proposal, won or lost; client is the client's name)" },
+    "update_deal": { "kind": "update", "collection": "deals", "description": "Change a deal, e.g. move it to another stage" },
+    "count_deals": { "kind": "count", "collection": "deals", "description": "Count deals, e.g. those won" }
+  },
+  "provides": ["find_clients", "find_deals"]
+}

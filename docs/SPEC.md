@@ -412,11 +412,11 @@ per app.
 An app declares actions (exposed like MCP tools) and what it lets others read. Agents call them in
 the app's chat; another app calls them only with the user's permission for those actions.
 
-**Phase 26: App kit**
+**Phase 26: App kit** (done, ADR 0026)
 Themed components (table, form, board, card, chart) and templates (CRM, tasks, notes), so agents
 build reliable apps from data and views instead of raw DOM.
 
-**Phase 27: Community apps**
+**Phase 27: Community apps** (done, ADR 0026)
 Apps in the catalog: install, change in their chat, updates from the author merged with the user's
 changes.
 

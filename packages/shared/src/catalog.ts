@@ -10,6 +10,8 @@ export const PACK_FILE_PATTERNS: readonly RegExp[] = [
   /^themes\/[a-z][a-z0-9-]{1,47}\/theme\.css$/,
   /^snippets\/[a-z][a-z0-9-]{1,47}\.css$/,
   /^extensions\/[a-z][a-z0-9-]{1,47}\/(manifest\.json|main\.js|styles\.css)$/,
+  // Apps with their own chat (ADR 0024, phase 27): installed as a project, updated by merging.
+  /^apps\/[a-z][a-z0-9-]{1,47}\/(manifest\.json|main\.js|styles\.css)$/,
 ];
 
 export function isPackFilePath(path: string): boolean {
@@ -35,6 +37,7 @@ export interface PackContents {
   themes: string[];
   snippets: string[];
   extensions: string[];
+  apps: string[];
 }
 
 export interface PackSummary {

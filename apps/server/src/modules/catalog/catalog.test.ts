@@ -39,7 +39,17 @@ describe("catalog", () => {
   test("built-in packs are valid and listed", async () => {
     t = await createTestApp();
     const ids = t.catalog.list().map((p) => p.id);
-    expect(ids).toEqual(["dev-team", "writing-team", "research", "ops", "themes", "alerts-panel"]);
+    expect(ids).toEqual([
+      "app-crm",
+      "app-tasks",
+      "app-notes",
+      "dev-team",
+      "writing-team",
+      "research",
+      "ops",
+      "themes",
+      "alerts-panel",
+    ]);
     const dev = t.catalog.list().find((p) => p.id === "dev-team");
     expect(dev?.contents).toMatchObject({ agents: ["coder", "reviewer"], skills: ["test-first"] });
     expect(dev?.installed).toBeNull();

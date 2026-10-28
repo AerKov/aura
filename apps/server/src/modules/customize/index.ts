@@ -308,6 +308,7 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
             t.Literal("insert"),
             t.Literal("update"),
             t.Literal("delete"),
+            t.Literal("schema"),
           ]),
           collection: t.String({ maxLength: 32 }),
           id: t.Optional(t.String({ maxLength: 64 })),

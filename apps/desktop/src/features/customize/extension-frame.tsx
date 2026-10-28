@@ -194,7 +194,7 @@ export function ExtensionFrame({
         case "data": {
           const { result } = await call(() =>
             ext().data.post({
-              op: p.op as "list" | "count" | "get" | "insert" | "update" | "delete",
+              op: p.op as "list" | "count" | "get" | "insert" | "update" | "delete" | "schema",
               collection: String(p.collection ?? ""),
               id: typeof p.id === "string" ? p.id : undefined,
               record: p.record,

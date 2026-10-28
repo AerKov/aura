@@ -205,6 +205,7 @@ export async function createServices(deps: {
     dataDir: deps.dataDir,
     approvals,
     extensions,
+    apps: appService,
     hub: deps.hub,
     fetch: deps.fetch,
   });

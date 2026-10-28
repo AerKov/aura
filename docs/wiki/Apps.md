@@ -6,7 +6,8 @@ own chat**. Every change is shown to you first, and every version can be brought
 
 ## Make an app
 
-- **+** on any tile → **New app**: give it a name and, if you like, say what it should do.
+- **+** on any tile → **New app**: start from a template (**CRM**, **Tasks**, **Notes**), or empty:
+  give it a name and, if you like, say what it should do.
 - Or ask the orchestrator: _"make me an app to track clients and deals"_. It proposes the app on a
   card; approve it.
 
@@ -58,6 +59,16 @@ Deleting a record always asks you first, on a card.
 An app can offer some of its actions to other apps (for example, a CRM offers _find clients_). Another
 app that wants to use them says so in its manifest, and the card you approve lists exactly which
 actions of which app it will call. It can call nothing else, and only what the first app still offers.
+
+## Apps from others
+
+Apps come in [Catalog](Catalog) packs, built in or from a link (community apps). Installing one
+creates the app with its own chat, like one you made. You can change it in its chat as usual.
+
+When the author ships a new version, install the pack again (**Update**): your own changes stay, and
+where you and the author changed the same lines, the author's version is used. The preview says so
+before you install, and **Versions** on the app's tile brings yours back if needed. If the app has a
+change waiting for your approval, decide on that first.
 
 ## What an app can do
 

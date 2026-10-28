@@ -5,6 +5,15 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-10-28: App kit and community apps
+
+- App templates: **+ → New app** starts from CRM, Tasks or Notes, ready to use and to change in
+  their chat.
+- The app kit: tables with search and sorting, forms built from the data's fields, boards with drag
+  and drop, cards, charts and numbers, all live and in the current theme. @builder uses them.
+- Apps in catalog packs (built in or from a link) install with their own chat. Updates from the
+  author are merged with your own changes; the preview says what happens.
+
 ## [0.25.0] - 2026-10-28: App data and actions
 
 - Each app keeps its data in its own store: a database of its own (default) or JSON files in its

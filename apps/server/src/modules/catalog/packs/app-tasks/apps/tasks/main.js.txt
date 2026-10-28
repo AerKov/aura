@@ -1,0 +1,10 @@
+export default function activate(ctx) {
+  const STATUS = ["todo", "doing", "done"];
+  ctx.ui.registerPanel({
+    title: "Tasks",
+    render(el) {
+      ctx.kit.form(el, { collection: "tasks", title: "New task", fields: ["title", "due", "status"], options: { status: STATUS }, defaults: { status: "todo" } });
+      ctx.kit.board(el, { collection: "tasks", groupBy: "status", groups: STATUS, labels: { todo: "To do", doing: "Doing", done: "Done" }, title: "title", subtitle: "due" });
+    },
+  });
+}

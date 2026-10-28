@@ -166,7 +166,11 @@ export function CatalogView() {
                     onClick={() => void preview(pack.id, { id: pack.id })}
                   >
                     {busy === pack.id ? <RefreshCw className="animate-spin" /> : <Download />}
-                    {pack.installed?.version === pack.version ? "Reinstall" : "Install"}
+                    {pack.installed?.version === pack.version
+                      ? "Reinstall"
+                      : pack.installed
+                        ? "Update"
+                        : "Install"}
                   </Button>
                 </div>
                 {panel(pack.id)}
@@ -187,6 +191,7 @@ function Contents({ pack }: { pack: PackSummary }) {
     ...c.themes.map((t) => `theme ${t}`),
     ...c.snippets.map((s) => `snippet ${s}`),
     ...c.extensions.map((e) => `panel ${e}`),
+    ...c.apps.map((a) => `app ${a}`),
   ];
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">

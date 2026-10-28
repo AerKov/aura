@@ -1,0 +1,9 @@
+{
+  "id": "app-notes",
+  "name": "Notes",
+  "version": "1.0.0",
+  "description": "Notes with tags, as cards you can search. Ask in its chat to write, find or summarize notes.",
+  "author": "Aura",
+  "tags": ["app", "notes"],
+  "files": ["apps/notes/manifest.json", "apps/notes/main.js"]
+}

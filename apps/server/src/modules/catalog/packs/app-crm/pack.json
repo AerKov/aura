@@ -1,0 +1,9 @@
+{
+  "id": "app-crm",
+  "name": "CRM",
+  "version": "1.0.0",
+  "description": "An app for clients and deals: a client list, a deal board by stage, and an overview. Agents in its chat add and update clients and deals for you; other apps may look clients up.",
+  "author": "Aura",
+  "tags": ["app", "crm", "sales"],
+  "files": ["apps/crm/manifest.json", "apps/crm/main.js"]
+}
