@@ -1,6 +1,6 @@
 # The screen
 
-Aura is a core you fill with apps. It opens on **Home**, the shelf of your apps, and lays out the
+Aura is a core you fill with apps. It opens on **Home**, the launcher of your apps, and lays out the
 apps you open as **tiles**, like a tiling window manager. Even the built-in parts (Chats, Skills,
 Memory…) are apps, and you can turn off the ones you do not need.
 

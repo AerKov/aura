@@ -419,7 +419,7 @@ Apps in the catalog: install, change in their chat, updates from the author merg
 changes.
 
 **Phase 28: Home and single-app tiles** (done, ADR 0027)
-The Home shelf (your apps, Add an app, built-in apps, a welcome card) on an empty screen. A tile
+The Home shelf (a grouped launcher since phase 35: your apps, Add an app, built-in apps, a welcome card) on an empty screen. A tile
 shows one app, no tabs; an app's chat opens as a panel inside its tile; nothing opens by itself.
 
 **Phase 29: The core and built-in apps** (done, ADR 0027)

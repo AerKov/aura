@@ -1,7 +1,7 @@
-# Aura 0.27 alpha
+# Aura alpha
 
-Aura is a messenger where you work with an AI orchestrator and a team of AI agents. This is the
-first public build. It works end to end, but expect rough edges. Please
+Aura is a messenger where you work with an AI orchestrator and a team of AI agents. It works end
+to end, but expect rough edges. Please
 [report what breaks](https://github.com/AerKov/aura/issues/new/choose).
 
 ## Install
@@ -30,18 +30,26 @@ Agents need a model. Aura uses what you already have and never asks for or store
 
 Then follow [Getting started](https://github.com/AerKov/aura/wiki/Getting-Started).
 
+## Your apps
+
+Home is a launcher: your apps by group, and the built-in ones (Chats, Agents, Skills, Memory,
+Schedule, Signals…), which you can turn off. Describe a tool you need and @builder makes it as an
+app with its own chat; every change waits for your approval. **Restore points** take the whole Aura
+back, or forward again, and **Localization** switches Aura to Ukrainian. Details:
+[The screen](https://github.com/AerKov/aura/wiki/The-Screen), [Apps](https://github.com/AerKov/aura/wiki/Apps).
+
 ## Connecting your tools
 
-Trackers, databases and internal APIs connect on the **Integrations** page: an MCP server or a
-script, its keys stored as secrets (no `~/.profile` needed), and a **Test** button that says what
-is wrong. The **Agents** page shows what each agent can do and what stops it. Or just ask the
-orchestrator: it knows how Aura works and can check the setup for you. Details:
-[Integrations](https://github.com/AerKov/aura/wiki/Integrations).
+Trackers, databases and internal APIs connect on the **Agents** page: an MCP server (a command or
+a URL), its keys stored as secrets, and a **Test** button that says what is wrong. Each agent's card
+shows its full prompt, what it can do and what stops it. Or just ask the orchestrator: it knows how
+Aura works and can check the setup for you. Details:
+[Agents](https://github.com/AerKov/aura/wiki/Agents).
 
 ## Optional
 
 - **Command sandbox:** macOS works out of the box. On Linux install `bubblewrap` and `socat`.
-- **Project containers:** Docker Desktop or Podman, for projects that run in their own container.
+  Agents' commands have no network; they use the web through their engine's web tools.
 - **Phone:** start with `AURA_REMOTE=1` and pair from the Devices page.
 
 ## Your data
@@ -54,8 +62,7 @@ repository, chats and history in a local database. Uninstalling the app keeps th
 - One user per installation (no accounts or sharing yet).
 - Packs from links are not signed. Read the preview before installing one.
 - Intel Macs: no build yet; run from source.
-- Windows has no command sandbox. Use project containers (Docker Desktop) for isolation.
+- Windows has no command sandbox yet: agents' commands run with your user's permissions there.
 - No automatic updates yet: download new versions from Releases.
-- Gemini CLI, Codex and OpenCode run on your computer even in container projects; Aura still
-  decides what they may do.
-- Data from this alpha should carry over, but back up `~/.aura` before updating.
+- Gemini CLI, Codex and OpenCode use their own sandboxes; Aura still decides what they may do.
+- Data from this alpha should carry over; save a restore point (or copy `~/.aura`) before updating.

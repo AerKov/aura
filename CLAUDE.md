@@ -48,7 +48,8 @@ apps/
     src-tauri/      Rust shell, sidecar config, plugins
   server/           Bun + Elysia: HTTP API, WebSocket, orchestrator, agent runtime, scheduler
     src/
-      modules/      feature modules (chat, agents, approvals, skills, alerts, extensions, auth)
+      modules/      feature modules (core, chat, agents, apps, approvals, skills, memory, alerts,
+                    customize, backups, localization, shell, auth…)
       providers/    LLMProvider implementations
       db/           SurrealDB client, schema, migrations
 packages/
@@ -95,7 +96,8 @@ docs/
    always reaches one addressee: mention, reply, name, or the orchestrator, ADR 0014); every
    agent-to-agent chain has a max depth; per-agent and per-project token/cost budgets stop runs.
 9. **Agents edit only the user data directory** (`agents/`, `skills/`, `themes/`, `snippets/`,
-   `extensions/`, `mcp/`). The app core is read-only for agents at runtime.
+   `extensions/`, `mcp/`, `locales/`, and project and app folders in `projects/`). The app core
+   is read-only for agents at runtime.
 10. **Every agent change to user data is a git commit** with a clear message, so it can be reverted.
 11. **Message protocol lives in `packages/shared`.** Server and client import it; never duplicate it.
 

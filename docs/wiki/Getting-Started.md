@@ -56,6 +56,6 @@ right agent, reply to an agent's message to answer it, or type `@` to pick an ag
 ## Next
 
 - [Chats and agents](Chats-and-Agents) for how conversations and agents behave
-- [The screen](The-Screen): the Home shelf, apps side by side, turning built-in apps off
+- [The screen](The-Screen): the Home launcher, apps side by side, turning built-in apps off, restore points, language
 - [Customization](Customization) to change the look or add tools by asking the orchestrator
 - [Phone](Phone) to keep an eye on things from your phone

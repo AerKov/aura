@@ -5,6 +5,11 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- Docs: the alpha notes, README, architecture overview and ADR table are up to date with the
+  launcher, restore points and Localization; Integrations and project containers are gone from
+  them.
+- Unused code removed.
+
 ## [0.35.0] - 2026-10-29: Aura as a shell
 
 - **Home is a launcher**: every app by group, with a one-line description, and a search box. Apps
