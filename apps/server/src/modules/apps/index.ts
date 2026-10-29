@@ -3,18 +3,24 @@ import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import { ProjectError } from "../projects/service";
 import type { AppDataService } from "./data";
+import { type AppLifecycle, LifecycleError } from "./lifecycle";
 import { AppError, type AppService } from "./service";
 
 function appError(error: unknown): string | null {
-  if (error instanceof AppError || error instanceof ProjectError) return error.message;
+  if (error instanceof AppError || error instanceof ProjectError || error instanceof LifecycleError)
+    return error.message;
   return null;
 }
 
-/** Apps built in Aura (ADR 0024): create one, see its versions, restore one, drop a draft. */
+/**
+ * Apps built in Aura (ADR 0024): create one, see its versions, restore one, drop a draft;
+ * uninstall one with a backup and bring it back (ADR 0033).
+ */
 export const appsModule = (deps: {
   sessions: LocalSessions;
   apps: AppService;
   appData: AppDataService;
+  lifecycle: AppLifecycle;
 }) =>
   new Elysia({ name: "apps" })
     .use(authGuard(deps.sessions))
@@ -122,4 +128,45 @@ export const appsModule = (deps: {
         auth: true,
         body: t.Object({ store: t.Union([t.Literal("database"), t.Literal("files")]) }),
       },
+    )
+    .delete(
+      "/apps/:appId",
+      async ({ params, status }) => {
+        try {
+          return await deps.lifecycle.uninstall(params.appId);
+        } catch (error) {
+          const message = appError(error);
+          if (message) return status(404, { error: message });
+          throw error;
+        }
+      },
+      { auth: true },
+    )
+    .get("/app-backups", () => deps.lifecycle.backups(), { auth: true })
+    .post(
+      "/app-backups/:name/restore",
+      async ({ params, status }) => {
+        try {
+          return await deps.lifecycle.restoreBackup(params.name);
+        } catch (error) {
+          const message = appError(error);
+          if (message) return status(400, { error: message });
+          throw error;
+        }
+      },
+      { auth: true },
+    )
+    .delete(
+      "/app-backups/:name",
+      ({ params, status }) => {
+        try {
+          deps.lifecycle.deleteBackup(params.name);
+          return { ok: true };
+        } catch (error) {
+          const message = appError(error);
+          if (message) return status(404, { error: message });
+          throw error;
+        }
+      },
+      { auth: true },
     );

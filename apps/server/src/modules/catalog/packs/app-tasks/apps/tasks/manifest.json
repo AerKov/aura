@@ -5,6 +5,8 @@
   "minAppVersion": "0.25.0",
   "permissions": ["ui.panel", "storage"],
   "author": "Aura",
+  "description": "Tasks on a board: to do, doing, done.",
+  "group": "Work",
   "icon": "kanban",
   "collections": {
     "tasks": {

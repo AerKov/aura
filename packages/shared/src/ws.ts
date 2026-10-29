@@ -16,6 +16,8 @@ export type ServerEvent =
   | { type: "message.delta"; chatId: string; messageId: string; text: string }
   | { type: "message.deleted"; chatId: string; messageId: string }
   | { type: "chat.updated"; chat: Chat }
+  /** A chat was deleted with its app (ADR 0033). */
+  | { type: "chat.removed"; chatId: string }
   /** A topic was created, renamed, closed or reopened. */
   | { type: "topic.updated"; topic: Topic }
   /** An app's data changed ("*": everything); its frames refresh (ADR 0024). */

@@ -5,6 +5,8 @@
   "minAppVersion": "0.25.0",
   "permissions": ["ui.panel", "storage"],
   "author": "Aura",
+  "description": "Notes as cards, with tags and search.",
+  "group": "Work",
   "icon": "notebook-pen",
   "collections": {
     "notes": { "fields": { "title": "string", "body": "string", "tag": "string?" } }

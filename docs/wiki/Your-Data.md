@@ -14,6 +14,9 @@ extensions/<id>/             panels
 mcp/servers.json             MCP servers
 engines.json                 default engine and models
 projects/<slug>/             project folders (each its own git repository; not in the parent repo)
+locales/<code>.json          your languages and translation fixes
+backups/apps/                backups of uninstalled apps (not in git)
+restore-points/              restore points of the whole Aura (not in git)
 state/                       database, keys, tokens (not in git)
 ```
 
@@ -25,7 +28,9 @@ state/                       database, keys, tokens (not in git)
 
 ## Backups
 
-Copy `~/.aura` while Aura is closed. For config alone you can push the git repository to a private
+**Restore points** (on Home) take Aura back or forward without leaving the app; see
+[The screen](The-Screen#restore-points). For a backup outside Aura, copy `~/.aura` while Aura is
+closed. For config alone you can push the git repository to a private
 remote. Do not publish `state/`.
 
 ## What leaves your computer

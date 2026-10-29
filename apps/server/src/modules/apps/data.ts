@@ -203,6 +203,8 @@ export class AppDataService {
       saveKind: (app: string, kind: StoreKind) => Promise<void>;
       /** Opens the app's own SurrealDB datastore. */
       openDatabase: (app: string) => Promise<Surreal>;
+      /** Deletes the app's own database files, once it is closed. */
+      removeDatabase?: (app: string) => void;
       contract: (app: string) => Promise<Contract>;
     },
   ) {}
@@ -345,6 +347,28 @@ export class AppDataService {
     await (await this.store(app, from)).clear();
     log.info("app data moved", { app, from, to: kind });
     this.changed(app, "*");
+  }
+
+  /** Puts back data from a dump: the app's store then holds exactly that (backups, ADR 0033). */
+  async replace(app: string, data: Record<string, DataRecord[]>): Promise<void> {
+    const store = await this.store(app);
+    await store.clear();
+    for (const [collection, records] of Object.entries(data))
+      for (const record of records) await store.put(collection, record);
+    this.changed(app, "*");
+  }
+
+  /** Clears and closes an app's stores before the app is removed. */
+  async forget(app: string): Promise<void> {
+    await (await this.store(app)).clear();
+    for (const [key, store] of this.open) {
+      if (!key.startsWith(`${app}:`)) continue;
+      this.open.delete(key);
+      await store
+        .then((s) => s.close())
+        .catch((e: unknown) => log.warn("store close failed", { app, error: errorMessage(e) }));
+    }
+    this.deps.removeDatabase?.(app);
   }
 
   async closeAll(): Promise<void> {

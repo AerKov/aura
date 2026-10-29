@@ -7,6 +7,9 @@ import {
   type ExtensionIcon,
   type ExtensionInfo,
   type ExtensionPermission,
+  LOCALE_CODE,
+  MAX_APP_DESCRIPTION,
+  MAX_APP_GROUP,
 } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 import { commitAll, git } from "../../lib/git";
@@ -17,6 +20,7 @@ import {
   EMPTY_CONTRACT,
   validateContract,
 } from "../apps/contract";
+import { LIBRARY_PATH, MAX_LIBRARIES_TOTAL } from "../apps/libraries";
 import type { EventHub } from "../realtime/hub";
 import kitSource from "./kit.js.txt" with { type: "text" };
 
@@ -56,12 +60,18 @@ export interface Manifest {
   author: string;
   mobile?: boolean;
   icon?: ExtensionIcon;
+  /** One line on what it is for, for the launcher (ADR 0033). */
+  description?: string;
+  /** Its launcher group. */
+  group?: string;
   /** Hosts `net` may reach. */
   hosts?: string[];
   /** Stored secrets the server may substitute into its requests. */
   secrets?: string[];
   /** An app's data and actions (phases 24-25). */
   contract?: Contract;
+  /** Library files in its folder, loaded before main.js in this order (ADR 0033). */
+  libraries?: string[];
 }
 
 export function compareVersions(a: string, b: string): number {
@@ -104,6 +114,14 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
     throw new ExtensionError(`only the app "${BAR_APP_ID}" may ask for ui.bar`);
   if (m.icon !== undefined && !(EXTENSION_ICONS as readonly unknown[]).includes(m.icon))
     throw new ExtensionError(`icon must be one of ${EXTENSION_ICONS.join(", ")}`);
+  const libraries = stringList(m.libraries, "libraries");
+  const badLibrary = libraries.find((l) => !LIBRARY_PATH.test(l));
+  if (badLibrary)
+    throw new ExtensionError(
+      `"${badLibrary}" is not a library path: lib/… ending in .js, .mjs or .css (add_library puts files there)`,
+    );
+  const description = optionalText(m.description, "description", MAX_APP_DESCRIPTION);
+  const group = optionalText(m.group, "group", MAX_APP_GROUP);
   const hosts = stringList(m.hosts, "hosts").map((h) => h.toLowerCase());
   const bad = hosts.find((h) => !HOST.test(h));
   if (bad) throw new ExtensionError(`"${bad}" is not a host name (e.g. api.example.com)`);
@@ -131,10 +149,20 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
     author: m.author.trim(),
     mobile: m.mobile === true,
     ...(m.icon ? { icon: m.icon as ExtensionIcon } : {}),
+    ...(description ? { description } : {}),
+    ...(group ? { group } : {}),
     ...(hosts.length ? { hosts: [...new Set(hosts)] } : {}),
     ...(secrets.length ? { secrets: [...new Set(secrets)] } : {}),
     ...(Object.keys(contract.collections).length || contract.uses.length ? { contract } : {}),
+    ...(libraries.length ? { libraries: [...new Set(libraries)] } : {}),
   };
+}
+
+function optionalText(value: unknown, field: string, max: number): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== "string" || value.length > max || value.includes("\n"))
+    throw new ExtensionError(`${field} must be one line of at most ${max} characters`);
+  return value.trim() || null;
 }
 
 function stringList(value: unknown, field: string): string[] {
@@ -154,6 +182,7 @@ export function describeManifest(m: Manifest): string[] {
       ? `- secrets put into those requests by Aura (the extension never sees them): ${m.secrets.map((s) => `\`${s}\``).join(", ")}`
       : "",
     ...(m.contract ? describeContract(m.contract) : []),
+    ...(m.libraries ?? []).map((l) => `- library: \`${l}\` (runs inside the app only)`),
   ].filter(Boolean);
 }
 
@@ -182,6 +211,9 @@ interface State {
   calls: string[];
   errors: number;
 }
+
+/** What the user granted an extension, without its error count. */
+export type GrantedState = Omit<State, "errors">;
 
 const grants = (m: Manifest) => ({
   granted: m.permissions,
@@ -313,6 +345,8 @@ export class ExtensionService {
         version: m.version,
         minAppVersion: m.minAppVersion,
         author: m.author,
+        description: m.description ?? null,
+        group: m.group ?? null,
         icon: m.icon ?? null,
         enabled: state.enabled && !problem,
         permissions: state.enabled ? state.granted : m.permissions,
@@ -329,6 +363,8 @@ export class ExtensionService {
         minAppVersion: "0.0.0",
         permissions: [],
         author: "",
+        description: null,
+        group: null,
         icon: null,
         hosts: [],
         secrets: [],
@@ -348,6 +384,24 @@ export class ExtensionService {
     rmSync(this.dirOf(id), { recursive: true, force: true });
     await this.deps.db.query("DELETE $id", { id: new RecordId("extension_state", id) }).collect();
     await commitAll(this.deps.dataDir, `extensions(${id}): remove`, author);
+    this.deps.hub.publish({ type: "customize.updated" });
+  }
+
+  /** What the user granted an app, to keep in its backup (ADR 0033). */
+  async exportState(id: string): Promise<GrantedState> {
+    const { enabled, granted, hosts, secrets, calls } = await this.state(id);
+    return { enabled, granted, hosts, secrets, calls };
+  }
+
+  /** Puts back what was granted, when an app comes back from a backup or a restore point. */
+  async importState(id: string, state: GrantedState): Promise<void> {
+    const manifest = await this.readManifest(id);
+    await this.saveState(id, manifest.version, { ...state, errors: 0 });
+  }
+
+  /** Forgets an app's grants when it is uninstalled. */
+  async forgetState(id: string): Promise<void> {
+    await this.deps.db.query("DELETE $id", { id: new RecordId("extension_state", id) }).collect();
     this.deps.hub.publish({ type: "customize.updated" });
   }
 
@@ -472,14 +526,36 @@ export class ExtensionService {
   }
 
   /** HTML of the sandboxed frame, or null when the extension may not run. */
-  async frame(id: string, draft = false): Promise<string | null> {
+  async frame(id: string, draft = false, language?: string): Promise<string | null> {
     if (this.deps.safeMode()) return null;
     const info = await this.info(id);
     if (!info.enabled) return null;
     const main = await this.fileOf(id, "main.js", draft);
     if (main === null) return null;
     const styles = (await this.fileOf(id, "styles.css", draft)) ?? "";
-    return frameHtml(info, main, styles);
+    const lang = language && LOCALE_CODE.test(language) ? language : "en";
+    return frameHtml(info, main, styles, await this.libraries(id, draft), lang);
+  }
+
+  /** The app's library files, as its manifest lists them; missing ones are skipped. */
+  private async libraries(id: string, draft: boolean): Promise<Library[]> {
+    let paths: string[] = [];
+    try {
+      const text = await this.fileOf(id, "manifest.json", draft);
+      paths = text ? (validateManifest(JSON.parse(text), id).libraries ?? []) : [];
+    } catch {
+      return [];
+    }
+    const out: Library[] = [];
+    let total = 0;
+    for (const path of paths) {
+      const source = await this.fileOf(id, path, draft);
+      if (source === null) continue;
+      total += source.length;
+      if (total > MAX_LIBRARIES_TOTAL) break;
+      out.push({ path, source });
+    }
+    return out;
   }
 
   /**
@@ -502,9 +578,25 @@ function inert(text: string): string {
   return text.replace(/<\/(script|style)/gi, "<\\/$1");
 }
 
-function frameHtml(info: ExtensionInfo, main: string, styles: string): string {
+interface Library {
+  path: string;
+  source: string;
+}
+
+function frameHtml(
+  info: ExtensionInfo,
+  main: string,
+  styles: string,
+  libraries: Library[] = [],
+  language = "en",
+): string {
+  const css = libraries.filter((l) => l.path.endsWith(".css"));
+  const scripts = libraries.filter((l) => l.path.endsWith(".js"));
+  const modules = Object.fromEntries(
+    libraries.filter((l) => l.path.endsWith(".mjs")).map((l) => [l.path, l.source]),
+  );
   return `<!doctype html>
-<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="${language}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(info.name)}</title>
 <style>
 :root { color-scheme: light dark; font-family: system-ui, sans-serif; font-size: 14px; }
@@ -555,9 +647,12 @@ body { margin: 0; padding: 12px; background: transparent; color: var(--foregroun
 .aura-kit-tab { font: inherit; font-size: 13px; background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 10px; cursor: pointer; color: var(--muted-foreground, GrayText); }
 .aura-kit-tab.aura-kit-active { color: var(--foreground, CanvasText); border-bottom-color: var(--primary, AccentColor); }
 </style>
+${css.map((l) => `<style>${inert(l.source)}</style>`).join("\n")}
 <style>${inert(styles)}</style>
+<script>window.__auraFrame = ${inert(JSON.stringify({ language, libraries: modules }))};</script>
 <script>${inert(KIT)}</script>
 <script>${inert(BRIDGE)}</script>
+${scripts.map((l) => `<script>${inert(l.source)}</script>`).join("\n")}
 </head><body><div id="root"></div>
 <script type="module">
 const source = ${inert(JSON.stringify(main))};
@@ -712,8 +807,16 @@ const BRIDGE = `(() => {
     el.append(root);
     return { element: root, values };
   };
+  const frame = window.__auraFrame || { language: "en", libraries: {} };
   const api = {
     context: () => call("context.get"),
+    // The language the user chose in Localization (ADR 0033); the frame reloads when it changes.
+    language: frame.language,
+    // ES module libraries load from memory: the frame has no network.
+    lib: (path) => {
+      if (!(path in frame.libraries)) return Promise.reject(new Error(path + " is not in the app's libraries"));
+      return import(URL.createObjectURL(new Blob([frame.libraries[path]], { type: "text/javascript" })));
+    },
     storage: Object.freeze({
       get: (key) => call("storage.get", { key }),
       set: (key, value) => call("storage.set", { key, value }),

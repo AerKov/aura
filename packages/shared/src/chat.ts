@@ -2,6 +2,7 @@
  * Chat domain types shared by server and client (docs/SPEC.md sections 2, 5 and 6).
  * Ids are the record keys without the table prefix.
  */
+import type { LocalizationState } from "./locale";
 import type { ModuleStates } from "./modules";
 import type { BarEdge, BarMode, WindowStyle } from "./wm";
 
@@ -63,7 +64,8 @@ export type ApprovalKind =
   | "budget_change"
   | "app_create"
   | "app_change"
-  | "app_data_delete";
+  | "app_data_delete"
+  | "restore_point";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "failed";
 
 export interface ApprovalCard {
@@ -413,6 +415,10 @@ export interface ExtensionInfo {
   minAppVersion: string;
   permissions: ExtensionPermission[];
   author: string;
+  /** One line on what it is for, shown in the launcher (ADR 0033). */
+  description: string | null;
+  /** Its launcher group; null puts it under DEFAULT_APP_GROUP. */
+  group: string | null;
   /** One of EXTENSION_ICONS, or null for the default. */
   icon: ExtensionIcon | null;
   /** Hosts it may reach through the server (`net`), as granted at install. */
@@ -438,6 +444,8 @@ export interface CustomizeState {
   appVersion: string;
   /** Built-in apps that are on (ADR 0027). */
   modules: ModuleStates;
+  /** The chosen language and the ones available (ADR 0033). */
+  localization: LocalizationState;
   extensions: ExtensionInfo[];
   mcpServers: McpServerInfo[];
 }

@@ -76,6 +76,8 @@ export interface RuntimeDeps {
   ) => Promise<{ text: string; upTo: string } | null>;
   /** The agent's own variables for its commands, resolved, and the ones with no value (ADR 0020). */
   agentEnv?: (profile: AgentProfile) => { values: Record<string, string>; missing: string[] };
+  /** The language the user chose for Aura (its English name), or null to follow their messages. */
+  language?: () => Promise<string | null>;
   /** Hides secret values in text shown in chat. */
   redact?: (text: string) => string;
   /** Called after each run, e.g. to fold old messages into the summary. */
@@ -157,7 +159,7 @@ export class AgentRuntime {
         ? "\n\n## What you remember\n(Notes from its memory that match the message, chosen for each run.)"
         : "",
       ownerName: this.deps.ownerName,
-      language: this.userLanguage,
+      language: (await this.deps.language?.()) ?? this.userLanguage,
     });
   }
 
@@ -494,7 +496,7 @@ export class AgentRuntime {
             env: ownEnv,
             memory: memory.text,
             ownerName: this.deps.ownerName,
-            language: this.userLanguage,
+            language: (await this.deps.language?.()) ?? this.userLanguage,
           }),
         ),
         prompt,

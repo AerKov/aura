@@ -56,6 +56,7 @@ async function main(): Promise<void> {
     embedder: () => engines.embedder(),
     engineStatus: (id) => engines.provider(id).isAvailable(),
     summaries: () => engines.store.get().summaries,
+    reloadEngines: () => engines.store.reload(),
     agents,
     dataDir: config.dataDir,
     safeMode: safe.mode,

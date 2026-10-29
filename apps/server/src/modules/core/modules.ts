@@ -116,6 +116,16 @@ export class ModuleService {
     return () => this.listeners.delete(listener);
   }
 
+  /** Reads `modules.json` again (a restore point put it back), starting or stopping what changed. */
+  reload(): void {
+    const before = this.states;
+    this.states = this.load();
+    const changed = MODULE_IDS.filter((m) => before[m] !== this.states[m]);
+    if (changed.length === 0) return;
+    for (const listener of this.listeners) listener(this.all(), changed);
+    this.deps.hub?.publish({ type: "customize.updated" });
+  }
+
   /** Turns a module on or off, with what it requires or what requires it. */
   async set(
     id: ModuleId,

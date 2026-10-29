@@ -74,6 +74,7 @@ export async function createTestApp(
     embedder: () => engines.embedder(),
     engineStatus: (id) => engines.provider(id).isAvailable(),
     summaries: () => engines.store.get().summaries,
+    reloadEngines: () => engines.store.reload(),
     fetch: opts.fetch,
     sandbox,
     agents,

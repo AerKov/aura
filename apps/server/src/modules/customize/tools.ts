@@ -44,6 +44,9 @@ export const EXTENSION_GUIDE = [
   "await ctx.alerts.recent() (alerts.read: alert cards {source, severity, title, summary, count, lastAt}); await ctx.alerts.post({ severity: 'info'|'warning'|'critical', title, summary, fingerprint? }) (alerts.write: an alert card in the Signals chat from app:<id>; the same title or fingerprint within an hour bumps its count; warnings wake the orchestrator; at most 30 an hour); ctx.events.on('message.created', (message) => …) (chat.read).",
   "Messages: {id, chatId, author: {kind, id}, body (markdown), card, createdAt}. Chats: {id, kind, title}.",
   "Theme CSS variables: var(--background), var(--foreground), var(--card), var(--muted), var(--muted-foreground), var(--border), var(--primary), var(--primary-foreground), var(--radius); forms and buttons already use them.",
+  'Apps are not limited to the kit: for a chart, a calendar, a map renderer or markdown, add a library with add_library (an exact npm version; UMD .js builds define a global, .mjs ones load with await ctx.lib("lib/…"), .css is applied) and list its path in manifest.json "libraries"; the frame has no network, so never load scripts from a URL.',
+  'ctx.language is the language the user chose for Aura ("en", "uk"…): write the app\'s own texts in it.',
+  'In manifest.json keep "description" (one line on what it is for, shown in the launcher) and "group" (its launcher group, e.g. "Work", "Home", "Money"; short) up to date.',
   "Pass `project` to make it a project's app: it then opens by itself next to that project's chat. Pick an `icon`. Ask only for the permissions it uses.",
 ].join(" ");
 

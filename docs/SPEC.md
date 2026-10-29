@@ -449,5 +449,10 @@ An agent's card shows its whole system prompt part by part (its own and what Aur
 user edit its own prompt with a diff and bring back older versions, and lists its notes and recent
 runs with the notes each run was given.
 
+**Phase 35: Aura as a shell** (done, ADR 0033)
+A launcher with groups, descriptions and search; uninstall with a backup and bring apps back;
+restore points of the whole Aura, back and forward; libraries from npm inside apps; the
+Localization app (English, Ukrainian, more as files).
+
 **Later**
 Pack signatures and a reviewed community index, multi-user.

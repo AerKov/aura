@@ -5,7 +5,15 @@ import { showNotification } from "@/features/devices/push";
 import { loadLayout, receiveLayout } from "@/features/shell/layout";
 import { NeedsPairingError, resetSession, wsUrl } from "@/lib/api";
 import { loadTasks, refreshProjectsSoon, reportError, resync, upsertTopic } from "./actions";
-import { appendDelta, getState, removeMessage, setState, upsertChat, upsertMessage } from "./store";
+import {
+  appendDelta,
+  getState,
+  removeChat,
+  removeMessage,
+  setState,
+  upsertChat,
+  upsertMessage,
+} from "./store";
 
 const PING_MS = 15_000;
 const RECONNECT_MS = 2_000;
@@ -63,6 +71,10 @@ export function startRealtime(): () => void {
         case "chat.updated":
           upsertChat(event.chat);
           if (event.chat.projectId) refreshProjectsSoon();
+          break;
+        case "chat.removed":
+          removeChat(event.chatId);
+          refreshProjectsSoon();
           break;
         case "customize.updated":
           void loadAppearance().catch(reportError);

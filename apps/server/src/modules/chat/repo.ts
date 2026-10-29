@@ -351,6 +351,26 @@ export class ChatRepo {
     return message;
   }
 
+  /**
+   * Deletes a chat with its messages, topics, members, summary, schedules and waiting approvals
+   * (an app being uninstalled, ADR 0033). Runs stay: they are the spend history.
+   */
+  async removeChat(chatId: string): Promise<void> {
+    const chat = new RecordId("chat", chatId);
+    await this.db
+      .query(
+        `DELETE message WHERE chat = $chat;
+         DELETE topic WHERE chat = $chat;
+         DELETE member WHERE chat = $chat;
+         DELETE job WHERE chat = $chat;
+         DELETE approval WHERE chat = $chat AND status = 'pending';
+         DELETE chat_summary WHERE chat = $chat;
+         DELETE $chat;`,
+        { chat },
+      )
+      .collect();
+  }
+
   async deleteMessage(messageId: string): Promise<void> {
     await this.db.query("DELETE $id", { id: new RecordId("message", messageId) }).collect();
   }

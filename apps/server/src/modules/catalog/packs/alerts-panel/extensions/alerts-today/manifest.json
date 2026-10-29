@@ -4,5 +4,7 @@
   "version": "1.0.0",
   "minAppVersion": "0.6.0",
   "permissions": ["ui.panel", "alerts.read"],
-  "author": "Aura"
+  "author": "Aura",
+  "description": "Today's alert cards at a glance.",
+  "group": "Monitoring"
 }

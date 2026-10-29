@@ -1,9 +1,10 @@
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { EngineId } from "@aura/shared";
 import type { Surreal } from "surrealdb";
 import { SERVER_VERSION } from "./config";
 import { openAppDatabase } from "./db/client";
-import { ensureRepo } from "./lib/git";
+import { commitAll, ensureRepo } from "./lib/git";
 import type { AgentDirectory } from "./modules/agents/directory";
 import { redact, resolveEnv } from "./modules/agents/env";
 import { RunRepo } from "./modules/agents/runs";
@@ -16,10 +17,13 @@ import { AlertService, TriageLimiter } from "./modules/alerts/service";
 import { ApprovalService } from "./modules/approvals/service";
 import { AppActions } from "./modules/apps/actions";
 import { AppDataService } from "./modules/apps/data";
+import { AppLifecycle } from "./modules/apps/lifecycle";
 import { AppSecrets } from "./modules/apps/secrets";
 import { AppService } from "./modules/apps/service";
 import { AppSnapshots } from "./modules/apps/snapshots";
-import { appTools, barTools, snapshotTool } from "./modules/apps/tools";
+import { appTools, barTools, libraryTool, snapshotTool } from "./modules/apps/tools";
+import { RestorePointService } from "./modules/backups/restore-points";
+import { restorePointTools } from "./modules/backups/tools";
 import { CatalogService } from "./modules/catalog/service";
 import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
@@ -35,6 +39,8 @@ import { DeviceService } from "./modules/devices/service";
 import type { EngineSelector } from "./modules/engines/registry";
 import { AURA_GUIDE, helpTools } from "./modules/help/tools";
 import { JobService } from "./modules/jobs/service";
+import { LocalizationService } from "./modules/localization/service";
+import { localizationTools } from "./modules/localization/tools";
 import { MemoryService } from "./modules/memory/service";
 import { ProjectService } from "./modules/projects/service";
 import type { EventHub } from "./modules/realtime/hub";
@@ -47,11 +53,23 @@ import { TaskService } from "./modules/tasks/service";
 import type { Embedder } from "./providers/embeddings";
 import type { ProviderStatus } from "./providers/types";
 
-/** The user data directory is a git repo; DB state and project repos are kept out of it. */
-export const DATA_GITIGNORE = "state/\nprojects/\n";
+/**
+ * The user data directory is a git repo; DB state, project repos, app backups and restore points
+ * are kept out of it.
+ */
+export const DATA_GITIGNORE = "state/\nprojects/\nbackups/\nrestore-points/\n";
 
 export async function prepareDataDir(dataDir: string): Promise<void> {
   await ensureRepo(dataDir, DATA_GITIGNORE);
+  // Data dirs made by older versions get the newer entries.
+  const file = join(dataDir, ".gitignore");
+  const current = existsSync(file) ? readFileSync(file, "utf8") : "";
+  const have = new Set(current.split("\n").map((l) => l.trim()));
+  const missing = DATA_GITIGNORE.split("\n").filter((l) => l && !have.has(l));
+  if (missing.length === 0) return;
+  const sep = current === "" || current.endsWith("\n") ? "" : "\n";
+  writeFileSync(file, `${current}${sep}${missing.join("\n")}\n`);
+  await commitAll(dataDir, "chore: keep backups and restore points out of git");
 }
 
 /** Wires the domain services shared by the server entry point and tests. */
@@ -59,6 +77,8 @@ export async function createServices(deps: {
   db: Surreal;
   hub: EventHub;
   engines: EngineSelector;
+  /** Re-reads the engine settings file (after a restore point put it back). */
+  reloadEngines?: () => void;
   /** OS sandbox for agents' shell commands; created from the data dir when absent. */
   sandbox?: SandboxService;
   /** Network for packs installed from a URL (replaced in tests). */
@@ -175,6 +195,8 @@ export async function createServices(deps: {
         id,
       ),
     contract: (id) => extensions.contract(id),
+    removeDatabase: (id) =>
+      rmSync(join(deps.dataDir, "state", "apps", id), { recursive: true, force: true }),
   });
   const appActions = new AppActions({
     data: appData,
@@ -189,6 +211,17 @@ export async function createServices(deps: {
     (await extensions.list()).map((e) => ({ app: e.id, secrets: e.secrets })),
     secrets,
   );
+  const lifecycle = new AppLifecycle({
+    dataDir: deps.dataDir,
+    appVersion: SERVER_VERSION,
+    apps: appService,
+    projects,
+    extensions,
+    data: appData,
+    repo,
+    secrets: appSecrets,
+    hub: deps.hub,
+  });
   const extensionBridge = new ExtensionBridge({
     db: deps.db,
     extensions,
@@ -203,6 +236,31 @@ export async function createServices(deps: {
     },
   });
   const layout = new LayoutService({ db: deps.db, hub: deps.hub, extensions });
+  const localization = new LocalizationService({
+    db: deps.db,
+    dataDir: deps.dataDir,
+    hub: deps.hub,
+  });
+  // Restore points of the whole Aura (ADR 0033): part of the core.
+  const restorePoints = new RestorePointService({
+    dataDir: deps.dataDir,
+    appVersion: SERVER_VERSION,
+    db: deps.db,
+    apps: appService,
+    lifecycle,
+    afterRestore: async () => {
+      deps.reloadEngines?.();
+      sandbox.store.reload();
+      modules.reload();
+      localization.reload();
+      deps.hub.publish({ type: "layout.updated", layout: await layout.get() });
+      deps.hub.publish({ type: "customize.updated" });
+    },
+  });
+  approvals.register("restore_point", async (payload) => {
+    const { restored, saved } = await restorePoints.restore(String(payload.id ?? ""));
+    return `Aura is back at “${restored.label}”. The state before is saved as “${saved.label}”.`;
+  });
   const customize = { appearance, mcp, extensions };
   const catalog = new CatalogService({
     dataDir: deps.dataDir,
@@ -238,6 +296,7 @@ export async function createServices(deps: {
   registerExecutors(toolDeps);
   const runtime = new AgentRuntime({
     enabled: () => modules.enabled("chats"),
+    language: () => localization.agentLanguage(),
     chat,
     repo,
     runs,
@@ -257,9 +316,21 @@ export async function createServices(deps: {
                 topicId: ctx.topicId,
               })),
               snapshotTool(appSnapshots, ctx.chat.projectId),
+              libraryTool(projects.workspaceOf(ctx.chat.projectId), deps.fetch),
             ]
           : []),
-        ...(ctx.handle === "orchestrator" ? [...agentSetupTools(agentSetup), ...helpTools()] : []),
+        ...(ctx.handle === "orchestrator"
+          ? [
+              ...agentSetupTools(agentSetup),
+              ...helpTools(),
+              ...localizationTools(localization),
+              ...restorePointTools(restorePoints, approvals, {
+                handle: ctx.handle,
+                chatId: ctx.chat.id,
+                topicId: ctx.topicId,
+              }),
+            ]
+          : []),
         // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
         // orchestrator had no such tools and claimed to have sent cards).
         ...(ctx.handle === "orchestrator"
@@ -350,6 +421,9 @@ export async function createServices(deps: {
     apps: appService,
     appData,
     appActions,
+    lifecycle,
+    restorePoints,
+    localization,
     layout,
     catalog,
     safeMode,

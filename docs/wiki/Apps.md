@@ -6,6 +6,9 @@ own chat**. Every change is shown to you first, and every version can be brought
 
 ## Make an app
 
+Every app has a name, a one-line **description** and a **group**, shown on Home. @builder keeps them
+in the app's manifest; say in its chat if you want them changed.
+
 - **Home** → **Add an app**: start from a template (**CRM**, **Tasks**, **Notes**), or empty:
   give it a name and, if you like, say what it should do (an empty app needs Chats on).
 - Or ask the orchestrator: _"make me an app to track clients and deals"_. It proposes the app on a
@@ -78,6 +81,27 @@ When the author ships a new version, install the pack again (**Update**): your o
 where you and the author changed the same lines, the author's version is used. The preview says so
 before you install, and **Versions** on the app's tile brings yours back if needed. If the app has a
 change waiting for your approval, decide on that first.
+
+## Uninstall and bring back
+
+The **⋯** menu on an app on Home has **Uninstall**. Aura keeps a backup first, in
+`~/.aura/backups/apps`: its code with all its versions, its data, what you allowed it, and its chat
+as text. Then the app, its chat and its data are gone. Its secrets are deleted, never backed up.
+
+**Restore points** → **Uninstalled apps** → **Bring back** puts the app back as it was, with a new
+chat (the old one is in the backup as `chat.md`).
+
+## Libraries
+
+Apps are not limited to the built-in kit. For charts, calendars, markdown or maps, @builder adds a
+library from npm with an exact version: Aura downloads it once into the app's `lib/` folder, and the
+change card lists it (`library: lib/chart.js@4.4.1/chart.umd.js`). It runs only inside the app's
+frame, which has no network; nothing loads from the internet while the app runs.
+
+## Its language
+
+An app gets the language you chose in **Localization** as `ctx.language` and writes its own texts in
+it; it reloads when you change the language.
 
 ## What an app can do
 

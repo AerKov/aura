@@ -12,11 +12,14 @@ import type { ApprovalService } from "./modules/approvals/service";
 import { appsModule } from "./modules/apps";
 import type { AppActions } from "./modules/apps/actions";
 import type { AppDataService } from "./modules/apps/data";
+import type { AppLifecycle } from "./modules/apps/lifecycle";
 import type { AppSecrets } from "./modules/apps/secrets";
 import type { AppService } from "./modules/apps/service";
 import type { AppSnapshots } from "./modules/apps/snapshots";
 import { authModule } from "./modules/auth";
 import type { LocalSessions, SessionUser } from "./modules/auth/sessions";
+import { restorePointsModule } from "./modules/backups";
+import type { RestorePointService } from "./modules/backups/restore-points";
 import { catalogModule } from "./modules/catalog";
 import type { CatalogService } from "./modules/catalog/service";
 import { chatModule } from "./modules/chat";
@@ -37,6 +40,8 @@ import type { EngineRegistry } from "./modules/engines/registry";
 import type { ToolBridge } from "./modules/engines/tool-bridge";
 import { type HealthDeps, healthModule } from "./modules/health";
 import type { JobService } from "./modules/jobs/service";
+import { localizationModule } from "./modules/localization";
+import type { LocalizationService } from "./modules/localization/service";
 import { memoryModule } from "./modules/memory";
 import type { MemoryService } from "./modules/memory/service";
 import { projectsModule } from "./modules/projects";
@@ -85,6 +90,9 @@ export interface AppDeps extends HealthDeps {
   extensionBridge: ExtensionBridge;
   layout: LayoutService;
   apps: AppService;
+  lifecycle: AppLifecycle;
+  restorePoints: RestorePointService;
+  localization: LocalizationService;
   appData: AppDataService;
   appActions: AppActions;
   mcp: McpService;
@@ -124,6 +132,8 @@ export function createApp(deps: AppDeps) {
     .use(customizeModule(deps))
     .use(shellModule(deps))
     .use(appsModule(deps))
+    .use(restorePointsModule({ sessions: deps.sessions, points: deps.restorePoints }))
+    .use(localizationModule(deps))
     .use(devicesModule(deps))
     .use(realtimeModule(deps));
 }

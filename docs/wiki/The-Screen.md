@@ -6,13 +6,18 @@ Memory…) are apps, and you can turn off the ones you do not need.
 
 ## Home
 
-Click the logo at the top of the rail to open Home. It shows:
+Click the logo at the top of the rail to open Home, the launcher. It lists every app by **group**,
+each with a line on what it is for:
 
-- **Your apps:** the apps you built or installed. Click one to open it.
+- **Your groups first:** the apps you built or installed, grouped as their manifest says (_Work_,
+  _Home_…; an app without a group is under _Apps_). Ask in an app's chat to change its group or
+  description. The **⋯** menu on an app uninstalls it (see [Apps](Apps#uninstall-and-bring-back)).
+- **Communication, Agents, System:** the built-in apps. Chats, Signals, Skills, Memory and
+  Schedule have a switch; Catalog, Customize, Localization, Restore points and Devices are always
+  there.
+- **Find an app:** type to filter by name, description or group; Enter opens the first match.
 - **Add an app:** start from a template (CRM, Tasks, Notes), browse the [Catalog](Catalog), or, with
   Chats on, start an empty app that @builder makes from your description.
-- **Built in:** Chats, Skills, Memory, Schedule and Signals, each with a switch.
-- **Aura:** Catalog, Customize and Devices, which are always there.
 
 ## Tiles
 
@@ -90,6 +95,26 @@ its switch on Home:
 - Off means off: its pages and features are gone, agents get no tools from it, and nothing runs in
   the background for it. Your data stays, and turning it on brings everything back.
 - The choice is saved in `~/.aura/modules.json`, like the rest of your setup.
+
+## Restore points
+
+**Restore points** (System group) keeps the whole Aura as it was at a moment: agents, skills,
+themes, tool servers, settings files, the look and layout, the language, and every app with its
+code, versions and data. Chats, memory and secrets are not part of them.
+
+- **Save the present** with a name. The orchestrator also saves one before bigger changes.
+- **Go to this point** takes Aura back. The present is saved first as an _automatic_ point, so you
+  can go forward to it again. Apps made after the point are uninstalled with a backup.
+- Points are folders in `~/.aura/restore-points`; delete the ones you no longer need.
+
+## Language
+
+**Localization** (System group) sets one language for Aura: its interface, the answers of its
+agents, and your apps (they get it as `ctx.language`). _Automatic_ uses this computer's language for
+the interface and lets agents answer in the language you write in. English and Ukrainian are built
+in; texts without a translation stay in English. To add a language or correct a translation, put
+`~/.aura/locales/<code>.json` with `{ "name": "Polski", "englishName": "Polish", "strings": {
+"Your apps": "Twoje aplikacje" } }`.
 
 ## Phone
 

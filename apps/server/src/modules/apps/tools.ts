@@ -4,6 +4,7 @@ import type { AgentTool } from "../../providers/types";
 import type { ApprovalService } from "../approvals/service";
 import type { ChatService } from "../chat/service";
 import type { AppearanceService } from "../customize/appearance";
+import { addLibrary } from "./libraries";
 import { type AppService, BUILDER_HANDLE } from "./service";
 import { type AppSnapshots, describeSnapshot } from "./snapshots";
 
@@ -110,6 +111,38 @@ export function snapshotTool(snapshots: AppSnapshots, app: string): AgentTool {
     inputSchema: {},
     async handler() {
       return { text: describeSnapshot(app, await snapshots.request(app)) };
+    },
+  };
+}
+
+/** @builder adds a library from npm to the app it changes (ADR 0033). */
+export function libraryTool(appDir: string, fetchFn?: typeof fetch): AgentTool {
+  return {
+    name: "add_library",
+    description:
+      'Add a library file from npm to this app\'s folder (lib/…), fetched once by Aura from the jsDelivr CDN at an exact version. Use a UMD/IIFE build (.js, it defines a global such as Chart), a self-contained ES module (.mjs, load it with await ctx.lib("lib/…")) or a stylesheet (.css). Then list the returned path in manifest.json "libraries" (in load order). The user sees it on the change card. Prefer small builds; no file over 2 MB.',
+    inputSchema: {
+      package: z.string().describe("npm package, e.g. chart.js or @scope/name"),
+      version: z.string().describe("exact version, e.g. 4.4.1"),
+      file: z.string().describe("path inside the package, e.g. dist/chart.umd.js"),
+    },
+    async handler(input) {
+      try {
+        const added = await addLibrary(
+          appDir,
+          {
+            package: String(input.package ?? ""),
+            version: String(input.version ?? ""),
+            file: String(input.file ?? ""),
+          },
+          fetchFn,
+        );
+        return {
+          text: `Added ${added.path} (${Math.ceil(added.bytes / 1000)} KB, sha256 ${added.sha256.slice(0, 16)}…). Add "${added.path}" to "libraries" in manifest.json.`,
+        };
+      } catch (error) {
+        return { text: `Error: ${errorMessage(error)}`, isError: true };
+      }
     },
   };
 }

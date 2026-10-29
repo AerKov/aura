@@ -5,6 +5,21 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-10-29: Aura as a shell
+
+- **Home is a launcher**: every app by group, with a one-line description, and a search box. Apps
+  say their group and description in their manifest; @builder keeps them up to date (WISH-10,
+  WISH-11).
+- **Uninstall an app** from its menu on Home: a backup of its code, versions, data and chat (as
+  text) is kept, and **Restore points** brings it back with a new chat.
+- **Restore points** of the whole Aura: agents, skills, themes, tool servers, settings and every app
+  with its code and data. Going to one saves the present first, so you can come back forward. The
+  orchestrator saves one before bigger changes and asks before going to one.
+- **Libraries in apps**: @builder adds a library from npm (an exact version, kept in the app's
+  folder) instead of being limited to the kit. The change card lists it.
+- **Localization**: one language for Aura's interface, its agents' answers and your apps
+  (`ctx.language`). English and Ukrainian are built in; more as files in `locales/`.
+
 ## [0.34.0] - 2026-10-28: Agents in the open
 
 - An agent's card on the **Agents** page shows its **whole system prompt**: its own prompt and each

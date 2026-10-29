@@ -1,4 +1,4 @@
-import { existsSync, writeFileSync } from "node:fs";
+import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   budgetText,
@@ -220,6 +220,17 @@ export class ProjectService {
     const project = await this.get(slug);
     if (!project) throw new ProjectError("project was not saved");
     return { project, chat };
+  }
+
+  /** Removes a project's record, its tasks and its workspace (an app being uninstalled). */
+  async remove(slug: string): Promise<void> {
+    await this.deps.db
+      .query("DELETE task WHERE project = $slug; DELETE $id;", {
+        slug,
+        id: new RecordId("project", slug),
+      })
+      .collect();
+    rmSync(this.workspaceOf(slug), { recursive: true, force: true });
   }
 
   /** User action (or an approved request): changes or removes the project's limits. */

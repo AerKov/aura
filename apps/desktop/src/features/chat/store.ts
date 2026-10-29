@@ -129,6 +129,20 @@ export function upsertMessage(message: Message): void {
   });
 }
 
+/** A chat deleted with its app (ADR 0033): gone from the list and, if open, closed. */
+export function removeChat(chatId: string): void {
+  setState((s) => {
+    const { [chatId]: _chat, ...chats } = s.chats;
+    const { [chatId]: _messages, ...messages } = s.messages;
+    return {
+      chats,
+      messages,
+      activeChatId: s.activeChatId === chatId ? null : s.activeChatId,
+      pane: s.activeChatId === chatId ? "list" : s.pane,
+    };
+  });
+}
+
 export function upsertChat(chat: Chat): void {
   setState((s) => ({ chats: { ...s.chats, [chat.id]: chat } }));
 }

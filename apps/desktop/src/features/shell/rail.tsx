@@ -13,6 +13,7 @@ import { createElement, useCallback, useEffect, useMemo, useState } from "react"
 import { renderToStaticMarkup } from "react-dom/server";
 import { AuraLogo } from "@/components/logo";
 import { setState, useChatStore } from "@/features/chat/store";
+import { useT } from "@/features/localization/i18n";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
 import { appAvailable, PAGES, railApp, useExtensionApps, useModules } from "./apps";
@@ -35,7 +36,7 @@ export interface RailItem {
 const DESKTOP_ONLY = new Set(["catalog", "engines", "customize", "devices"]);
 
 const PAGE_ORDER: PageId[] = ["skills", "memory", "agents", "catalog", "jobs"];
-const PAGE_TAIL: PageId[] = ["engines", "customize", "devices"];
+const PAGE_TAIL: PageId[] = ["engines", "customize", "localization", "backups", "devices"];
 
 /** Every rail item in its default order, before the user's layout is applied. */
 export function useRailItems(): RailItem[] {
@@ -44,15 +45,16 @@ export function useRailItems(): RailItem[] {
   const phone = useIsPhone();
   const extensions = useExtensionApps();
   const modules = useModules();
+  const t = useT();
   const open = new Set(phone ? [phoneApp] : visibleApps(layout));
   const page = (id: PageId): RailItem => ({
     key: id,
-    label: PAGES[id].label,
+    label: t(PAGES[id].label),
     icon: PAGES[id].icon,
     active: open.has(`page:${id}`),
   });
   return [
-    { key: "chats", label: "Chats", icon: MessagesSquare, active: open.has("messenger") },
+    { key: "chats", label: t("Chats"), icon: MessagesSquare, active: open.has("messenger") },
     ...PAGE_ORDER.map(page),
     ...extensions.map((ext) => ({
       key: `ext:${ext.id}`,
@@ -99,6 +101,7 @@ const EDGE = {
  * connection) and carries the keyboard shortcuts. The user arranges it on the Customize page.
  */
 export function Rail() {
+  const t = useT();
   const pane = useChatStore((s) => s.pane);
   const current = useChatStore(phoneAppOf);
   const rail = useChatStore((s) => s.appearance?.rail);
@@ -188,8 +191,8 @@ export function Rail() {
       >
         <button
           type="button"
-          title="Home: all your apps (Shift-click: open on the right)"
-          aria-label="Home"
+          title={t("Home: all your apps (Shift-click: open on the right)")}
+          aria-label={t("Home")}
           aria-current={homeOpen ? "page" : undefined}
           onClick={(e) => openAppRef("home", e.shiftKey && !phone ? "right" : "here")}
           className={cn(

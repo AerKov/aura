@@ -2,7 +2,7 @@
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { APP_ID_PATTERN, BAR_APP_ID, type Chat, slugify } from "@aura/shared";
+import { APP_ID_PATTERN, BAR_APP_ID, type Chat, MAX_APP_DESCRIPTION, slugify } from "@aura/shared";
 import { commitAll, git } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
 import type { AgentDirectory } from "../agents/directory";
@@ -42,6 +42,7 @@ export const BUILDER_DEFAULT: AgentProfile = {
     "You build and change one Aura app: a small web app that runs in a sandboxed frame inside Aura.",
     "You work in the app's folder: manifest.json, main.js (and styles.css). Read them before you change them.",
     "Your changes do not go live by themselves: after your reply the user sees them as a diff on an approval card, and the app reloads when they approve. Say in one or two sentences what you changed and why; do not paste the code.",
+    "When the app needs a library (charts, dates, markdown, maps…), add it with add_library instead of writing it yourself or loading it from a URL.",
     "Keep changes small and focused on what the user asked. Keep the app's permissions, hosts and secrets in manifest.json to what it needs, and say so when you add one.",
     "If the user asks to use the app (add a record, look something up), and you cannot do it from its files, say what is missing.",
     "",
@@ -53,7 +54,9 @@ export const BUILDER_DEFAULT: AgentProfile = {
 const MAX_DIFF = 12_000;
 
 /** A new app's first files: an empty panel that says how to build it. */
-function scaffold(id: string, name: string): Record<string, string> {
+function scaffold(id: string, name: string, description: string): Record<string, string> {
+  // The launcher shows one line; @builder refines it as the app takes shape.
+  const line = description.split("\n")[0]?.trim().slice(0, MAX_APP_DESCRIPTION) ?? "";
   const manifest = {
     id,
     name,
@@ -62,6 +65,7 @@ function scaffold(id: string, name: string): Record<string, string> {
     permissions: ["ui.panel", "storage"],
     author: "you",
     icon: "blocks",
+    ...(line ? { description: line } : {}),
   };
   return {
     // An app's data (the "files" store) is not part of its code versions.
@@ -94,6 +98,8 @@ function barFiles(): Record<string, string> {
     minAppVersion: "0.31.0",
     permissions: ["ui.bar", "storage"],
     author: "you",
+    description: "Aura's bar: your apps, the screen and the status, as your own code.",
+    group: "System",
   };
   return {
     "manifest.json": `${JSON.stringify(manifest, null, 2)}\n`,
@@ -187,7 +193,7 @@ export class AppService {
       name,
       slug: id,
       kind: "app",
-      files: { ...scaffold(id, name), ...(input.files ?? {}) },
+      files: { ...scaffold(id, name, description), ...(input.files ?? {}) },
       agents: [BUILDER_HANDLE],
       brief: input.brief
         ? input.brief
@@ -248,7 +254,8 @@ export class AppService {
     );
     if (pending) return;
     const stat = await git(app.dir, ["diff", "--cached", "--stat", "HEAD"]);
-    const full = await git(app.dir, ["diff", "--cached", "HEAD"]);
+    // Library files are listed, not shown line by line (ADR 0033).
+    const full = await git(app.dir, ["diff", "--cached", "HEAD", "--", ".", ":(exclude)lib"]);
     const diff =
       full.length > MAX_DIFF
         ? `${full.slice(0, MAX_DIFF)}\n… ${full.length - MAX_DIFF} more`

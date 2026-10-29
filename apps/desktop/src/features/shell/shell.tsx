@@ -15,6 +15,7 @@ import { AuraLogo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { AgentsView } from "@/features/agents/agents-view";
+import { BackupsView } from "@/features/backups/backups-view";
 import { CatalogView } from "@/features/catalog/catalog-view";
 import { loadInitial, reportError } from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
@@ -25,6 +26,8 @@ import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
 import { EnginesView } from "@/features/engines/engines-view";
 import { JobsView } from "@/features/jobs/jobs-view";
+import { useT } from "@/features/localization/i18n";
+import { LocalizationView } from "@/features/localization/localization-view";
 import { MemoryView } from "@/features/memory/memory-view";
 import { SkillsView } from "@/features/skills/skills-view";
 import { api, call } from "@/lib/api";
@@ -105,7 +108,10 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
   const extensions = useExtensionApps();
   const modules = useModules();
   const titles = useChatStore((s) => s.appearance?.wm.titles ?? "minimal");
-  const { label, icon: Icon } = appInfo(tile.app, extensions);
+  const t = useT();
+  const info = appInfo(tile.app, extensions);
+  const label = tile.app.startsWith("ext:") ? info.label : t(info.label);
+  const Icon = info.icon;
   const ext = tile.app.startsWith("ext:")
     ? extensions.find((e) => e.id === tile.app.slice(4))
     : undefined;
@@ -198,12 +204,15 @@ function OpenMenu() {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [open]);
+  const t = useT();
   const yours: AppRef[] = extensions.map((e) => `ext:${e.id}` as AppRef);
   const aura: AppRef[] = (
     ["home", "messenger", ...PAGE_IDS.map((p) => `page:${p}`)] as AppRef[]
   ).filter((app) => appAvailable(app, modules));
   const item = (app: AppRef) => {
-    const { label, icon: Icon } = appInfo(app, extensions);
+    const info = appInfo(app, extensions);
+    const label = app.startsWith("ext:") ? info.label : t(info.label);
+    const Icon = info.icon;
     return (
       <li key={app}>
         <button
@@ -419,6 +428,10 @@ function AppView({ app }: { app: AppRef }) {
       return <CustomizeView />;
     case "devices":
       return <DevicesView />;
+    case "localization":
+      return <LocalizationView />;
+    case "backups":
+      return <BackupsView />;
     default:
       return null;
   }

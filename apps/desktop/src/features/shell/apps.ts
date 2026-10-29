@@ -12,6 +12,8 @@ import {
   Brain,
   CalendarClock,
   Cpu,
+  History,
+  Languages,
   LayoutGrid,
   MessagesSquare,
   Package,
@@ -32,6 +34,8 @@ export const PAGES: Record<PageId, { label: string; icon: LucideIcon }> = {
   engines: { label: "Engines", icon: Cpu },
   customize: { label: "Customize", icon: Palette },
   devices: { label: "Devices", icon: Smartphone },
+  localization: { label: "Localization", icon: Languages },
+  backups: { label: "Restore points", icon: History },
 };
 
 /** Enabled extensions with a panel: the apps users install or build. */

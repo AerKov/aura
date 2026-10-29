@@ -88,7 +88,11 @@ export class CatalogService {
 
   private summary(pack: Pack, source: "builtin" | "url", url: string | null): PackSummary {
     const m = pack.manifest;
-    const lock = this.installed()[m.id];
+    const contents = contentsOf(m.files);
+    // A pack whose apps were all uninstalled (ADR 0033) can be installed again.
+    const appsGone =
+      contents.apps.length > 0 && contents.apps.every((a) => !this.deps.apps?.isApp(a));
+    const lock = appsGone ? undefined : this.installed()[m.id];
     return {
       id: m.id,
       name: m.name,
@@ -98,7 +102,7 @@ export class CatalogService {
       tags: m.tags,
       source,
       url,
-      contents: contentsOf(m.files),
+      contents,
       installed: lock ? { version: lock.version, sha256: lock.sha256 } : null,
     };
   }

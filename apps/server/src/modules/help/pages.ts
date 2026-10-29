@@ -46,13 +46,15 @@ export const HELP_PAGES: HelpPage[] = [
   {
     id: "the-screen",
     title: "The screen",
-    summary: "Home shelf, apps as tiles: opening, splitting, resizing, turning off; the phone",
+    summary:
+      "Home launcher, apps as tiles: opening, splitting, resizing, turning off; restore points, language; the phone",
     text: TheScreen,
   },
   {
     id: "apps",
     title: "Apps",
-    summary: "Apps with their own chat: make, change with approval, versions",
+    summary:
+      "Apps with their own chat: make, change with approval, versions, uninstall and bring back, libraries",
     text: Apps,
   },
   {

@@ -2,6 +2,7 @@ import type { ExtensionInfo, ExtensionPermission, Message, Placement } from "@au
 import { useEffect, useRef, useState } from "react";
 import { reportError } from "@/features/chat/actions";
 import { getState, useChatStore } from "@/features/chat/store";
+import { useLocale } from "@/features/localization/i18n";
 import { api, call, SERVER_URL } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -109,6 +110,7 @@ export function ExtensionFrame({
   /** The frame reported an error. */
   onError?: (message: string) => void;
 }) {
+  const locale = useLocale();
   const barRef = useRef(bar);
   barRef.current = bar;
   const draftRef = useRef(draft);
@@ -433,7 +435,8 @@ export function ExtensionFrame({
         ref={ref}
         title={title}
         sandbox="allow-scripts"
-        src={`${SERVER_URL}/extensions/${extension.id}/frame${draft ? "?draft=1" : ""}`}
+        // A new language reloads the frame: apps read it once as ctx.language (ADR 0033).
+        src={`${SERVER_URL}/extensions/${extension.id}/frame?lang=${locale}${draft ? "&draft=1" : ""}`}
         className={cn("flex-1 border-0", variant === "bar" && "h-full min-h-0 w-full min-w-0")}
         onLoad={sendTheme}
         onError={() => reportError(new Error(`extension ${extension.id} failed to load`))}

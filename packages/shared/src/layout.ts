@@ -15,6 +15,8 @@ export const PAGE_IDS = [
   "engines",
   "customize",
   "devices",
+  "localization",
+  "backups",
 ] as const;
 export type PageId = (typeof PAGE_IDS)[number];
 

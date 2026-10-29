@@ -7,6 +7,7 @@ import type { LocalSessions } from "../auth/sessions";
 import type { ChatRepo } from "../chat/repo";
 import { ChatError } from "../chat/service";
 import type { ModuleService } from "../core/modules";
+import type { LocalizationService } from "../localization/service";
 import { ProjectError, type ProjectService } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
 import { AppearanceError, type AppearanceService } from "./appearance";
@@ -22,6 +23,7 @@ export interface CustomizeRouteDeps {
   mcp: McpService;
   safeMode: SafeMode;
   modules: ModuleService;
+  localization: LocalizationService;
   appSecrets: AppSecrets;
   appSnapshots: AppSnapshots;
   hub: EventHub;
@@ -47,7 +49,7 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
     // `?draft=1` previews an app's changes that wait for approval (ADR 0024).
     .get("/extensions/:extensionId/frame", async ({ params, query, set, status }) => {
       const html = await deps.extensions
-        .frame(params.extensionId, query.draft === "1")
+        .frame(params.extensionId, query.draft === "1", query.lang)
         .catch(() => null);
       if (!html) return status(404, "Extension is not enabled");
       set.headers["content-type"] = "text/html; charset=utf-8";
@@ -111,6 +113,7 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         safeMode: deps.safeMode,
         appVersion: deps.appVersion,
         modules: deps.modules.all(),
+        localization: await deps.localization.get(),
         extensions: await deps.extensions.list(),
         mcpServers: deps.mcp.list(),
       }),

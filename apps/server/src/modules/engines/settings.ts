@@ -126,6 +126,11 @@ export class EngineStore {
     return join(this.dataDir, "state", "secrets.json");
   }
 
+  /** Drops the cached settings, so the file is read again (a restore point put it back). */
+  reload(): void {
+    this.cached = null;
+  }
+
   get(): EngineSettings {
     if (this.cached) return this.cached;
     let raw: unknown = null;

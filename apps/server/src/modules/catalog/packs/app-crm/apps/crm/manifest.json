@@ -5,6 +5,8 @@
   "minAppVersion": "0.25.0",
   "permissions": ["ui.panel", "storage"],
   "author": "Aura",
+  "description": "Clients and deals: a client list, a deal board by stage and an overview.",
+  "group": "Work",
   "icon": "users",
   "collections": {
     "clients": {
