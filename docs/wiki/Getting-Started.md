@@ -17,19 +17,26 @@ bun install
 bun run dev
 ```
 
-## 2. Pick an engine
+## 2. Connect an AI
 
-Helpers need something to think with. In **My apps** (the **A** at the top of the bar) turn on
-**Advanced mode**, open **Helper programs** and get one engine to **Ready**. The quickest options:
+![The first screen: connect a free AI service](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/connect.png)
 
-| You have                      | Do this                                                                                                                 |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| A Claude subscription         | Install Claude Code, run `claude` once and log in. Aura uses it automatically.                                          |
-| A Google account              | `npm install -g @google/gemini-cli`, run `gemini` once and sign in (free tier).                                         |
-| A decent GPU or Apple Silicon | Install [Ollama](https://ollama.com), `ollama pull qwen3:8b`, start it with `OLLAMA_CONTEXT_LENGTH=32768 ollama serve`. |
-| Nothing yet                   | Create a free key at openrouter.ai/keys, paste it under OpenRouter, pick a model marked _free_.                         |
+Helpers need something to think with. Aura's first screen asks for it, in the Helper's chat: pick a
+**free service**, make a key on its site (the link is on the card), paste it and press **Connect**.
+Aura picks a model and you are ready.
 
-Then press **Use for all agents** on that engine. Details: [Engines](Engines).
+| Service       | Make a key at               |
+| ------------- | --------------------------- |
+| Google Gemini | aistudio.google.com/apikey  |
+| Groq          | console.groq.com/keys       |
+| OpenRouter    | openrouter.ai/keys          |
+| Cerebras      | cloud.cerebras.ai           |
+| Mistral       | console.mistral.ai/api-keys |
+
+Free plans have limits (a long job may have to wait) and some may use your prompts to improve their
+models; each card says what applies. Prefer to keep everything on your computer, or already use
+Claude Code, Codex, Gemini CLI or OpenCode? In **My apps** turn on **Advanced mode** and open **Helper
+programs**. Details: [Engines](Engines).
 
 ## 3. Talk to your Helper
 

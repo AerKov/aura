@@ -6,7 +6,8 @@
 
 <p align="center">
   <b>Your own apps, built and changed by chatting with a team of AI helpers.</b><br>
-  Local-first and open source. Bring your own AI: Claude Code, Gemini CLI, Codex, OpenCode, or a model on your computer.
+  Local-first and open source. Start free with a key from Google Gemini, Groq or OpenRouter; or bring your own
+  agent (Claude Code, Codex…) or a model on your computer.
 </p>
 
 <p align="center">
@@ -82,8 +83,9 @@ chats stay on your computer.
   engine. Ask the Helper for a new one and approve it.
 - **Projects that ship.** A project is a chat, a git folder and a limit. Agents take turns, every run
   is committed, every reply shows what was done and what it cost.
-- **Choose the AI per helper.** Claude Code, Gemini CLI, Codex or OpenCode under your own login, or
-  Aura's built-in agent on OpenRouter, Ollama or LM Studio, free options included.
+- **Start free, choose the AI per helper.** Free services (Google Gemini, Groq, OpenRouter, Cerebras,
+  Mistral) or local models run on Aura's own agent; Claude Code, Codex, Gemini CLI and OpenCode work
+  too, under your own login, for those who want them.
 - **Memory and skills that improve.** Helpers keep notes between runs (you can read and delete all of
   them) and propose changes to their own know-how; you approve the diff.
 - **Alerts and reminders.** Monitoring webhooks wake the Helper for triage; recurring jobs run
@@ -117,18 +119,29 @@ chats stay on your computer.
    From source you need [Bun](https://bun.sh) 1.4+ and the
    [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 
-2. **Pick an engine**: what your helpers think with. In **My apps** turn on **Advanced mode** and open
-   **Helper programs**. Any one engine is enough:
+2. **Connect an AI.** The easiest way is a **free service**: Aura's first screen asks for it. Make a
+   free key on the service's site, paste it, and your helpers run. Nothing else to install.
 
-   | Engine                                        | Setup                                                              | Cost                  |
-   | --------------------------------------------- | ------------------------------------------------------------------ | --------------------- |
-   | Claude Code                                   | `npm i -g @anthropic-ai/claude-code`, run `claude`, log in         | Claude plan or API    |
-   | Gemini CLI                                    | `npm i -g @google/gemini-cli`, run `gemini`, sign in with Google   | free tier             |
-   | Codex                                         | `npm i -g @openai/codex @zed-industries/codex-acp`, `codex login`  | ChatGPT plan or API   |
-   | OpenCode                                      | `npm i -g opencode-ai`, `opencode auth login`                      | depends on provider   |
-   | Ollama                                        | `ollama pull qwen3:8b`, `OLLAMA_CONTEXT_LENGTH=32768 ollama serve` | free, local           |
-   | OpenRouter                                    | paste a key from openrouter.ai/keys, pick a `:free` model          | free models available |
-   | LM Studio and other OpenAI-compatible servers | the server URL                                                     | free, local           |
+   | Service           | Where to make a key                                                | Notes                                        |
+   | ----------------- | ------------------------------------------------------------------ | -------------------------------------------- |
+   | Google Gemini     | [aistudio.google.com/apikey](https://aistudio.google.com/apikey)   | free, no card; prompts may be used by Google |
+   | Groq              | [console.groq.com/keys](https://console.groq.com/keys)             | free, very fast open models                  |
+   | OpenRouter        | [openrouter.ai/keys](https://openrouter.ai/keys)                   | many models; pick one marked `:free`         |
+   | Cerebras          | [cloud.cerebras.ai](https://cloud.cerebras.ai/)                    | free key; the plan's terms change            |
+   | Mistral           | [console.mistral.ai/api-keys](https://console.mistral.ai/api-keys) | free Experiment plan; may ask for a phone    |
+   | Ollama, LM Studio | on your computer                                                   | free and private; needs a capable machine    |
+
+   Free plans have limits, and some use your prompts to improve their models: each card says so.
+
+   **Advanced:** already use an agent app? Claude Code, Codex, Gemini CLI and OpenCode work too, under
+   your own login (open **Helper programs** in advanced mode):
+
+   | Agent app   | Setup                                                             | Cost                |
+   | ----------- | ----------------------------------------------------------------- | ------------------- |
+   | Claude Code | `npm i -g @anthropic-ai/claude-code`, run `claude`, log in        | Claude plan or API  |
+   | Codex       | `npm i -g @openai/codex @zed-industries/codex-acp`, `codex login` | ChatGPT plan or API |
+   | Gemini CLI  | `npm i -g @google/gemini-cli`, run `gemini`, sign in with Google  | free tier           |
+   | OpenCode    | `npm i -g opencode-ai`, `opencode auth login`                     | depends on provider |
 
 3. **Tell your Helper what you want**, in any language: _"make me an app to track clients and
    deals"_. Approve its plan, then open the new app from **My apps**.

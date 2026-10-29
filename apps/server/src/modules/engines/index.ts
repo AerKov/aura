@@ -78,10 +78,12 @@ export const enginesModule = ({ sessions, engines, agents, dataDir, toolBridge }
     )
     .put(
       "/engines/:engine/key",
-      ({ params, body }) => {
+      async ({ params, body }) => {
         // The key is stored on the server and never sent back (ADR 0011).
         engines.store.setKey(params.engine, body.key);
-        return { hasKey: body.key !== null };
+        // A first key is enough to start: pick a model and, if nothing else works, this engine.
+        const connected = body.key ? await engines.connect(params.engine) : null;
+        return { hasKey: body.key !== null, ...(connected ?? { model: null, isDefault: false }) };
       },
       {
         auth: true,

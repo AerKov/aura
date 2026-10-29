@@ -468,6 +468,10 @@ versions. A chat's helpers are added and removed from its header ("+ Helper"). F
 Files in chats (attach from the computer, helpers read them and hand files back), files in apps
 (`docs`: add, keep, view, print, save), and a viewer window for PDFs, images and text with Print.
 
+**Phase 37c: Free services first** (done, ADR 0037)
+Free OpenAI-compatible services (Google Gemini, Groq, OpenRouter, Cerebras, Mistral) lead the
+engine choice, with a one-step "paste a key" start; local models next; agent apps as advanced.
+
 **Phase 38: Helpers** (next, ADR 0034)
 One app for everything about agents: Team, Skills, Memory and AI connection.
 

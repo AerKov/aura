@@ -302,4 +302,49 @@ export const UK: Record<string, string> = {
   "Add files to {name}": "Додати файли до «{name}»",
   "Drop files here, or": "Перетягніть файли сюди або",
   "Choose from this computer": "Оберіть на цьому комп'ютері",
+
+  // Free AI services (ADR 0037).
+  "Free AI services": "Безкоштовні ШІ-сервіси",
+  "Make a free key:": "Створіть безкоштовний ключ:",
+  Copied: "Скопійовано",
+  "Copy link": "Копіювати посилання",
+  "Paste it here. It stays on this computer and goes only to {name}.":
+    "Вставте його сюди. Він лишається на цьому комп'ютері й іде лише до {name}.",
+  "{name} API key": "API-ключ {name}",
+  "paste the key": "вставте ключ",
+  Connect: "Підключити",
+  "Connect an AI to start": "Підключіть ШІ, щоб почати",
+  "Your helpers need an AI to think with. The easiest way is a free service:":
+    "Помічникам потрібен ШІ, яким вони думають. Найпростіше — безкоштовний сервіс:",
+  "I already use an agent app (Claude Code, Codex…) or local models":
+    "Я вже користуюся агентною програмою (Claude Code, Codex…) або локальними моделями",
+  "Connect Claude Code": "Підключити Claude Code",
+  "Install Claude Code:": "Встановіть Claude Code:",
+  Run: "Запустіть",
+  "in a terminal and log in with your Claude account.":
+    "у терміналі й увійдіть зі своїм акаунтом Claude.",
+  "Come back and check again. The app never sees your credentials.":
+    "Поверніться й перевірте ще раз. Застосунок ніколи не бачить ваших облікових даних.",
+  "Open Helper programs": "Відкрити «Helper programs»",
+  "Gemini models from Google AI Studio. A free key, no card needed.":
+    "Моделі Gemini з Google AI Studio. Безкоштовний ключ, без картки.",
+  "On the free plan Google may use your prompts to improve its products, and daily limits apply.":
+    "На безкоштовному плані Google може використовувати ваші запити для покращення своїх продуктів, і діють добові ліміти.",
+  "Open models (gpt-oss, Llama) answering very fast. A free key.":
+    "Відкриті моделі (gpt-oss, Llama), що відповідають дуже швидко. Безкоштовний ключ.",
+  "The free plan has per-minute and daily limits; long agent runs may need to wait.":
+    "Безкоштовний план має хвилинні та добові ліміти; довгі запуски агентів можуть чекати.",
+  "Many models behind one key, with a free section (models ending in :free).":
+    "Багато моделей за одним ключем, є безкоштовний розділ (моделі з :free).",
+  "Free models have daily limits and may log prompts; pick one marked free.":
+    "Безкоштовні моделі мають добові ліміти й можуть зберігати запити; обирайте позначені free.",
+  "Open models on very fast hardware. A key is free to make; the free plan's terms change.":
+    "Відкриті моделі на дуже швидкому залізі. Ключ створити безкоштовно; умови безкоштовного плану змінюються.",
+  "Check the plan on the sign-up page: a card may be asked for. Daily limits apply.":
+    "Перегляньте план на сторінці реєстрації: може знадобитися картка. Діють добові ліміти.",
+  "Mistral's own models, with a free Experiment plan.":
+    "Власні моделі Mistral, є безкоштовний план Experiment.",
+  "The free plan may ask for a phone number and may use your prompts to train models.":
+    "Безкоштовний план може просити номер телефону й використовувати ваші запити для навчання моделей.",
+  "Check again": "Перевірити ще раз",
 };

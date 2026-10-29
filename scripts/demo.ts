@@ -45,6 +45,12 @@ const PORT = Number(process.env.AURA_PORT ?? 4517);
 const read = (name: string) => readFileSync(join(import.meta.dir, "demo", name), "utf8");
 
 const t = await createTestApp({ fileAgents: true, welcome: false });
+// AURA_DEMO_NO_AI=1 shows the first-run screen: no AI is connected yet.
+if (process.env.AURA_DEMO_NO_AI)
+  (t.provider as unknown as { status: unknown }).status = {
+    ok: false,
+    reason: "Claude Code was not found on this computer.",
+  };
 const user = { kind: "user" as const, id: "owner" };
 const agent = (id: string) => ({ kind: "agent" as const, id });
 const say = (chatId: string, author: ReturnType<typeof agent> | typeof user, body: string) =>

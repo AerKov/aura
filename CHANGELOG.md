@@ -5,6 +5,11 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Free AI services come first.** Google Gemini, Groq, OpenRouter, Cerebras and Mistral: make a free
+  key on the service's site and paste it; Aura picks a model and starts. A "Connect an AI to start"
+  panel in the Helper's chat does it in one step. **Helper programs** now reads: Start free, On your
+  computer, then "Advanced: your own agent app" (Claude Code, Codex, Gemini CLI, OpenCode).
+
 - **Files in chats.** Attach files from your computer (the paperclip, drag and drop, or paste); the
   helpers read them, and in a project a helper can hand you a finished file back. Click a file to
   look at it; the arrow saves it to your computer.

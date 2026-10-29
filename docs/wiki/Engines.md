@@ -1,29 +1,40 @@
 # Engines
 
-An **engine** is what actually runs an agent. Aura supports two families, and each agent can use a
-different one.
+An **engine** is what actually runs a helper. Each helper can use a different one. They come in
+three kinds, easiest first:
 
-**Agent apps** are complete coding agents that you install and log in to yourself. Aura starts them,
-streams their work into the chat and decides what they may touch. Your login stays with the app;
-Aura never reads it.
+**Free services (start here).** Google Gemini, Groq, OpenRouter, Cerebras and Mistral give access to
+models through an API. You make a key on the service's site (a minute, usually no card), paste it
+into Aura, and Aura's own agent loop runs on it. Aura picks a model for you and makes the service the
+default if nothing else works yet. Free plans have limits, and some use your prompts to improve their
+models: the card says what applies.
 
-**Aura's own agent** is a built-in agent loop that works with any model behind an OpenAI-compatible
-API: a cloud router, or a model on your own machine.
+**Local models.** Ollama, LM Studio, llama.cpp, vLLM: free and private, but they need a capable
+machine and a model that supports tools.
 
-| Engine            | Kind                  | Login or key                   | Cost                                    |
-| ----------------- | --------------------- | ------------------------------ | --------------------------------------- |
-| Claude Code       | agent app (Agent SDK) | your Claude login              | Claude plan or API                      |
-| Gemini CLI        | agent app (ACP)       | your Google login              | generous free tier                      |
-| Codex             | agent app (ACP)       | ChatGPT plan or OpenAI API key | plan or API                             |
-| OpenCode          | agent app (ACP)       | its own providers              | depends on provider                     |
-| OpenRouter        | Aura's agent          | API key pasted in Aura         | free models available                   |
-| Ollama            | Aura's agent          | none                           | free, local                             |
-| OpenAI-compatible | Aura's agent          | optional key                   | LM Studio, llama.cpp, vLLM: free, local |
+**Agent apps (advanced).** Complete coding agents that you install and log in to yourself: Claude
+Code, Codex, Gemini CLI, OpenCode. Aura starts them, streams their work into the chat and decides what
+they may touch. Your login stays with the app; Aura never reads it.
+
+| Engine            | Kind                  | Login or key                   | Cost                             |
+| ----------------- | --------------------- | ------------------------------ | -------------------------------- |
+| Google Gemini     | free service          | key from aistudio.google.com   | free plan                        |
+| Groq              | free service          | key from console.groq.com      | free plan                        |
+| OpenRouter        | free service          | key from openrouter.ai         | free models (`:free`) available  |
+| Cerebras          | free service          | key from cloud.cerebras.ai     | free plan, terms change          |
+| Mistral           | free service          | key from console.mistral.ai    | free Experiment plan             |
+| Ollama            | local                 | none                           | free                             |
+| OpenAI-compatible | local or any API      | optional key                   | LM Studio, llama.cpp, vLLM: free |
+| Claude Code       | agent app (Agent SDK) | your Claude login              | Claude plan or API               |
+| Codex             | agent app (ACP)       | ChatGPT plan or OpenAI API key | plan or API                      |
+| Gemini CLI        | agent app (ACP)       | your Google login              | generous free tier               |
+| OpenCode          | agent app (ACP)       | its own providers              | depends on provider              |
 
 ## Choosing
 
+- **Just starting:** a free service. Google Gemini is a good first pick; if you hit its limit, add Groq
+  or OpenRouter and give a helper to each.
 - **Best results:** Claude Code. It is the strongest coder and the most tested with Aura.
-- **Free, in the cloud:** Gemini CLI with a Google account, or free models on OpenRouter.
 - **Free and private:** Ollama or LM Studio with a model that supports tool calling (qwen3 is a good
   start). Small models follow tools less reliably; give them simpler jobs.
 - **Mix:** a strong engine for the coder, a free one for the reviewer or a news digest agent.

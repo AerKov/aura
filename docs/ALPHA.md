@@ -21,12 +21,13 @@ The builds are **not signed** yet:
 
 ## You need one engine
 
-Agents need a model. Aura uses what you already have and never asks for or stores your logins:
+Agents need a model. The easiest way is a **free service**: make a key on Google AI Studio, Groq,
+OpenRouter, Cerebras or Mistral and paste it when Aura asks (free plans have limits, and some may
+use your prompts to improve their models). Other ways, for those who prefer them:
 
-- **Claude Code**, logged in with your Claude subscription (run `claude` once in a terminal);
-- or **Gemini CLI**, **Codex** or **OpenCode**, logged in with their own commands;
-- or **Ollama** / **LM Studio** on your computer, free;
-- or an **OpenRouter** key, with free models available.
+- **Ollama** / **LM Studio** on your computer, free and private;
+- or an agent app you already use, under its own login, which Aura never reads or stores:
+  **Claude Code**, **Gemini CLI**, **Codex** or **OpenCode**.
 
 Then follow [Getting started](https://github.com/AerKov/aura/wiki/Getting-Started).
 

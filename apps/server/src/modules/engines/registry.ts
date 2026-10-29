@@ -1,4 +1,12 @@
-import { ENGINE_IDS, type EngineId, type EngineModel } from "@aura/shared";
+import {
+  ENGINE_IDS,
+  type EngineId,
+  type EngineModel,
+  FREE_SERVICES,
+  type FreeService,
+  freeServiceOf,
+  pickStartModel,
+} from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
 import { type AcpAgentSpec, AcpProvider, type AgentProcess } from "../../providers/acp";
 import { locateExecutable } from "../../providers/claude-locate";
@@ -9,6 +17,9 @@ import { EngineStore, KEYED_ENGINES, type KeyedEngine } from "./settings";
 import type { ToolBridgeLike } from "./tool-bridge";
 
 const OPENROUTER_URL = "https://openrouter.ai/api/v1";
+
+/** The free services that are plain OpenAI-compatible endpoints with a key (OpenRouter has its own). */
+const PLAIN_SERVICES = FREE_SERVICES.filter((s) => s.id !== "openrouter");
 
 /** What the runtime needs: the engine and model for an agent. */
 export interface EngineSelector {
@@ -42,6 +53,15 @@ const DESCRIPTIONS: Record<
   EngineId,
   { label: string; kind: EngineInfo["kind"]; free: boolean; text: string }
 > = {
+  ...(Object.fromEntries(
+    PLAIN_SERVICES.map((s) => [
+      s.id,
+      { label: s.label, kind: "aura" as const, free: true, text: `${s.blurb} ${s.note}` },
+    ]),
+  ) as Record<
+    "google" | "groq" | "cerebras" | "mistral",
+    { label: string; kind: EngineInfo["kind"]; free: boolean; text: string }
+  >),
   "claude-code": {
     label: "Claude Code",
     kind: "official",
@@ -174,11 +194,30 @@ export class EngineRegistry implements EngineSelector {
         toolBridge: opts.toolBridge,
         spawn: opts.acpSpawn,
       });
+    const plain = (id: "google" | "groq" | "cerebras" | "mistral") => {
+      const s = freeServiceOf(id);
+      if (!s) throw new Error(`no free service ${id}`);
+      return new OpenAICompatProvider({
+        id,
+        label: s.label,
+        baseUrl: () => s.baseUrl,
+        apiKey: () => this.store.key(id),
+        needsKey: true,
+        pricing: "free",
+        defaultModel: () => settings().models[id] ?? null,
+        check: () => this.checkService(s),
+        fetch: this.fetch,
+      });
+    };
     this.providers = {
       "claude-code": opts.claude,
       "gemini-cli": acp("gemini-cli"),
       codex: acp("codex"),
       opencode: acp("opencode"),
+      google: plain("google"),
+      groq: plain("groq"),
+      cerebras: plain("cerebras"),
+      mistral: plain("mistral"),
       openrouter: new OpenAICompatProvider({
         id: "openrouter",
         label: "OpenRouter",
@@ -280,16 +319,14 @@ export class EngineRegistry implements EngineSelector {
           status,
           model:
             settings.models[id] ?? (id === "claude-code" ? (this.opts.defaultModel ?? null) : null),
-          needsKey: id === "openrouter",
+          needsKey: (KEYED_ENGINES as readonly string[]).includes(id) && id !== "openai-compatible",
           hasKey: keyed ? this.store.key(id as KeyedEngine) !== null : false,
           baseUrl:
             id === "ollama"
               ? settings.ollama.baseUrl
               : id === "openai-compatible"
                 ? settings.custom.baseUrl
-                : id === "openrouter"
-                  ? OPENROUTER_URL
-                  : null,
+                : (freeServiceOf(id)?.baseUrl ?? null),
         };
       }),
     );
@@ -338,6 +375,8 @@ export class EngineRegistry implements EngineSelector {
         })
         .sort((a, b) => Number(b.free) - Number(a.free) || a.label.localeCompare(b.label));
     }
+    const service = freeServiceOf(engine);
+    if (service) return this.serviceModels(service);
     const key = this.store.key("openai-compatible");
     const body = await this.getJson(
       `${settings.custom.baseUrl}/models`,
@@ -349,6 +388,82 @@ export class EngineRegistry implements EngineSelector {
       .map((m) => String(m.id ?? ""))
       .filter(Boolean)
       .map((id) => ({ id, label: id, free: false }));
+  }
+
+  /** A free service's models, its preferred ones first. */
+  private async serviceModels(service: FreeService): Promise<EngineModel[]> {
+    const key = this.store.key(service.id as KeyedEngine);
+    if (!key) throw new Error(`Add your ${service.label} API key first.`);
+    const body = await this.getJson(`${service.baseUrl}/models`, {
+      authorization: `Bearer ${key}`,
+    });
+    const data = isRecord(body) && Array.isArray(body.data) ? body.data : [];
+    const prefix = service.stripPrefix ?? "";
+    const ids = data
+      .filter(isRecord)
+      .map((m) => String(m.id ?? ""))
+      .filter(Boolean)
+      .map((id) => (prefix && id.startsWith(prefix) ? id.slice(prefix.length) : id));
+    const rank = (id: string) => {
+      const i = service.preferred.indexOf(id);
+      return i === -1 ? service.preferred.length : i;
+    };
+    return ids
+      .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
+      .map((id) => ({ id, label: id, free: true }));
+  }
+
+  /**
+   * After a key is saved (ADR 0037): pick the service's best model if none is chosen, and make it
+   * the default engine when the current default does not work, so a newcomer's first key is enough.
+   */
+  async connect(engine: EngineId): Promise<{ model: string | null; isDefault: boolean }> {
+    const service = freeServiceOf(engine);
+    const settings = this.store.get();
+    if (!service || !this.store.key(engine as KeyedEngine))
+      return { model: settings.models[engine] ?? null, isDefault: settings.default === engine };
+    let model = settings.models[engine] ?? null;
+    let offered: string[] = [];
+    try {
+      offered = (await this.models(engine)).map((m) => m.id);
+    } catch (error) {
+      log.debug("models not listed while connecting", { engine, error: errorMessage(error) });
+    }
+    if (!model) model = pickStartModel(service, offered);
+    // Only a key that works can take the place of the default engine.
+    const accepted = await withTimeout(this.providers[engine].isAvailable(), 25_000)
+      .then((s) => s.ok)
+      .catch(() => false);
+    const currentWorks =
+      settings.default !== engine &&
+      (await withTimeout(this.providers[settings.default].isAvailable(), 25_000)
+        .then((s) => s.ok)
+        .catch(() => false));
+    const makeDefault = accepted && !currentWorks;
+    await this.store.update({
+      ...(model ? { models: { [engine]: model } } : {}),
+      ...(makeDefault ? { default: engine } : {}),
+    });
+    return { model, isDefault: this.store.get().default === engine };
+  }
+
+  /** Whether a free service accepts the key, with a plain reason when it does not. */
+  private async checkService(service: FreeService): Promise<ProviderStatus> {
+    const key = this.store.key(service.id as KeyedEngine);
+    if (!key) return { ok: false, reason: `Add your ${service.label} API key.` };
+    try {
+      const res = await this.fetch(`${service.baseUrl}/models`, {
+        headers: { authorization: `Bearer ${key}` },
+        signal: AbortSignal.timeout(8000),
+      });
+      if (res.status === 401 || res.status === 403)
+        return { ok: false, reason: `${service.label} rejected the API key.` };
+      if (res.status === 429) return { ok: true, detail: "limit reached for now" };
+      if (!res.ok) return { ok: false, reason: `${service.label} answered HTTP ${res.status}.` };
+      return { ok: true, detail: "free plan" };
+    } catch (error) {
+      return { ok: false, reason: `${service.label} is not reachable (${errorMessage(error)}).` };
+    }
   }
 
   private async getJson(url: string, headers: Record<string, string> = {}): Promise<unknown> {

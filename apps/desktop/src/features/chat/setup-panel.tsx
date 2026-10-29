@@ -1,14 +1,18 @@
 import { Cpu, RefreshCw, TerminalSquare } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { QuickConnect } from "@/features/engines/quick-connect";
+import { useT } from "@/features/localization/i18n";
 import { recheckProvider, reportError, showEngines } from "./actions";
 import { useChatStore } from "./store";
 
 /**
- * Shown when the default engine is not ready. For Claude Code the app never handles the login
- * itself (CLAUDE.md rule 4): it only explains how to do it, and offers the other engines.
+ * Shown when the default engine is not ready (ADR 0037). It leads with the easiest way in: a free
+ * AI service and a key. Your own agent apps (Claude Code and the others) are one step further; for
+ * Claude Code the app never handles the login itself (CLAUDE.md rule 4): it only explains how.
  */
 export function SetupPanel() {
+  const t = useT();
   const provider = useChatStore((s) => s.provider);
   const [checking, setChecking] = useState(false);
   if (!provider || provider.ok) return null;
@@ -24,59 +28,49 @@ export function SetupPanel() {
     }
   };
 
-  const recheck = (
-    <Button size="sm" variant="outline" disabled={checking} onClick={() => void check()}>
-      <RefreshCw className={checking ? "animate-spin" : ""} /> Check again
-    </Button>
-  );
-  const otherEngines = (
-    <Button size="sm" variant="ghost" onClick={showEngines}>
-      <Cpu /> Use another engine
-    </Button>
-  );
-
-  if (provider.engine !== "claude-code") {
-    return (
-      <div className="mx-auto mb-3 max-w-xl rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950/40">
-        <div className="mb-2 flex items-center gap-2 font-medium">
-          <Cpu className="size-4" /> The agent engine is not ready
-        </div>
-        <p className="text-muted-foreground mb-3">{provider.reason}</p>
-        <div className="flex flex-wrap gap-2">
-          {recheck}
-          <Button size="sm" variant="ghost" onClick={showEngines}>
-            <Cpu /> Open Engines
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto mb-3 max-w-xl rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-800 dark:bg-amber-950/40">
-      <div className="mb-2 flex items-center gap-2 font-medium">
-        <TerminalSquare className="size-4" /> Connect Claude Code
+    <div className="bg-card mx-auto mb-3 max-w-xl border border-warning/65 p-4 text-sm">
+      <div className="mb-1 flex items-center gap-2 font-medium">
+        <Cpu className="size-4" /> {t("Connect an AI to start")}
       </div>
-      <p className="text-muted-foreground mb-3">{provider.reason}</p>
-      <ol className="mb-3 list-decimal space-y-1 pl-5">
-        <li>
-          Install Claude Code:{" "}
-          <code className="bg-muted rounded px-1">npm install -g @anthropic-ai/claude-code</code>
-        </li>
-        <li>
-          Run <code className="bg-muted rounded px-1">claude</code> in a terminal and log in with
-          your Claude account.
-        </li>
-        <li>Come back and check again. The app never sees your credentials.</li>
-      </ol>
       <p className="text-muted-foreground mb-3">
-        No Claude subscription? Run agents for free on local models (Ollama) or free OpenRouter
-        models.
+        {t("Your helpers need an AI to think with. The easiest way is a free service:")}
       </p>
-      <div className="flex flex-wrap gap-2">
-        {recheck}
-        {otherEngines}
-      </div>
+      <QuickConnect />
+      <details className="mt-4 border-t pt-3">
+        <summary className="text-muted-foreground cursor-pointer text-[13px]">
+          {t("I already use an agent app (Claude Code, Codex…) or local models")}
+        </summary>
+        <div className="mt-3 grid gap-3">
+          <p className="text-muted-foreground">{provider.reason}</p>
+          {provider.engine === "claude-code" && (
+            <div>
+              <div className="mb-1 flex items-center gap-2 font-medium">
+                <TerminalSquare className="size-4" /> {t("Connect Claude Code")}
+              </div>
+              <ol className="list-decimal space-y-1 pl-5">
+                <li>
+                  {t("Install Claude Code:")}{" "}
+                  <code className="bg-muted px-1">npm install -g @anthropic-ai/claude-code</code>
+                </li>
+                <li>
+                  {t("Run")} <code className="bg-muted px-1">claude</code>{" "}
+                  {t("in a terminal and log in with your Claude account.")}
+                </li>
+                <li>{t("Come back and check again. The app never sees your credentials.")}</li>
+              </ol>
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" disabled={checking} onClick={() => void check()}>
+              <RefreshCw className={checking ? "animate-spin" : ""} /> {t("Check again")}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={showEngines}>
+              <Cpu /> {t("Open Helper programs")}
+            </Button>
+          </div>
+        </div>
+      </details>
     </div>
   );
 }

@@ -21,8 +21,8 @@ your machine, in plain files and a local database.
 ## Start here
 
 1. [Getting started](Getting-Started): install, first run, first project.
-2. [Engines](Engines): pick what runs your helpers: Claude Code, Gemini CLI, Codex, OpenCode, or
-   Aura's own agent on OpenRouter, Ollama or LM Studio (free options included).
+2. [Engines](Engines): pick what your helpers think with: a free service (Google Gemini, Groq,
+   OpenRouter…) to start, local models, or an agent app such as Claude Code for advanced use.
 3. [Chats and agents](Chats-and-Agents): how the Helper, groups, projects and agents work together.
 
 ## Guides

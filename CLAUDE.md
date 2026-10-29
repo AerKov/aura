@@ -31,8 +31,9 @@ Full product and architecture spec: `docs/SPEC.md`. Read the relevant section be
   `@streamdown/code` (shiki). Use `components/markdown.tsx`. Mermaid/KaTeX later.
 - **LLM:** only through the `LLMProvider` interface ("engines", ADR 0011/0012): Claude Agent SDK
   (`@anthropic-ai/claude-agent-sdk`) under the user's own Claude Code login; Gemini CLI, Codex and
-  OpenCode over ACP (`@agentclientprotocol/sdk`) under their own logins; Aura's own agent loop over
-  OpenAI-compatible APIs (OpenRouter, Ollama, LM Studio…).
+  OpenCode over ACP (`@agentclientprotocol/sdk`) under their own logins (advanced users); Aura's own
+  agent loop over OpenAI-compatible APIs, which is the default path: free services first (Google
+  Gemini, Groq, OpenRouter, Cerebras, Mistral; ADR 0037), then Ollama, LM Studio…
 - **Agent tools:** MCP.
 - **Lint/format:** Biome. **Tests:** `bun test`.
 
