@@ -50,6 +50,7 @@ Extensions run in a sandbox and can do only what you approved when you installed
 | `net`         | Reach the hosts listed on the card, through Aura                                |
 | `agents.ask`  | Ask an agent for you: posts your message `@agent …` in the chat, within budgets |
 | `files.read`  | Read a project's files (read-only)                                              |
+| `docs`        | Keep its own files, let you add and save them, and show them (PDF, images)      |
 
 **Network and keys.** An extension cannot reach the internet by itself. With `net`, Aura makes the
 request for it, only to the hosts shown on the install card. If it needs a key, the card also names

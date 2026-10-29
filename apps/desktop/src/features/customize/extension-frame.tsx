@@ -1,9 +1,17 @@
-import type { ExtensionInfo, ExtensionPermission, Message, Placement } from "@aura/shared";
+import {
+  type ExtensionInfo,
+  type ExtensionPermission,
+  type Message,
+  mimeOf,
+  type Placement,
+} from "@aura/shared";
 import { useEffect, useRef, useState } from "react";
 import { reportError } from "@/features/chat/actions";
 import { getState, useChatStore } from "@/features/chat/store";
+import { askForFiles } from "@/features/files/picker";
 import { useLocale } from "@/features/localization/i18n";
 import { api, call, SERVER_URL } from "@/lib/api";
+import { fetchFile, openFile, saveBlob } from "@/lib/files";
 import { cn } from "@/lib/utils";
 
 const THEME_TOKENS = [
@@ -19,6 +27,20 @@ const THEME_TOKENS = [
   "--accent",
   "--radius",
 ];
+
+/** The biggest file an app can read back into its frame. */
+const MAX_READ = 10 * 1024 * 1024;
+
+const docPath = (app: string, id: string) =>
+  `/extensions/${encodeURIComponent(app)}/docs/${encodeURIComponent(id)}`;
+
+async function toBase64(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000)
+    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
 
 type Request = { aura: 1; id?: number; method: string; params?: Record<string, unknown> };
 
@@ -39,6 +61,13 @@ const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
   "agents.ask": "agents.ask",
   "files.list": "files.read",
   "files.read": "files.read",
+  "docs.pick": "docs",
+  "docs.list": "docs",
+  "docs.put": "docs",
+  "docs.read": "docs",
+  "docs.remove": "docs",
+  "docs.view": "docs",
+  "docs.save": "docs",
   data: "storage",
   "actions.run": "storage",
   "apps.call": "apps.call",
@@ -235,6 +264,68 @@ export function ExtensionFrame({
             ext().files.get({ query: { project, path: String(p.path ?? ""), read } }),
           );
           return reply(req.id, read ? result.content : result.entries);
+        }
+        case "docs.pick": {
+          const files = await askForFiles({
+            appName: extension.name,
+            accept: typeof p.accept === "string" ? p.accept : undefined,
+            multiple: p.multiple === true,
+          });
+          const saved = [];
+          for (const file of files) saved.push(await call(() => ext().docs.post({ file })));
+          return reply(req.id, saved);
+        }
+        case "docs.list":
+          return reply(req.id, await call(() => ext().docs.get()));
+        case "docs.put": {
+          const bytes =
+            typeof p.base64 === "string"
+              ? Uint8Array.from(atob(p.base64), (c) => c.charCodeAt(0))
+              : new TextEncoder().encode(String(p.text ?? ""));
+          const file = new File([bytes], String(p.name ?? "file"));
+          return reply(req.id, await call(() => ext().docs.post({ file })));
+        }
+        case "docs.read": {
+          const blob = await fetchFile(docPath(extension.id, String(p.id ?? "")));
+          if (blob.size > MAX_READ)
+            return reply(req.id, null, "The file is too large to read here");
+          return reply(req.id, p.as === "base64" ? await toBase64(blob) : await blob.text());
+        }
+        case "docs.remove":
+          await call(() =>
+            ext()
+              .docs({ fileId: String(p.id ?? "") })
+              .delete(),
+          );
+          return reply(req.id, true);
+        case "docs.save": {
+          const id = String(p.id ?? "");
+          const found = (await call(() => ext().docs.get())).find((f) => f.id === id);
+          if (!found) return reply(req.id, null, "No such file");
+          saveBlob(await fetchFile(docPath(extension.id, id)), found.name);
+          return reply(req.id, true);
+        }
+        case "docs.view": {
+          if (typeof p.id === "string") {
+            const id = p.id;
+            const found = (await call(() => ext().docs.get())).find((f) => f.id === id);
+            if (!found) return reply(req.id, null, "No such file");
+            openFile({
+              name: found.name,
+              type: found.type,
+              load: () => fetchFile(docPath(extension.id, id)),
+            });
+          } else {
+            // Content the app has right now, shown without being kept.
+            const name = String(p.name ?? "file");
+            const bytes =
+              typeof p.base64 === "string"
+                ? Uint8Array.from(atob(p.base64), (c) => c.charCodeAt(0))
+                : new TextEncoder().encode(String(p.text ?? ""));
+            const type = typeof p.type === "string" ? p.type : mimeOf(name);
+            openFile({ name, type, load: async () => new Blob([bytes], { type }) });
+          }
+          return reply(req.id, true);
         }
         case "data": {
           const { result } = await call(() =>

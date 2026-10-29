@@ -12,6 +12,7 @@ import {
   type Topic,
 } from "@aura/shared";
 import { useSyncExternalStore } from "react";
+import type { FileRequest } from "@/features/files/picker";
 
 export type Connection = "connecting" | "open" | "closed";
 
@@ -20,6 +21,13 @@ export interface AgentInfo {
   handle: string;
   name: string;
   role: string;
+}
+
+/** What the viewer shows: a name, a type, and how to get the bytes. */
+export interface FileView {
+  name: string;
+  type: string;
+  load: () => Promise<Blob>;
 }
 
 export interface ChatState {
@@ -59,6 +67,10 @@ export interface ChatState {
   /** The "My apps" menu next to the bar, and the "New app" sheet (ADR 0034). */
   menuOpen: boolean;
   addOpen: boolean;
+  /** The file shown in the viewer window (ADR 0036). */
+  viewer: FileView | null;
+  /** An app is asking the user for files (ADR 0036). */
+  filePicker: FileRequest | null;
   /** On narrow screens the messenger shows one pane: the chat list or a chat. */
   pane: "list" | "main";
   needsPairing: boolean;
@@ -89,6 +101,8 @@ let state: ChatState = {
   barFailed: null,
   menuOpen: false,
   addOpen: false,
+  viewer: null,
+  filePicker: null,
   appearance: null,
   customize: null,
   pane: "list",

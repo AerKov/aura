@@ -3,6 +3,7 @@ import {
   type Card,
   type Chat,
   type ChatKind,
+  type FileRef,
   type Message,
   type MessageKind,
   type MessageStatus,
@@ -46,6 +47,7 @@ function toMessage(row: Row): Message {
     kind: row.kind as MessageKind,
     body: String(row.body),
     card: (row.card as Card | undefined) ?? null,
+    attachments: (row.attachments as FileRef[] | undefined) ?? [],
     replyTo: optionalKey(row.reply_to),
     mentions: (row.mentions as string[] | undefined) ?? [],
     status: row.status as MessageStatus,
@@ -83,6 +85,7 @@ export interface NewMessage {
   kind?: MessageKind;
   body: string;
   card?: Card | null;
+  attachments?: FileRef[];
   replyTo?: string | null;
   mentions?: string[];
   status?: MessageStatus;
@@ -332,6 +335,7 @@ export class ChatRepo {
         kind: input.kind ?? "text",
         body: input.body,
         card: input.card ?? undefined,
+        attachments: input.attachments?.length ? input.attachments : undefined,
         reply_to: input.replyTo ? new RecordId("message", input.replyTo) : undefined,
         mentions: input.mentions ?? [],
         status: input.status ?? "final",
@@ -393,7 +397,9 @@ export class ChatRepo {
       ? previewText(message.body)
       : message.card
         ? cardPreview(message.card)
-        : "";
+        : message.attachments.length > 0
+          ? message.attachments.map((f) => f.name).join(", ")
+          : "";
     // Many writers touch the same chat record; retry optimistic-concurrency conflicts.
     await retryOnConflict(() =>
       this.db

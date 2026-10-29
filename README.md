@@ -72,6 +72,8 @@ chats stay on your computer.
   its own data. Every change is a diff you approve, and every version can be brought back.
 - **Uninstall without fear.** An uninstalled app leaves a backup; **restore points** take the whole
   Aura back (or forward again) after a round of changes.
+- **Files.** Attach files in any chat and helpers read them; apps keep, show and save files of their
+  own, and a PDF opens in a window with Print and Save.
 - **Ready-made packs.** Add a dev team, writers, researchers, themes or panels in one click, or a
   pack from a GitHub link. You see every file first.
 

@@ -23,6 +23,8 @@ import { CustomizeView, loadCustomize } from "@/features/customize/customize-vie
 import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { DevicesView } from "@/features/devices/devices-view";
 import { EnginesView } from "@/features/engines/engines-view";
+import { FilePicker } from "@/features/files/picker";
+import { FileViewer } from "@/features/files/viewer";
 import { JobsView } from "@/features/jobs/jobs-view";
 import { useT } from "@/features/localization/i18n";
 import { LocalizationView } from "@/features/localization/localization-view";
@@ -63,6 +65,8 @@ export function Shell() {
       <div className="@container relative flex min-h-0 min-w-0 flex-1">
         <AppView app={phoneApp} />
         <NewAppSheet />
+        <FileViewer />
+        <FilePicker />
       </div>
     );
   }
@@ -73,6 +77,8 @@ export function Shell() {
       <NodeView node={layout.root} focused={layout.focused} many={tiles(layout.root).length > 1} />
       <StartMenu />
       <NewAppSheet />
+      <FileViewer />
+      <FilePicker />
     </div>
   );
 }

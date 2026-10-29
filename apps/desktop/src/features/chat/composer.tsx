@@ -1,7 +1,16 @@
-import { addresseesOf, type ChatKind, type Message } from "@aura/shared";
-import { CornerDownRight, SendHorizontal, X } from "lucide-react";
+import {
+  addresseesOf,
+  type ChatKind,
+  type FileRef,
+  formatBytes,
+  MAX_ATTACHMENTS,
+  MAX_FILE_BYTES,
+  type Message,
+} from "@aura/shared";
+import { CornerDownRight, Loader, Paperclip, SendHorizontal, X } from "lucide-react";
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useT } from "@/features/localization/i18n";
+import { uploadToChat } from "@/lib/files";
 import { cn } from "@/lib/utils";
 import { reportError, sendMessage } from "./actions";
 import { AgentMark } from "./agent-mark";
@@ -11,6 +20,16 @@ import { agentName } from "./participants";
 import { type AgentInfo, useChatStore } from "./store";
 
 const ORCHESTRATOR = "orchestrator";
+
+/** A file the user added to the message that is uploading or ready (ADR 0036). */
+interface Pending {
+  key: number;
+  name: string;
+  size: number;
+  ref?: FileRef;
+  error?: string;
+}
+let pendingKey = 0;
 
 /**
  * A floating command bar: write markdown, reply to a message, and address agents. Typing `@` (or
@@ -45,6 +64,8 @@ export function Composer({
   const [menuClosed, setMenuClosed] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<Pending[]>([]);
+  const picker = useRef<HTMLInputElement>(null);
   const ref = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -91,14 +112,50 @@ export function Composer({
     });
   };
 
+  const uploading = files.some((f) => !f.ref && !f.error);
+  const ready = files.flatMap((f) => (f.ref ? [f.ref] : []));
+  const addFiles = (list: File[]) => {
+    for (const file of list) {
+      const entry: Pending = { key: ++pendingKey, name: file.name, size: file.size };
+      if (files.length + 1 > MAX_ATTACHMENTS) {
+        setError(t("At most {n} files in one message", { n: MAX_ATTACHMENTS }));
+        break;
+      }
+      if (file.size > MAX_FILE_BYTES) {
+        entry.error = t("Too large: at most {size}", { size: formatBytes(MAX_FILE_BYTES) });
+      }
+      setFiles((all) => [...all, entry]);
+      if (entry.error) continue;
+      uploadToChat(chatId, file).then(
+        (saved) =>
+          setFiles((all) => all.map((f) => (f.key === entry.key ? { ...f, ref: saved } : f))),
+        (err: unknown) =>
+          setFiles((all) =>
+            all.map((f) =>
+              f.key === entry.key
+                ? { ...f, error: err instanceof Error ? err.message : String(err) }
+                : f,
+            ),
+          ),
+      );
+    }
+  };
+
   const send = async () => {
     const body = text.trim();
-    if (!body || sending) return;
+    if ((!body && ready.length === 0) || sending || uploading) return;
     setSending(true);
     setError(null);
     try {
-      await sendMessage(chatId, body, replyTo?.id ?? null, topicId);
+      await sendMessage(
+        chatId,
+        body,
+        replyTo?.id ?? null,
+        topicId,
+        ready.map((f) => f.id),
+      );
       setText("");
+      setFiles([]);
       setCaret(0);
       onCancelReply();
     } catch (err) {
@@ -181,7 +238,16 @@ export function Composer({
             ))}
           </div>
         )}
-        <div className="flex items-end gap-2">
+        {/* biome-ignore lint/a11y/noStaticElementInteractions: dropping files is a pointer-only shortcut; the paperclip button does the same */}
+        <div
+          className="flex items-end gap-2"
+          onDragOver={(e) => e.dataTransfer.types.includes("Files") && e.preventDefault()}
+          onDrop={(e) => {
+            if (e.dataTransfer.files.length === 0) return;
+            e.preventDefault();
+            addFiles([...e.dataTransfer.files]);
+          }}
+        >
           <div className="bg-input-bg border-input focus-within:border-ring min-w-0 flex-1 border transition-colors">
             {replyTo && (
               <div className="flex items-center gap-2 border-b px-4 py-2 text-sm">
@@ -200,7 +266,58 @@ export function Composer({
                 </button>
               </div>
             )}
+            {files.length > 0 && (
+              <ul className="flex flex-wrap gap-1.5 border-b px-2.5 py-2">
+                {files.map((f) => (
+                  <li
+                    key={f.key}
+                    title={f.error}
+                    className={cn(
+                      "flex max-w-full items-center gap-1.5 border px-2 py-1 text-xs",
+                      f.error && "border-destructive text-destructive",
+                    )}
+                  >
+                    {f.ref || f.error ? (
+                      <Paperclip className="size-3.5 shrink-0" />
+                    ) : (
+                      <Loader className="size-3.5 shrink-0 animate-spin" />
+                    )}
+                    <span className="truncate">{f.name}</span>
+                    <span className="text-muted-foreground shrink-0 font-mono">
+                      {f.error ? t("failed") : formatBytes(f.size)}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label={t("Remove {name}", { name: f.name })}
+                      className="text-muted-foreground hover:text-foreground shrink-0"
+                      onClick={() => setFiles((all) => all.filter((x) => x.key !== f.key))}
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
             <div className="flex items-end">
+              <input
+                ref={picker}
+                type="file"
+                multiple
+                hidden
+                onChange={(e) => {
+                  addFiles([...(e.target.files ?? [])]);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                aria-label={t("Attach a file")}
+                title={t("Attach a file")}
+                onClick={() => picker.current?.click()}
+                className="text-muted-foreground hover:text-foreground grid size-[38px] shrink-0 place-items-center"
+              >
+                <Paperclip className="size-4" strokeWidth={1.5} />
+              </button>
               <textarea
                 ref={ref}
                 value={text}
@@ -211,6 +328,12 @@ export function Composer({
                   setMenuIndex(0);
                 }}
                 onKeyDown={onKeyDown}
+                onPaste={(e) => {
+                  const pasted = [...e.clipboardData.files];
+                  if (pasted.length === 0) return;
+                  e.preventDefault();
+                  addFiles(pasted);
+                }}
                 onKeyUp={updateCaret}
                 onClick={updateCaret}
                 onBlur={() => setMenuClosed(true)}
@@ -218,14 +341,14 @@ export function Composer({
                 placeholder={placeholder ?? t("Write a message…")}
                 rows={1}
                 aria-autocomplete="list"
-                className="placeholder:text-muted-foreground field-sizing-content max-h-48 min-h-[38px] flex-1 resize-none bg-transparent px-3 py-2 text-[14.5px] outline-none"
+                className="placeholder:text-muted-foreground field-sizing-content max-h-48 min-h-[38px] flex-1 resize-none bg-transparent py-2 pr-3 pl-0 text-[14.5px] outline-none"
               />
             </div>
           </div>
           <button
             type="button"
             aria-label={t("Send")}
-            disabled={!text.trim() || sending}
+            disabled={(!text.trim() && ready.length === 0) || sending || uploading}
             onClick={() => void send()}
             className="bg-primary text-primary-foreground hover:bg-primary-hover grid size-[38px] shrink-0 place-items-center transition-colors disabled:opacity-45"
           >

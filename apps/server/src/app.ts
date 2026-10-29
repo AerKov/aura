@@ -39,6 +39,8 @@ import type { DeviceService } from "./modules/devices/service";
 import { enginesModule } from "./modules/engines";
 import type { EngineRegistry } from "./modules/engines/registry";
 import type { ToolBridge } from "./modules/engines/tool-bridge";
+import { filesModule } from "./modules/files";
+import type { FileStore } from "./modules/files/store";
 import { type HealthDeps, healthModule } from "./modules/health";
 import type { JobService } from "./modules/jobs/service";
 import { localizationModule } from "./modules/localization";
@@ -72,6 +74,7 @@ export interface AppDeps extends HealthDeps {
   summaries: ChatSummaryService;
   agentSetup: AgentSetupService;
   appSecrets: AppSecrets;
+  files: FileStore;
   appSnapshots: AppSnapshots;
   sandbox: SandboxService;
   dataDir: string;
@@ -128,8 +131,10 @@ export function createApp(deps: AppDeps) {
         busyIn: (chatId) => deps.runtime.busyIn(chatId),
         projectOf: (slug) => deps.projects.get(slug),
         archiveProject: (slug) => deps.projects.archive(slug),
+        dropFiles: (chatId) => deps.files.removeScope({ kind: "chat", id: chatId }),
       }),
     )
+    .use(filesModule(deps))
     .use(agentsModule(deps))
     .use(enginesModule(deps))
     .use(memoryModule(deps))

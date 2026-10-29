@@ -39,7 +39,9 @@ describe("groups and deleting chats (ADR 0035)", () => {
     const members = (await t.repo.members(chat?.id ?? "")).map((m) => m.participant.id);
     expect(members.sort()).toEqual(["orchestrator", "owner", "tester"]);
 
+    t.files.put({ kind: "chat", id: chat?.id ?? "" }, "plan.txt", new TextEncoder().encode("x"));
     const removed = await api.chats({ chatId: chat?.id ?? "" }).delete();
+    expect(t.files.list({ kind: "chat", id: chat?.id ?? "" })).toEqual([]);
     expect(removed.status).toBe(200);
     expect(await t.repo.findChat(chat?.id ?? "")).toBeNull();
     expect((await api.chats({ chatId: chat?.id ?? "" }).delete()).status).toBe(404);

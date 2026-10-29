@@ -1,5 +1,6 @@
 import {
   type Chat,
+  type FileRef,
   GENERAL_TOPIC_TITLE,
   MAX_MESSAGE_LENGTH,
   MAX_TOPIC_TITLE,
@@ -101,9 +102,11 @@ export class ChatService {
     chainDepth?: number;
     /** undefined: the replied-to message's topic, else General. */
     topicId?: string | null;
+    /** Files already stored for this chat (ADR 0036). */
+    attachments?: FileRef[];
   }): Promise<Message> {
     const body = input.body.trim();
-    if (!body) throw new ChatError("invalid", "Message is empty");
+    if (!body && !input.attachments?.length) throw new ChatError("invalid", "Message is empty");
     if (body.length > MAX_MESSAGE_LENGTH) {
       throw new ChatError("invalid", `Message is longer than ${MAX_MESSAGE_LENGTH} characters`);
     }
@@ -129,6 +132,7 @@ export class ChatService {
       topicId,
       author: input.author,
       body,
+      attachments: input.attachments,
       replyTo: input.replyTo ?? null,
       mentions: parseMentions(body),
       chainDepth: input.chainDepth ?? 0,

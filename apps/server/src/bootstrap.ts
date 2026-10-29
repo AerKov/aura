@@ -37,6 +37,7 @@ import type { SafeMode } from "./modules/customize/safe-mode";
 import { customizeTools } from "./modules/customize/tools";
 import { DeviceService } from "./modules/devices/service";
 import type { EngineSelector } from "./modules/engines/registry";
+import { FileStore } from "./modules/files/store";
 import { AURA_GUIDE, helpTools } from "./modules/help/tools";
 import { JobService } from "./modules/jobs/service";
 import { LocalizationService } from "./modules/localization/service";
@@ -132,7 +133,9 @@ export async function createServices(deps: {
     triageDelayMs: deps.triageDelayMs,
   });
   const memory = new MemoryService({ db: deps.db, embedder: deps.embedder ?? (() => null) });
+  const files = new FileStore(deps.dataDir);
   const toolDeps = {
+    files,
     agents: deps.agents,
     projects,
     approvals,
@@ -220,6 +223,7 @@ export async function createServices(deps: {
     data: appData,
     repo,
     secrets: appSecrets,
+    files,
     hub: deps.hub,
   });
   const extensionBridge = new ExtensionBridge({
@@ -388,6 +392,7 @@ export async function createServices(deps: {
     appRun: (project, run) => appService.afterRun(project, run),
     ownerName: owner.name,
     scratchDir,
+    files,
     maxChainDepth: deps.maxChainDepth,
   });
   const lastOwnMessage = (await repo.listMessages("direct", { limit: 50 }))
@@ -412,6 +417,7 @@ export async function createServices(deps: {
     sandbox,
     secrets,
     appSecrets,
+    files,
     appSnapshots,
     agentSetup,
     appearance,

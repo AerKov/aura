@@ -49,8 +49,11 @@ export async function sendMessage(
   body: string,
   replyTo: string | null,
   topicId: string | null = null,
+  attachments: string[] = [],
 ): Promise<void> {
-  const message = await call(() => api.chats({ chatId }).messages.post({ body, replyTo, topicId }));
+  const message = await call(() =>
+    api.chats({ chatId }).messages.post({ body, replyTo, topicId, attachments }),
+  );
   upsertMessage(message);
 }
 

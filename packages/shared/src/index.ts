@@ -3,6 +3,7 @@ export * from "./auth";
 export * from "./catalog";
 export * from "./chat";
 export * from "./engines";
+export * from "./files";
 export * from "./health";
 export * from "./layout";
 export * from "./locale";

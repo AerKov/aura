@@ -5,6 +5,15 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Files in chats.** Attach files from your computer (the paperclip, drag and drop, or paste); the
+  helpers read them, and in a project a helper can hand you a finished file back. Click a file to
+  look at it; the arrow saves it to your computer.
+- **A viewer for PDFs, images and text**, with **Print** and **Save**, for chats and apps.
+- **Files in apps.** A new `docs` permission and `ctx.docs`: the user adds files from their computer,
+  an app keeps and shows them (a PDF opens in the viewer with Print), makes files of its own (an
+  invoice, a CSV) and saves them to the computer. @builder knows the API.
+- An app's backup includes its files; deleting a chat deletes its files.
+
 - **Your own groups.** "New group" at the top of the chat list: a name and the helpers you choose.
   Groups have their own section.
 - **Delete a chat** from its header: a group, or a project (its files are kept in the backups

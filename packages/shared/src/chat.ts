@@ -2,6 +2,7 @@
  * Chat domain types shared by server and client (docs/SPEC.md sections 2, 5 and 6).
  * Ids are the record keys without the table prefix.
  */
+import type { FileRef } from "./files";
 import type { LocalizationState } from "./locale";
 import type { ModuleStates } from "./modules";
 import type { BarEdge, BarMode, WindowStyle } from "./wm";
@@ -166,6 +167,8 @@ export interface Message {
   /** Markdown. */
   body: string;
   card: Card | null;
+  /** Files attached by the author (ADR 0036); empty for most messages. */
+  attachments: FileRef[];
   replyTo: string | null;
   /** Handles mentioned with `@handle`, lowercase, without `@`. */
   mentions: string[];
@@ -361,6 +364,8 @@ export type ExtensionPermission =
   | "net"
   | "agents.ask"
   | "files.read"
+  /** Keep its own files (PDFs, images…), let the user add and save them, and show them (ADR 0036). */
+  | "docs"
   | "apps.call";
 
 /** Icons an extension may name in its manifest (lucide names the app ships). */

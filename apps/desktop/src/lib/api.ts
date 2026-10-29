@@ -136,6 +136,24 @@ export async function call<T>(fn: () => Promise<EdenResult<T>>): Promise<T> {
   return result.data as T;
 }
 
+/** A raw request with the session (file bytes): renews a local session once on 401, like `call`. */
+export async function authFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  const send = async () => {
+    const session = await ensureSession();
+    return fetch(`${SERVER_URL}${path}`, {
+      ...init,
+      headers: { ...init.headers, authorization: `Bearer ${session}` },
+    });
+  };
+  let res = await send();
+  if (res.status === 401 && !IS_REMOTE) {
+    token = null;
+    res = await send();
+  }
+  if (!res.ok) throw new ApiError(res.status, `The server answered ${res.status}`);
+  return res;
+}
+
 function errorText(value: unknown): string {
   if (typeof value === "string") return value;
   if (value && typeof value === "object" && "error" in value) return String(value.error);

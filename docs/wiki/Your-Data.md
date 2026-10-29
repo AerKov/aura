@@ -15,6 +15,7 @@ mcp/servers.json             MCP servers
 engines.json                 default engine and models
 projects/<slug>/             project folders (each its own git repository; not in the parent repo)
 locales/<code>.json          your languages and translation fixes
+files/chats/, files/apps/    files attached to chats and kept by apps (not in git)
 backups/apps/                backups of uninstalled apps (not in git)
 restore-points/              restore points of the whole Aura (not in git)
 state/                       database, keys, tokens (not in git)

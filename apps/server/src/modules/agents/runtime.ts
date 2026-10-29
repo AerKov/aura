@@ -1,4 +1,5 @@
-import { mkdirSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import {
   budgetText,
   type Chat,
@@ -14,6 +15,7 @@ import type { AgentEvent, AgentTool, McpServerSpec, SandboxPolicy } from "../../
 import type { ChatRepo } from "../chat/repo";
 import type { ChatService } from "../chat/service";
 import type { EngineSelector } from "../engines/registry";
+import type { FileStore } from "../files/store";
 import type { ProjectInfo } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
 import { buildPrompt, CONTEXT_WINDOW, SUMMARY_BATCH } from "./context";
@@ -90,6 +92,8 @@ export interface RuntimeDeps {
   ownerName: string;
   /** Working directory for runs outside a project. */
   scratchDir: string;
+  /** Files attached to chats; staged in the run's working folder for the agent (ADR 0036). */
+  files?: FileStore;
   maxChainDepth?: number;
   maxTurns?: number;
 }
@@ -278,6 +282,33 @@ export class AgentRuntime {
     }
   }
 
+  /**
+   * Chat files in the prompt's window are copied into the run's working folder under
+   * `attachments/`, where the agent's file tools can read them (ADR 0036). In a project they are
+   * kept out of its git history: a PDF is not a change.
+   */
+  private stageAttachments(chat: Chat, messages: Message[], cwd: string, inProject: boolean): void {
+    const files = this.deps.files;
+    const wanted = messages.flatMap((m) => m.attachments);
+    if (!files || wanted.length === 0) return;
+    for (const file of new Map(wanted.map((f) => [f.id, f])).values()) {
+      try {
+        files.stage({ kind: "chat", id: chat.id }, file.id, cwd);
+      } catch (error) {
+        log.warn("attachment not staged", {
+          chat: chat.id,
+          file: file.id,
+          error: errorMessage(error),
+        });
+      }
+    }
+    if (!inProject) return;
+    const ignore = join(cwd, ".gitignore");
+    const lines = existsSync(ignore) ? readFileSync(ignore, "utf8").split("\n") : [];
+    if (!lines.includes("attachments/"))
+      appendFileSync(ignore, `${lines.length ? "\n" : ""}attachments/\n`);
+  }
+
   private trigger(
     handle: string,
     chat: Chat,
@@ -437,6 +468,7 @@ export class AgentRuntime {
       log.warn("chat summary unavailable", { chat: chat.id, error: errorMessage(e) });
       return null;
     });
+    this.stageAttachments(chat, [...history, trigger], cwd, project !== null);
     const prompt =
       buildPrompt({
         agentHandle: handle,

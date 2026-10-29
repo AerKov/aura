@@ -18,6 +18,8 @@ export interface GroupsDeps {
   projectOf: (slug: string) => Promise<{ kind: "project" | "app" } | null>;
   /** Removes a project's record and moves its files to the backups folder. */
   archiveProject: (slug: string) => Promise<string>;
+  /** Drops the files attached in the chat. */
+  dropFiles: (chatId: string) => void;
 }
 
 /**
@@ -74,6 +76,7 @@ export const groupsModule = (deps: GroupsDeps) =>
           if (project) await deps.archiveProject(found.projectId);
         }
         await deps.repo.removeChat(found.id);
+        deps.dropFiles(found.id);
         deps.hub.publish({ type: "chat.removed", chatId: found.id });
         return { ok: true };
       },

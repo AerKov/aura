@@ -21,6 +21,7 @@ const msg = (extra: Partial<Message>): Message => ({
   kind: "text",
   body: "",
   card: null,
+  attachments: [],
   replyTo: null,
   mentions: [],
   status: "final",

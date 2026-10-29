@@ -1,4 +1,4 @@
-import type { Message, Participant } from "@aura/shared";
+import { formatBytes, type Message, type Participant, stagedPath } from "@aura/shared";
 import { describeCardForPrompt } from "../alerts/service";
 
 export const CONTEXT_WINDOW = 30;
@@ -56,7 +56,10 @@ export function formatMessage(m: Message, byId: Map<string, Message>, ownerName:
   const reply = m.replyTo ? byId.get(m.replyTo) : undefined;
   const replyNote = reply ? ` (replying to ${label(reply.author, ownerName)})` : "";
   const content = m.kind === "card" ? (describeCardForPrompt(m) ?? m.body) : m.body;
-  return `[${label(m.author, ownerName)}${replyNote}]\n${content}`;
+  const files = m.attachments.map(
+    (f) => `[Attached file: ${stagedPath(f)} (${f.type}, ${formatBytes(f.size)})]`,
+  );
+  return `[${label(m.author, ownerName)}${replyNote}]\n${[content, ...files].filter(Boolean).join("\n")}`;
 }
 
 /** System prompt addendum: who the user is and which language to address them in. */

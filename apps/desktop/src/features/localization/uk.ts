@@ -282,4 +282,24 @@ export const UK: Record<string, string> = {
   Value: "Значення",
   Clear: "Очистити",
   "Settings of {name}": "Налаштування: {name}",
+
+  // Files.
+  "{n} pages": "{n} стор.",
+  "Zoom out": "Зменшити",
+  "Zoom in": "Збільшити",
+  Print: "Друкувати",
+  "This kind of file cannot be shown here. Save it to open it with another program.":
+    "Цей тип файлу тут не показати. Збережіть його, щоб відкрити іншою програмою.",
+  "At most {n} files in one message": "Не більше {n} файлів в одному повідомленні",
+  "Too large: at most {size}": "Завеликий: не більше {size}",
+  failed: "не вдалося",
+  "Remove {name}": "Прибрати {name}",
+  "Attach a file": "Додати файл",
+  "Open {name}": "Відкрити {name}",
+  "Save {name}": "Зберегти {name}",
+  "Save to this computer": "Зберегти на цей комп'ютер",
+  "Loading…": "Завантаження…",
+  "Add files to {name}": "Додати файли до «{name}»",
+  "Drop files here, or": "Перетягніть файли сюди або",
+  "Choose from this computer": "Оберіть на цьому комп'ютері",
 };

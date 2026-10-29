@@ -27,6 +27,11 @@ describe("uninstalling apps with a backup (ADR 0033)", () => {
     await t.appData.insert("clients", "clients", { name: "Petrenko" });
     await t.appData.kvSet("clients", "view", "board");
     t.appSecrets.set("clients", "API_KEY", "k-123");
+    const bill = t.files.put(
+      { kind: "app", id: "clients" },
+      "bill.pdf",
+      new TextEncoder().encode("%PDF-1.4"),
+    );
 
     const backup = (await api.apps({ appId: "clients" }).delete()).data;
     expect(backup).toMatchObject({ id: "clients", appName: "Clients", taken: false });
@@ -35,6 +40,8 @@ describe("uninstalling apps with a backup (ADR 0033)", () => {
     expect(await t.repo.findChat(chatId)).toBeNull();
     expect((await t.extensions.list()).map((e) => e.id)).not.toContain("clients");
     expect(t.appSecrets.names("clients")).toEqual([]);
+    // The app's files left with it, and sit in the backup.
+    expect(t.files.list({ kind: "app", id: "clients" })).toEqual([]);
 
     const folder = join(t.dataDir, "backups", "apps", backup?.name ?? "");
     expect(readFileSync(join(folder, "chat.md"), "utf8")).toContain("# The chat of Clients");
@@ -46,6 +53,8 @@ describe("uninstalling apps with a backup (ADR 0033)", () => {
     expect(restored?.id).toBe("clients");
     expect(restored?.chatId).not.toBe(chatId);
     expect(readFileSync(join(dir, "main.js"), "utf8")).toContain("v2");
+    const back = t.files.find({ kind: "app", id: "clients" }, bill.id);
+    expect(back && readFileSync(back.path, "utf8")).toBe("%PDF-1.4");
     expect((await t.apps.history("clients")).map((v) => v.subject)).toContain("feat: version two");
     expect((await t.appData.list("clients", "clients")).map((r) => r.name)).toEqual(["Petrenko"]);
     expect(await t.appData.kvGet("clients", "view")).toBe("board");

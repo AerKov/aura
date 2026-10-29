@@ -68,6 +68,17 @@ you create with **+ Topic** under the chat's header (for example _Customization_
 - Rename or close a topic from its **⋯** menu (or right-click). A closed topic is read-only until
   you reopen it.
 
+## Files
+
+Press the **paperclip** in the message box, drop files on it or paste them: they go with your
+message (up to 10 files, 30 MB each). Helpers see them: a file lands in their working folder under
+`attachments/` (in a project it stays out of git). In a project a helper can also hand a finished
+file back (a report, an export) as an attachment.
+
+A **picture** shows as a thumbnail. Click a file to open it in a window: a **PDF**, an image or text,
+with **Print** and **Save**. The arrow next to a file saves it to your computer. Other types are
+saved, not shown. Files are kept in `~/.aura/files/` (not in git) and go when their chat is deleted.
+
 ## Groups
 
 **New group** at the top of the chat list makes a chat of your own: a name and the helpers you

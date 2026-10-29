@@ -36,6 +36,7 @@ const PERMISSION_TEXT: Record<string, string> = {
   net: "Reach the listed hosts",
   "agents.ask": "Ask agents for you",
   "files.read": "Read project files",
+  docs: "Keep its own files, show and save them",
   "apps.call": "Use other apps' actions",
 };
 

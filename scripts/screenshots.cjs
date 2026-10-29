@@ -91,6 +91,14 @@ const row = (p, name) =>
     await ctx.close();
   }
   {
+    // a PDF in the viewer, opened from an app that keeps files
+    const { ctx, p } = await fresh(b, "light", SINGLE("ext:invoices"));
+    await p.frameLocator("iframe").getByRole("button", { name: "View" }).first().click();
+    await wait(p, 2500);
+    await p.screenshot({ path: `${out}/viewer.png` });
+    await ctx.close();
+  }
+  {
     // phone
     const { ctx, p } = await fresh(b, "light", SINGLE("messenger"), { width: 390, height: 844 });
     await p.screenshot({ path: `${out}/phone-list.png` });

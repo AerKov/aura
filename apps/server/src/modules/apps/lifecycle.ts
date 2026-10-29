@@ -13,6 +13,7 @@ import { sizeOf, timeStamp } from "../../lib/files";
 import { errorMessage, log } from "../../lib/log";
 import type { ChatRepo } from "../chat/repo";
 import type { ExtensionService, GrantedState } from "../customize/extensions";
+import type { FileStore } from "../files/store";
 import type { ProjectService } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
 import type { AppDataService, DataRecord, StoreKind } from "./data";
@@ -80,6 +81,7 @@ export class AppLifecycle {
       data: AppDataService;
       repo: ChatRepo;
       secrets: AppSecrets;
+      files: FileStore;
       hub: EventHub;
     },
   ) {}
@@ -88,8 +90,11 @@ export class AppLifecycle {
     return join(this.deps.dataDir, "backups", "apps");
   }
 
-  /** Writes an app's archive into `dir`: meta.json, code/ and data.json. Secrets are left out. */
-  async archive(id: string, dir: string): Promise<ArchiveMeta> {
+  /**
+   * Writes an app's archive into `dir`: meta.json, code/ and data.json, and files/ when asked (an
+   * uninstall keeps them; restore points do not, files are too big for them). Secrets are left out.
+   */
+  async archive(id: string, dir: string, options: { files?: boolean } = {}): Promise<ArchiveMeta> {
     const source = this.deps.apps.sources().find((a) => a.id === id);
     const project = await this.deps.projects.get(id);
     if (!source || !project) throw new LifecycleError(`No app "${id}"`);
@@ -104,6 +109,8 @@ export class AppLifecycle {
     };
     copyCode(source.dir, join(dir, "code"));
     writeFileSync(join(dir, "data.json"), JSON.stringify(await this.deps.data.dump(id)));
+    const files = this.deps.files.folderOf({ kind: "app", id });
+    if (options.files && existsSync(files)) cpSync(files, join(dir, "files"), { recursive: true });
     writeFileSync(join(dir, "meta.json"), `${JSON.stringify(meta, null, 2)}\n`);
     return meta;
   }
@@ -136,6 +143,13 @@ export class AppLifecycle {
       DataRecord[]
     >;
     await this.deps.data.replace(meta.id, data);
+    // A backup with files brings them back; a restore point has none and leaves the present ones.
+    const saved = join(dir, "files");
+    if (existsSync(saved)) {
+      const scope = { kind: "app" as const, id: meta.id };
+      this.deps.files.removeScope(scope);
+      cpSync(saved, this.deps.files.folderOf(scope), { recursive: true });
+    }
     await this.deps.extensions.importState(meta.id, meta.extension);
     await this.deps.apps.load();
     this.deps.hub.publish({ type: "customize.updated" });
@@ -148,10 +162,11 @@ export class AppLifecycle {
     if (!source) throw new LifecycleError(`No app "${id}"`);
     const name = `${id}-${timeStamp()}`;
     const dir = join(this.backupRoot, name);
-    const meta = await this.archive(id, dir);
+    const meta = await this.archive(id, dir, { files: true });
     writeFileSync(join(dir, "chat.md"), await this.chatText(source.chatId, meta.name));
 
     await this.remove(id, source.chatId);
+    this.deps.files.removeScope({ kind: "app", id });
     log.info("app uninstalled", { app: id, backup: name });
     return this.backupInfo(name);
   }
@@ -164,6 +179,7 @@ export class AppLifecycle {
     await this.deps.extensions.forgetState(id);
     this.deps.secrets.drop(id);
     await this.deps.repo.removeChat(chatId);
+    this.deps.files.removeScope({ kind: "chat", id: chatId });
     await this.deps.projects.remove(id);
     await this.deps.apps.load();
     this.deps.hub.publish({ type: "chat.removed", chatId });

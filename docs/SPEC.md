@@ -464,6 +464,10 @@ The chat list, a calmer feed (run cards collapsed, approvals in plain words with
 on request, alerts by severity), the composer, and an app's tile with its chat panel, draft and
 versions. A chat's helpers are added and removed from its header ("+ Helper"). Follow-up (ADR 0035): groups of the user's own, deleting chats, limits in the header, secrets on the app's tile, no bundled apps.
 
+**Phase 37b: Files** (done, ADR 0036)
+Files in chats (attach from the computer, helpers read them and hand files back), files in apps
+(`docs`: add, keep, view, print, save), and a viewer window for PDFs, images and text with Print.
+
 **Phase 38: Helpers** (next, ADR 0034)
 One app for everything about agents: Team, Skills, Memory and AI connection.
 

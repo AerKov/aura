@@ -272,3 +272,27 @@
     animation: none;
   }
 }
+
+/* Printing a file from the viewer (ADR 0036): only #aura-print is on paper. */
+#aura-print {
+  display: none;
+}
+@media print {
+  body > *:not(#aura-print) {
+    display: none;
+  }
+  #aura-print {
+    display: block;
+    background: #fff;
+    color: #000;
+  }
+  #aura-print img {
+    display: block;
+    width: 100%;
+    break-after: page;
+  }
+  #aura-print pre {
+    white-space: pre-wrap;
+    font-size: 11pt;
+  }
+}

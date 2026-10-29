@@ -55,6 +55,16 @@ app's tile shows where and how much:
 Switching moves the data. **Export** saves everything as one JSON file; **Delete data** clears it.
 Restoring an older version of the app does not touch its data.
 
+## Its files
+
+![A PDF in the viewer, with Print and Save](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/viewer.png)
+
+An app with the `docs` permission keeps **files of its own** (PDFs, images, exports): it asks you to
+add them (a window with a button and a drop area), shows them, and saves them to your computer. A PDF
+opens in the viewer with **Print** and **Save**. They live in `~/.aura/files/apps/<app>/`, outside the
+app's git history, go into the app's backup when you uninstall it, and come back with it. Ask in the
+app's chat: _"let me add the invoices as PDFs and show them in a window I can print"_.
+
 ## Its secrets
 
 An app that talks to a service (a weather API, your tracker) gets its key from **its own

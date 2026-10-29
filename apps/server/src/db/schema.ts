@@ -35,6 +35,7 @@ DEFINE FIELD OVERWRITE author.id ON message TYPE string;
 DEFINE FIELD OVERWRITE kind ON message TYPE string ASSERT $value IN ["text", "card", "system"];
 DEFINE FIELD OVERWRITE body ON message TYPE string;
 DEFINE FIELD OVERWRITE card ON message TYPE option<object> FLEXIBLE;
+DEFINE FIELD OVERWRITE attachments ON message TYPE option<array<object>> FLEXIBLE;
 DEFINE FIELD OVERWRITE reply_to ON message TYPE option<record<message>>;
 DEFINE FIELD OVERWRITE mentions ON message TYPE array<string> DEFAULT [];
 DEFINE FIELD OVERWRITE status ON message TYPE string ASSERT $value IN ["streaming", "final", "error"];

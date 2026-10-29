@@ -1,0 +1,11 @@
+{
+  "id": "invoices",
+  "name": "Invoices",
+  "version": "1.0.0",
+  "minAppVersion": "0.37.0",
+  "permissions": ["ui.panel", "docs"],
+  "author": "Demo",
+  "description": "Invoices as PDF files: add, view, print and save them.",
+  "group": "Work",
+  "icon": "file-text"
+}

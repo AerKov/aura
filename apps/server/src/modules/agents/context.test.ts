@@ -10,6 +10,7 @@ const msg = (id: string, body: string, extra: Partial<Message> = {}): Message =>
   kind: "text",
   body,
   card: null,
+  attachments: [],
   replyTo: null,
   mentions: [],
   status: "final",

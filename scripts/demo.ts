@@ -13,6 +13,34 @@ import { join } from "node:path";
 import { DIRECT_CHAT_ID, SYSTEM_CHAT_ID } from "../apps/server/src/modules/chat/repo";
 import { createTestApp } from "../apps/server/src/testing";
 
+/** A one-page PDF with a few lines of text, written by hand: no library needed. */
+function tinyPdf(lines: string[]): Uint8Array {
+  const text = lines
+    .map(
+      (line, i) =>
+        `BT /F1 ${i === 0 ? 22 : 14} Tf 60 ${760 - i * 34} Td (${line.replace(/[()\\]/g, "")}) Tj ET`,
+    )
+    .join("\n");
+  const objects = [
+    "<< /Type /Catalog /Pages 2 0 R >>",
+    "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>",
+    `<< /Length ${text.length} >>\nstream\n${text}\nendstream`,
+    "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+  ];
+  let out = "%PDF-1.4\n";
+  const offsets: number[] = [];
+  objects.forEach((body, i) => {
+    offsets.push(out.length);
+    out += `${i + 1} 0 obj\n${body}\nendobj\n`;
+  });
+  const xref = out.length;
+  out += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (const at of offsets) out += `${String(at).padStart(10, "0")} 00000 n \n`;
+  out += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+  return new TextEncoder().encode(out);
+}
+
 const PORT = Number(process.env.AURA_PORT ?? 4517);
 const read = (name: string) => readFileSync(join(import.meta.dir, "demo", name), "utf8");
 
@@ -51,6 +79,18 @@ const deals = [
 ];
 for (const [title, client, amount, stage] of deals)
   await t.appData.insert("clients", "deals", { title, client, amount, stage });
+
+// An app that keeps PDF files (the `docs` permission, ADR 0036), with one invoice in it.
+await t.apps.installFromPack(
+  "invoices",
+  { "manifest.json": read("invoices.manifest.json"), "main.js": read("invoices.main.js") },
+  { id: "invoices", version: "1.0.0" },
+);
+t.files.put(
+  { kind: "app", id: "invoices" },
+  "Invoice 2026-014.pdf",
+  tinyPdf(["Invoice 2026-014", "Lumen Studio: website redesign", "Total: 4 200 EUR"]),
+);
 
 // The chat with the Helper.
 await say(

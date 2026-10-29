@@ -34,12 +34,12 @@ export const PERMISSIONS: Record<ExtensionPermission, string> = {
   "ui.panel": "Show a panel in the app",
   "ui.bar": "Be Aura's bar: list and open apps, see the screen and the status",
   "alerts.read": "Read alerts",
-  "alerts.write":
-    "Post alert cards to the Signals chat (as itself; warnings wake the orchestrator)",
+  "alerts.write": "Post alert cards to the Alerts chat (as itself; warnings wake the orchestrator)",
   storage: "Keep its own data",
   net: "Reach the listed hosts (through Aura)",
   "agents.ask": "Ask agents for you (as your message, within budgets)",
   "files.read": "Read project files",
+  docs: "Keep its own files (PDFs, images…), let you add and save them, and show them",
   "apps.call": "Use other apps' actions listed below",
 };
 
@@ -747,6 +747,18 @@ const BRIDGE = `(() => {
   addEventListener("error", (event) => report(event.error || event.message));
   addEventListener("unhandledrejection", (event) => report(event.reason));
   // Themed controls for agents' forms and buttons. No <form> submit: sandboxed frames cannot submit.
+  // File content as the host takes it: text, or bytes as base64 (a string, bytes or { base64 }).
+  const bytesOrText = (data) => {
+    if (typeof data === "string") return { text: data };
+    if (data && typeof data.base64 === "string") return { base64: data.base64 };
+    if (data && (data instanceof ArrayBuffer || ArrayBuffer.isView(data))) {
+      const bytes = data instanceof ArrayBuffer ? new Uint8Array(data) : new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000));
+      return { base64: btoa(binary) };
+    }
+    throw new Error("A file's content is a string, bytes or { base64 }");
+  };
   const button = (el, label, onClick) => {
     const b = document.createElement("button");
     b.type = "button";
@@ -843,6 +855,15 @@ const BRIDGE = `(() => {
     files: Object.freeze({
       list: (path, options) => call("files.list", { path: path || "", ...(options || {}) }),
       read: (path, options) => call("files.read", { path, ...(options || {}) }),
+    }),
+    docs: Object.freeze({
+      pick: (options) => call("docs.pick", options || {}),
+      list: () => call("docs.list"),
+      put: (name, data) => call("docs.put", { name, ...bytesOrText(data) }),
+      read: (id, options) => call("docs.read", { id, as: (options && options.as) || "text" }),
+      remove: (id) => call("docs.remove", { id }),
+      view: (what) => call("docs.view", typeof what === "string" ? { id: what } : { ...what, ...bytesOrText(what.data) }),
+      save: (id) => call("docs.save", { id }),
     }),
     chat: Object.freeze({
       list: () => call("chat.list"),

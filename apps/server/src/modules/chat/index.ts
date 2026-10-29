@@ -1,6 +1,8 @@
+import { type FileRef, MAX_ATTACHMENTS } from "@aura/shared";
 import { Elysia, t } from "elysia";
 import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
+import type { FileStore } from "../files/store";
 import type { ChatService } from "./service";
 
 export interface ChatDeps {
@@ -8,11 +10,12 @@ export interface ChatDeps {
   sessions: LocalSessions;
   /** Whether an agent exists (its profile is valid). */
   agentExists: (handle: string) => Promise<boolean>;
+  files: FileStore;
 }
 
 const HANDLE = t.String({ pattern: "^[a-z][a-z0-9_-]{1,31}$" });
 
-export const chatModule = ({ chat, sessions, agentExists }: ChatDeps) =>
+export const chatModule = ({ chat, sessions, agentExists, files }: ChatDeps) =>
   new Elysia({ name: "chat" })
     .use(authGuard(sessions))
     .get("/me", ({ user }) => user, { auth: true })
@@ -94,18 +97,30 @@ export const chatModule = ({ chat, sessions, agentExists }: ChatDeps) =>
     )
     .post(
       "/chats/:chatId/messages",
-      ({ params, body, user }) =>
-        chat.post({
+      ({ params, body, user, status }) => {
+        // Files were uploaded to this chat first; the message names them by id (ADR 0036).
+        const attachments: FileRef[] = [];
+        for (const id of new Set(body.attachments ?? [])) {
+          const found = files.find({ kind: "chat", id: params.chatId }, id);
+          if (!found) return status(400, { error: "An attached file is missing: add it again" });
+          attachments.push(found.ref);
+        }
+        return chat.post({
           chatId: params.chatId,
           author: { kind: "user", id: user.id },
           body: body.body,
+          attachments,
           replyTo: body.replyTo ?? null,
           topicId: body.topicId,
-        }),
+        });
+      },
       {
         auth: true,
         body: t.Object({
-          body: t.String({ minLength: 1, maxLength: 32_000 }),
+          body: t.String({ maxLength: 32_000 }),
+          attachments: t.Optional(
+            t.Array(t.String({ maxLength: 20 }), { maxItems: MAX_ATTACHMENTS }),
+          ),
           replyTo: t.Optional(t.Nullable(t.String({ maxLength: 64 }))),
           topicId: t.Optional(t.Nullable(t.String({ maxLength: 64 }))),
         }),

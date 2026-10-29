@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { openAgentSettings, reportError, stopRun } from "./actions";
 import { AlertCard } from "./alert-card";
 import { ApprovalCard } from "./approval-card";
+import { Attachments } from "./attachments";
 import { displayName, formatTime, previewOf } from "./message-utils";
 import { agentName as agentNameOf } from "./participants";
 import { RunCard } from "./run-card";
@@ -106,7 +107,8 @@ export function MessageBubble({
         {reply}
         <div className="bg-bubble-own text-bubble-own-foreground relative max-w-[min(36rem,85%)] rounded-lg px-3 py-2 text-[14.5px] leading-[1.45]">
           {replyButton}
-          <Markdown>{highlightMentions(body)}</Markdown>
+          {body && <Markdown>{highlightMentions(body)}</Markdown>}
+          <Attachments chatId={message.chatId} files={message.attachments} />
         </div>
         {showAuthor && (
           <span className="text-muted-foreground mt-1 font-mono text-[11px]">
@@ -160,6 +162,7 @@ export function MessageBubble({
         <div className="relative max-w-[46rem]">
           {replyButton}
           {body && <Markdown streaming={streaming}>{highlightMentions(body)}</Markdown>}
+          <Attachments chatId={message.chatId} files={message.attachments} />
           {streaming && (
             <span
               role="status"
