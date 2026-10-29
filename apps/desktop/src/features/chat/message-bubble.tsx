@@ -63,7 +63,7 @@ export function MessageBubble({
   );
 
   const action =
-    "text-muted-foreground hover:text-foreground bg-background/80 rounded-full border p-1 shadow-sm";
+    "text-muted-foreground hover:text-foreground bg-background/80 rounded-pill border p-1 shadow-sm";
   const replyButton = (
     <div className="absolute -top-3 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
       {onMove && (

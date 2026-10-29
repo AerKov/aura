@@ -45,7 +45,7 @@ export function TopicBar({
             setMenu(id);
           }}
           className={cn(
-            "flex h-7 items-center gap-1 rounded-full border px-2.5 text-xs whitespace-nowrap",
+            "flex h-7 items-center gap-1 rounded-pill border px-2.5 text-xs whitespace-nowrap",
             active === id
               ? "border-primary bg-primary/10 text-foreground"
               : "text-muted-foreground hover:bg-accent",
@@ -99,7 +99,7 @@ export function TopicBar({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="text-muted-foreground hover:bg-accent flex h-7 shrink-0 items-center gap-1 rounded-full px-2 text-xs"
+          className="text-muted-foreground hover:bg-accent flex h-7 shrink-0 items-center gap-1 rounded-pill px-2 text-xs"
           title="A new topic: its messages stay in it, and agents there see only them"
         >
           <Plus className="size-3.5" /> Topic
@@ -135,7 +135,7 @@ function TitleInput({
           if (e.key === "Enter") finish(true);
           if (e.key === "Escape") finish(false);
         }}
-        className="bg-background h-7 w-36 rounded-full border px-2.5 text-xs"
+        className="bg-background h-7 w-36 rounded-pill border px-2.5 text-xs"
       />
       <button
         type="button"

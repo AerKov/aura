@@ -81,7 +81,7 @@ export function BudgetEditor({
             aria-pressed={unit === key}
             onClick={() => setUnit(key)}
             className={cn(
-              "rounded-full border px-3 py-1 text-xs",
+              "rounded-pill border px-3 py-1 text-xs",
               unit === key ? "border-primary bg-primary/10 text-foreground" : "hover:bg-accent",
             )}
           >
@@ -111,7 +111,7 @@ export function BudgetEditor({
       {error && <p className="text-destructive text-xs">{error}</p>}
       <Button
         size="sm"
-        className="justify-self-start rounded-full"
+        className="justify-self-start rounded-pill"
         disabled={busy}
         onClick={() => void save()}
       >

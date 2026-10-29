@@ -24,9 +24,9 @@ export const MODULES: Record<ModuleId, ModuleSpec> = {
   },
   skills: { name: "Skills", description: "Know-how your agents can use.", requires: ["chats"] },
   memory: { name: "Memory", description: "What your agents remember.", requires: ["chats"] },
-  jobs: { name: "Schedule", description: "Agents' work on a schedule.", requires: ["chats"] },
+  jobs: { name: "Reminders", description: "Agents' work on a schedule.", requires: ["chats"] },
   alerts: {
-    name: "Signals",
+    name: "Alerts",
     description: "Alerts from monitoring tools, triaged by the orchestrator.",
     requires: ["chats"],
   },

@@ -325,6 +325,8 @@ export interface Appearance {
   rail: RailLayout;
   /** How tiles look and the shortcuts' Mod key (ADR 0028). */
   wm: WindowStyle;
+  /** Advanced mode (ADR 0034): technical names, details and every app; off, the plain view. */
+  advanced: boolean;
 }
 
 /** Order and visibility of the navigation rail's items, by key ("skills", "ext:<id>", …). */

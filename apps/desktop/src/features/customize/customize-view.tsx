@@ -59,7 +59,7 @@ export function CustomizeView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Make it yours" icon={<Palette className="text-primary size-7" />}>
+        <PageHeader title="Look" icon={<Palette className="text-primary size-7" />}>
           Ask the orchestrator to change the app (“make a dark blue theme”, “add a panel with
           today's alerts”). Every change is approved by you and committed to <code>~/.aura</code>.
         </PageHeader>
@@ -172,7 +172,7 @@ export function CustomizeView() {
                     <li
                       key={p}
                       className={cn(
-                        "rounded-full border px-2 py-0.5",
+                        "rounded-pill border px-2 py-0.5",
                         ext.enabled ? "" : "text-muted-foreground",
                       )}
                     >

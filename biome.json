@@ -11,7 +11,8 @@
       "**",
       "!**/src-tauri",
       "!**/*.gen.ts",
-      "!apps/server/src/modules/catalog/packs/**/*.{md,css,json,txt}"
+      "!apps/server/src/modules/catalog/packs/**/*.{md,css,json,txt}",
+      "!docs/design/round4"
     ]
   },
   "formatter": {

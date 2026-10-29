@@ -123,7 +123,7 @@ export function EnvEditor({
             aria-pressed={row.secret}
             onClick={() => update(i, { secret: !row.secret })}
             className={cn(
-              "rounded-full border p-1.5",
+              "rounded-pill border p-1.5",
               row.secret ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground",
             )}
           >
@@ -142,7 +142,7 @@ export function EnvEditor({
       <Button
         variant="ghost"
         size="sm"
-        className="rounded-full"
+        className="rounded-pill"
         onClick={() =>
           onChange([
             ...rows,
@@ -180,7 +180,7 @@ export function EnvEditor({
                   },
                 ])
               }
-              className="hover:bg-accent/60 flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px]"
+              className="hover:bg-accent/60 flex items-center gap-1 rounded-pill border px-2 py-0.5 font-mono text-[11px]"
             >
               <Plus className="size-3" /> {name}
             </button>

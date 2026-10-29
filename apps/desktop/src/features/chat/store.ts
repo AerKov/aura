@@ -54,6 +54,9 @@ export interface ChatState {
   appChat: Record<string, boolean>;
   /** Why the bar app is not shown (it failed), so the built-in bar stands in (ADR 0029). */
   barFailed: string | null;
+  /** The "My apps" menu next to the bar, and the "New app" sheet (ADR 0034). */
+  menuOpen: boolean;
+  addOpen: boolean;
   /** On narrow screens the messenger shows one pane: the chat list or a chat. */
   pane: "list" | "main";
   needsPairing: boolean;
@@ -81,6 +84,8 @@ let state: ChatState = {
   previewDraft: {},
   appChat: {},
   barFailed: null,
+  menuOpen: false,
+  addOpen: false,
   appearance: null,
   customize: null,
   pane: "list",

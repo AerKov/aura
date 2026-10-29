@@ -1,13 +1,22 @@
 import type { LucideIcon } from "lucide-react";
-import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
-import { AuraGlyph } from "./logo";
 
-/** Stable hue (0-359) for a name, so every agent keeps its colour everywhere. */
-export function hueOf(key: string): number {
+/**
+ * Agents are squares told apart by fill style, not hue, so they work with any theme (ADR 0034).
+ * The orchestrator is solid primary and @builder solid ink; the others keep one style by name.
+ */
+const STYLES = [
+  "bg-accent text-accent-foreground border border-accent-foreground/20",
+  "border border-primary text-primary",
+  "border border-dashed border-foreground/60 text-foreground",
+  "bg-secondary text-secondary-foreground border",
+] as const;
+
+export function markStyle(name: string): string {
+  if (name === "builder") return "bg-foreground text-background";
   let hash = 0;
-  for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return hash % 360;
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  return STYLES[hash % STYLES.length] ?? STYLES[0];
 }
 
 export function initialsOf(name: string): string {
@@ -17,15 +26,15 @@ export function initialsOf(name: string): string {
 
 const SIZES = {
   xs: "size-5 text-[9px]",
-  sm: "size-6 text-[10px]",
-  md: "size-8 text-[11px]",
-  lg: "size-10 text-xs",
-  xl: "size-16 text-base",
+  sm: "size-[26px] text-[10px]",
+  md: "size-[34px] text-[12px]",
+  lg: "size-10 text-sm",
+  xl: "size-[52px] text-lg",
 };
 
 /**
- * A participant's mark: a rounded monogram tile tinted by its name. The orchestrator carries Aura's
- * mark; `working` shows a small pulsing signal dot in the corner.
+ * A participant's mark: agents are square monograms (the orchestrator solid primary), people are
+ * round. `working` shows a small pulsing signal dot in the corner.
  */
 export function Mark({
   name,
@@ -44,30 +53,23 @@ export function Mark({
 }) {
   const look =
     kind === "orchestrator"
-      ? "border border-white/10 bg-[#121720]"
+      ? "bg-primary text-primary-foreground"
       : kind === "user"
-        ? "bg-secondary text-secondary-foreground border"
+        ? "bg-secondary text-secondary-foreground border rounded-pill"
         : kind === "alert"
-          ? "bg-destructive/10 text-destructive border border-destructive/30"
-          : "mark";
+          ? "border border-warning text-warning-text"
+          : markStyle(name);
   return (
     <span
       aria-hidden
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center rounded-[34%] font-mono font-semibold",
+        "relative inline-flex shrink-0 items-center justify-center font-heading font-semibold",
         SIZES[size],
         look,
         className,
       )}
-      style={{ "--h": hueOf(name) } as CSSProperties}
     >
-      {Icon ? (
-        <Icon className="size-[50%]" />
-      ) : kind === "orchestrator" ? (
-        <AuraGlyph className="size-[86%]" />
-      ) : (
-        initialsOf(name)
-      )}
+      {Icon ? <Icon className="size-[50%]" /> : kind === "alert" ? "!" : initialsOf(name)}
       {working && (
         <span className="bg-primary ring-background absolute -right-1 -bottom-1 size-2.5 animate-pulse rounded-full ring-2" />
       )}

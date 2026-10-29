@@ -93,7 +93,7 @@ export function SandboxCard() {
         </div>
         {error && <p className="text-destructive mt-2 text-xs">{error}</p>}
         <div className="mt-3 flex items-center gap-3">
-          <Button size="sm" className="rounded-full" disabled={!dirty} onClick={() => void save()}>
+          <Button size="sm" className="rounded-pill" disabled={!dirty} onClick={() => void save()}>
             <Check /> {saved ? "Saved" : "Save"}
           </Button>
           <span className="text-muted-foreground text-xs">

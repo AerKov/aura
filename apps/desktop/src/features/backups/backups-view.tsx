@@ -97,7 +97,7 @@ export function BackupsView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title={t("Restore points")} icon={<History className="text-primary size-7" />}>
+        <PageHeader title="Backups" icon={<History className="text-primary size-7" />}>
           {t(
             "A restore point keeps the whole Aura as it was: agents, skills, themes, tool servers, settings, and every app with its code, versions and data. Chats, memory and secrets stay as they are. Going to a point saves the present first, so you can come back forward.",
           )}
@@ -115,7 +115,7 @@ export function BackupsView() {
           />
           <Button
             size="sm"
-            className="rounded-full"
+            className="rounded-pill"
             disabled={busy !== null}
             onClick={() => void create()}
           >
@@ -164,7 +164,7 @@ export function BackupsView() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="rounded-full"
+                      className="rounded-pill"
                       disabled={busy !== null}
                       onClick={() => setConfirm(p.id)}
                     >
@@ -210,7 +210,7 @@ export function BackupsView() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="rounded-full"
+                  className="rounded-pill"
                   disabled={busy !== null || b.taken}
                   onClick={() => void bringBack(b)}
                 >

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-bea88c1d-e074-43a8-a5dd-7e774df2abc8/styles.css">
+<script src="_ds/industry-bea88c1d-e074-43a8-a5dd-7e774df2abc8/_ds_bundle.js"></script>
+</helmet>
+<div style="display:flex;flex-direction:column;height:100%;min-height:0;background:var(--chat-bg);color:var(--foreground)">
+  <div style="flex:1;min-height:0;overflow:auto;background-image:radial-gradient(var(--grid-dot) 1px, transparent 1.3px);background-size:16px 16px">
+  <div style="min-height:100%;display:flex;flex-direction:column;justify-content:flex-end;gap:14px;padding:16px 16px 12px;max-width:760px;margin:0 auto;box-sizing:border-box">
+    <sc-for list="{{ messages }}" as="m" hint-placeholder-count="4">
+      <sc-if value="{{ m.isSys }}">
+        <div style="align-self:center;font-size:12px;color:var(--muted-foreground);background:var(--chat-bg);padding:2px 8px;text-align:center">{{ m.text }}</div>
+      </sc-if>
+      <sc-if value="{{ m.isOwn }}">
+        <div style="align-self:flex-end;max-width:78%;display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+          <div style="background:var(--bubble-own);color:var(--bubble-own-foreground);padding:8px 12px;font-size:14.5px;line-height:1.45;text-wrap:pretty">{{ m.text }}</div>
+          <span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--muted-foreground)">{{ m.time }}</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ m.isAgent }}">
+        <div style="display:flex;gap:10px;max-width:88%">
+          <span style="{{ m.mark }}">{{ m.letter }}</span>
+          <div style="display:flex;flex-direction:column;gap:2px;min-width:0">
+            <span style="display:flex;gap:8px;align-items:baseline"><span style="font-size:13px;font-weight:600">{{ m.name }}</span><span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--muted-foreground)">{{ m.time }}</span></span>
+            <span style="font-size:14.5px;line-height:1.5;text-wrap:pretty">{{ m.text }}<sc-if value="{{ m.streaming }}"><span style="display:inline-block;width:7px;height:15px;margin-left:2px;vertical-align:-2px;background:var(--signal)"></span></sc-if></span>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ m.isRun }}">
+        <div style="margin-left:34px;border:1px solid var(--border);background:var(--card);display:flex;flex-direction:column;max-width:600px">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;flex-wrap:wrap">
+            <span style="{{ m.statusDot }}"></span>
+            <span style="display:flex;flex-direction:column;line-height:1.3;min-width:0;flex:1">
+              <span style="font-size:13.5px"><b style="font-weight:600">{{ m.name }}</b> {{ m.statusText }}</span>
+              <span style="font-size:12.5px;color:var(--muted-foreground)">{{ m.summary }}</span>
+            </span>
+            <sc-if value="{{ m.running }}"><button class="btn btn-secondary" onClick="{{ m.stop }}" style="font-size:12px;padding:2px 9px">Зупинити</button></sc-if>
+            <button class="btn btn-ghost" onClick="{{ m.toggle }}" style="font-size:12px;padding:2px 6px;color:var(--signal-text)">{{ m.toggleLabel }}</button>
+          </div>
+          <sc-if value="{{ m.open }}">
+            <div style="border-top:1px solid var(--border);padding:7px 10px;display:flex;flex-direction:column;gap:3px">
+              <sc-for list="{{ m.tools }}" as="tl" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:70px minmax(0,1fr) 16px;gap:8px;font-size:12px;align-items:center">
+                  <span style="color:var(--muted-foreground)">{{ tl.verb }}</span><span style="font-family:'Geist Mono',monospace;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ tl.arg }}</span><span style="{{ tl.stateStyle }}">{{ tl.state }}</span>
+                </div>
+              </sc-for>
+              <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--muted-foreground);margin-top:4px">{{ m.cost }}</span>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ m.isApproval }}">
+        <div style="{{ m.frame }}">
+          <div style="display:flex;flex-direction:column;gap:4px;padding:12px 14px 8px">
+            <span style="{{ m.kicker }}">{{ m.kickerText }}</span>
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:21px;line-height:1.15">{{ m.title }}</span>
+            <span style="font-size:14px;color:var(--muted-foreground);text-wrap:pretty;line-height:1.45">{{ m.why }}</span>
+          </div>
+          <sc-if value="{{ m.warn }}">
+            <div style="margin:0 14px 8px;padding:7px 10px;font-size:13px;background:color-mix(in srgb,var(--warning) 14%,transparent);color:var(--warning-text)">⚠ {{ m.warn }}</div>
+          </sc-if>
+          <div style="margin:0 14px;display:flex;flex-direction:column;gap:5px;border-top:1px solid var(--border);padding-top:8px">
+            <span style="font-size:12px;color:var(--muted-foreground)">Що зміниться</span>
+            <sc-for list="{{ m.changes }}" as="c" hint-placeholder-count="3">
+              <div style="display:flex;gap:8px;font-size:14px;line-height:1.4"><span style="color:var(--signal-text);font-family:'Geist Mono',monospace">+</span><span>{{ c.t }}</span></div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ m.codeOpen }}">
+            <div style="margin:8px 14px 0;background:var(--muted);border:1px solid var(--border);padding:6px 0;font-family:'Geist Mono',monospace;font-size:11.5px;line-height:1.6;overflow:auto">
+              <sc-for list="{{ m.diff }}" as="d" hint-placeholder-count="5"><div style="{{ d.style }}">{{ d.t }}</div></sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ m.pending }}">
+            <div style="display:flex;gap:10px;padding:12px 14px 14px;align-items:center;flex-wrap:wrap">
+              <button class="btn btn-primary blueprint" onClick="{{ m.approve }}" style="color:var(--primary-foreground)">Так, зробити</button>
+              <button class="btn btn-secondary" onClick="{{ m.reject }}">Ні, не треба</button>
+              <button class="btn btn-ghost" onClick="{{ m.toggleCode }}" style="font-size:12.5px;color:var(--signal-text);margin-left:auto">{{ m.codeLabel }}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ m.decided }}">
+            <div style="padding:10px 14px 12px;font-size:13px;color:var(--muted-foreground)">{{ m.decidedText }}</div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ m.isAlert }}">
+        <div style="border:1px solid var(--border);background:var(--card);display:grid;grid-template-columns:4px minmax(0,1fr);max-width:640px">
+          <span style="{{ m.sevBar }}"></span>
+          <div style="padding:10px 12px;display:flex;flex-direction:column;gap:3px">
+            <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap">
+              <span style="{{ m.sevKicker }}">{{ m.sev }}</span>
+              <span style="font-size:12px;color:var(--muted-foreground)">{{ m.source }}</span>
+              <span style="font-size:12px;color:var(--muted-foreground);margin-left:auto">{{ m.meta }}</span>
+            </div>
+            <span style="font-size:15px;font-weight:500">{{ m.title }}</span>
+            <span style="font-size:13.5px;color:var(--muted-foreground)">{{ m.summary }}</span>
+          </div>
+        </div>
+      </sc-if>
+    </sc-for>
+  </div>
+  </div>
+  <div style="flex:none;border-top:1px solid var(--border);background:var(--background);padding:8px 12px 10px;position:relative">
+    <sc-if value="{{ composer.showSug }}">
+      <div class="blueprint" style="position:absolute;left:12px;bottom:calc(100% + 6px);width:min(300px,calc(100% - 24px));background:var(--popover);border-color:var(--border);box-shadow:var(--shadow-md);padding:4px;z-index:20">
+        
+        <sc-for list="{{ composer.sugs }}" as="s" hint-placeholder-count="3">
+          <button onClick="{{ s.pick }}" style="{{ s.row }}">
+            <span style="{{ s.mark }}">{{ s.letter }}</span>
+            <span style="display:flex;flex-direction:column;line-height:1.25;min-width:0"><span style="font-size:13px;font-weight:500">{{ s.name }}</span><span style="font-size:11.5px;color:var(--muted-foreground)">{{ s.role }}</span></span>
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <div style="display:flex;gap:8px;align-items:flex-end;max-width:760px;margin:0 auto">
+      <textarea class="input" rows="1" placeholder="{{ composer.placeholder }}" value="{{ composer.value }}" onChange="{{ composer.onChange }}" onKeyDown="{{ composer.onKey }}" style="min-height:38px;height:38px;resize:none;background:var(--input-bg);font-size:14.5px;padding:8px 10px;line-height:1.4"></textarea>
+      <button class="btn btn-primary blueprint" title="Надіслати · Enter" onClick="{{ composer.send }}" style="width:38px;height:38px;padding:0;color:var(--primary-foreground);flex:none">{{ composer.sendIcon }}</button>
+    </div>
+    <div style="display:flex;gap:12px;max-width:760px;margin:5px auto 0;font-size:11.5px;color:var(--muted-foreground);flex-wrap:wrap">
+      <span>Відповість: <span style="color:var(--signal-text);font-weight:500">{{ composer.target }}</span></span>
+      <span style="margin-left:auto">@ — покликати іншого помічника</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:420,&quot;height&quot;:640},&quot;messages&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object[]&quot;},&quot;composer&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;}}"></script>
+</body>
+</html>

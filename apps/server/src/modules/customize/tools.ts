@@ -135,7 +135,7 @@ export function customizeTools(
     {
       name: "set_appearance",
       description:
-        "Switch the theme or the enabled snippets among existing ones, arrange the bar (its items and the screen edge it sits on), or set how tiles look like a tiling window manager (no approval needed). theme null = default. Rail keys: chats, skills, memory, agents, integrations, catalog, jobs, engines, customize, devices, ext:<extension id>; chats and customize cannot be hidden. Window styles: preset hyprland (gaps 8, radius 12, border 2, minimal titles) or i3 (no gaps, square, border 1, full titles), then gaps/radius 0-24 px, border 0-4 px, titles full|minimal|none, mod (the shortcuts' modifier) alt|ctrl-alt|meta.",
+        "Switch the theme or the enabled snippets among existing ones, arrange the bar (its items and the screen edge it sits on), or set how tiles look like a tiling window manager (no approval needed). theme null = default. Rail keys: chats, signals, jobs, agents, skills, memory, catalog, engines, customize, localization, backups, devices, ext:<extension id>; chats and customize cannot be hidden. advanced turns advanced mode on or off (technical names, details and every app; off is the plain view). Window styles: preset hyprland (gaps 10, radius 10, border 2, minimal titles) or i3 (no gaps, square, border 1, full titles), then gaps/radius 0-24 px, border 0-4 px, titles full|minimal|none, mod (the shortcuts' modifier) alt|ctrl-alt|meta.",
       inputSchema: {
         theme: z.string().nullable().optional(),
         snippets: z.array(z.string()).optional(),
@@ -154,6 +154,7 @@ export function customizeTools(
           .enum(["builtin", "app", "off"])
           .optional()
           .describe("Aura's built-in bar, the user's bar app (change it with change_bar), or none"),
+        advanced: z.boolean().optional().describe("advanced mode on or off"),
         preset: z.enum(["hyprland", "i3"]).optional().describe("applied before the values below"),
         gaps: z.number().int().min(0).max(24).optional(),
         radius: z.number().int().min(0).max(24).optional(),
@@ -166,6 +167,7 @@ export function customizeTools(
           const a = await deps.appearance.set({
             theme: input.theme === undefined ? undefined : (input.theme as string | null),
             snippets: Array.isArray(input.snippets) ? input.snippets.map(String) : undefined,
+            advanced: typeof input.advanced === "boolean" ? input.advanced : undefined,
             wm: windowInput(input),
             rail:
               Array.isArray(input.rail_order) ||
@@ -197,7 +199,7 @@ export function customizeTools(
                 : undefined,
           });
           return ok(
-            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.mode} on the ${a.rail.edge}${a.rail.size ? `, ${a.rail.size}px` : ""}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}.`,
+            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.mode} on the ${a.rail.edge}${a.rail.size ? `, ${a.rail.size}px` : ""}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}; advanced mode: ${a.advanced ? "on" : "off"}.`,
           );
         } catch (error) {
           return fail(error);

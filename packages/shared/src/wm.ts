@@ -44,7 +44,7 @@ export interface WindowStyle {
 }
 
 export const WM_PRESETS = {
-  hyprland: { gaps: 8, radius: 12, border: 2, titles: "minimal" },
+  hyprland: { gaps: 10, radius: 10, border: 2, titles: "minimal" },
   i3: { gaps: 0, radius: 0, border: 1, titles: "full" },
 } as const satisfies Record<string, Omit<WindowStyle, "mod">>;
 export type WmPreset = keyof typeof WM_PRESETS;

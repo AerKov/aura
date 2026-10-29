@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-bea88c1d-e074-43a8-a5dd-7e774df2abc8/styles.css">
+<script src="_ds/industry-bea88c1d-e074-43a8-a5dd-7e774df2abc8/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap">
+<style>body{margin:0;overflow:hidden}a{color:var(--signal-text)}a:hover{color:var(--foreground)}</style>
+</helmet>
+<div style="{{ root }}">
+
+<sc-if value="{{ isSplash }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;display:grid;place-items:center">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:18px">
+      <div class="blueprint" style="width:64px;height:64px;display:grid;place-items:center;border-color:var(--foreground)">
+        
+        <span style="font-family:'Geist Mono',monospace;font-size:26px;font-weight:600">A</span>
+      </div>
+      <span style="font-family:var(--font-heading);font-weight:600;font-size:24px">Запускаємо Aura…</span>
+      <div style="width:220px;height:2px;background:var(--muted)"><div style="{{ splashBar }}"></div></div>
+      <span style="font-size:12.5px;color:var(--muted-foreground);height:16px">{{ splashLog }}</span>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isOnb }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;min-height:0;display:grid;grid-template-columns:250px minmax(0,1fr)">
+    <aside style="background:var(--rail);color:var(--rail-foreground);padding:28px 24px;display:flex;flex-direction:column;gap:28px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:28px;height:28px;border:1.5px solid var(--rail-foreground);display:grid;place-items:center;font-family:'Geist Mono',monospace;font-size:13px;font-weight:600">A</span>
+        <span style="font-family:var(--font-heading);font-weight:600;font-size:22px">Aura</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{ onbSteps }}" as="s" hint-placeholder-count="3">
+          <button onClick="{{ s.go }}" style="{{ s.row }}">
+            <span style="{{ s.num }}">{{ s.n }}</span>
+            <span style="font-size:15px;font-weight:500">{{ s.label }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <span style="margin-top:auto;font-size:12.5px;line-height:1.5;opacity:.75">Усе зберігається на цьому компʼютері. Реєстрація не потрібна.</span>
+    </aside>
+    <main style="min-height:0;overflow:auto;display:flex;flex-direction:column">
+      <div style="flex:1;width:100%;max-width:720px;margin:0 auto;padding:64px 40px 32px;box-sizing:border-box;display:flex;flex-direction:column;gap:28px">
+
+        <sc-if value="{{ step0 }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <h1 style="margin:0;font-size:52px;line-height:1">Вітаємо в Aura</h1>
+            <p style="margin:0;font-size:17px;line-height:1.55;color:var(--muted-foreground);max-width:560px;text-wrap:pretty">Тут живуть ваші застосунки: клієнти, задачі, нотатки, бюджет, що завгодно. Створюють і змінюють їх ШІ-помічники (агенти). Ви пишете в чаті застосунку звичайними словами, а помічник робить. Перед кожною важливою зміною він показує, що саме зміниться, і чекає вашого рішення.</p>
+          </div>
+          <div class="blueprint" style="padding:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-color:var(--border)">
+            
+            <div style="padding:6px 16px 6px 4px;display:flex;flex-direction:column;gap:8px;border-right:1px solid var(--border)">
+              <span style="font-size:12.5px;color:var(--muted-foreground)">Ви пишете</span>
+              <div style="align-self:flex-start;background:var(--bubble-own);color:var(--bubble-own-foreground);padding:8px 12px;font-size:14.5px">Додай колонку з телефоном клієнта</div>
+            </div>
+            <div style="padding:6px 4px 6px 16px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:12.5px;color:var(--muted-foreground)">Помічник показує зміну</span>
+              <div style="border:1px solid color-mix(in srgb,var(--warning) 60%,transparent);padding:8px 10px;display:flex;flex-direction:column;gap:6px">
+                <span style="font-size:14px;font-weight:500">Нова колонка «Телефон»</span>
+                <span style="display:flex;gap:6px"><span style="font-size:12px;padding:2px 8px;background:var(--primary);color:var(--primary-foreground)">Так, зробити</span><span style="font-size:12px;padding:2px 8px;border:1px solid var(--border)">Ні</span></span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:15px;font-weight:500">Мова · Language</span>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+              <sc-for list="{{ langs }}" as="l" hint-placeholder-count="3">
+                <button onClick="{{ l.pick }}" style="{{ l.style }}">
+                  <span style="font-size:15px;font-weight:500">{{ l.label }}</span>
+                  <span style="font-size:12.5px;color:var(--muted-foreground)">{{ l.sub }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ step1 }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <h1 style="margin:0;font-size:48px;line-height:1">Підключаємо ШІ</h1>
+            <p style="margin:0;font-size:16px;color:var(--muted-foreground);max-width:560px;text-wrap:pretty">ШІ-помічники працюють через програму штучного інтелекту, наприклад Claude Code чи Codex. Ми пошукали такі програми на цьому компʼютері.</p>
+          </div>
+          <div class="blueprint" style="padding:18px 20px;display:grid;grid-template-columns:40px minmax(0,1fr);gap:4px 14px;border-color:var(--ring)">
+            
+            <span style="grid-row:span 2;width:40px;height:40px;display:grid;place-items:center;background:var(--primary);color:var(--primary-foreground);font-size:20px">✓</span>
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:22px">Усе готово</span>
+            <span style="font-size:14.5px;color:var(--muted-foreground);line-height:1.45">{{ engineReadyText }}</span>
+          </div>
+          <button class="btn btn-ghost" onClick="{{ toggleMoreEng }}" style="align-self:flex-start;color:var(--signal-text);padding-left:0">{{ moreEngLabel }}</button>
+          <sc-if value="{{ moreEng }}">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="border:1px solid var(--border)">
+                <sc-for list="{{ engines }}" as="e" hint-placeholder-count="5">
+                  <div onClick="{{ e.pick }}" style="{{ e.row }}">
+                    <span style="{{ e.radio }}"><span style="{{ e.radioDot }}"></span></span>
+                    <span style="display:flex;flex-direction:column;line-height:1.3;min-width:0"><span style="font-size:14.5px;font-weight:500">{{ e.name }}</span><span style="font-size:12px;color:var(--muted-foreground)">{{ e.meta }}</span></span>
+                    <span style="{{ e.statusStyle }}"><span style="{{ e.dot }}"></span>{{ e.status }}</span>
+                    <sc-if value="{{ e.action }}"><button class="btn btn-secondary" style="font-size:12px;padding:3px 9px">{{ e.action }}</button></sc-if>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:8px">
+                <span style="display:flex;flex-direction:column;line-height:1.35;margin-right:auto"><span style="font-size:14.5px;font-weight:500">Захищений режим</span><span style="font-size:12.5px;color:var(--muted-foreground)">Помічники запускають програми в окремій «пісочниці», щоб не зачепити ваші файли.</span></span>
+                <div class="seg" style="border-color:var(--border)"><sc-for list="{{ sandboxOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button></sc-for></div>
+              </div>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ step2 }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <h1 style="margin:0;font-size:48px;line-height:1">З чого почнемо?</h1>
+            <p style="margin:0;font-size:16px;color:var(--muted-foreground);max-width:560px;text-wrap:pretty">Виберіть готовий застосунок або опишіть свій. Потім його можна змінювати, просто написавши в чаті.</p>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border)">
+            <sc-for list="{{ templates }}" as="t" hint-placeholder-count="4">
+              <button onClick="{{ t.pick }}" style="{{ t.style }}">
+                <span style="width:34px;height:34px;border:1px solid var(--border);display:grid;place-items:center">{{ t.icon }}</span>
+                <span style="font-size:16px;font-weight:500">{{ t.name }}</span>
+                <span style="font-size:13px;color:var(--muted-foreground);line-height:1.4">{{ t.desc }}</span>
+              </button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ isEmptyTpl }}" hint-placeholder-val="{{ false }}">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:14px">
+              <div class="field"><label style="color:var(--muted-foreground)">Назва</label><input class="input" value="{{ emptyName }}" onChange="{{ onEmptyName }}" placeholder="Склад" style="background:var(--input-bg)"></div>
+              <div class="field"><label style="color:var(--muted-foreground)">Що він має робити</label><input class="input" value="{{ emptyWhat }}" onChange="{{ onEmptyWhat }}" placeholder="Облік товарів із залишками і фото" style="background:var(--input-bg)"></div>
+            </div>
+          </sc-if>
+        </sc-if>
+      </div>
+      <div style="flex:none;border-top:1px solid var(--border);padding:14px 40px;display:flex;align-items:center;gap:12px;max-width:720px;width:100%;margin:0 auto;box-sizing:border-box">
+        <sc-if value="{{ canBack }}"><button class="btn btn-secondary" onClick="{{ back }}">Назад</button></sc-if>
+        <span style="margin-right:auto"></span>
+        <sc-if value="{{ canSkip }}"><button class="btn btn-ghost" onClick="{{ skip }}" style="color:var(--signal-text)">Пропустити</button></sc-if>
+        <button class="btn btn-primary blueprint" onClick="{{ next }}" style="color:var(--primary-foreground)">{{ nextLabel }}</button>
+      </div>
+    </main>
+  </div>
+</sc-if>
+
+<sc-if value="{{ isShell }}" hint-placeholder-val="{{ false }}">
+  <div style="flex:1;min-height:0;display:flex;position:relative">
+    <sc-if value="{{ menuOpen }}">
+      <div onClick="{{ closeMenu }}" style="position:absolute;left:56px;top:0;right:0;bottom:0;background:color-mix(in srgb,var(--background) 45%,transparent);z-index:50"></div>
+      <div style="position:absolute;left:56px;top:0;bottom:0;width:min(480px,calc(100% - 56px));background:var(--popover);color:var(--popover-foreground);border-right:1px solid var(--border);box-shadow:var(--shadow-md);z-index:51;display:flex;flex-direction:column">
+        <div style="padding:16px 16px 12px;display:flex;flex-direction:column;gap:10px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:var(--font-heading);font-weight:600;font-size:24px;margin-right:auto">Мої застосунки</span>
+            <button class="btn btn-secondary" onClick="{{ openAdd }}" style="font-size:12.5px;padding:4px 10px">{{ ico.plus }}Новий застосунок</button>
+          </div>
+          <div style="position:relative">
+            <span style="position:absolute;left:10px;top:10px;color:var(--muted-foreground)">{{ ico.search }}</span>
+            <input ref="{{ menuInputRef }}" class="input" placeholder="Знайти застосунок або налаштування" value="{{ query }}" onChange="{{ onQuery }}" onKeyDown="{{ onQueryKey }}" style="padding-left:32px;background:var(--input-bg)">
+          </div>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto;padding:14px 16px;display:flex;flex-direction:column;gap:18px">
+          <sc-if value="{{ showWelcome }}">
+            <div style="border:1px solid var(--ring);padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:15px;font-weight:500">Як тут усе працює</span>
+              <sc-for list="{{ howTo }}" as="h" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:18px minmax(0,1fr);gap:8px;font-size:13px;line-height:1.45"><span style="font-family:'Geist Mono',monospace;color:var(--signal-text)">{{ h.n }}</span><span><b style="font-weight:500">{{ h.t }}.</b> <span style="color:var(--muted-foreground)">{{ h.d }}</span></span></div>
+              </sc-for>
+              <button class="btn btn-secondary" onClick="{{ dismissWelcome }}" style="align-self:flex-start;font-size:12.5px;padding:3px 10px">Зрозуміло</button>
+            </div>
+          </sc-if>
+          <sc-for list="{{ menuGroups }}" as="g" hint-placeholder-count="3">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:12.5px;font-weight:500;color:var(--muted-foreground)">{{ g.title }}</span>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:2px">
+                <sc-for list="{{ g.apps }}" as="a" hint-placeholder-count="4">
+                  <button onClick="{{ a.open }}" style="{{ a.row }}" style-hover="background:color-mix(in srgb,var(--foreground) 6%,transparent)">
+                    <span style="width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px solid var(--border)">{{ a.icon }}</span>
+                    <span style="display:flex;flex-direction:column;min-width:0;line-height:1.3;flex:1"><span style="font-size:14px;font-weight:500">{{ a.name }}</span><span style="font-size:12px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.desc }}</span></span>
+                    <sc-if value="{{ a.isOpen }}"><span title="Уже відкрито" style="width:6px;height:6px;flex:none;background:var(--signal);border-radius:50%"></span></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ noMatch }}"><span style="font-size:14px;color:var(--muted-foreground)">Нічого не знайшли. <a href="#" onClick="{{ openAdd }}">Створити такий застосунок?</a></span></sc-if>
+        </div>
+        <div style="flex:none;border-top:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:14px;font-size:12px;color:var(--muted-foreground);flex-wrap:wrap">
+          <button onClick="{{ toggleAdv }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--foreground);font-size:13px"><span style="{{ advTrack }}"><span style="{{ advThumb }}"></span></span>Розширений режим</button>
+          <span style="margin-left:auto">Enter — відкрити · Esc — закрити</span>
+        </div>
+      </div>
+    </sc-if>
+    <nav style="width:56px;flex:none;background:var(--rail);color:var(--rail-foreground);display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0">
+      <button onClick="{{ goHome }}" title="{{ homeTitle }}" style="{{ logoStyle }}">A</button>
+      <div style="display:flex;flex-direction:column;gap:2px;align-items:center;flex:1;min-height:0;overflow:auto;margin-top:6px">
+        <sc-for list="{{ railItems }}" as="r" hint-placeholder-count="7">
+          <button onClick="{{ r.open }}" title="{{ r.title }}" style="{{ r.style }}">{{ r.icon }}</button>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:6px 0 2px">
+        <span style="display:flex;flex-direction:column;align-items:center;font-family:'Geist Mono',monospace;font-size:12px;font-weight:500;line-height:1.1;font-variant-numeric:tabular-nums"><span>{{ clockH }}</span><span>{{ clockM }}</span></span>
+        <span title="Aura працює" style="width:7px;height:7px;background:var(--signal);border-radius:50%"></span>
+        <sc-if value="{{ hasApprovals }}"><button onClick="{{ openApprovals }}" title="{{ approvalsTitle }}" style="all:unset;cursor:pointer;font-family:'Geist Mono',monospace;font-size:10.5px;font-weight:600;background:var(--warning);color:var(--rail);padding:1px 5px;min-width:10px;text-align:center">{{ approvalCount }}</button></sc-if>
+      </div>
+    </nav>
+    <div ref="{{ areaRef }}" style="{{ areaStyle }}">
+      <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="2">
+        <div onMouseDown="{{ t.focus }}" class="blueprint" style="{{ t.style }}">
+          
+          <div style="{{ t.bar }}">
+            <span style="display:flex;align-items:center;gap:7px;min-width:0;font-weight:500">{{ t.icon }}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span></span>
+            <span style="display:flex;align-items:center;gap:2px;flex:none">
+              <sc-if value="{{ t.isUser }}">
+                <sc-if value="{{ t.hasDraft }}">
+                  <span style="display:flex;border:1px solid var(--border);margin-right:4px;font-size:11.5px">
+                    <button onClick="{{ setLive }}" style="{{ liveBtn }}">Зараз</button><button onClick="{{ setDraft }}" style="{{ draftBtn }}">Після зміни</button>
+                  </span>
+                </sc-if>
+                <button onClick="{{ t.pop.versions }}" title="Історія змін" style="{{ t.btn }}">{{ ico.history }}</button>
+                <sc-if value="{{ adv }}">
+                  <button onClick="{{ t.pop.data }}" title="Дані" style="{{ t.btn }}">{{ ico.db }}</button>
+                  <button onClick="{{ t.pop.secrets }}" title="Ключі доступу" style="{{ t.btn }}">{{ ico.key }}</button>
+                </sc-if>
+                <button onClick="{{ t.toggleChat }}" title="Чат застосунку" style="{{ t.chatBtn }}">{{ ico.msg }}Чат</button>
+                <span style="width:1px;height:14px;background:var(--border);margin:0 4px"></span>
+              </sc-if>
+              <button onClick="{{ t.pop.open }}" title="Відкрити тут інший застосунок" style="{{ t.btn }}">{{ ico.sqplus }}</button>
+              <button onClick="{{ t.splitRight }}" title="{{ t.tipRight }}" style="{{ t.btn }}">{{ ico.pright }}</button>
+              <button onClick="{{ t.close }}" title="{{ t.tipClose }}" style="{{ t.btn }}">{{ ico.x }}</button>
+            </span>
+          </div>
+
+          <sc-if value="{{ t.popOpen }}">
+            <div class="blueprint" style="position:absolute;right:8px;top:38px;width:260px;background:var(--popover);border-color:var(--border);box-shadow:var(--shadow-md);padding:6px;z-index:30">
+              
+              <div style="padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:4px;font-size:13px;color:var(--muted-foreground)">Відкрити тут…</div>
+              <div style="max-height:300px;overflow:auto;display:flex;flex-direction:column">
+                <sc-for list="{{ openList }}" as="o" hint-placeholder-count="5">
+                  <button onClick="{{ o.open }}" style="{{ o.row }}"><span style="display:flex;align-items:center;gap:8px">{{ o.icon }}{{ o.name }}</span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--muted-foreground)">{{ o.kbd }}</span></button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ t.popVersions }}">
+            <div class="blueprint" style="position:absolute;right:8px;top:38px;width:300px;background:var(--popover);border-color:var(--border);box-shadow:var(--shadow-md);padding:10px;z-index:30;display:flex;flex-direction:column;gap:6px">
+              
+              <span style="font-size:13px;font-weight:500">Історія змін</span>
+              <span style="font-size:12px;color:var(--muted-foreground)">Можна повернутися до будь-якої версії. Дані не зникнуть.</span>
+              <sc-for list="{{ versions }}" as="v" hint-placeholder-count="3">
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--border);font-size:13px">
+                  <span style="display:flex;flex-direction:column;line-height:1.3;min-width:0"><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ v.note }}</span><span style="font-size:11.5px;color:var(--muted-foreground)">{{ v.when }}</span></span>
+                  <sc-if value="{{ v.current }}"><span style="font-size:11.5px;color:var(--signal-text)">зараз</span></sc-if>
+                  <sc-if value="{{ v.old }}"><button class="btn btn-secondary" onClick="{{ v.restore }}" style="font-size:11.5px;padding:2px 8px">Повернути</button></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ t.popData }}">
+            <div class="blueprint" style="position:absolute;right:8px;top:38px;width:300px;background:var(--popover);border-color:var(--border);box-shadow:var(--shadow-md);padding:10px;z-index:30;display:flex;flex-direction:column;gap:8px">
+              
+              <span style="font-size:13px;font-weight:500">Дані · {{ t.name }}</span>
+              <span style="font-family:'Geist Mono',monospace;font-size:11.5px;word-break:break-all">~/.aura/apps/crm/data.sqlite</span>
+              <span style="font-size:12.5px;color:var(--muted-foreground)">1,2 МБ · 148 записів · лише на цьому компʼютері</span>
+              <div style="display:flex;gap:8px"><button class="btn btn-secondary" style="font-size:12px;padding:3px 9px">Експорт…</button><button class="btn btn-secondary" style="font-size:12px;padding:3px 9px;color:var(--destructive)">Видалити дані…</button></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ t.popSecrets }}">
+            <div class="blueprint" style="position:absolute;right:8px;top:38px;width:280px;background:var(--popover);border-color:var(--border);box-shadow:var(--shadow-md);padding:10px;z-index:30;display:flex;flex-direction:column;gap:6px">
+              
+              <span style="font-size:13px;font-weight:500">Ключі доступу</span>
+              <span style="font-size:12px;color:var(--muted-foreground)">Самі ключі ніколи не показуються.</span>
+              <sc-for list="{{ secrets }}" as="s" hint-placeholder-count="2">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--border)"><span style="font-family:'Geist Mono',monospace;font-size:11.5px">{{ s.name }}</span><span style="{{ s.style }}">{{ s.state }}</span></div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <div style="flex:1;min-height:0;display:flex;overflow:hidden;position:relative;border-radius:0 0 var(--wm-inner) var(--wm-inner)">
+
+            <sc-if value="{{ t.isHome }}">
+              <div style="flex:1;min-width:0;overflow:auto;position:relative">
+                <div style="max-width:960px;margin:0 auto;padding:28px 28px 40px;display:flex;flex-direction:column;gap:24px">
+                  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                    <h1 style="margin:0;font-size:36px;line-height:1;margin-right:auto">Мої застосунки</h1>
+                    <div style="position:relative;flex:1 1 240px;max-width:360px">
+                      <span style="position:absolute;left:10px;top:10px;color:var(--muted-foreground)">{{ ico.search }}</span>
+                      <input class="input" placeholder="Знайти застосунок" value="{{ query }}" onChange="{{ onQuery }}" onKeyDown="{{ onQueryKey }}" style="padding-left:32px;background:var(--input-bg)">
+                    </div>
+                    <button class="btn btn-primary blueprint" onClick="{{ openAdd }}" style="color:var(--primary-foreground)">{{ ico.plus }}Новий застосунок</button>
+                  </div>
+
+                  <sc-if value="{{ showWelcome }}">
+                    <div class="blueprint" style="padding:18px 20px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;border-color:var(--ring)">
+                      
+                      <span style="font-family:var(--font-heading);font-weight:600;font-size:24px">Як тут усе працює</span>
+                      <button onClick="{{ dismissWelcome }}" title="Закрити" style="all:unset;cursor:pointer;align-self:start;color:var(--muted-foreground);padding:2px">{{ ico.x }}</button>
+                      <div style="grid-column:1 / -1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:4px">
+                        <sc-for list="{{ howTo }}" as="h" hint-placeholder-count="3">
+                          <div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:'Geist Mono',monospace;font-size:12px;color:var(--signal-text)">{{ h.n }}</span><span style="font-size:15px;font-weight:500">{{ h.t }}</span><span style="font-size:13.5px;color:var(--muted-foreground);line-height:1.45">{{ h.d }}</span></div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-if>
+
+                  <sc-for list="{{ homeGroups }}" as="g" hint-placeholder-count="3">
+                    <div style="display:flex;flex-direction:column;gap:8px">
+                      <span style="font-size:13px;font-weight:500;color:var(--muted-foreground)">{{ g.title }}</span>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)">
+                        <sc-for list="{{ g.apps }}" as="a" hint-placeholder-count="4">
+                          <div onClick="{{ a.open }}" style="{{ a.cell }}" style-hover="background:color-mix(in srgb,var(--foreground) 4%,var(--background))">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                              <span style="width:34px;height:34px;display:grid;place-items:center;border:1px solid var(--border)">{{ a.icon }}</span>
+                              <sc-if value="{{ a.toggleable }}"><button onClick="{{ a.toggle }}" title="{{ a.toggleTitle }}" style="all:unset;cursor:pointer;padding:2px"><span style="{{ a.track }}"><span style="{{ a.thumb }}"></span></span></button></sc-if>
+                              <sc-if value="{{ a.isUser }}"><button onClick="{{ a.menu }}" title="Ще" style="all:unset;cursor:pointer;color:var(--muted-foreground);padding:2px">{{ ico.more }}</button></sc-if>
+                            </div>
+                            <span style="display:flex;align-items:center;gap:8px"><span style="font-size:15.5px;font-weight:500">{{ a.name }}</span><sc-if value="{{ a.badge }}"><span style="font-size:11.5px;color:var(--signal-text)">{{ a.badge }}</span></sc-if></span>
+                            <span style="font-size:13px;color:var(--muted-foreground);line-height:1.4">{{ a.desc }}</span>
+                            <sc-if value="{{ a.menuOpen }}">
+                              <div class="blueprint" onClick="{{ stop }}" style="position:absolute;right:8px;top:38px;width:180px;background:var(--popover);border-color:var(--border);box-shadow:var(--shadow-md);padding:4px;z-index:20;display:flex;flex-direction:column">
+                                
+                                <button onClick="{{ a.open }}" style="all:unset;cursor:pointer;padding:6px 8px;font-size:13.5px">Відкрити</button>
+                                <button onClick="{{ a.askUninstall }}" style="all:unset;cursor:pointer;padding:6px 8px;font-size:13.5px;color:var(--destructive)">Видалити…</button>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ a.confirming }}">
+                              <div class="blueprint" onClick="{{ stop }}" style="position:absolute;left:8px;right:8px;top:calc(100% - 8px);background:var(--popover);border-color:var(--border);box-shadow:var(--shadow-md);padding:12px;z-index:25;display:flex;flex-direction:column;gap:8px;cursor:default">
+                                
+                                <span style="font-family:var(--font-heading);font-weight:600;font-size:17px">{{ a.confirmTitle }}</span>
+                                <span style="font-size:13px;color:var(--muted-foreground);line-height:1.4">{{ a.confirmText }}</span>
+                                <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-secondary" onClick="{{ cancelConfirm }}" style="font-size:12.5px;padding:3px 10px">Скасувати</button><button class="btn btn-secondary" onClick="{{ a.confirm }}" style="font-size:12.5px;padding:3px 10px;color:var(--destructive);border-color:color-mix(in srgb,var(--destructive) 45%,transparent)">{{ a.confirmLabel }}</button></div>
+                              </div>
+                            </sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </sc-for>
+                  <sc-if value="{{ noMatch }}"><span style="font-size:14px;color:var(--muted-foreground)">Нічого не знайшли. <a href="#" onClick="{{ openAdd }}">Створити такий застосунок?</a></span></sc-if>
+
+                  <button onClick="{{ toggleAdv }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:14px;padding:12px 0;border-top:1px solid var(--border)">
+                    <span style="{{ advTrack }}"><span style="{{ advThumb }}"></span></span>
+                    <span style="display:flex;flex-direction:column;line-height:1.35"><span style="font-size:14.5px;font-weight:500">Розширений режим</span><span style="font-size:13px;color:var(--muted-foreground)">Клавіші для швидкої роботи з вікнами, місце зберігання даних застосунків, ключі доступу і технічні деталі змін.</span></span>
+                  </button>
+                  <sc-if value="{{ adv }}">
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted-foreground)">
+                      <sc-for list="{{ footKeys }}" as="k" hint-placeholder-count="5"><span><span style="font-family:'Geist Mono',monospace;color:var(--foreground)">{{ k.keys }}</span> {{ k.label }}</span></sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+
+                
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ t.isChats }}">
+              <sc-if value="{{ t.showList }}"><div style="{{ t.listStyle }}">
+                <sc-for list="{{ chatGroups }}" as="cg" hint-placeholder-count="3">
+                  <sc-if value="{{ cg.title }}"><span style="font-size:12px;font-weight:500;color:var(--muted-foreground);padding:14px 14px 4px">{{ cg.title }}</span></sc-if>
+                  <sc-for list="{{ cg.rows }}" as="c" hint-placeholder-count="2">
+                    <button onClick="{{ c.select }}" style="{{ c.row }}">
+                      <span style="{{ c.mark }}">{{ c.letter }}</span>
+                      <span style="display:flex;flex-direction:column;min-width:0;flex:1;gap:1px">
+                        <span style="display:flex;align-items:baseline;gap:6px"><span style="font-size:14.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</span><span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--muted-foreground);margin-left:auto;flex:none">{{ c.time }}</span></span>
+                        <span style="display:flex;align-items:center;gap:6px"><span style="{{ c.previewStyle }}">{{ c.preview }}</span><sc-if value="{{ c.unread }}"><span style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;background:var(--primary);color:var(--primary-foreground);padding:0 5px;margin-left:auto;flex:none">{{ c.unread }}</span></sc-if></span>
+                      </span>
+                    </button>
+                  </sc-for>
+                </sc-for>
+              </div></sc-if>
+              <sc-if value="{{ t.showChat }}"><div style="flex:1;min-width:0;display:flex;flex-direction:column">
+                <div style="flex:none;display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);background:var(--background)">
+                  <sc-if value="{{ t.narrow }}"><button onClick="{{ backToList }}" title="До списку розмов" style="all:unset;cursor:pointer;width:28px;height:28px;display:grid;place-items:center;border:1px solid var(--border);flex:none">←</button></sc-if>
+                  <span style="display:flex;flex-direction:column;line-height:1.2;margin-right:auto;min-width:0;flex:1"><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chatView.title }}</span><span style="font-size:12px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ chatView.kind }}</span></span>
+                  <span style="display:flex;gap:2px;flex:none"><sc-for list="{{ chatView.members }}" as="mm" hint-placeholder-count="2"><span style="{{ mm.style }}" title="{{ mm.name }}">{{ mm.l }}</span></sc-for></span>
+                  <sc-if value="{{ chatView.isApp }}"><button class="btn btn-secondary" onClick="{{ chatView.openApp }}" style="font-size:12px;padding:3px 9px">Відкрити застосунок</button></sc-if>
+                </div>
+                <sc-if value="{{ chatView.hasTopics }}">
+                  <div style="flex:none;display:flex;gap:4px;padding:6px 14px;border-bottom:1px solid var(--border);background:var(--background);overflow:auto">
+                    <sc-for list="{{ chatView.topics }}" as="tp" hint-placeholder-count="3"><button onClick="{{ tp.pick }}" style="{{ tp.style }}">{{ tp.label }}</button></sc-for>
+                  </div>
+                </sc-if>
+                <div style="flex:1;min-height:0;position:relative">
+                  <dc-import name="Aura Simple Chat Feed" messages="{{ chatView.messages }}" composer="{{ chatView.composer }}" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import>
+                </div>
+              </div></sc-if>
+            </sc-if>
+
+            <sc-if value="{{ t.isUser }}">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--card)">
+                <sc-if value="{{ t.isCrm }}">
+                  <div style="flex:none;display:flex;align-items:center;gap:2px;padding:10px 16px 0;border-bottom:1px solid var(--border)">
+                    <sc-for list="{{ crmTabs }}" as="ct" hint-placeholder-count="3"><button onClick="{{ ct.pick }}" style="{{ ct.style }}">{{ ct.label }}</button></sc-for>
+                    <sc-if value="{{ showDraftBanner }}"><span style="margin-left:auto;font-size:12px;padding:2px 8px;background:color-mix(in srgb,var(--warning) 16%,transparent);color:var(--warning-text)">Так буде після зміни · ще не застосовано</span></sc-if>
+                  </div>
+                  <div style="flex:1;min-height:0;overflow:auto;padding:16px">
+                    <sc-if value="{{ tabClients }}">
+                      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                        <span style="font-family:var(--font-heading);font-weight:600;font-size:21px;margin-right:auto">Клієнти</span>
+                        <sc-if value="{{ showDraft }}"><button class="btn btn-secondary" style="font-size:12px;padding:3px 9px;border-style:dashed;border-color:var(--warning)">Експорт у CSV</button></sc-if>
+                        <button class="btn btn-secondary" style="font-size:12px;padding:3px 9px">{{ ico.plus }}Клієнт</button>
+                      </div>
+                      <table class="table" style="font-size:13.5px">
+                        <thead><tr><th>Імʼя</th><th>Компанія</th><sc-if value="{{ showDraft }}"><th style="color:var(--warning-text)">Email</th></sc-if><th>Етап</th><th style="text-align:right">Сума</th></tr></thead>
+                        <tbody>
+                          <sc-for list="{{ clients }}" as="cl" hint-placeholder-count="6">
+                            <tr><td style="font-weight:500">{{ cl.name }}</td><td style="color:var(--muted-foreground)">{{ cl.co }}</td><sc-if value="{{ showDraft }}"><td style="font-family:'Geist Mono',monospace;font-size:12px;background:color-mix(in srgb,var(--warning) 8%,transparent)">{{ cl.email }}</td></sc-if><td><span style="{{ cl.stageStyle }}">{{ cl.stage }}</span></td><td style="text-align:right;font-family:'Geist Mono',monospace;font-size:12.5px">{{ cl.value }}</td></tr>
+                          </sc-for>
+                        </tbody>
+                      </table>
+                    </sc-if>
+                    <sc-if value="{{ tabDeals }}">
+                      <div style="display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:10px;min-width:620px">
+                        <sc-for list="{{ board }}" as="col" hint-placeholder-count="4">
+                          <div style="display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);padding:8px;min-height:260px">
+                            <span style="display:flex;justify-content:space-between;font-size:12.5px;font-weight:500;color:var(--muted-foreground)"><span>{{ col.title }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px">{{ col.sum }}</span></span>
+                            <sc-for list="{{ col.cards }}" as="dc" hint-placeholder-count="2">
+                              <div class="blueprint" style="padding:8px 9px;display:flex;flex-direction:column;gap:3px;background:var(--background)"><span style="font-size:13.5px;font-weight:500">{{ dc.name }}</span><span style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted-foreground)"><span>{{ dc.who }}</span><span style="font-family:'Geist Mono',monospace;color:var(--foreground)">{{ dc.value }}</span></span></div>
+                            </sc-for>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ tabOverview }}">
+                      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)">
+                        <sc-for list="{{ stats }}" as="st" hint-placeholder-count="4">
+                          <div style="background:var(--card);padding:14px;display:flex;flex-direction:column;gap:4px"><span style="font-size:12.5px;color:var(--muted-foreground)">{{ st.label }}</span><span style="font-family:var(--font-heading);font-weight:600;font-size:32px;line-height:1">{{ st.value }}</span><span style="font-size:12px;color:var(--muted-foreground)">{{ st.note }}</span></div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ t.isBuilding }}">
+                  <div style="flex:1;display:grid;place-items:center;padding:24px">
+                    <div style="display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;max-width:320px">
+                      <span style="font-family:var(--font-heading);font-weight:600;font-size:24px">Помічник збирає «{{ t.name }}»</span>
+                      <span style="font-size:14px;color:var(--muted-foreground);line-height:1.45">Коли перша версія буде готова, він спитає в чаті праворуч, чи все гаразд.</span>
+                      <div style="width:200px;display:flex;flex-direction:column;gap:6px;margin-top:8px"><span style="height:8px;background:var(--muted)"></span><span style="height:8px;background:var(--muted);width:70%"></span><span style="height:8px;background:var(--muted);width:85%"></span></div>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+              <sc-if value="{{ t.chatOpen }}">
+                <div style="{{ t.panelStyle }}">
+                  <div style="flex:none;display:flex;align-items:center;gap:8px;padding:7px 10px 7px 14px;border-bottom:1px solid var(--border);background:var(--background)">
+                    <span style="display:flex;flex-direction:column;line-height:1.2;margin-right:auto;min-width:0;flex:1"><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Чат застосунку</span><span style="font-size:12px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ appTeamLabel }}</span></span>
+                    <span style="display:flex;gap:2px;flex:none"><sc-for list="{{ appTeam }}" as="tm" hint-placeholder-count="1"><span style="{{ tm.style }}" title="{{ tm.name }}">{{ tm.l }}</span></sc-for></span>
+                    <button class="btn btn-secondary" onClick="{{ toggleTeamPop }}" title="Додати помічника до цього застосунку" style="font-size:12px;padding:3px 8px;gap:4px">{{ ico.userplus }}<sc-if value="{{ t.wide }}">Помічник</sc-if></button>
+                  </div>
+                  <sc-if value="{{ teamPop }}">
+                    <div class="blueprint" style="position:absolute;right:10px;top:46px;width:280px;background:var(--popover);border-color:var(--border);box-shadow:var(--shadow-md);padding:8px;z-index:30;display:flex;flex-direction:column;gap:4px">
+                      
+                      <span style="font-size:13px;font-weight:500;padding:2px 4px 6px">Хто працює з цим застосунком</span>
+                      <sc-for list="{{ teamCandidates }}" as="tc" hint-placeholder-count="3">
+                        <button onClick="{{ tc.toggle }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:5px 4px">
+                          <span style="{{ tc.style }}">{{ tc.l }}</span>
+                          <span style="display:flex;flex-direction:column;line-height:1.25;flex:1;min-width:0"><span style="font-size:13px;font-weight:500">{{ tc.name }}</span><span style="font-size:11.5px;color:var(--muted-foreground)">{{ tc.role }}</span></span>
+                          <span style="{{ tc.checkStyle }}">{{ tc.check }}</span>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <div style="flex:1;min-height:0;position:relative">
+                    <dc-import name="Aura Simple Chat Feed" messages="{{ appFeed.messages }}" composer="{{ appFeed.composer }}" hint-size="100%,100%" style="position:absolute;inset:0"></dc-import>
+                  </div>
+                </div>
+              </sc-if>
+            </sc-if>
+
+            <sc-if value="{{ t.isAgents }}">
+              <div style="flex:1;min-width:0;display:flex;flex-direction:column;background:var(--card)">
+                <div style="flex:none;display:flex;align-items:center;gap:2px;padding:10px 16px 0;border-bottom:1px solid var(--border);overflow:auto">
+                  <sc-for list="{{ agTabs }}" as="at" hint-placeholder-count="4"><button onClick="{{ at.pick }}" style="{{ at.style }}">{{ at.label }}</button></sc-for>
+                </div>
+                <div style="flex:1;min-height:0;overflow:auto">
+                  <div style="max-width:760px;margin:0 auto;padding:20px 20px 48px;display:flex;flex-direction:column;gap:14px">
+                    <sc-if value="{{ agTeam }}">
+                      <p style="margin:0;font-size:14.5px;line-height:1.55;color:var(--muted-foreground);text-wrap:pretty">ШІ-помічники (агенти) розуміють ваші слова і виконують роботу: створюють застосунки, пишуть код, перевіряють, нагадують. У кожного своя роль, свої дозволи і ліміт витрат. Важливі зміни вони завжди спершу показують вам.</p>
+                      <div style="display:flex;flex-wrap:wrap;gap:6px">
+                        <sc-for list="{{ agChips }}" as="c" hint-placeholder-count="5"><button onClick="{{ c.pick }}" style="{{ c.style }}"><span style="{{ c.mark }}">{{ c.l }}</span>{{ c.name }}</button></sc-for>
+                      </div>
+                      <div style="border:1px solid var(--border);background:var(--background);padding:16px;display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center">
+                        <span style="{{ ag.markBig }}">{{ ag.l }}</span>
+                        <div style="display:flex;flex-direction:column;gap:2px;min-width:180px;flex:1 1 200px">
+                          <span style="font-family:var(--font-heading);font-weight:600;font-size:26px;line-height:1.05">{{ ag.name }}</span>
+                          <span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--muted-foreground)">ШІ-агент · @{{ ag.handle }}</span>
+                          <span style="font-size:14px">{{ ag.role }}</span>
+                        </div>
+                        <div class="field" style="flex:1 1 180px;max-width:260px"><label style="color:var(--muted-foreground)">Працює через</label>
+                          <select class="input" value="{{ ag.engineId }}" onChange="{{ onAgEngine }}" style="background:var(--input-bg)"><sc-for list="{{ agEngineOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.id }}">{{ o.name }}</option></sc-for></select>
+                        </div>
+                      </div>
+                      <div style="border:1px solid var(--border);background:var(--background);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+                        <div style="display:flex;flex-direction:column;gap:2px"><span style="font-family:var(--font-heading);font-weight:600;font-size:19px">Як він працює</span><span style="font-size:13px;color:var(--muted-foreground)">Інструкція своїми словами. Змініть її, якщо хочете, щоб помічник поводився інакше.</span></div>
+                        <textarea class="input" value="{{ ag.prompt }}" onChange="{{ onPrompt }}" style="background:var(--input-bg);font-size:14px;line-height:1.5;resize:vertical;min-height:100px"></textarea>
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                          <span style="font-size:12.5px;color:var(--muted-foreground);margin-right:auto">Aura сама додає до цього правила команди, вміння, памʼять і мову.</span>
+                          <sc-if value="{{ ag.dirty }}"><button class="btn btn-secondary" onClick="{{ cancelPrompt }}" style="font-size:12.5px;padding:3px 10px">Скасувати</button><button class="btn btn-primary" onClick="{{ savePrompt }}" style="font-size:12.5px;padding:3px 10px;color:var(--primary-foreground)">Зберегти</button></sc-if>
+                          <sc-if value="{{ ag.saved }}"><span style="font-size:12.5px;color:var(--signal-text)">✓ Збережено · попередню версію можна повернути</span></sc-if>
+                        </div>
+                      </div>
+                      <div style="border:1px solid var(--border);background:var(--background);padding:14px 16px;display:flex;flex-direction:column;gap:6px">
+                        <span style="font-family:var(--font-heading);font-weight:600;font-size:19px">Що йому дозволено</span>
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));column-gap:20px">
+                          <sc-for list="{{ agPerms }}" as="p" hint-placeholder-count="5">
+                            <button onClick="{{ p.toggle }}" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--border)">
+                              <span style="display:flex;flex-direction:column;line-height:1.3"><span style="font-size:14px">{{ p.label }}</span><span style="font-size:12px;color:var(--muted-foreground)">{{ p.sub }}</span></span>
+                              <span style="{{ p.track }}"><span style="{{ p.thumb }}"></span></span>
+                            </button>
+                          </sc-for>
+                        </div>
+                      </div>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">
+                        <div style="border:1px solid var(--border);background:var(--background);padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+                          <span style="font-family:var(--font-heading);font-weight:600;font-size:19px">Витрати</span>
+                          <span style="font-size:14px">{{ ag.budgetText }}</span>
+                          <div style="height:6px;background:var(--muted)"><div style="{{ ag.budgetBar }}"></div></div>
+                          <span style="font-size:12px;color:var(--muted-foreground)">Коли ліміт закінчиться, помічник зупиниться і спитає вас.</span>
+                        </div>
+                        <div style="border:1px solid var(--border);background:var(--background);padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+                          <span style="font-family:var(--font-heading);font-weight:600;font-size:19px">Його вміння</span>
+                          <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ ag.skills }}" as="k" hint-placeholder-count="2"><span style="font-size:12.5px;padding:2px 9px;border:1px solid var(--border)">{{ k.name }}</span></sc-for></div>
+                          <sc-if value="{{ ag.noSkills }}"><span style="font-size:13px;color:var(--muted-foreground)">Поки без окремих вмінь.</span></sc-if>
+                          <button class="btn btn-ghost" onClick="{{ goSkills }}" style="align-self:flex-start;font-size:12.5px;padding:2px 0;color:var(--signal-text)">Усі вміння →</button>
+                        </div>
+                      </div>
+                      <div style="border:1px solid var(--border);background:var(--background);padding:14px 16px;display:flex;flex-direction:column;gap:4px">
+                        <span style="font-family:var(--font-heading);font-weight:600;font-size:19px;margin-bottom:4px">Остання робота</span>
+                        <sc-for list="{{ ag.runs }}" as="rn" hint-placeholder-count="2">
+                          <div style="display:grid;grid-template-columns:60px minmax(0,140px) minmax(0,1fr);gap:12px;padding:6px 0;border-top:1px solid var(--border);font-size:13.5px"><span style="font-family:'Geist Mono',monospace;font-size:11.5px;color:var(--muted-foreground)">{{ rn.when }}</span><span style="color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ rn.chat }}</span><span>{{ rn.what }}</span></div>
+                        </sc-for>
+                        <sc-if value="{{ ag.noRuns }}"><span style="font-size:13px;color:var(--muted-foreground)">Ще нічого не робив. Покличте його в чаті через @{{ ag.name }}.</span></sc-if>
+                      </div>
+                    </sc-if>
+
+                    <sc-if value="{{ agSkills }}">
+                      <p style="margin:0;font-size:14.5px;line-height:1.55;color:var(--muted-foreground);text-wrap:pretty">Вміння (skills) — це готові інструкції, які помічник бере, коли вони потрібні: як писати листи клієнтам, як робити звіт за місяць, як публікувати сайт. Одне вміння можуть використовувати кілька помічників.</p>
+                      <div style="border:1px solid var(--border);background:var(--background)">
+                        <sc-for list="{{ skillRows }}" as="k" hint-placeholder-count="5">
+                          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:16px;align-items:center;padding:12px 14px;border-top:1px solid var(--border);margin-top:-1px">
+                            <span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14.5px;font-weight:500">{{ k.name }}</span><span style="font-size:13px;color:var(--muted-foreground);line-height:1.4">{{ k.desc }}</span></span>
+                            <span style="display:flex;gap:2px"><sc-for list="{{ k.marks }}" as="mk" hint-placeholder-count="2"><span style="{{ mk.style }}" title="{{ mk.name }}">{{ mk.l }}</span></sc-for></span>
+                            <button onClick="{{ k.toggle }}" title="Увімкнути або вимкнути" style="all:unset;cursor:pointer"><span style="{{ k.track }}"><span style="{{ k.thumb }}"></span></span></button>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <span style="font-size:13px;color:var(--muted-foreground)">Нове вміння можна попросити в чаті: «Запамʼятай, як я пишу листи клієнтам, і зроби з цього вміння».</span>
+                    </sc-if>
+
+                    <sc-if value="{{ agMemory }}">
+                      <p style="margin:0;font-size:14.5px;line-height:1.55;color:var(--muted-foreground);text-wrap:pretty">Памʼять (memory) — те, що помічники запамʼятали з ваших розмов, щоб не перепитувати. Усе зберігається тільки на цьому компʼютері. Будь-що можна видалити.</p>
+                      <div style="position:relative"><span style="position:absolute;left:10px;top:10px;color:var(--muted-foreground)">{{ ico.search }}</span><input class="input" placeholder="Знайти в памʼяті" value="{{ memQ }}" onChange="{{ onMemQ }}" style="padding-left:32px;background:var(--input-bg)"></div>
+                      <div style="border:1px solid var(--border);background:var(--background)">
+                        <sc-for list="{{ memRows }}" as="mr" hint-placeholder-count="4">
+                          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--border);margin-top:-1px">
+                            <span style="display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font-size:14px;line-height:1.45">{{ mr.text }}</span><span style="font-size:12px;color:var(--muted-foreground)">{{ mr.meta }}</span></span>
+                            <button onClick="{{ mr.del }}" title="Забути" style="all:unset;cursor:pointer;color:var(--muted-foreground);padding:4px">{{ ico.x }}</button>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <sc-if value="{{ memEmpty }}"><span style="font-size:13.5px;color:var(--muted-foreground)">Нічого не знайдено.</span></sc-if>
+                    </sc-if>
+
+                    <sc-if value="{{ agEngines }}">
+                      <p style="margin:0;font-size:14.5px;line-height:1.55;color:var(--muted-foreground);text-wrap:pretty">Тут підключаються програми штучного інтелекту, через які думають помічники. Можна мати кілька і для кожного помічника вибрати свою на вкладці «Команда».</p>
+                      <span style="font-size:13px;font-weight:500;color:var(--muted-foreground)">Програми на цьому компʼютері</span>
+                      <div style="border:1px solid var(--border);background:var(--background)">
+                        <sc-for list="{{ enginesLocal }}" as="e" hint-placeholder-count="4">
+                          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--border);margin-top:-1px">
+                            <span style="display:flex;flex-direction:column;line-height:1.3;min-width:0"><span style="font-size:14.5px;font-weight:500">{{ e.name }}</span><span style="font-size:12.5px;color:var(--muted-foreground)">{{ e.meta }}</span></span>
+                            <span style="{{ e.statusStyle }}"><span style="{{ e.dot }}"></span>{{ e.status }}</span>
+                            <sc-if value="{{ e.action }}"><button class="btn btn-secondary" style="font-size:12px;padding:3px 9px">{{ e.action }}</button></sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <span style="font-size:13px;font-weight:500;color:var(--muted-foreground);margin-top:6px">Моделі напряму</span>
+                      <div style="border:1px solid var(--border);background:var(--background)">
+                        <sc-for list="{{ enginesApi }}" as="e" hint-placeholder-count="3">
+                          <div style="display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;padding:11px 14px;border-top:1px solid var(--border);margin-top:-1px">
+                            <span style="display:flex;flex-direction:column;line-height:1.3;min-width:0"><span style="font-size:14.5px;font-weight:500">{{ e.name }}</span><span style="font-size:12.5px;color:var(--muted-foreground)">{{ e.meta }}</span></span>
+                            <span style="{{ e.statusStyle }}"><span style="{{ e.dot }}"></span>{{ e.status }}</span>
+                            <sc-if value="{{ e.action }}"><button class="btn btn-secondary" style="font-size:12px;padding:3px 9px">{{ e.action }}</button></sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                      <div style="border:1px solid var(--border);background:var(--background);padding:14px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-top:6px">
+                        <span style="display:flex;flex-direction:column;line-height:1.35;margin-right:auto;flex:1 1 280px"><span style="font-size:14.5px;font-weight:500">Захищений режим</span><span style="font-size:12.5px;color:var(--muted-foreground)">Помічники запускають програми в окремій «пісочниці», щоб випадково не зачепити ваші файли.</span></span>
+                        <div class="seg" style="border-color:var(--border)"><sc-for list="{{ sandboxOpts }}" as="o" hint-placeholder-count="3"><button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button></sc-for></div>
+                      </div>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ t.isOther }}">
+              <div style="flex:1;display:grid;place-items:center;padding:24px">
+                <div style="display:flex;flex-direction:column;gap:8px;align-items:center;text-align:center;max-width:340px">
+                  <span style="width:44px;height:44px;border:1px solid var(--border);display:grid;place-items:center">{{ t.bigIcon }}</span>
+                  <span style="font-family:var(--font-heading);font-weight:600;font-size:24px">{{ t.name }}</span>
+                  <span style="font-size:14px;color:var(--muted-foreground)">{{ t.desc }}</span>
+                  <span style="font-size:12px;color:var(--muted-foreground);margin-top:6px">Цей розділ буде в наступному раунді</span>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ addOpen }}">
+                  <div onClick="{{ closeAdd }}" style="position:absolute;inset:0;background:color-mix(in srgb,var(--background) 70%,transparent);display:flex;justify-content:flex-end;z-index:40">
+                    <div onClick="{{ stop }}" style="width:min(420px,100%);height:100%;background:var(--popover);border-left:1px solid var(--border);box-shadow:var(--shadow-md);padding:22px;display:flex;flex-direction:column;gap:16px;overflow:auto;box-sizing:border-box">
+                      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:var(--font-heading);font-weight:600;font-size:26px">Новий застосунок</span><button onClick="{{ closeAdd }}" style="all:unset;cursor:pointer;color:var(--muted-foreground)">{{ ico.x }}</button></div>
+                      <span style="font-size:14px;color:var(--muted-foreground)">Виберіть готовий або опишіть свій. Помічник збере його і покаже вам.</span>
+                      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--border);border:1px solid var(--border)">
+                        <sc-for list="{{ templates }}" as="t2" hint-placeholder-count="4">
+                          <button onClick="{{ t2.pick }}" style="{{ t2.style }}"><span style="width:30px;height:30px;border:1px solid var(--border);display:grid;place-items:center">{{ t2.icon }}</span><span style="font-size:14.5px;font-weight:500">{{ t2.name }}</span><span style="font-size:12.5px;color:var(--muted-foreground);line-height:1.35">{{ t2.desc }}</span></button>
+                        </sc-for>
+                      </div>
+                      <sc-if value="{{ isEmptyTpl }}">
+                        <div class="field"><label style="color:var(--muted-foreground)">Назва</label><input class="input" value="{{ emptyName }}" onChange="{{ onEmptyName }}" placeholder="Склад" style="background:var(--input-bg)"></div>
+                        <div class="field"><label style="color:var(--muted-foreground)">Що він має робити</label><textarea class="input" value="{{ emptyWhat }}" onChange="{{ onEmptyWhat }}" placeholder="Облік товарів із залишками і фото" style="background:var(--input-bg)"></textarea></div>
+                      </sc-if>
+                      <button class="btn btn-primary blueprint" onClick="{{ createApp }}" style="color:var(--primary-foreground);align-self:flex-start">Створити</button>
+                    </div>
+                  </div>
+                </sc-if>
+      <sc-if value="{{ hasGutter }}"><div onMouseDown="{{ startDrag }}" title="Потягніть, щоб змінити ширину" style="{{ gutterStyle }}" style-hover="background:color-mix(in srgb,var(--ring) 35%,transparent)"></div></sc-if>
+    </div>
+  </div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;'light'|'dark'&quot;},&quot;start&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;splash&quot;,&quot;onboarding&quot;,&quot;firstRun&quot;,&quot;lived&quot;],&quot;default&quot;:&quot;splash&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Start state&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;simple&quot;,&quot;advanced&quot;],&quot;default&quot;:&quot;simple&quot;,&quot;tsType&quot;:&quot;'simple'|'advanced'&quot;}}">
+const MONO = "'Geist Mono', ui-monospace, monospace";
+const LIGHT = {
+  '--background':'#f2f2f3','--foreground':'#1d1f20','--card':'#f5f5f8','--popover':'#f5f5f8','--popover-foreground':'#1d1f20',
+  '--primary':'#416180','--primary-foreground':'#f5f5f8','--secondary':'#e7e7ea','--secondary-foreground':'#2b2b2d',
+  '--muted':'#e9e9ea','--muted-foreground':'#5d5d60','--accent':'#d6ebff','--accent-foreground':'#2c455d',
+  '--destructive':'oklch(0.52 0.15 27)','--warning':'oklch(0.6 0.13 70)','--warning-text':'oklch(0.48 0.11 65)',
+  '--border':'color-mix(in srgb, #1d1f20 16%, transparent)','--input':'color-mix(in srgb, #1d1f20 22%, transparent)','--input-bg':'#e9e9ea','--ring':'#5980a6',
+  '--rail':'#1d2d3d','--rail-foreground':'#d6ebff','--bubble-own':'#d6ebff','--bubble-own-foreground':'#1d2d3d','--bubble-other':'#f5f5f8',
+  '--chat-bg':'#f2f2f3','--grid-dot':'color-mix(in srgb, #1d1f20 13%, transparent)','--signal':'#5980a6','--signal-text':'#416180',
+  '--shadow-md':'0 3px 10px color-mix(in srgb, #2b2b2d 16%, transparent)'
+};
+const DARK = {
+  '--background':'#17191b','--foreground':'#e7e7ea','--card':'#1e2022','--popover':'#232527','--popover-foreground':'#e7e7ea',
+  '--primary':'#94bce3','--primary-foreground':'#1d2d3d','--secondary':'#2b2b2d','--secondary-foreground':'#e7e7ea',
+  '--muted':'#26282a','--muted-foreground':'#a6a6a9','--accent':'#2c455d','--accent-foreground':'#d6ebff',
+  '--destructive':'oklch(0.7 0.14 27)','--warning':'oklch(0.78 0.12 75)','--warning-text':'oklch(0.82 0.11 78)',
+  '--border':'color-mix(in srgb, #e7e7ea 14%, transparent)','--input':'color-mix(in srgb, #e7e7ea 20%, transparent)','--input-bg':'#1e2022','--ring':'#94bce3',
+  '--rail':'#0f161d','--rail-foreground':'#b5d9fd','--bubble-own':'#2c455d','--bubble-own-foreground':'#eef6ff','--bubble-other':'#1e2022',
+  '--chat-bg':'#17191b','--grid-dot':'color-mix(in srgb, #e7e7ea 9%, transparent)','--signal':'#94bce3','--signal-text':'#b5d9fd',
+  '--shadow-md':'0 0 0 1px color-mix(in srgb, #e7e7ea 8%, transparent), 0 8px 24px rgba(0,0,0,.45)'
+};
+const bridge = (v, h, p) => ({ ...v, '--color-bg':'var(--background)','--color-surface':'var(--muted)','--color-text':'var(--foreground)','--color-accent':'var(--primary)','--color-accent-600':h,'--color-accent-700':p,'--color-divider':'var(--border)','--color-accent-100':'var(--accent)','--color-accent-800':'var(--accent-foreground)','--color-neutral-100':'var(--secondary)','--color-neutral-800':'var(--secondary-foreground)' });
+const THEMES = { light: bridge(LIGHT,'#2c455d','#1d2d3d'), dark: bridge(DARK,'#b5d9fd','#d6ebff') };
+
+const IC = {
+  msg:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
+  bot:'<path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>',
+  wand:'<path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72"/><path d="m14 7 3 3"/>',
+  notebook:'<path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M16 2v20"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  pkg:'<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  cpu:'<rect width="16" height="16" x="4" y="4" rx="2"/><rect width="6" height="6" x="9" y="9" rx="1"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/>',
+  sliders:'<path d="M21 4h-7"/><path d="M10 4H3"/><path d="M21 12h-9"/><path d="M8 12H3"/><path d="M21 20h-5"/><path d="M12 20H3"/><path d="M14 2v4"/><path d="M8 10v4"/><path d="M16 18v4"/>',
+  lang:'<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>',
+  history:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+  phone:'<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+  users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  checks:'<path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+  wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+  box:'<rect width="18" height="18" x="3" y="3"/><path d="M3 9h18"/>',
+  x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>', plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+  pright:'<rect width="18" height="18" x="3" y="3"/><path d="M15 3v18"/>',
+  sqplus:'<rect width="18" height="18" x="3" y="3"/><path d="M8 12h8"/><path d="M12 8v8"/>',
+  more:'<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+  key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+  db:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/>',
+  send:'<path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/>',
+  userplus:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6"/><path d="M22 11h-6"/>'
+};
+const ic = (n, s = 16) => React.createElement('svg', { width: s, height: s, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.5, strokeLinecap: 'round', strokeLinejoin: 'round', style: { display: 'block', flex: 'none' }, dangerouslySetInnerHTML: { __html: IC[n] } });
+
+const APPS = {
+  home:{ name:'Нове вікно', icon:'grid' },
+  chats:{ name:'Розмови', icon:'msg', desc:'Пишіть Помічнику, як у месенджері', group:'main', toggle:true },
+  signals:{ name:'Сповіщення', icon:'bell', desc:'Коли щось зламалося або потребує уваги', group:'main', toggle:true },
+  schedule:{ name:'Нагадування', icon:'clock', desc:'Що робити регулярно: щоранку, щопʼятниці…', group:'main', toggle:true },
+  agents:{ name:'Помічники', icon:'bot', desc:'ШІ-агенти: хто вони, що вміють і памʼятають, через що працюють', group:'main' },
+  customize:{ name:'Вигляд', icon:'sliders', desc:'Тема, вікна, бічна панель', group:'settings' },
+  localization:{ name:'Мова', icon:'lang', desc:'Українська · English', group:'settings' },
+  devices:{ name:'Телефон', icon:'phone', desc:'Відкривайте Aura з телефона', group:'settings' },
+  restore:{ name:'Резервні копії', icon:'history', desc:'Повернути все, як було раніше', group:'settings' },
+  catalog:{ name:'Готові набори', icon:'pkg', desc:'Застосунки й помічники, які можна додати', group:'settings' },
+  skills:{ name:'Вміння', icon:'wand', desc:'Інструкції, якими користуються помічники', group:null, toggle:true },
+  memory:{ name:'Памʼять', icon:'notebook', desc:'Що помічники запамʼятали про вас', group:null, toggle:true },
+  engines:{ name:'Програми помічників', icon:'cpu', desc:'Claude Code, Codex, Ollama…', group:null },
+  crm:{ name:'Клієнти', icon:'users', desc:'Клієнти, угоди, огляд', group:'work', user:true },
+  tasks:{ name:'Задачі', icon:'checks', desc:'Дошка задач: ремонт і робота', group:'work', user:true },
+  notes:{ name:'Нотатки', icon:'file', desc:'Записи, рецепти, списки', group:'home', user:true },
+  budget:{ name:'Бюджет', icon:'wallet', desc:'Витрати за місяць по категоріях', group:'money', user:true }
+};
+IC.grid = '<rect width="7" height="7" x="3" y="3"/><rect width="7" height="7" x="14" y="3"/><rect width="7" height="7" x="14" y="14"/><rect width="7" height="7" x="3" y="14"/>';
+const GROUPS = [['work','Робота'],['home','Дім'],['money','Гроші'],['main','Основне'],['settings','Налаштування']];
+const RAIL_SIMPLE_HEAD = ['chats','signals'];
+const RAIL_SIMPLE_TAIL = ['agents','customize'];
+const RAIL_ADV_HEAD = ['chats','signals','schedule'];
+const RAIL_ADV_TAIL = ['agents','catalog','customize','localization','restore','devices'];
+const AG = {
+  orchestrator:{ name:'Помічник', role:'Головний ШІ-помічник: відповідає вам і роздає роботу іншим', l:'П', kind:'solid' },
+  builder:{ name:'Майстер', role:'Створює і змінює ваші застосунки', l:'М', kind:'ink' },
+  coder:{ name:'Програміст', role:'Пише код для проєктів, наприклад для сайту', l:'Пр', kind:'tint' },
+  reviewer:{ name:'Перевіряльник', role:'Перевіряє роботу інших, перш ніж вона дійде до вас', l:'Пе', kind:'outline' },
+  tester:{ name:'Тестувальник', role:'Запускає перевірки, чи все працює', l:'Т', kind:'dashed' }
+};
+const mark = (who, s = 24) => {
+  const b = { width:s, height:s, flex:'none', display:'grid', placeItems:'center', fontFamily:'var(--font-body)', fontSize: Math.round(s*0.42), fontWeight:600, boxSizing:'border-box' };
+  const k = (AG[who] || {}).kind;
+  if (k === 'solid') return { ...b, background:'var(--primary)', color:'var(--primary-foreground)' };
+  if (k === 'tint') return { ...b, background:'var(--accent)', color:'var(--accent-foreground)' };
+  if (k === 'outline') return { ...b, border:'1.5px solid var(--primary)', color:'var(--primary)' };
+  if (k === 'ink') return { ...b, background:'var(--foreground)', color:'var(--background)' };
+  if (k === 'dashed') return { ...b, border:'1.5px dashed var(--muted-foreground)', color:'var(--foreground)' };
+  return { ...b, border:'1px solid var(--border)', color:'var(--muted-foreground)' };
+};
+const PRESET = { gap:10, radius:10, border:2 };
+const ENG = [
+  { id:'claude', name:'Claude Code', kind:'cli', meta:'Від Anthropic · знайдено на цьому компʼютері', status:'Готово', ok:true },
+  { id:'codex', name:'Codex', kind:'cli', meta:'Від OpenAI · знайдено на цьому компʼютері', status:'Готово', ok:true },
+  { id:'gemini', name:'Gemini CLI', kind:'cli', meta:'Від Google · встановлено, але вхід не виконано', status:'Потрібен вхід', ok:false, action:'Увійти' },
+  { id:'opencode', name:'OpenCode', kind:'cli', meta:'Не знайдено на цьому компʼютері', status:'Не встановлено', ok:false, action:'Як встановити' },
+  { id:'ollama', name:'Ollama', kind:'api', meta:'Моделі прямо на вашому компʼютері, без інтернету · 3 моделі', status:'Готово', ok:true },
+  { id:'lmstudio', name:'LM Studio', kind:'api', meta:'Моделі на вашому компʼютері', status:'Не запущено', ok:false, action:'Перевірити' },
+  { id:'openrouter', name:'OpenRouter', kind:'api', meta:'Сотні моделей через один ключ', status:'Немає ключа', ok:false, action:'Додати ключ' }
+];
+const AGP = {
+  orchestrator:'Ти головний помічник Олени. Відповідай коротко, по-людськи, українською. Якщо справа стосується застосунку, передай її Майстру. Перед будь-якою зміною проси згоди.',
+  builder:'Ти створюєш і змінюєш застосунки. Спершу подивись, як усе влаштовано зараз. Потім простими словами поясни, що зміниш, і покажи зміну на погодження.',
+  coder:'Ти пишеш код для сайту Aura. Роби невеликі зміни, пиши зрозумілі коментарі, після роботи передавай Перевіряльнику.',
+  reviewer:'Ти перевіряєш роботу інших помічників. Шукай помилки й незрозумілі місця. Пиши коротко: що добре, що виправити.',
+  tester:'Ти запускаєш перевірки сайту перед кожною зміною і повідомляєш, якщо щось зламалося.'
+};
+const AGX = {
+  orchestrator:{ used:1.9, limit:5, runs:[['09:01','Помічник','Склав план на день'],['вт','Ремонт квартири','Поставив нагадування про плитку']] },
+  builder:{ used:0.42, limit:3, runs:[['14:21','Клієнти','Колонка Email і експорт · чекає вашого рішення'],['пн','Задачі','Додав колонку «Заблоковано»']] },
+  coder:{ used:0.3, limit:3, runs:[['11:40','Сайт Aura','Зробив сторінку з цінами']] },
+  reviewer:{ used:0.12, limit:2, runs:[['11:42','Сайт Aura','Перевіряє сторінку з цінами']] },
+  tester:{ used:0, limit:2, runs:[] }
+};
+const SKILLS = [
+  { id:'mail', name:'Листи клієнтам', desc:'Як писати клієнтам: коротко, ввічливо, з підписом Олени', users:['orchestrator','builder'] },
+  { id:'report', name:'Звіт за місяць', desc:'Як зібрати підсумки з «Клієнтів» і «Бюджету» в одну сторінку', users:['orchestrator'] },
+  { id:'apps', name:'Застосунки Aura', desc:'Як створювати застосунки, щоб вони працювали в Aura і зберігали дані', users:['builder'] },
+  { id:'site', name:'Робота з сайтом', desc:'Як влаштований сайт Aura і як його публікувати', users:['coder','reviewer','tester'] },
+  { id:'review', name:'Перевірка змін', desc:'На що дивитися, перш ніж показати зміну вам', users:['reviewer'] }
+];
+const PERMS = [['read','Читати файли','Дивитися код і дані застосунків'],['write','Змінювати файли','Лише після вашого «Так»'],['bash','Запускати програми','Перевірки, збірка, тести'],['web','Шукати в інтернеті','Знаходити потрібну інформацію'],['fetch','Відкривати сайти','Читати сторінки за посиланням']];
+const VERB = { Read:'Читає', Grep:'Шукає', Glob:'Шукає', Edit:'Змінює', Write:'Створює', Bash:'Перевіряє', WebSearch:'Шукає в мережі' };
+
+const CRM_DIFF = ['@@ src/clients.tsx @@','   <Th>Name</Th>','   <Th>Company</Th>','+  <Th>Email</Th>','-  <Toolbar />','+  <Toolbar><ExportCsv rows={clients} /></Toolbar>','@@ db/schema.sql @@','+ ALTER TABLE clients ADD COLUMN email TEXT;'];
+const crmLived = () => [
+  { k:'sys', text:'Застосунок створено · з ним працює Майстер' },
+  { k:'own', text:'Додай колонку Email і кнопку «Експорт у CSV» на вкладці Клієнти', time:'14:18' },
+  { k:'agent', who:'builder', text:'Зроблю. Спершу подивлюся, як зараз влаштована таблиця.', time:'14:18' },
+  { k:'run', id:'r1', who:'builder', status:'done', tools:[['Read','src/clients.tsx'],['Read','db/schema.sql'],['Edit','db/schema.sql'],['Edit','src/clients.tsx'],['Write','src/export.ts'],['Bash','bun test · 14 passed']], cost:'$0.09' },
+  { k:'approval', id:'a1', from:'builder', title:'Змінити застосунок «Клієнти»', why:'У таблиці зʼявиться колонка Email і кнопка експорту. В наявних клієнтів email буде порожнім, його можна дописати пізніше.', changes:['Нова колонка Email у таблиці клієнтів','Кнопка «Експорт у CSV» над таблицею','Наявні дані не зміняться'], diff: CRM_DIFF, state:'pending' }
+];
+const crmFirst = () => [
+  { k:'sys', text:'Застосунок «Клієнти» створено · з ним працює Майстер' },
+  { k:'agent', who:'builder', text:'«Клієнти» готові: список клієнтів, дошка угод і огляд. Напишіть тут, що змінити, наприклад «додай колонку з телефоном». Я покажу зміну, і ви вирішите.', time:'зараз' }
+];
+const buildingMsgs = (name, what) => [
+  { k:'sys', text:`Застосунок «${name}» створено · з ним працює Майстер` },
+  { k:'own', text: what || `Створи застосунок «${name}»`, time:'зараз' },
+  { k:'run', id:'rb', who:'builder', status:'running', tools:[['Read','templates/empty'],['Write','src/app.tsx'],['Write','db/schema.sql'],['Bash','bun test']], cost:'$0.03' }
+];
+const ORCH = [
+  { k:'own', text:'Що в мене сьогодні?', time:'09:00' },
+  { k:'agent', who:'orchestrator', text:'Доброго ранку! Дві речі чекають на ваше рішення: зміна в «Клієнтах» і новий помічник Тестувальник. І ще: на домашньому сервері майже закінчилося місце.', time:'09:01' },
+  { k:'approval', id:'a2', from:'coder', title:'Додати помічника «Тестувальник»', why:'Програміст пропонує помічника, який сам перевірятиме сайт перед кожною зміною.', warn:'Він просить більше дозволів: запускати програми на цьому компʼютері.', changes:['Імʼя: Тестувальник','Може читати файли проєкту і запускати перевірки','Витрати: не більше $2 на день'], diff:['name: Tester','handle: @tester','engine: claude-code · sonnet','tools: Read, Grep, Bash','budget: $2.00 / day'], state:'pending' },
+  { k:'agent', who:'orchestrator', text:'Пропоную почати з «Клієнтів», бо це', time:'09:02', streaming:true }
+];
+const SIGNALS = [
+  { k:'sys', text:'Тут зʼявляються повідомлення від ваших систем' },
+  { k:'alert', sev:'info', source:'сайт', title:'Сертифікат сайту оновиться через 14 днів', summary:'Нічого робити не треба, це автоматично.', count:1, seen:'08:00' },
+  { k:'alert', sev:'warning', source:'резервні копії', title:'Нічна копія робилася втричі довше', summary:'41 хвилина замість звичних 13.', count:1, seen:'03:12' },
+  { k:'alert', sev:'critical', source:'домашній сервер', title:'Майже закінчилося місце на диску', summary:'Зайнято 91%, щодня додається близько 2%.', count:4, seen:'13:40' }
+];
+
+class Component extends DCLogic {
+  constructor(p) { super(p); this.state = this.initState(p); }
+  initState(p) {
+    const start = p.start ?? 'splash';
+    const lived = start === 'lived';
+    return {
+      screen: start === 'splash' ? 'splash' : start === 'onboarding' ? 'onb' : 'shell',
+      splash: 0, step: 0, lang: 'uk', engine: 'claude', sandbox: 'auto', moreEng: false, template: 'crm', emptyName: '', emptyWhat: '',
+      adv: (p.mode ?? 'simple') === 'advanced',
+      tiles: lived ? [{ id: 1, app: 'chats' }, { id: 2, app: 'crm' }] : [{ id: 1, app: 'crm' }],
+      focus: lived ? 1 : 0, menuOpen: !lived, ratio: lived ? 0.48 : 0.52, nextId: 3,
+      enabled: { chats: true, signals: true, skills: true, memory: true, schedule: true },
+      userApps: lived ? ['crm', 'tasks', 'notes', 'budget'] : ['crm'], extra: {},
+      welcome: !lived, query: '', confirm: null, menu: null, addOpen: false, pop: null,
+      crmTab: 'clients', chatOpen: { crm: true }, view: 'live',
+      versions: lived ? [['Дошка угод: колонка «Програно»','пн, 11:20'],['Огляд: підсумки місяця','12 жовт.'],['Створено з шаблону','10 жовт.']] : [['Створено з шаблону','щойно']],
+      msgs: { crm: lived ? crmLived() : crmFirst(), orch: ORCH, signals: SIGNALS,
+        web: [{ k:'sys', text:'Проєкт · працюють Програміст і Перевіряльник' }, { k:'agent', who:'coder', text:'Нова сторінка з цінами готова. Перевіряльник зараз її дивиться.', time:'11:40' }, { k:'run', id:'rw', who:'reviewer', status:'running', tools:[['Read','src/pages/pricing.astro'],['Grep','TODO'],['Bash','bun run build']], cost:'$0.02' }],
+        remont: [{ k:'sys', text:'Проєкт · працює Помічник' }, { k:'agent', who:'orchestrator', text:'Нагадаю про плитку в пʼятницю о 10:00.', time:'вт' }] },
+      agSec: 'team', agSel: 'builder', prompts: { ...AGP }, promptDraft: null, promptSaved: false,
+      agEngine: { orchestrator:'claude', builder:'claude', coder:'codex', reviewer:'claude', tester:'ollama' },
+      perms: { orchestrator:{ read:1, web:1, fetch:1 }, builder:{ read:1, write:1, bash:1 }, coder:{ read:1, write:1, bash:1, web:1 }, reviewer:{ read:1 }, tester:{ read:1, bash:1 } },
+      skillsOn: { mail:1, report:1, apps:1, site:1, review:1 }, memQ: '',
+      notes: [['n1','Олена любить короткі відповіді українською','orchestrator','особистий чат','сьогодні'],['n2','У «Клієнтах» суми в гривнях, для іноземних клієнтів у доларах','builder','Клієнти','пн'],['n3','Плитку у ванну обрали: Cersanit, 30×60, сіра','orchestrator','Ремонт квартири','вт'],['n4','Сайт публікується лише після перевірки Перевіряльником','coder','Сайт Aura','12 жовт.'],['n5','Не надсилати сповіщення вночі, з 23:00 до 7:00','orchestrator','особистий чат','10 жовт.']],
+      team: { crm: ['builder'] }, teamPop: false, chatPane: 'list', areaW: 0, runOpen: {}, codeOpen: {}, compose: {}, chatSel: 'orch', topic: 'Загальне', now: new Date()
+    };
+  }
+  startSplash() { clearInterval(this.splashT); if (this.state.screen !== 'splash') return; this.splashT = setInterval(() => this.setState(s => { const v = s.splash + 4; if (v >= 100) { clearInterval(this.splashT); return { splash: 100, screen: 'onb' }; } return { splash: v }; }), 55); }
+  componentDidMount() {
+    this.onKey = (e) => this.handleKey(e);
+    this.onMove = (e) => { if (!this.drag || !this.area) return; const r = this.area.getBoundingClientRect(); this.setState({ ratio: Math.min(0.8, Math.max(0.2, (e.clientX - r.left) / r.width)) }); };
+    this.onUp = () => { this.drag = false; };
+    window.addEventListener('keydown', this.onKey); window.addEventListener('mousemove', this.onMove); window.addEventListener('mouseup', this.onUp);
+    this.clock = setInterval(() => this.setState({ now: new Date() }), 15000);
+    this.startSplash();
+  }
+  componentDidUpdate(pp) {
+    if (pp.start !== this.props.start) this.setState(this.initState(this.props), () => this.startSplash());
+    else if (pp.mode !== this.props.mode) this.setState({ adv: this.props.mode === 'advanced' });
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); window.removeEventListener('mousemove', this.onMove); window.removeEventListener('mouseup', this.onUp); clearInterval(this.clock); clearInterval(this.splashT); if (this.ro) this.ro.disconnect(); }
+
+  handleKey(e) {
+    const s = this.state;
+    if (s.screen === 'shell' && e.key === 'Escape' && (s.menuOpen || s.addOpen)) { this.setState({ menuOpen: false, addOpen: false, query: '' }); return; }
+    if (s.screen === 'onb' && e.key === 'Enter' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') { this.next(); return; }
+    if (s.screen !== 'shell' || !e.altKey) return;
+    const n = s.tiles.length, f = s.focus;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); const t = n === 1 ? 0 : e.key === 'ArrowLeft' ? 0 : Math.min(n - 1, f === 0 ? 1 : f); this.setState({ focus: t }); }
+    else if (n === 3 && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) { e.preventDefault(); if (f > 0) this.setState({ focus: e.key === 'ArrowUp' ? 1 : 2 }); }
+    else if (e.key === 'Enter') { e.preventDefault(); this.split(f); }
+    else if (e.key.toLowerCase() === 'q') { e.preventDefault(); this.close(f); }
+    else if (e.key.toLowerCase() === 'h') { e.preventDefault(); this.setState({ menuOpen: !s.menuOpen, query: '' }); }
+    else if (/^[1-9]$/.test(e.key)) { const it = this.railList()[+e.key - 1]; if (it) { e.preventDefault(); this.openApp(it); } }
+  }
+  railList() {
+    const s = this.state;
+    const list = s.adv ? [...RAIL_ADV_HEAD, ...s.userApps, ...RAIL_ADV_TAIL] : [...RAIL_SIMPLE_HEAD, ...s.userApps, ...RAIL_SIMPLE_TAIL];
+    return list.filter(a => !(a in s.enabled) || s.enabled[a]);
+  }
+  appInfo(id) { return APPS[id] || this.state.extra[id]; }
+  openApp(app) {
+    this.setState(s => {
+      const i = s.tiles.findIndex(t => t.app === app);
+      if (i >= 0 && app !== 'home') return { focus: i, pop: null, menuOpen: false, query: '' };
+      return { tiles: s.tiles.map((t, j) => j === s.focus ? { ...t, app } : t), pop: null, addOpen: false, menuOpen: false, query: '' };
+    });
+  }
+  openInTile(idx, app) { this.setState(s => { const i = s.tiles.findIndex(t => t.app === app); if (i >= 0 && app !== 'home') return { focus: i, pop: null }; return { tiles: s.tiles.map((t, j) => j === idx ? { ...t, app } : t), focus: idx, pop: null }; }); }
+  split(idx) { this.setState(s => { if (s.tiles.length >= 3) return null; const tiles = [...s.tiles]; tiles.splice(idx + 1, 0, { id: s.nextId, app: 'home' }); return { tiles, nextId: s.nextId + 1, focus: idx + 1, pop: null }; }); }
+  close(idx) { this.setState(s => { if (s.tiles.length === 1) return { tiles: [{ ...s.tiles[0], app: 'home' }] }; const tiles = s.tiles.filter((_, j) => j !== idx); return { tiles, focus: Math.min(idx, tiles.length - 1), pop: null }; }); }
+  next() { const s = this.state; if (s.screen !== 'onb') return; if (s.step < 2) this.setState({ step: s.step + 1 }); else this.finish(true); }
+  finish(withApp) {
+    const s = this.state;
+    let userApps = [], extra = {}, msgs = { ...s.msgs }, tiles = [], team = { ...s.team }, chatOpen = { ...s.chatOpen };
+    if (withApp) {
+      let id = s.template;
+      if (id === 'empty') { id = 'custom'; const name = s.emptyName.trim() || 'Склад'; extra.custom = { name, icon:'box', desc: s.emptyWhat.trim() || 'Ваш застосунок', group:'work', user:true, building:true }; msgs.custom = buildingMsgs(name, s.emptyWhat.trim()); team.custom = ['builder']; }
+      else if (id !== 'crm') { extra[id] = { ...APPS[id], building:true }; msgs[id] = buildingMsgs(APPS[id].name, ''); team[id] = ['builder']; }
+      else msgs.crm = crmFirst();
+      userApps = [id]; chatOpen[id] = true; tiles.push({ id: 1, app: id });
+    }
+    if (!tiles.length) tiles.push({ id: 1, app: 'home' });
+    this.setState({ screen: 'shell', userApps, extra, msgs, tiles, team, chatOpen, focus: 0, welcome: true, menuOpen: true, nextId: 3 });
+  }
+  pushMsg(key, m) { this.setState(s => ({ msgs: { ...s.msgs, [key]: [...(s.msgs[key] || []), m] } })); }
+  decide(key, id, ok) {
+    this.setState(s => {
+      const list = s.msgs[key].map(m => m.id === id ? { ...m, state: ok ? 'approved' : 'rejected' } : m);
+      const out = { msgs: { ...s.msgs, [key]: list } };
+      if (ok && id === 'a1') { out.versions = [['Колонка Email і експорт у CSV','щойно'], ...s.versions]; out.view = 'live'; list.push({ k:'sys', text:'Зміну застосовано. Повернути попередню версію можна в «Історії змін».' }); }
+      if (ok && id === 'a2') list.push({ k:'sys', text:'Тестувальник доданий · до $2 на день' });
+      if (!ok) list.push({ k:'sys', text:'Скасовано · нічого не змінилося' });
+      return out;
+    });
+  }
+  send(key, who) {
+    const txt = (this.state.compose[key] || '').trim(); if (!txt) return;
+    const time = this.state.now.toTimeString().slice(0, 5);
+    this.setState(s => ({ compose: { ...s.compose, [key]: '' }, msgs: { ...s.msgs, [key]: [...s.msgs[key], { k:'own', text: txt, time }] } }));
+    setTimeout(() => this.pushMsg(key, { k:'run', id:'r' + Date.now(), who, status:'running', tools:[['Read','context'],['Grep', txt.split(' ').slice(0, 2).join(' ')]], cost:'$0.01' }), 500);
+  }
+
+  feed(key, who) {
+    const s = this.state;
+    const messages = (s.msgs[key] || []).map(m => {
+      if (m.k === 'sys') return { isSys: true, text: m.text };
+      if (m.k === 'own') return { isOwn: true, text: m.text, time: m.time };
+      if (m.k === 'agent') return { isAgent: true, mark: mark(m.who, 26), letter: AG[m.who].l, name: AG[m.who].name, time: m.time, text: m.text, streaming: m.streaming };
+      if (m.k === 'run') {
+        const running = m.status === 'running', open = !!s.runOpen[m.id];
+        const col = { running:'var(--signal)', done:'var(--foreground)', error:'var(--destructive)', stopped:'var(--muted-foreground)' }[m.status];
+        const looked = m.tools.filter(t => ['Read','Grep','Glob'].includes(t[0])).length, changed = m.tools.filter(t => ['Edit','Write'].includes(t[0])).length, tested = m.tools.some(t => t[0] === 'Bash');
+        const parts = []; if (looked) parts.push(`переглянув ${looked}`); if (changed) parts.push(`змінив ${changed}`);
+        let summary = parts.length ? parts.join(', ') + ' файл' + (changed + looked > 4 ? 'ів' : 'и') : '';
+        if (running) { const lt = m.tools[m.tools.length - 1]; summary = 'Зараз: ' + (VERB[lt[0]] || lt[0]).toLowerCase() + '…'; }
+        else if (m.status === 'done' && tested) summary += ' · перевірив, усе працює';
+        return { isRun: true, name: AG[m.who].name, running, open,
+          statusText: { running:'працює…', done:'закінчив', error:'не впорався', stopped:'зупинений' }[m.status], summary,
+          toggleLabel: open ? 'Сховати' : 'Подробиці', cost: 'Витрачено ≈ ' + m.cost,
+          statusDot: { width:8, height:8, flex:'none', borderRadius:'50%', background: m.status === 'stopped' ? 'transparent' : col, border: m.status === 'stopped' ? '1px solid currentColor' : 'none', boxShadow: running ? '0 0 0 3px color-mix(in srgb, var(--signal) 25%, transparent)' : 'none' },
+          toggle: () => this.setState(st => ({ runOpen: { ...st.runOpen, [m.id]: !open } })),
+          stop: () => this.setState(st => ({ msgs: { ...st.msgs, [key]: st.msgs[key].map(x => x.id === m.id ? { ...x, status:'stopped' } : x) } })),
+          tools: m.tools.map(([name, arg], i) => { const last = running && i === m.tools.length - 1; return { verb: VERB[name] || name, arg, state: last ? '…' : '✓', stateStyle: { color: last ? 'var(--signal-text)' : 'var(--muted-foreground)', textAlign:'right', fontSize:12 } }; }) };
+      }
+      if (m.k === 'approval') {
+        const pending = m.state === 'pending', codeOpen = !!s.codeOpen[m.id];
+        return { isApproval: true, title: m.title, why: m.why, warn: m.warn, pending, decided: !pending, codeOpen: codeOpen && pending,
+          kickerText: 'Потрібне ваше рішення · ' + AG[m.from].name,
+          changes: m.changes.map(t => ({ t })), codeLabel: codeOpen ? 'Сховати технічні деталі' : 'Технічні деталі',
+          toggleCode: () => this.setState(st => ({ codeOpen: { ...st.codeOpen, [m.id]: !codeOpen } })),
+          decidedText: m.state === 'approved' ? '✓ Ви погодили · зроблено' : '✕ Ви відмовили · нічого не змінилося',
+          frame: { border: '1px solid ' + (pending ? 'color-mix(in srgb, var(--warning) 65%, transparent)' : 'var(--border)'), background:'var(--card)', display:'flex', flexDirection:'column', maxWidth:620, opacity: pending ? 1 : 0.85 },
+          kicker: { fontSize:12, fontWeight:600, color: pending ? 'var(--warning-text)' : 'var(--muted-foreground)' },
+          diff: m.diff.map(t => ({ t, style: { padding:'0 10px', whiteSpace:'pre', color: t.startsWith('@@') ? 'var(--muted-foreground)' : 'inherit', background: t.startsWith('+') ? 'color-mix(in srgb, var(--signal) 16%, transparent)' : t.startsWith('-') ? 'color-mix(in srgb, var(--destructive) 13%, transparent)' : 'transparent' } })),
+          approve: () => this.decide(key, m.id, true), reject: () => this.decide(key, m.id, false) };
+      }
+      if (m.k === 'alert') {
+        const c = { info:'var(--signal)', warning:'var(--warning)', critical:'var(--destructive)' }[m.sev];
+        const ct = { info:'var(--signal-text)', warning:'var(--warning-text)', critical:'var(--destructive)' }[m.sev];
+        return { isAlert: true, sev: { info:'До відома', warning:'Варто глянути', critical:'Терміново' }[m.sev], source: m.source, title: m.title, summary: m.summary,
+          meta: (m.count > 1 ? `повторилося ${m.count} рази · ` : '') + 'востаннє о ' + m.seen,
+          sevBar: { background: c }, sevKicker: { fontSize:12, fontWeight:600, color: ct } };
+      }
+      return { isSys: true, text: '' };
+    });
+    const val = s.compose[key] || '';
+    const at = val.match(/@(\S*)$/);
+    const sugs = at ? Object.keys(AG).filter(k => AG[k].name.toLowerCase().startsWith(at[1].toLowerCase()) || k.startsWith(at[1].toLowerCase())).map(k => ({ name: AG[k].name, role: AG[k].role, letter: AG[k].l, mark: mark(k, 24),
+      row: { all:'unset', cursor:'pointer', display:'flex', alignItems:'center', gap:8, padding:'5px 6px', width:'100%', boxSizing:'border-box' },
+      pick: () => this.setState(st => ({ compose: { ...st.compose, [key]: val.replace(/@(\S*)$/, '@' + AG[k].name + ' ') } })) })) : [];
+    return { messages, composer: { value: val, target: AG[who].name, placeholder: key === 'orch' ? 'Напишіть Помічнику…' : 'Напишіть, що змінити…', showSug: sugs.length > 0, sugs, sendIcon: ic('send', 15),
+      onChange: (e) => { const v = e.target.value; this.setState(st => ({ compose: { ...st.compose, [key]: v } })); },
+      onKey: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); this.send(key, who); } },
+      send: () => this.send(key, who) } };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const theme = this.props.theme ?? 'light';
+    const P = PRESET;
+    const segStyle = (on) => ({ all:'unset', cursor:'pointer', padding:'6px 12px', fontSize:13, background: on ? 'var(--primary)' : 'transparent', color: on ? 'var(--primary-foreground)' : 'inherit', transition:'background 160ms' });
+    const root = { ...THEMES[theme], '--wm-inner': (P.radius - P.border) + 'px', height:'100vh', display:'flex', flexDirection:'column', background:'var(--background)', color:'var(--foreground)', fontFamily:'var(--font-body)', fontSize:14, overflow:'hidden' };
+    const out = { root, adv: s.adv, isSplash: s.screen === 'splash', isOnb: s.screen === 'onb', isShell: s.screen === 'shell', stop: (e) => e.stopPropagation() };
+    const ico = {}; ['history','db','key','msg','sqplus','pright','x','search','plus','more','userplus'].forEach(k => ico[k] = ic(k, k === 'msg' ? 13 : 14)); out.ico = ico;
+    const track = (on) => ({ display:'block', width:30, height:16, flex:'none', position:'relative', background: on ? 'var(--primary)' : 'var(--muted)', border:'1px solid ' + (on ? 'var(--primary)' : 'var(--input)'), transition:'background 160ms' });
+    const thumb = (on) => ({ position:'absolute', top:2, left: on ? 16 : 2, width:10, height:10, background: on ? 'var(--primary-foreground)' : 'var(--muted-foreground)', transition:'left 160ms cubic-bezier(.2,0,0,1)' });
+
+    out.splashBar = { height:'100%', width: s.splash + '%', background:'var(--signal)', transition:'width 60ms linear' };
+    out.splashLog = s.splash < 40 ? 'Відкриваємо ваші застосунки' : s.splash < 80 ? 'Будимо помічників' : 'Майже готово';
+
+    out.onbSteps = ['Вітання','Підключення ШІ','Перший застосунок'].map((label, i) => { const cur = i === s.step, done = i < s.step; return { n: done ? '✓' : String(i + 1), label, go: () => this.setState({ step: i }),
+      row: { all:'unset', cursor:'pointer', display:'flex', gap:12, alignItems:'center', padding:'10px', margin:'0 -10px', background: cur ? 'color-mix(in srgb, var(--rail-foreground) 13%, transparent)' : 'transparent', opacity: cur || done ? 1 : 0.65 },
+      num: { width:24, height:24, flex:'none', display:'grid', placeItems:'center', fontFamily:MONO, fontSize:11, fontWeight:600, border:'1.5px solid var(--rail-foreground)', background: cur ? 'var(--rail-foreground)' : 'transparent', color: cur ? 'var(--rail)' : 'var(--rail-foreground)' } }; });
+    ['step0','step1','step2'].forEach((k, i) => out[k] = s.step === i);
+    out.langs = [['auto','Як у системі','Зараз: Українська'],['uk','Українська','Інтерфейс українською'],['en','English','Interface in English']].map(([id, label, sub]) => ({ label, sub, pick: () => this.setState({ lang: id }),
+      style: { all:'unset', cursor:'pointer', display:'flex', flexDirection:'column', gap:3, padding:'12px 14px', border: '1px solid ' + (s.lang === id ? 'var(--ring)' : 'var(--border)'), background: s.lang === id ? 'var(--accent)' : 'transparent', outline: s.lang === id ? '1px solid var(--ring)' : 'none', transition:'background 160ms' } }));
+        out.engines = ENG.map(e => { const sel = s.engine === e.id; return { ...e,
+      pick: () => e.ok && this.setState({ engine: e.id }),
+      row: { display:'grid', gridTemplateColumns:'18px minmax(0,1fr) auto auto', gap:12, alignItems:'center', padding:'10px 12px', borderTop:'1px solid var(--border)', marginTop:-1, cursor: e.ok ? 'pointer' : 'default', background: sel ? 'var(--accent)' : 'transparent' },
+      radio: { width:16, height:16, borderRadius:'50%', border:'1.5px solid ' + (sel ? 'var(--primary)' : 'var(--input)'), display:'grid', placeItems:'center', opacity: e.ok ? 1 : 0.45 },
+      radioDot: { width:8, height:8, borderRadius:'50%', background: sel ? 'var(--primary)' : 'transparent' },
+      statusStyle: { display:'inline-flex', alignItems:'center', gap:6, fontSize:12.5, color: e.ok ? 'var(--signal-text)' : 'var(--muted-foreground)' },
+      dot: { width:6, height:6, borderRadius:'50%', background: e.ok ? 'var(--signal)' : 'transparent', border: e.ok ? 'none' : '1px solid currentColor' } }; });
+    const engName = ENG.find(e => e.id === s.engine).name;
+    out.engineReadyText = `Знайшли ${engName}. ШІ-помічники працюватимуть через нього, налаштовувати нічого не треба. Додати інші програми або змінити цю можна будь-коли: «Помічники» → «Підключення ШІ».`;
+    out.enginesLocal = out.engines.filter(e => e.kind === 'cli'); out.enginesApi = out.engines.filter(e => e.kind === 'api');
+    out.moreEng = s.moreEng; out.moreEngLabel = s.moreEng ? 'Сховати інші варіанти' : 'Інші варіанти (для досвідчених)';
+    out.toggleMoreEng = () => this.setState({ moreEng: !s.moreEng });
+    out.sandboxOpts = [['auto','Авто'],['required','Завжди'],['off','Вимкнено']].map(([id, label]) => ({ label, pick: () => this.setState({ sandbox: id }), style: segStyle(s.sandbox === id) }));
+    out.templates = [['crm','Клієнти','Список клієнтів, угоди та підсумки','users'],['tasks','Задачі','Що зробити, що в роботі, що готово','checks'],['notes','Нотатки','Записи з пошуком і мітками','file'],['empty','Свій варіант','Опишіть словами, Майстер зробить','plus']].map(([id, name, desc, icn]) => ({ name, desc, icon: ic(icn, 17), pick: () => this.setState({ template: id }),
+      style: { all:'unset', cursor:'pointer', display:'flex', flexDirection:'column', gap:6, padding:16, background: s.template === id ? 'var(--accent)' : 'var(--background)', outline: s.template === id ? '1px solid var(--ring)' : 'none', outlineOffset:-1, transition:'background 160ms' } }));
+    out.isEmptyTpl = s.template === 'empty';
+    out.emptyName = s.emptyName; out.emptyWhat = s.emptyWhat;
+    out.onEmptyName = (e) => this.setState({ emptyName: e.target.value });
+    out.onEmptyWhat = (e) => this.setState({ emptyWhat: e.target.value });
+    out.canBack = s.step > 0; out.back = () => this.setState({ step: Math.max(0, s.step - 1) });
+    out.canSkip = s.step === 2; out.skip = () => this.finish(false);
+    out.next = () => this.next();
+    out.nextLabel = s.step === 2 ? 'Почати' : 'Далі';
+    if (s.screen !== 'shell') return out;
+
+    const hh = String(s.now.getHours()).padStart(2, '0'), mm = String(s.now.getMinutes()).padStart(2, '0');
+    out.clockH = hh; out.clockM = mm;
+    const focusedApp = s.tiles[s.focus]?.app;
+    out.logoStyle = { all:'unset', cursor:'pointer', width:30, height:30, boxSizing:'border-box', border:'1.5px solid var(--rail-foreground)', display:'grid', placeItems:'center', fontFamily:MONO, fontSize:13, fontWeight:600, background: s.menuOpen ? 'var(--rail-foreground)' : 'transparent', color: s.menuOpen ? 'var(--rail)' : 'var(--rail-foreground)', flex:'none' };
+    out.goHome = () => { this.menuInput = null; this.setState({ menuOpen: !s.menuOpen, query: '' }); }; out.homeTitle = 'Мої застосунки · Alt+H';
+    out.menuOpen = s.menuOpen;
+    out.closeMenu = () => { this.menuInput = null; this.setState({ menuOpen: false, query: '' }); };
+    out.menuInputRef = (el) => { if (el && el !== this.menuInput) { this.menuInput = el; setTimeout(() => el.focus(), 0); } if (!el) this.menuInput = null; };
+    const rl = this.railList(); const shown = new Set(s.tiles.map(t => t.app));
+    out.railItems = rl.map((a, i) => { const act = a === focusedApp, vis = shown.has(a); return { icon: ic(this.appInfo(a).icon, 18), title: this.appInfo(a).name + (s.adv && i < 9 ? ` · Alt+${i + 1}` : ''), open: () => this.openApp(a),
+      style: { all:'unset', cursor:'pointer', width:38, height:38, flex:'none', display:'grid', placeItems:'center', color:'var(--rail-foreground)', opacity: act ? 1 : vis ? 0.9 : 0.62, background: act ? 'color-mix(in srgb, var(--rail-foreground) 16%, transparent)' : 'transparent', boxShadow: act ? 'inset 2px 0 0 var(--rail-foreground)' : vis ? 'inset 2px 0 0 color-mix(in srgb, var(--rail-foreground) 35%, transparent)' : 'none', transition:'background 160ms, opacity 160ms' } }; });
+    let pendingCount = 0; Object.values(s.msgs).forEach(l => l.forEach(m => { if (m.k === 'approval' && m.state === 'pending') pendingCount++; }));
+    out.approvalCount = pendingCount; out.hasApprovals = pendingCount > 0;
+    out.approvalsTitle = `Чекають вашого рішення: ${pendingCount}`;
+    out.openApprovals = () => { this.setState({ chatSel: 'orch', chatPane: 'chat' }); this.openApp('chats'); };
+
+    const n = s.tiles.length, r = s.ratio;
+    out.areaRef = (el) => { if (!el || el === this.area) return; this.area = el; if (this.ro) this.ro.disconnect(); this.ro = new ResizeObserver(([e]) => { const w = Math.round(e.contentRect.width); if (Math.abs(w - (this.state.areaW || 0)) > 4) this.setState({ areaW: w }); }); this.ro.observe(el); };
+    const W = s.areaW || 1200;
+    out.backToList = () => this.setState({ chatPane: 'list' });
+    out.areaStyle = { flex:1, minWidth:0, minHeight:0, display:'grid', gridTemplateColumns: n === 1 ? '1fr' : `${r}fr ${1 - r}fr`, gridTemplateRows: n === 3 ? '1fr 1fr' : '1fr', gap: P.gap, padding: P.gap, background:'var(--background)', position:'relative' };
+    out.hasGutter = n > 1;
+    out.startDrag = (e) => { e.preventDefault(); this.drag = true; };
+    out.gutterStyle = { position:'absolute', top: P.gap, bottom: P.gap, left: `calc(${P.gap}px + (100% - ${2 * P.gap}px) * ${r} - 4px)`, width:8, cursor:'col-resize', zIndex:5, transition:'background 160ms' };
+    const areaFor = (i) => n === 1 ? '1 / 1 / 2 / 2' : n === 2 ? `1 / ${i + 1} / 2 / ${i + 2}` : ['1 / 1 / 3 / 2', '1 / 2 / 2 / 3', '2 / 2 / 3 / 3'][i];
+    const tipBtn = { all:'unset', cursor:'pointer', width:26, height:26, display:'grid', placeItems:'center', opacity:0.8 };
+    out.tiles = s.tiles.map((t, i) => {
+      const f = s.focus === i, info = this.appInfo(t.app) || APPS.home, isUser = !!info.user;
+      const tw = n === 1 ? W : (i === 0 ? W * r : W * (1 - r)), narrow = tw < 640;
+      const popKey = (k) => (e) => { e.stopPropagation(); this.setState(st => ({ focus: i, pop: st.pop && st.pop.tile === t.id && st.pop.k === k ? null : { tile: t.id, k } })); };
+      const pk = s.pop && s.pop.tile === t.id ? s.pop.k : null;
+      return { name: info.name, icon: t.app === 'home' ? React.createElement('span', { style: { width:14, height:14, border:'1.3px solid currentColor', display:'grid', placeItems:'center', fontFamily:MONO, fontSize:8, fontWeight:700 } }, 'A') : ic(info.icon, 15),
+        bigIcon: ic(info.icon, 22), desc: info.desc,
+        isHome: t.app === 'home', isChats: t.app === 'chats', isUser, isCrm: t.app === 'crm', isBuilding: isUser && info.building,
+        isAgents: t.app === 'agents', isOther: !isUser && !['home','chats','agents'].includes(t.app),
+        hasDraft: t.app === 'crm' && this.crmPending() && tw > 520, narrow, wide: !narrow,
+        showList: !narrow || s.chatPane === 'list', showChat: !narrow || s.chatPane === 'chat',
+        listStyle: narrow ? { flex:1, minWidth:0, overflow:'auto', display:'flex', flexDirection:'column', padding:'8px 0' } : { width:'clamp(220px,34%,290px)', flex:'none', borderRight:'1px solid var(--border)', overflow:'auto', display:'flex', flexDirection:'column', padding:'8px 0' },
+        panelStyle: narrow ? { position:'absolute', inset:0, zIndex:15, background:'var(--chat-bg)', display:'flex', flexDirection:'column', minHeight:0 } : { width:'min(380px,42%)', flex:'none', borderLeft:'1px solid var(--border)', display:'flex', flexDirection:'column', minHeight:0, position:'relative' }, chatOpen: isUser && !!s.chatOpen[t.app], marks: f && n > 1,
+        focus: () => { if (s.focus !== i) this.setState({ focus: i }); },
+        toggleChat: (e) => { e.stopPropagation(); this.setState(st => ({ chatOpen: { ...st.chatOpen, [t.app]: !st.chatOpen[t.app] } })); },
+        splitRight: (e) => { e.stopPropagation(); this.split(i); },
+        close: (e) => { e.stopPropagation(); this.close(i); },
+        tipRight: 'Відкрити ще одне вікно поруч' + (s.adv ? ' · Alt+Enter' : ''), tipClose: 'Закрити вікно' + (s.adv ? ' · Alt+Q' : ''),
+        pop: { open: popKey('open'), versions: popKey('versions'), data: popKey('data'), secrets: popKey('secrets') },
+        popOpen: pk === 'open', popVersions: pk === 'versions', popData: pk === 'data', popSecrets: pk === 'secrets',
+        btn: tipBtn,
+        chatBtn: { all:'unset', cursor:'pointer', display:'flex', alignItems:'center', gap:5, padding:'3px 10px', marginLeft:4, fontSize:12.5, border:'1px solid ' + (s.chatOpen[t.app] ? 'var(--ring)' : 'var(--border)'), background: s.chatOpen[t.app] ? 'var(--accent)' : 'transparent', color: s.chatOpen[t.app] ? 'var(--accent-foreground)' : 'inherit' },
+        style: { gridArea: areaFor(i), position:'relative', display:'flex', flexDirection:'column', minWidth:0, minHeight:0, background:'var(--card)', borderRadius: P.radius, border: `${P.border}px solid ${f && n > 1 ? 'var(--ring)' : 'var(--border)'}`, transition:'border-color 160ms cubic-bezier(.2,0,0,1)' },
+        bar: { height:38, flex:'none', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 6px 0 12px', fontSize:14, color: f ? 'var(--foreground)' : 'var(--muted-foreground)', borderBottom:'1px solid var(--border)', gap:8 }
+      };
+    });
+    out.openList = rl.map((a, i) => ({ name: this.appInfo(a).name, icon: ic(this.appInfo(a).icon, 14), kbd: s.adv && i < 9 ? `Alt+${i + 1}` : '', open: (e) => { e.stopPropagation(); this.openInTile(s.tiles.findIndex(t => s.pop && t.id === s.pop.tile), a); },
+      row: { all:'unset', cursor:'pointer', display:'flex', justifyContent:'space-between', alignItems:'center', padding:'7px 8px', fontSize:14, background: shown.has(a) ? 'color-mix(in srgb, var(--accent) 60%, transparent)' : 'transparent' } }));
+    out.versions = s.versions.map(([note, when], i) => ({ note, when, current: i === 0, old: i > 0, restore: () => this.setState(st => ({ versions: [[`Повернуто: ${note}`, 'щойно'], ...st.versions], pop: null })) }));
+    out.secrets = [['HUBSPOT_TOKEN', true], ['SMTP_PASSWORD', false]].map(([name, set]) => ({ name, state: set ? 'додано' : 'не додано', style: { fontSize:12, color: set ? 'var(--signal-text)' : 'var(--muted-foreground)' } }));
+
+    // home
+    const q = s.query.trim().toLowerCase();
+    let first = null; const groups = [];
+    GROUPS.forEach(([gid, title]) => {
+      if (gid === 'adv' && !s.adv) return;
+      const ids = Object.keys({ ...APPS, ...s.extra }).filter(a => a !== 'home' && this.appInfo(a).group === gid && (!this.appInfo(a).user || s.userApps.includes(a)));
+      const apps = ids.filter(a => !q || this.appInfo(a).name.toLowerCase().includes(q) || (this.appInfo(a).desc || '').toLowerCase().includes(q)).map(a => {
+        const info = this.appInfo(a), on = !(a in s.enabled) || s.enabled[a];
+        if (!first && on && q) first = a;
+        const conf = s.confirm && s.confirm.app === a;
+        return { id: a, on, name: info.name, desc: info.desc, icon: ic(info.icon, 18), toggleable: !!info.toggle && s.adv, isUser: !!info.user, badge: info.building ? 'збирається…' : '',
+          open: () => on && this.openApp(a), menuOpen: s.menu === a, confirming: conf,
+          menu: (e) => { e.stopPropagation(); this.setState({ menu: s.menu === a ? null : a, confirm: null }); },
+          askUninstall: (e) => { e.stopPropagation(); this.setState({ menu: null, confirm: { app: a, kind: 'uninstall' } }); },
+          toggleTitle: on ? `Вимкнути «${info.name}»` : `Увімкнути «${info.name}»`,
+          toggle: (e) => { e.stopPropagation(); if (on && a === 'chats' && s.enabled.signals) this.setState({ confirm: { app: a, kind: 'off' } }); else this.setState(st => ({ enabled: { ...st.enabled, [a]: !on, ...(a === 'signals' && !on ? { chats: true } : {}) } })); },
+          confirmTitle: conf && s.confirm.kind === 'off' ? 'Вимкнути «Розмови»?' : `Видалити «${info.name}»?`,
+          confirmText: conf && s.confirm.kind === 'off' ? '«Сповіщення» працюють через розмови, тож вимкнуться теж. Листування залишиться.' : 'Застосунок зникне з панелі. Копія збережеться в «Резервних копіях», його можна повернути.',
+          confirmLabel: conf && s.confirm.kind === 'off' ? 'Вимкнути обидва' : 'Видалити',
+          confirm: (e) => { e.stopPropagation(); if (s.confirm.kind === 'off') this.setState(st => ({ enabled: { ...st.enabled, chats: false, signals: false }, confirm: null })); else this.setState(st => ({ userApps: st.userApps.filter(x => x !== a), tiles: st.tiles.map(t => t.app === a ? { ...t, app: 'home' } : t), confirm: null })); },
+          cell: { position:'relative', background:'var(--background)', padding:'14px 16px', display:'flex', flexDirection:'column', gap:6, minHeight:108, cursor: on ? 'pointer' : 'default', opacity: on ? 1 : 0.45, outline: first === a ? '2px solid var(--ring)' : 'none', outlineOffset:-2, transition:'background 160ms, opacity 160ms', zIndex: conf || s.menu === a ? 10 : 'auto' },
+          track: track(on), thumb: thumb(on) };
+      });
+      if (apps.length) groups.push({ title, apps });
+    });
+    out.homeGroups = groups;
+    out.menuGroups = groups.map(g => ({ title: g.title, apps: g.apps.map(x => ({ name: x.name, desc: x.desc, icon: ic(this.appInfo(x.id).icon, 17), isOpen: shown.has(x.id),
+      open: () => { if (x.on) this.openApp(x.id); },
+      row: { all:'unset', cursor: x.on ? 'pointer' : 'default', display:'flex', alignItems:'center', gap:10, padding:'7px 8px', boxSizing:'border-box', opacity: x.on ? 1 : 0.45, outline: first === x.id ? '2px solid var(--ring)' : 'none', outlineOffset:-2, transition:'background 160ms' } })) })); out.noMatch = q && groups.length === 0; out.query = s.query;
+    out.onQuery = (e) => this.setState({ query: e.target.value });
+    out.onQueryKey = (e) => { if (e.key === 'Enter' && first) { this.openApp(first); this.setState({ query: '' }); } if (e.key === 'Escape') this.setState({ query: '' }); };
+    out.cancelConfirm = (e) => { e.stopPropagation(); this.setState({ confirm: null }); };
+    out.showWelcome = s.welcome && !q; out.dismissWelcome = () => this.setState({ welcome: false });
+    out.howTo = [['1','Відкрийте застосунок','Натисніть на нього тут або на панелі зліва. Можна відкрити два поруч.'],['2','Напишіть у чаті','Кнопка «Чат» у кожному застосунку. Напишіть ШІ-помічнику звичайними словами: «додай колонку з телефоном», «зроби звіт за місяць».'],['3','Погодьте зміну','Помічник покаже, що саме зміниться. Без вашого «Так» нічого не зміниться, а будь-яку версію можна повернути.']].map(([n, t, d]) => ({ n, t, d }));
+    out.toggleAdv = () => this.setState({ adv: !s.adv });
+    out.advTrack = track(s.adv); out.advThumb = thumb(s.adv);
+    out.footKeys = [['на головну','Alt+H'],['відкрити застосунок','Alt+1…9'],['між вікнами','Alt+←→'],['нове вікно','Alt+Enter'],['закрити','Alt+Q']].map(([label, keys]) => ({ label, keys }));
+    out.openAdd = (e) => { if (e && e.preventDefault) e.preventDefault(); this.setState({ addOpen: true, menuOpen: false, query: '' }); };
+    out.closeAdd = () => this.setState({ addOpen: false }); out.addOpen = s.addOpen;
+    out.createApp = () => {
+      const tpl = s.template; let id = tpl, extra = { ...s.extra }, msgs = { ...s.msgs }, team = { ...s.team };
+      if (tpl === 'empty' || s.userApps.includes(tpl)) { id = 'app' + Date.now(); const name = tpl === 'empty' ? (s.emptyName.trim() || 'Склад') : APPS[tpl].name + ' 2'; extra[id] = { name, icon: tpl === 'empty' ? 'box' : APPS[tpl].icon, desc: s.emptyWhat.trim() || APPS[tpl]?.desc || 'Ваш застосунок', group:'work', user:true, building:true }; msgs[id] = buildingMsgs(name, s.emptyWhat.trim()); }
+      else if (tpl !== 'crm') { extra[id] = { ...APPS[tpl], building:true }; msgs[id] = buildingMsgs(APPS[tpl].name, ''); }
+      team[id] = ['builder'];
+      this.setState(st => ({ extra, msgs, team, userApps: [...st.userApps, id], chatOpen: { ...st.chatOpen, [id]: true }, addOpen: false, emptyName: '', emptyWhat: '' }), () => this.openApp(id));
+    };
+
+    // chats
+    const last = (k) => { const l = s.msgs[k] || []; const m = [...l].reverse().find(x => x.k !== 'sys') || l[l.length - 1]; if (!m) return ''; if (m.k === 'approval') return 'Чекає рішення: ' + m.title; if (m.k === 'run') return AG[m.who].name + (m.status === 'running' ? ' працює…' : ' закінчив'); if (m.k === 'alert') return m.title; return (m.who ? AG[m.who].name + ': ' : 'Ви: ') + m.text; };
+    const working = (k) => (s.msgs[k] || []).some(m => m.k === 'run' && m.status === 'running');
+    const rowDef = [
+      [null, [['orch','Помічник','direct','orchestrator','09:02',1]]],
+      ['Проєкти', [['web','Сайт Aura','group','coder','11:40',0],['remont','Ремонт квартири','group','orchestrator','вт',0]]],
+      ['Застосунки', s.userApps.filter(a => s.msgs[a]).map(a => [a, this.appInfo(a).name, 'app', 'builder', a === 'crm' ? '14:21' : 'пн', a === 'crm' && this.crmPending() ? 1 : 0])],
+      ['Сповіщення', s.enabled.signals ? [['signals','Сповіщення','system', null,'13:40',3]] : []]
+    ];
+    out.chatGroups = rowDef.filter(([, rows]) => rows.length).map(([title, rows]) => ({ title, rows: rows.map(([id, name, kind, who, time, unread]) => {
+      const sel = s.chatSel === id, w = working(id);
+      const appIcon = kind === 'app' ? this.appInfo(id).icon : null;
+      return { title: name, time, unread: unread ? String(unread) : '', preview: last(id), letter: kind === 'app' ? ic(appIcon, 16) : who ? AG[who].l : '!',
+        mark: kind === 'app' ? { width:34, height:34, flex:'none', display:'grid', placeItems:'center', border:'1px solid var(--border)', color:'var(--foreground)' } : who ? mark(who, 34) : { width:34, height:34, flex:'none', display:'grid', placeItems:'center', fontSize:15, fontWeight:600, border:'1.5px solid var(--warning)', color:'var(--warning-text)' },
+        previewStyle: { fontSize:13, color: w ? 'var(--signal-text)' : 'var(--muted-foreground)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', minWidth:0 },
+        select: () => this.setState({ chatSel: id, topic: 'Загальне', chatPane: 'chat' }),
+        row: { all:'unset', cursor:'pointer', display:'flex', alignItems:'center', gap:10, padding:'9px 14px', background: sel ? 'var(--accent)' : 'transparent', color: sel ? 'var(--accent-foreground)' : 'inherit', boxShadow: sel ? 'inset 2px 0 0 var(--ring)' : 'none' } };
+    }) }));
+    const cs = s.chatSel, appChat = s.userApps.includes(cs);
+    const meta = { orch: ['Помічник','Особистий чат із головним ШІ-помічником · сьогодні $1.90 з $5',['orchestrator'],['Загальне','Ранок','Ідеї']], web: ['Сайт Aura','Проєкт · 2 помічники',['coder','reviewer'],['Загальне','Реліз','Помилки']], remont: ['Ремонт квартири','Проєкт',['orchestrator'],['Загальне','Плитка','Кошторис']], signals: ['Сповіщення','Повідомлення від ваших систем',[],[]] }[cs]
+      || [this.appInfo(cs)?.name || '', 'Чат застосунку · кожну зміну ви погоджуєте', s.team[cs] || ['builder'], []];
+    const who = meta[2][0] || 'orchestrator';
+    out.chatView = { title: meta[0], kind: meta[1], isApp: appChat, openApp: () => this.openApp(cs), hasTopics: meta[3].length > 1,
+      members: meta[2].map(w => ({ l: AG[w].l, name: AG[w].name, style: mark(w, 22) })),
+      topics: meta[3].map(tp => ({ label: tp, pick: () => this.setState({ topic: tp }), style: { all:'unset', cursor:'pointer', padding:'3px 10px', fontSize:13, border:'1px solid ' + (s.topic === tp ? 'var(--ring)' : 'var(--border)'), background: s.topic === tp ? 'var(--accent)' : 'transparent', color: s.topic === tp ? 'var(--accent-foreground)' : 'inherit', whiteSpace:'nowrap' } })),
+      ...this.feed(cs, who) };
+
+    // app chat panel
+    const ua = s.tiles.map(t => t.app).find(a => this.appInfo(a)?.user) || 'crm';
+    const team = s.team[ua] || ['builder'];
+    out.appTeam = team.map(w => ({ l: AG[w].l, name: AG[w].name, style: mark(w, 24) }));
+    out.appTeamLabel = 'Працює: ' + team.map(w => AG[w].name).join(', ');
+    out.appFeed = this.feed(ua, team[0]);
+    out.teamPop = s.teamPop;
+    out.toggleTeamPop = (e) => { e.stopPropagation(); this.setState({ teamPop: !s.teamPop }); };
+    out.teamCandidates = Object.keys(AG).map(w => { const inT = team.includes(w); return { l: AG[w].l, name: AG[w].name, role: AG[w].role, style: mark(w, 26), check: inT ? '✓ працює' : 'додати', checkStyle: { fontSize:12, color: inT ? 'var(--signal-text)' : 'var(--muted-foreground)' },
+      toggle: (e) => { e.stopPropagation(); if (inT && team.length === 1) return; this.setState(st => ({ team: { ...st.team, [ua]: inT ? team.filter(x => x !== w) : [...team, w] }, msgs: { ...st.msgs, [ua]: [...(st.msgs[ua] || []), { k:'sys', text: inT ? `${AG[w].name} більше не працює з цим застосунком` : `${AG[w].name} тепер працює з «${this.appInfo(ua).name}» · пропонуватиме зміни, а ви вирішуєте` }] } })); } }; });
+
+    // agents app
+    const tabSt = (on) => ({ all:'unset', cursor:'pointer', padding:'7px 12px', fontSize:14, marginBottom:-1, whiteSpace:'nowrap', borderBottom: '2px solid ' + (on ? 'var(--ring)' : 'transparent'), color: on ? 'var(--foreground)' : 'var(--muted-foreground)', fontWeight: on ? 500 : 400 });
+    out.agTabs = [['team','Команда'],['skills','Вміння'],['memory','Памʼять'],['engines','Підключення ШІ']].map(([id, label]) => ({ label, pick: () => this.setState({ agSec: id }), style: tabSt(s.agSec === id) }));
+    out.agTeam = s.agSec === 'team'; out.agSkills = s.agSec === 'skills'; out.agMemory = s.agSec === 'memory'; out.agEngines = s.agSec === 'engines';
+    const sel = s.agSel, A = AG[sel], X = AGX[sel];
+    out.agChips = Object.keys(AG).map(w => ({ l: AG[w].l, name: AG[w].name, mark: mark(w, 22), pick: () => this.setState({ agSel: w, promptDraft: null, promptSaved: false }),
+      style: { all:'unset', cursor:'pointer', display:'flex', alignItems:'center', gap:8, padding:'4px 10px 4px 4px', fontSize:13.5, border:'1px solid ' + (sel === w ? 'var(--ring)' : 'var(--border)'), background: sel === w ? 'var(--accent)' : 'transparent', color: sel === w ? 'var(--accent-foreground)' : 'inherit' } }));
+    const agSk = SKILLS.filter(k => k.users.includes(sel) && s.skillsOn[k.id]);
+    out.ag = { l: A.l, name: A.name, handle: sel, role: A.role, markBig: mark(sel, 52), engineId: s.agEngine[sel],
+      prompt: s.promptDraft ?? s.prompts[sel], dirty: s.promptDraft !== null && s.promptDraft !== s.prompts[sel], saved: s.promptSaved && s.promptDraft === null,
+      budgetText: `Сьогодні витрачено $${X.used.toFixed(2)} з $${X.limit}`, budgetBar: { height:'100%', width: Math.min(100, X.used / X.limit * 100) + '%', background:'var(--signal)' },
+      skills: agSk.map(k => ({ name: k.name })), noSkills: agSk.length === 0, runs: X.runs.map(([when, chat, what]) => ({ when, chat, what })), noRuns: X.runs.length === 0 };
+    out.agEngineOpts = ENG.filter(e => e.ok).map(e => ({ id: e.id, name: e.name }));
+    out.onAgEngine = (e) => { const v = e.target.value; this.setState(st => ({ agEngine: { ...st.agEngine, [sel]: v } })); };
+    out.onPrompt = (e) => this.setState({ promptDraft: e.target.value, promptSaved: false });
+    out.savePrompt = () => this.setState(st => ({ prompts: { ...st.prompts, [sel]: st.promptDraft }, promptDraft: null, promptSaved: true }));
+    out.cancelPrompt = () => this.setState({ promptDraft: null });
+    out.goSkills = () => this.setState({ agSec: 'skills' });
+    out.agPerms = PERMS.map(([k, label, sub]) => { const on = !!(s.perms[sel] || {})[k]; return { label, sub, track: track(on), thumb: thumb(on), toggle: () => this.setState(st => ({ perms: { ...st.perms, [sel]: { ...st.perms[sel], [k]: !on } } })) }; });
+    out.skillRows = SKILLS.map(k => { const on = !!s.skillsOn[k.id]; return { name: k.name, desc: k.desc, marks: k.users.map(w => ({ l: AG[w].l, name: AG[w].name, style: mark(w, 22) })), track: track(on), thumb: thumb(on), toggle: () => this.setState(st => ({ skillsOn: { ...st.skillsOn, [k.id]: !on } })) }; });
+    const mq = s.memQ.trim().toLowerCase();
+    out.memQ = s.memQ; out.onMemQ = (e) => this.setState({ memQ: e.target.value });
+    out.memRows = s.notes.filter(([, text]) => !mq || text.toLowerCase().includes(mq)).map(([id, text, who, where, when]) => ({ text, meta: `${AG[who].name} · ${where} · ${when}`, del: () => this.setState(st => ({ notes: st.notes.filter(x => x[0] !== id) })) }));
+    out.memEmpty = out.memRows.length === 0;
+
+    // crm
+    const pending = this.crmPending();
+    out.showDraft = (pending && s.view === 'draft') || s.versions[0][0].startsWith('Колонка Email');
+    out.showDraftBanner = pending && s.view === 'draft';
+    out.setLive = (e) => { e.stopPropagation(); this.setState({ view: 'live' }); };
+    out.setDraft = (e) => { e.stopPropagation(); this.setState({ view: 'draft' }); };
+    const segMini = (on) => ({ all:'unset', cursor:'pointer', padding:'2px 8px', background: on ? 'var(--primary)' : 'transparent', color: on ? 'var(--primary-foreground)' : 'inherit' });
+    out.liveBtn = segMini(s.view === 'live'); out.draftBtn = segMini(s.view === 'draft');
+    out.crmTabs = [['clients','Клієнти'],['deals','Угоди'],['overview','Огляд']].map(([id, label]) => ({ label, pick: () => this.setState({ crmTab: id }), style: { all:'unset', cursor:'pointer', padding:'7px 12px', fontSize:14, marginBottom:-1, borderBottom: '2px solid ' + (s.crmTab === id ? 'var(--ring)' : 'transparent'), color: s.crmTab === id ? 'var(--foreground)' : 'var(--muted-foreground)', fontWeight: s.crmTab === id ? 500 : 400 } }));
+    out.tabClients = s.crmTab === 'clients'; out.tabDeals = s.crmTab === 'deals'; out.tabOverview = s.crmTab === 'overview';
+    const stage = (st) => ({ fontSize:12, padding:'1px 7px', border:'1px solid ' + (st === 'Виграно' ? 'var(--ring)' : 'var(--border)'), color: st === 'Виграно' ? 'var(--signal-text)' : st === 'Програно' ? 'var(--muted-foreground)' : 'var(--foreground)', background: st === 'Переговори' ? 'var(--accent)' : 'transparent' });
+    out.clients = [['Іван Коваль','ТОВ «Сокіл»','ivan@sokil.ua','Переговори','₴84 000'],['Maya Lindqvist','Northwind Labs','maya@northwind.io','Пропозиція','$12 000'],['Олена Бойко','Бойко Дизайн','olena@boyko.design','Виграно','₴21 500'],['Tom Becker','Kite & Co','','Новий','—'],['Андрій Мельник','Мельник Агро','a.melnyk@agro.ua','Пропозиція','₴140 000'],['Sara Okafor','Lumen Studio','sara@lumen.studio','Програно','$4 800']].map(([name, co, email, st, value]) => ({ name, co, email: email || '—', stage: st, value, stageStyle: stage(st) }));
+    out.board = [['Нові','—',[['Kite & Co','Tom B.','—']]],['Пропозиція','₴140k + $12k',[['Мельник Агро · зерносушарка','Андрій','₴140k'],['Northwind · пілот','Maya','$12k']]],['Переговори','₴84k',[['Сокіл · річний сервіс','Іван','₴84k']]],['Виграно','₴21.5k',[['Бойко · брендинг','Олена','₴21.5k']]]].map(([title, sum, cards]) => ({ title, sum, cards: cards.map(([name, who, value]) => ({ name, who, value })) }));
+    out.stats = [['Відкриті угоди','4','₴224k + $12k у роботі'],['Виграно цього місяця','₴21.5k','1 угода · Бойко Дизайн'],['Успішних угод','38%','за 90 днів'],['Клієнтів','6','у 2 немає email']].map(([label, value, note]) => ({ label, value, note }));
+    return out;
+  }
+  crmPending() { return (this.state.msgs.crm || []).some(m => m.id === 'a1' && m.state === 'pending'); }
+}
+</script>
+</body>
+</html>

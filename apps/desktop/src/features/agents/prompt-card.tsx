@@ -118,14 +118,14 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
           {error && <p className="text-destructive mt-2 text-xs">{error}</p>}
           <div className="mt-2 flex gap-2">
             {review === null ? (
-              <Button size="sm" className="rounded-full" onClick={() => void startReview()}>
+              <Button size="sm" className="rounded-pill" onClick={() => void startReview()}>
                 <Check /> Review changes
               </Button>
             ) : (
               <>
                 <Button
                   size="sm"
-                  className="rounded-full"
+                  className="rounded-pill"
                   disabled={busy || review.trim() === ""}
                   onClick={() => void save()}
                 >
@@ -134,7 +134,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="rounded-full"
+                  className="rounded-pill"
                   onClick={() => setReview(null)}
                 >
                   <Pencil /> Keep editing
@@ -144,7 +144,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
             <Button
               size="sm"
               variant="ghost"
-              className="rounded-full"
+              className="rounded-pill"
               onClick={() => {
                 setDraft(null);
                 setReview(null);
@@ -202,7 +202,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="mt-2 rounded-full"
+                  className="mt-2 rounded-pill"
                   onClick={() => {
                     setDraft(version.prompt);
                     setReview(null);
@@ -248,7 +248,7 @@ function PartRow({
           )}
         </button>
         {onEdit && (
-          <Button size="sm" variant="ghost" className="h-7 rounded-full" onClick={onEdit}>
+          <Button size="sm" variant="ghost" className="h-7 rounded-pill" onClick={onEdit}>
             <Pencil /> Edit
           </Button>
         )}

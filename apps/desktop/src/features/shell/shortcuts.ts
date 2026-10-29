@@ -1,5 +1,5 @@
 import { neighbour, type Rect, swapTiles } from "@aura/shared";
-import { getState } from "@/features/chat/store";
+import { getState, setState } from "@/features/chat/store";
 import { closeTileId, focusTile, openAppRef, setLayout } from "./layout";
 import type { WmAction } from "./shortcut-keys";
 
@@ -32,7 +32,8 @@ export function runWmAction(action: WmAction, apps: string[], open: (key: string
       closeTileId(layout.focused);
       return;
     case "home":
-      openAppRef("home");
+      // Mod+H toggles the "My apps" menu (ADR 0034); the work behind it stays on screen.
+      setState((s) => ({ menuOpen: !s.menuOpen }));
       return;
     case "app": {
       const key = apps[action.index];

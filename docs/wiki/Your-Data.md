@@ -28,8 +28,8 @@ state/                       database, keys, tokens (not in git)
 
 ## Backups
 
-**Restore points** (on Home) take Aura back or forward without leaving the app; see
-[The screen](The-Screen#restore-points). For a backup outside Aura, copy `~/.aura` while Aura is
+**Backups** (in My apps) takes Aura back or forward without leaving the app; see
+[The screen](The-Screen#backups-and-restore-points). For a backup outside Aura, copy `~/.aura` while Aura is
 closed. For config alone you can push the git repository to a private
 remote. Do not publish `state/`.
 

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
+import { useT } from "@/features/localization/i18n";
 
-/** Header for full-page views (skills, schedule, customize, devices). */
+/** Header for the built-in apps' pages; the title is translated (ADR 0034). */
 export function PageHeader({
   title,
   children,
@@ -10,11 +11,12 @@ export function PageHeader({
   children?: ReactNode;
   icon?: ReactNode;
 }) {
+  const t = useT();
   return (
-    <header className="mb-8">
-      <h1 className="flex items-center gap-3 text-[28px] leading-tight font-semibold tracking-tight">
+    <header className="mb-6">
+      <h1 className="flex items-center gap-2.5 text-[26px] [&_svg]:size-6 [&_svg]:stroke-[1.5]">
         {icon}
-        {title}
+        {t(title)}
       </h1>
       {children && <p className="text-muted-foreground mt-2 max-w-2xl text-sm">{children}</p>}
     </header>

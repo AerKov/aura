@@ -56,7 +56,7 @@ export function AgentToolServers() {
           <Plug className="size-4" /> Tool servers (MCP)
         </h2>
         {editing === null && (
-          <Button size="sm" className="rounded-full" onClick={() => setEditing("new")}>
+          <Button size="sm" className="rounded-pill" onClick={() => setEditing("new")}>
             <Plus /> Add server
           </Button>
         )}
@@ -187,7 +187,7 @@ function ServerCard({
               </span>
             ) : (
               server.agents.map((a) => (
-                <span key={a} className="bg-muted rounded-full px-2 py-0.5 font-mono text-[11px]">
+                <span key={a} className="bg-muted rounded-pill px-2 py-0.5 font-mono text-[11px]">
                   @{a}
                 </span>
               ))
@@ -197,7 +197,7 @@ function ServerCard({
                 key={e.name}
                 title={e.set ? "Has a value" : "No value: set it under Secrets"}
                 className={cn(
-                  "rounded-full border px-2 py-0.5 font-mono text-[11px]",
+                  "rounded-pill border px-2 py-0.5 font-mono text-[11px]",
                   !e.set && "border-amber-500/50 text-amber-600 dark:text-amber-400",
                 )}
               >
@@ -210,7 +210,7 @@ function ServerCard({
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
+            className="rounded-pill"
             disabled={busy}
             onClick={() => void test()}
           >
@@ -261,7 +261,7 @@ function ProbeResult({
       {probe.unpassed.length > 0 && (
         <Button
           size="sm"
-          className="mt-2 rounded-full"
+          className="mt-2 rounded-pill"
           disabled={busy}
           onClick={() => onGive(probe.unpassed)}
         >
@@ -455,7 +455,7 @@ function ServerForm({
                       setAgents(on ? agents.filter((x) => x !== a.handle) : [...agents, a.handle])
                     }
                     className={cn(
-                      "rounded-full border px-2.5 py-1 font-mono text-[12px] transition-colors",
+                      "rounded-pill border px-2.5 py-1 font-mono text-[12px] transition-colors",
                       on ? "border-primary bg-primary/10 text-primary" : "hover:bg-accent/60",
                     )}
                   >
@@ -470,13 +470,13 @@ function ServerForm({
       <div className="mt-4 flex gap-2">
         <Button
           size="sm"
-          className="rounded-full"
+          className="rounded-pill"
           disabled={busy || !name.trim()}
           onClick={() => void save()}
         >
           {busy ? <RefreshCw className="animate-spin" /> : <Check />} Save
         </Button>
-        <Button variant="ghost" size="sm" className="rounded-full" onClick={onDone}>
+        <Button variant="ghost" size="sm" className="rounded-pill" onClick={onDone}>
           <X /> Cancel
         </Button>
       </div>
@@ -561,7 +561,7 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
           <Button
             type="submit"
             size="sm"
-            className="h-auto rounded-full"
+            className="h-auto rounded-pill"
             disabled={!name.trim() || !value}
           >
             <Check /> Save secret
@@ -621,7 +621,7 @@ function HeadersEditor({
         <Button
           variant="ghost"
           size="sm"
-          className="rounded-full"
+          className="rounded-pill"
           onClick={() => onChange([...rows, { id: crypto.randomUUID(), name: "", value: "" }])}
         >
           <Plus /> Add header
@@ -637,7 +637,7 @@ function HeadersEditor({
                 { id: crypto.randomUUID(), name: "Authorization", value: `Bearer ${ref(s)}` },
               ])
             }
-            className="hover:bg-accent/60 flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px]"
+            className="hover:bg-accent/60 flex items-center gap-1 rounded-pill border px-2 py-0.5 font-mono text-[11px]"
           >
             <KeyRound className="size-3" /> Bearer {s}
           </button>

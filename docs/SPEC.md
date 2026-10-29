@@ -454,5 +454,22 @@ A launcher with groups, descriptions and search; uninstall with a backup and bri
 restore points of the whole Aura, back and forward; libraries from npm inside apps; the
 Localization app (English, Ukrainian, more as files).
 
+**Phase 36: The Industry look and the "My apps" menu** (done, ADR 0034)
+Round 4 of the redesign: Industry tokens and fonts, square marks, a plain interface with an
+advanced mode, the "My apps" menu over the tiles, "New window", the "New app" sheet, the bar and
+tile bars.
+
+**Phase 37: Chats and app tiles** (next, ADR 0034)
+The chat list, a calmer feed (run cards collapsed, approvals in plain words with technical details
+on request, alerts by severity), the composer, and an app's tile with its chat panel, draft and
+versions.
+
+**Phase 38: Helpers** (ADR 0034)
+One app for everything about agents: Team, Skills, Memory and AI connection.
+
+**Phase 39: Splash and onboarding** (ADR 0034)
+A splash while Aura starts and three first-run steps: welcome and language, AI connection, the
+first app.
+
 **Later**
 Pack signatures and a reviewed community index, multi-user.

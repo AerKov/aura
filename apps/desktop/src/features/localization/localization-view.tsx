@@ -44,7 +44,7 @@ export function LocalizationView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title={t("Localization")} icon={<Languages className="text-primary size-7" />}>
+        <PageHeader title="Language" icon={<Languages className="text-primary size-7" />}>
           {t(
             "One language for Aura: its interface, the answers of its agents, and your apps (they get it as ctx.language and write their texts in it).",
           )}

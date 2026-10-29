@@ -288,7 +288,7 @@ function MoveDialog({
             key={t.id ?? "general"}
             size="sm"
             variant="outline"
-            className="rounded-full"
+            className="rounded-pill"
             onClick={() => {
               onClose();
               void moveToTopic(message.id, t.id).catch(reportError);

@@ -6,10 +6,10 @@ own chat**. Every change is shown to you first, and every version can be brought
 
 ## Make an app
 
-Every app has a name, a one-line **description** and a **group**, shown on Home. @builder keeps them
+Every app has a name, a one-line **description** and a **group**, shown in My apps. @builder keeps them
 in the app's manifest; say in its chat if you want them changed.
 
-- **Home** → **Add an app**: start from a template (**CRM**, **Tasks**, **Notes**), or empty:
+- **My apps** → **New app**: start from a template (**CRM**, **Tasks**, **Notes**), or empty:
   give it a name and, if you like, say what it should do (an empty app needs Chats on).
 - Or ask the orchestrator: _"make me an app to track clients and deals"_. It proposes the app on a
   card; approve it.
@@ -84,11 +84,11 @@ change waiting for your approval, decide on that first.
 
 ## Uninstall and bring back
 
-The **⋯** menu on an app on Home has **Uninstall**. Aura keeps a backup first, in
+The **⋯** menu on your app in a New window has **Uninstall**. Aura keeps a backup first, in
 `~/.aura/backups/apps`: its code with all its versions, its data, what you allowed it, and its chat
 as text. Then the app, its chat and its data are gone. Its secrets are deleted, never backed up.
 
-**Restore points** → **Uninstalled apps** → **Bring back** puts the app back as it was, with a new
+**Backups** → **Uninstalled apps** → **Bring back** puts the app back as it was, with a new
 chat (the old one is in the backup as `chat.md`).
 
 ## Libraries
@@ -100,7 +100,7 @@ frame, which has no network; nothing loads from the internet while the app runs.
 
 ## Its language
 
-An app gets the language you chose in **Localization** as `ctx.language` and writes its own texts in
+An app gets the language you chose in **Language** as `ctx.language` and writes its own texts in
 it; it reloads when you change the language.
 
 ## What an app can do

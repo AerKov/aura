@@ -23,7 +23,7 @@ export function AlertCard({ card }: { card: AlertCardData }) {
         <Siren className="size-4 shrink-0" />
         <span className="font-semibold">{card.title}</span>
         {card.count > 1 && (
-          <span className="rounded-full bg-black/10 px-1.5 text-xs dark:bg-white/10">
+          <span className="rounded-pill bg-black/10 px-1.5 text-xs dark:bg-white/10">
             ×{card.count}
           </span>
         )}

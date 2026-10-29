@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/industry-bea88c1d-e074-43a8-a5dd-7e774df2abc8/styles.css">
+<script src="_ds/industry-bea88c1d-e074-43a8-a5dd-7e774df2abc8/_ds_bundle.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap">
+<style>body{margin:0;background:var(--color-surface)}a{color:var(--color-accent-700)}a:hover{color:var(--color-accent-800)}</style>
+</helmet>
+<div style="font-family:var(--font-body);color:var(--color-text);background:var(--color-bg);min-height:100vh">
+<div style="max-width:1440px;margin:0 auto;padding:40px 32px 80px;display:flex;flex-direction:column;gap:56px">
+
+<header style="display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:40px;align-items:start">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700)">Aura · Round 1 of 6 · Design system</div>
+    <h1 style="font-size:56px;margin:0;line-height:1">Tokens, type, components, tiles</h1>
+    <p style="max-width:620px;font-size:15px;color:var(--color-neutral-700);margin:0;text-wrap:pretty">Every value below is a CSS variable with a shadcn name. The light and dark columns render the same markup; only the variables change, which is how installed themes will work. Click tiles or press Alt+arrows in the window-manager section.</p>
+  </div>
+  <div class="blueprint" style="padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+    <div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700)">Decisions · please choose</div>
+    <ol style="margin:0;padding-left:18px;font-size:13.5px;line-height:1.5;display:flex;flex-direction:column;gap:6px">
+      <li><b>Identity.</b> The project's Industry system is applied: square corners, hairline borders, "+" registration marks, Barlow / Barlow Condensed. Your brief asks for soft rounded shapes and Geist. Keep Industry, or switch to Geist + rounded? Geist Mono is used for kickers, code, numbers and the clock either way.</li>
+      <li><b>Primary.</b> The base steel <code>#5980a6</code> fails AA with small labels, so light <code>--primary</code> is the 700 step <code>#416180</code>. The base stays as <code>--ring</code> and <code>--signal</code>.</li>
+      <li><b>Rail.</b> Deep steel field (shown), or the same ground as the tiles?</li>
+      <li><b>Agent marks.</b> Agents are square marks told apart by fill pattern, not hue, so any theme palette works. Humans are round. Per-agent hues instead?</li>
+      <li><b>Status colours.</b> Industry has one accent. I added <code>--destructive</code> and <code>--warning</code> at the ramp's lightness for errors, critical alerts and approvals. OK?</li>
+    </ol>
+  </div>
+</header>
+
+<section style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-600)">01</span><h2 style="margin:0">Colour tokens</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:24px">
+    <sc-for list="{{ themes }}" as="th" hint-placeholder-count="2">
+      <div style="{{ th.style }}">
+        <div style="padding:20px;border:1px solid var(--border);display:flex;flex-direction:column;gap:14px;background:var(--background);color:var(--foreground)">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <h3 style="margin:0;font-size:22px">{{ th.name }}</h3>
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted-foreground)">{{ th.note }}</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--border);border:1px solid var(--border)">
+            <sc-for list="{{ th.tokens }}" as="t" hint-placeholder-count="22">
+              <div style="background:var(--background);padding:8px;display:flex;gap:8px;align-items:center;min-width:0">
+                <div style="{{ t.sw }}"></div>
+                <div style="display:flex;flex-direction:column;min-width:0">
+                  <span style="font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.name }}</span>
+                  <span style="font-family:'Geist Mono',monospace;font-size:10px;color:var(--muted-foreground);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.value }}</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-600)">02</span><h2 style="margin:0">Type, spacing, radius</h2></div>
+  <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px">
+    <div class="blueprint" style="padding:20px">
+      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+      <div style="display:grid;grid-template-columns:150px minmax(0,1fr);row-gap:14px;column-gap:16px;align-items:baseline">
+        <sc-for list="{{ typeScale }}" as="ty" hint-placeholder-count="9">
+          <span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--color-neutral-700)">{{ ty.spec }}</span>
+          <span style="{{ ty.style }}">{{ ty.sample }}</span>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <div class="blueprint" style="padding:20px;display:flex;flex-direction:column;gap:10px">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700)">Spacing · 0.85× base 4</div>
+        <sc-for list="{{ spaces }}" as="sp" hint-placeholder-count="6">
+          <div style="display:grid;grid-template-columns:80px 60px minmax(0,1fr);align-items:center;gap:10px">
+            <span style="font-family:'Geist Mono',monospace;font-size:11px">{{ sp.name }}</span>
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-700)">{{ sp.px }}</span>
+            <div style="{{ sp.bar }}"></div>
+          </div>
+        </sc-for>
+      </div>
+      <div class="blueprint" style="padding:20px;display:flex;flex-direction:column;gap:12px">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700)">Radius · motion</div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap">
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:56px;height:40px;border:1px solid var(--color-text)"></div><span style="font-family:'Geist Mono',monospace;font-size:10.5px">--radius 0</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:56px;height:40px;border:1px solid var(--color-divider);border-radius:2px"></div><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--color-neutral-700)">sm 2</span></div>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:56px;height:40px;border:1px solid var(--color-divider);border-radius:10px"></div><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--color-neutral-700)">--wm-radius 10</span></div>
+        </div>
+        <p style="margin:0;font-size:13px;color:var(--color-neutral-700);text-wrap:pretty">Components stay square (<code>--radius: 0</code>). Only tiles take <code>--wm-radius</code>, so the Hyprland preset can round windows without softening buttons. Motion: 160ms <code>cubic-bezier(.2,0,0,1)</code> for focus and hover, 200ms for popovers. No springs.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-600)">03</span><h2 style="margin:0">Core components</h2></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(600px,100%),1fr));gap:24px">
+    <sc-for list="{{ themes }}" as="th" hint-placeholder-count="2">
+      <div style="{{ th.style }}">
+      <div style="background:var(--background);color:var(--foreground);border:1px solid var(--border);padding:24px;display:flex;flex-direction:column;gap:26px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><h3 style="margin:0;font-size:22px">{{ th.name }}</h3><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted-foreground)">same markup</span></div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)">Buttons</span>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+            <button class="btn btn-primary blueprint" style="color:var(--primary-foreground)">Approve<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></button>
+            <button class="btn btn-secondary">Review changes</button>
+            <button class="btn btn-ghost">Skip</button>
+            <button class="btn btn-secondary" style="color:var(--destructive);border-color:color-mix(in srgb,var(--destructive) 45%,transparent)">Reject</button>
+            <button class="btn btn-secondary btn-icon" title="Search · Alt+K" style="width:32px;height:32px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg></button>
+            <button class="btn btn-secondary" disabled="">Disabled</button>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+            <button class="btn btn-primary blueprint" style="color:var(--primary-foreground);font-size:12px;padding:3px 9px">Small<i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i></button>
+            <button class="btn btn-secondary" style="font-size:12px;padding:3px 9px;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>Add an app</button>
+            <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted-foreground)">Focus ring <button class="btn btn-secondary" style="outline:2px solid var(--ring);outline-offset:2px;font-size:12px;padding:3px 9px">Tab</button></span>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px">
+          <div class="field"><label style="color:var(--muted-foreground)">Find an app</label>
+            <div style="position:relative"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" style="position:absolute;left:10px;top:11px;color:var(--muted-foreground)"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg><input class="input" placeholder="Find an app" style="padding-left:32px;background:var(--input-bg)"></div>
+          </div>
+          <div class="field"><label style="color:var(--muted-foreground)">Agent name (focused)</label>
+            <input class="input" value="@tester" style="border-color:var(--ring);outline:2px solid color-mix(in srgb,var(--ring) 35%,transparent);outline-offset:0;background:var(--input-bg);font-family:'Geist Mono',monospace;font-size:13px">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)">Switch</span>
+            <sc-for list="{{ switches }}" as="sw" hint-placeholder-count="3">
+              <button onClick="{{ sw.toggle }}" style="all:unset;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:14px;padding:2px 0">
+                <span style="display:flex;flex-direction:column"><span>{{ sw.label }}</span><span style="font-size:12px;color:var(--muted-foreground)">{{ sw.hint }}</span></span>
+                <span style="{{ sw.track }}"><span style="{{ sw.thumb }}"></span></span>
+              </button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)">Chips · pick an agent</span>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+                <button onClick="{{ c.pick }}" style="{{ c.style }}">{{ c.label }}</button>
+              </sc-for>
+            </div>
+            <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground);margin-top:6px">Kicker labels</span>
+            <div style="display:flex;flex-wrap:wrap;gap:12px;font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:500">
+              <span style="color:var(--signal-text)">Run</span><span style="color:var(--warning)">Approval</span><span style="color:var(--destructive)">Alert</span><span style="color:var(--muted-foreground)">System</span><span style="color:var(--foreground)">Task</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)">Status badges</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;font-family:'Geist Mono',monospace;font-size:11px">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:1px solid color-mix(in srgb,var(--signal) 50%,transparent);color:var(--signal-text)"><span style="width:6px;height:6px;background:var(--signal)"></span>running</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:1px solid var(--border);color:var(--foreground)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 6 9 17l-5-5"></path></svg>done</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:1px solid color-mix(in srgb,var(--destructive) 50%,transparent);color:var(--destructive)"><span style="width:6px;height:6px;background:var(--destructive)"></span>error</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border:1px dashed var(--border);color:var(--muted-foreground)"><span style="width:6px;height:6px;border:1px solid currentColor"></span>stopped</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:2px 8px;background:color-mix(in srgb,var(--warning) 16%,transparent);color:var(--warning-text)">waiting · 2</span>
+            <span style="display:inline-flex;align-items:center;padding:1px 6px;min-width:20px;justify-content:center;background:var(--primary);color:var(--primary-foreground);font-weight:600">12</span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)">Avatar marks · agents square, people round</span>
+          <div style="display:flex;flex-wrap:wrap;gap:16px">
+            <sc-for list="{{ agents }}" as="a" hint-placeholder-count="6">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="{{ a.mark }}">{{ a.letter }}</span>
+                <span style="display:flex;flex-direction:column;line-height:1.2"><span style="font-size:13px;font-weight:500">{{ a.name }}</span><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted-foreground)">{{ a.handle }}</span></span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start">
+          <div class="card blueprint" style="background:transparent;border-color:var(--border);gap:8px;padding:14px">
+            <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+            <span class="card-kicker" style="font-family:'Geist Mono',monospace;color:var(--signal-text)">Card</span>
+            <span class="card-title">Тиждень у CRM</span>
+            <p class="card-body" style="opacity:1;color:var(--muted-foreground)">Sections in built-in apps are cards: hairline, transparent, marked at the corners.</p>
+            <div class="card-meta" style="font-family:'Geist Mono',monospace;color:var(--muted-foreground)">@builder · 14:32</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;position:relative">
+            <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-foreground)">Popover · open an app here</span>
+            <div class="blueprint" style="background:var(--popover);color:var(--popover-foreground);border-color:var(--border);box-shadow:var(--shadow-md);padding:6px;display:flex;flex-direction:column">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="display:flex;align-items:center;gap:6px;padding:4px 6px 8px;border-bottom:1px solid var(--border);margin-bottom:4px;font-size:13px;color:var(--muted-foreground)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>Open an app…</div>
+              <sc-for list="{{ menu }}" as="m" hint-placeholder-count="4">
+                <div style="{{ m.row }}"><span>{{ m.label }}</span><span style="font-family:'Geist Mono',monospace;font-size:10.5px;color:var(--muted-foreground)">{{ m.kbd }}</span></div>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted-foreground)">Tooltip
+              <span style="background:var(--foreground);color:var(--background);padding:3px 7px;font-size:11.5px;display:inline-flex;gap:8px;align-items:center">Split right <span style="font-family:'Geist Mono',monospace;opacity:.75">Alt+Enter</span></span>
+              <span style="display:inline-flex;gap:3px"><kbd style="font-family:'Geist Mono',monospace;font-size:10.5px;padding:1px 5px;border:1px solid var(--border);border-bottom-width:2px;background:var(--muted);color:var(--foreground)">Alt</kbd><kbd style="font-family:'Geist Mono',monospace;font-size:10.5px;padding:1px 5px;border:1px solid var(--border);border-bottom-width:2px;background:var(--muted);color:var(--foreground)">←</kbd></span>
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+    </sc-for>
+  </div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+    <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-600)">04</span><h2 style="margin:0">Tile presets</h2>
+    <span style="font-size:13px;color:var(--color-neutral-700);margin-right:auto">Only <code>--wm-gap</code>, <code>--wm-radius</code>, <code>--wm-border</code> and title style differ. Alt+arrows moves focus in both.</span>
+    <div class="seg">
+      <sc-for list="{{ themeOpts }}" as="o" hint-placeholder-count="2">
+        <button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button>
+      </sc-for>
+    </div>
+  </div>
+  <div style="{{ tileThemeStyle }}">
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(620px,100%),1fr));gap:24px">
+    <sc-for list="{{ presets }}" as="p" hint-placeholder-count="2">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:baseline;gap:10px;color:var(--color-text)">
+          <h3 style="margin:0;font-size:22px">{{ p.name }}</h3>
+          <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--color-neutral-700)">{{ p.spec }}</span>
+        </div>
+        <div style="{{ p.frame }}">
+          <div style="{{ p.rail }}">
+            <span style="width:22px;height:22px;border:1.5px solid var(--rail-foreground);display:grid;place-items:center;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">A</span>
+            <span style="width:28px;height:28px;display:grid;place-items:center;background:color-mix(in srgb,var(--rail-foreground) 16%,transparent)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></span>
+            <span style="width:28px;height:28px;display:grid;place-items:center;opacity:.7"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8V4H8"></path><rect width="16" height="12" x="4" y="8" rx="2"></rect><path d="M2 14h2"></path><path d="M20 14h2"></path><path d="M15 13v2"></path><path d="M9 13v2"></path></svg></span>
+            <span style="width:28px;height:28px;display:grid;place-items:center;opacity:.7"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></span>
+            <span style="margin-top:auto;display:flex;flex-direction:column;align-items:center;font-family:'Geist Mono',monospace;font-size:11px;line-height:1.1;font-weight:500"><span>14</span><span>32</span></span>
+            <span style="width:6px;height:6px;background:var(--signal)"></span>
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;font-weight:600;background:var(--warning);color:var(--background);padding:0 4px">2</span>
+          </div>
+          <div style="{{ p.grid }}">
+            <sc-for list="{{ p.tiles }}" as="t" hint-placeholder-count="3">
+              <div onClick="{{ t.focus }}" class="blueprint" style="{{ t.style }}">
+                <sc-if value="{{ t.marks }}"><i class="corner tl" style="color:var(--ring)"></i><i class="corner tr" style="color:var(--ring)"></i><i class="corner bl" style="color:var(--ring)"></i><i class="corner br" style="color:var(--ring)"></i></sc-if>
+                <div style="{{ t.bar }}">
+                  <span style="font-weight:500;display:flex;align-items:center;gap:6px;min-width:0"><span style="{{ t.dot }}"></span>{{ t.name }}</span>
+                  <span style="display:flex;align-items:center;gap:2px">
+                    <sc-if value="{{ t.hasChat }}"><span title="Chat panel" style="padding:2px 6px;font-size:11px;border:1px solid currentColor;opacity:.75;margin-right:4px">Chat</span></sc-if>
+                    <span title="Open an app here" style="width:20px;height:20px;display:grid;place-items:center;opacity:.75"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect width="18" height="18" x="3" y="3"></rect><path d="M8 12h8"></path><path d="M12 8v8"></path></svg></span>
+                    <span title="Open right · Alt+Enter" style="width:20px;height:20px;display:grid;place-items:center;opacity:.75"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="3"></rect><path d="M15 3v18"></path></svg></span>
+                    <span title="Open below · Alt+Shift+Enter" style="width:20px;height:20px;display:grid;place-items:center;opacity:.75"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect width="18" height="18" x="3" y="3"></rect><path d="M3 15h18"></path></svg></span>
+                    <span title="Close · Alt+Q" style="width:20px;height:20px;display:grid;place-items:center;opacity:.75"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg></span>
+                  </span>
+                </div>
+                <div style="{{ t.body }}">
+                  <sc-if value="{{ t.isChat }}">
+                    <div style="display:flex;flex-direction:column;gap:10px;padding:12px">
+                      <div style="align-self:flex-end;max-width:80%;background:var(--bubble-own);color:var(--bubble-own-foreground);padding:6px 10px;font-size:13px">Зроби експорт клієнтів у CSV</div>
+                      <div style="display:flex;gap:8px;max-width:90%">
+                        <span style="width:20px;height:20px;flex:none;border:1.5px solid var(--primary);color:var(--primary);display:grid;place-items:center;font-family:'Geist Mono',monospace;font-size:10px;font-weight:600">B</span>
+                        <div style="display:flex;flex-direction:column;gap:2px;font-size:13px"><span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted-foreground)">@builder</span><span>Готово. Diff for CRM is waiting for your approval.</span></div>
+                      </div>
+                      <div style="border:1px solid color-mix(in srgb,var(--warning) 55%,transparent);padding:8px 10px;display:flex;flex-direction:column;gap:2px;margin-left:28px">
+                        <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--warning-text)">APPROVAL</span>
+                        <span style="font-size:13px;font-weight:500">Change CRM · +42 −3</span>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ t.isCrm }}">
+                    <div style="padding:10px 12px;display:flex;flex-direction:column;font-size:12.5px">
+                      <sc-for list="{{ crmRows }}" as="r" hint-placeholder-count="4">
+                        <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) 60px;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span>{{ r.n }}</span><span style="color:var(--muted-foreground)">{{ r.s }}</span><span style="font-family:'Geist Mono',monospace;text-align:right">{{ r.v }}</span></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ t.isAgents }}">
+                    <div style="padding:10px 12px;display:flex;flex-direction:column;gap:6px;font-size:12.5px">
+                      <div style="display:flex;gap:6px;align-items:center"><span style="width:18px;height:18px;background:var(--primary);color:var(--primary-foreground);display:grid;place-items:center;font-family:'Geist Mono',monospace;font-size:9.5px;font-weight:600">O</span><b style="font-weight:500">Orchestrator</b><span style="font-family:'Geist Mono',monospace;color:var(--muted-foreground);font-size:11px;margin-left:auto">claude-code · ready</span></div>
+                      <div style="height:6px;background:var(--muted)"><div style="width:38%;height:100%;background:var(--signal)"></div></div>
+                      <span style="font-family:'Geist Mono',monospace;font-size:11px;color:var(--muted-foreground)">budget $1.90 / $5.00</span>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  </div>
+</section>
+
+<footer style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--color-neutral-700)">
+  <span style="font-family:'Geist Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700)">Next · Round 2</span>
+  <span>The shell: rail on the left and on top, a 2–3 tile layout, the tile bar, the "open an app" popover and keyboard hints. Answer the five questions above first and I'll carry the choices through.</span>
+</footer>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const MONO = "'Geist Mono', ui-monospace, monospace";
+const LIGHT = {
+  '--background':'#f2f2f3','--foreground':'#1d1f20','--card':'#f5f5f8','--card-foreground':'#1d1f20',
+  '--popover':'#f5f5f8','--popover-foreground':'#1d1f20','--primary':'#416180','--primary-foreground':'#f5f5f8',
+  '--secondary':'#e7e7ea','--secondary-foreground':'#2b2b2d','--muted':'#e9e9ea','--muted-foreground':'#5d5d60',
+  '--accent':'#d6ebff','--accent-foreground':'#2c455d','--destructive':'oklch(0.52 0.15 27)','--warning':'oklch(0.6 0.13 70)','--warning-text':'oklch(0.48 0.11 65)',
+  '--border':'color-mix(in srgb, #1d1f20 16%, transparent)','--input':'color-mix(in srgb, #1d1f20 22%, transparent)','--input-bg':'#e9e9ea','--ring':'#5980a6','--radius':'0px',
+  '--rail':'#1d2d3d','--rail-foreground':'#d6ebff','--bubble-own':'#d6ebff','--bubble-own-foreground':'#1d2d3d','--bubble-other':'#f5f5f8',
+  '--chat-bg':'#f2f2f3','--grid-dot':'color-mix(in srgb, #1d1f20 14%, transparent)','--signal':'#5980a6','--signal-text':'#416180',
+  '--shadow-md':'0 3px 10px color-mix(in srgb, #2b2b2d 16%, transparent)'
+};
+const DARK = {
+  '--background':'#17191b','--foreground':'#e7e7ea','--card':'#1e2022','--card-foreground':'#e7e7ea',
+  '--popover':'#232527','--popover-foreground':'#e7e7ea','--primary':'#94bce3','--primary-foreground':'#1d2d3d',
+  '--secondary':'#2b2b2d','--secondary-foreground':'#e7e7ea','--muted':'#242628','--muted-foreground':'#a6a6a9',
+  '--accent':'#2c455d','--accent-foreground':'#d6ebff','--destructive':'oklch(0.7 0.14 27)','--warning':'oklch(0.78 0.12 75)','--warning-text':'oklch(0.82 0.11 78)',
+  '--border':'color-mix(in srgb, #e7e7ea 14%, transparent)','--input':'color-mix(in srgb, #e7e7ea 20%, transparent)','--input-bg':'#1e2022','--ring':'#94bce3','--radius':'0px',
+  '--rail':'#0f161d','--rail-foreground':'#b5d9fd','--bubble-own':'#2c455d','--bubble-own-foreground':'#eef6ff','--bubble-other':'#1e2022',
+  '--chat-bg':'#17191b','--grid-dot':'color-mix(in srgb, #e7e7ea 10%, transparent)','--signal':'#94bce3','--signal-text':'#b5d9fd',
+  '--shadow-md':'0 0 0 1px color-mix(in srgb, #e7e7ea 8%, transparent), 0 8px 24px rgba(0,0,0,.45)'
+};
+const SHOWN = ['--background','--foreground','--card','--popover','--primary','--primary-foreground','--secondary','--muted','--muted-foreground','--accent','--accent-foreground','--destructive','--warning','--border','--input','--ring','--rail','--rail-foreground','--bubble-own','--bubble-other','--chat-bg','--grid-dot','--signal','--radius'];
+
+function themeStyle(v, hover, press) {
+  return { ...v,
+    '--color-bg':'var(--background)','--color-surface':'var(--muted)','--color-text':'var(--foreground)',
+    '--color-accent':'var(--primary)','--color-accent-600':hover,'--color-accent-700':press,
+    '--color-divider':'var(--border)','--color-accent-100':'var(--accent)','--color-accent-800':'var(--accent-foreground)',
+    '--color-neutral-100':'var(--secondary)','--color-neutral-800':'var(--secondary-foreground)','--color-neutral-700':'var(--muted-foreground)','--color-neutral-600':'var(--muted-foreground)',
+    '--shadow-md': v['--shadow-md'], color:'var(--foreground)' };
+}
+const STY = { light: themeStyle(LIGHT,'#2c455d','#1d2d3d'), dark: themeStyle(DARK,'#b5d9fd','#d6ebff') };
+
+class Component extends DCLogic {
+  state = { focus: 0, sw: { chats: true, signals: false, memory: true }, chip: 'coder', tileTheme: 'light' };
+  onKey = (e) => {
+    if (!e.altKey || !e.key.startsWith('Arrow')) return;
+    const f = this.state.focus;
+    const map = { ArrowLeft: [0,0,0], ArrowRight: [1,1,2], ArrowUp: [0,1,1], ArrowDown: [0,2,2] };
+    const next = map[e.key][f];
+    e.preventDefault();
+    this.setState({ focus: next });
+  };
+  componentDidMount() { window.addEventListener('keydown', this.onKey); }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onKey); }
+
+  renderVals() {
+    const s = this.state;
+    const mkTokens = (v) => SHOWN.map(n => ({ name: n, value: v[n],
+      sw: { width: 28, height: 28, flex: 'none', background: n === '--radius' ? 'transparent' : v[n], border: '1px solid ' + (n === '--radius' ? v['--foreground'] : 'color-mix(in srgb, currentColor 18%, transparent)') } }));
+    const themes = [
+      { id:'light', name:'Light', note:'ground #f2f2f3 · ink #1d1f20', style: STY.light, tokens: mkTokens(LIGHT) },
+      { id:'dark', name:'Dark', note:'ground #17191b · ink #e7e7ea', style: STY.dark, tokens: mkTokens(DARK) }
+    ];
+    const head = "'Barlow Condensed', system-ui, sans-serif", body = "'Barlow', system-ui, sans-serif";
+    const typeScale = [
+      { spec:'Display · BC 600 42/1.05', sample:'Your apps', style:{ fontFamily:head, fontWeight:600, fontSize:42, lineHeight:1.05 } },
+      { spec:'Title · BC 600 25/1.15', sample:'Change CRM', style:{ fontFamily:head, fontWeight:600, fontSize:25 } },
+      { spec:'Section · BC 600 18/1.2', sample:'System prompt', style:{ fontFamily:head, fontWeight:600, fontSize:18 } },
+      { spec:'Body · Barlow 400 14/1.5', sample:'Agents talk to each other in chats like people.', style:{ fontFamily:body, fontSize:14 } },
+      { spec:'Body strong · 500 14', sample:'Іван Коваль · ТОВ «Сокіл»', style:{ fontFamily:body, fontSize:14, fontWeight:500 } },
+      { spec:'Small · Barlow 400 12.5', sample:'Last seen 3 min ago · repeated ×4', style:{ fontFamily:body, fontSize:12.5, color:'var(--color-neutral-700)' } },
+      { spec:'Kicker · Mono 500 10.5 +12%', sample:'APPROVAL · RUN · SYSTEM', style:{ fontFamily:MONO, fontSize:10.5, fontWeight:500, letterSpacing:'.12em', color:'var(--color-accent-700)' } },
+      { spec:'Code · Mono 400 12.5/1.55', sample:'+ export async function toCsv(rows) {', style:{ fontFamily:MONO, fontSize:12.5 } },
+      { spec:'Numeric · Mono 500 13 tnum', sample:'14:32 · 12 480 tok · $0.18', style:{ fontFamily:MONO, fontSize:13, fontWeight:500, fontVariantNumeric:'tabular-nums' } }
+    ];
+    const spaces = [['--space-1','3.4'],['--space-2','6.8'],['--space-3','10.2'],['--space-4','13.6'],['--space-6','20.4'],['--space-8','27.2']]
+      .map(([n,px]) => ({ name:n, px:px+'px', bar:{ height:8, width:`var(${n})`, background:'var(--color-accent)' } }));
+    const swDefs = [['chats','Chats','Signals depends on it'],['signals','Signals','Alerts from monitoring'],['memory','Memory','Notes agents keep']];
+    const switches = swDefs.map(([k,label,hint]) => { const on = s.sw[k]; return { label, hint,
+      toggle: () => this.setState(st => ({ sw: { ...st.sw, [k]: !st.sw[k] } })),
+      track: { width:34, height:18, flex:'none', position:'relative', background: on ? 'var(--primary)' : 'var(--muted)', border: '1px solid ' + (on ? 'var(--primary)' : 'var(--input)'), transition:'background 160ms cubic-bezier(.2,0,0,1)' },
+      thumb: { position:'absolute', top:2, left: on ? 18 : 2, width:12, height:12, background: on ? 'var(--primary-foreground)' : 'var(--muted-foreground)', transition:'left 160ms cubic-bezier(.2,0,0,1)' } }; });
+    const chips = ['orchestrator','coder','reviewer','builder','tester'].map(k => { const on = s.chip === k; return { label:'@'+k,
+      pick: () => this.setState({ chip: k }),
+      style: { all:'unset', cursor:'pointer', fontFamily:MONO, fontSize:12, padding:'3px 9px', border:'1px solid ' + (on ? 'var(--primary)' : 'var(--border)'), background: on ? 'var(--accent)' : 'transparent', color: on ? 'var(--accent-foreground)' : 'var(--foreground)', transition:'background 160ms' } }; });
+    const markBase = { width:28, height:28, flex:'none', display:'grid', placeItems:'center', fontFamily:MONO, fontSize:12, fontWeight:600 };
+    const agents = [
+      { name:'Orchestrator', handle:'@orchestrator', letter:'O', mark:{ ...markBase, background:'var(--primary)', color:'var(--primary-foreground)' } },
+      { name:'Coder', handle:'@coder', letter:'C', mark:{ ...markBase, background:'var(--accent)', color:'var(--accent-foreground)' } },
+      { name:'Reviewer', handle:'@reviewer', letter:'R', mark:{ ...markBase, border:'1.5px solid var(--primary)', color:'var(--primary)' } },
+      { name:'Builder', handle:'@builder', letter:'B', mark:{ ...markBase, background:'var(--foreground)', color:'var(--background)' } },
+      { name:'Tester', handle:'@tester', letter:'T', mark:{ ...markBase, border:'1.5px dashed var(--muted-foreground)', color:'var(--foreground)' } },
+      { name:'Олена (you)', handle:'local', letter:'О', mark:{ ...markBase, borderRadius:'50%', background:'var(--secondary)', color:'var(--secondary-foreground)', fontFamily:body, fontSize:13 } }
+    ];
+    const menu = [['Chats','Alt+1',true],['Skills','Alt+2',false],['CRM','Alt+5',false],['Agents','Alt+3',false]].map(([label,kbd,act]) => ({ label, kbd,
+      row: { display:'flex', justifyContent:'space-between', alignItems:'center', padding:'5px 8px', fontSize:13.5, background: act ? 'var(--accent)' : 'transparent', color: act ? 'var(--accent-foreground)' : 'inherit' } }));
+    const themeOpts = ['light','dark'].map(k => ({ label: k === 'light' ? 'Light' : 'Dark', pick: () => this.setState({ tileTheme: k }),
+      style: { all:'unset', cursor:'pointer', padding:'6px 12px', fontSize:13, background: s.tileTheme === k ? 'var(--color-accent)' : 'transparent', color: s.tileTheme === k ? 'var(--color-bg)' : 'inherit' } }));
+
+    const defs = [
+      { id:'hypr', name:'Hyprland', gap:10, radius:10, border:2, mode:'minimal' },
+      { id:'i3', name:'i3', gap:0, radius:0, border:1, mode:'bar' }
+    ];
+    const tileDefs = [
+      { name:'Chats', area:'1 / 1 / 3 / 2', kind:'chat' },
+      { name:'CRM', area:'1 / 2 / 2 / 3', kind:'crm' },
+      { name:'Agents', area:'2 / 2 / 3 / 3', kind:'agents' }
+    ];
+    const presets = defs.map(d => ({
+      name: d.name,
+      spec: `--wm-gap ${d.gap} · --wm-radius ${d.radius} · --wm-border ${d.border} · title ${d.mode}`,
+      frame: { display:'flex', height:400, gap: d.gap, padding: d.gap, background: d.mode === 'bar' ? 'var(--border)' : 'var(--background)', border:'1px solid var(--border)', color:'var(--foreground)' },
+      rail: { width:44, flex:'none', background:'var(--rail)', color:'var(--rail-foreground)', display:'flex', flexDirection:'column', alignItems:'center', gap:8, padding:'10px 0', borderRadius: d.radius },
+      grid: { flex:1, minWidth:0, display:'grid', gridTemplateColumns:'1.25fr 1fr', gridTemplateRows:'1fr 1fr', gap: d.mode === 'bar' ? 1 : d.gap },
+      tiles: tileDefs.map((t, i) => {
+        const f = s.focus === i;
+        const isBar = d.mode === 'bar';
+        return { name: t.name, isChat: t.kind === 'chat', isCrm: t.kind === 'crm', isAgents: t.kind === 'agents', hasChat: t.kind === 'crm', marks: f && !isBar,
+          focus: () => this.setState({ focus: i }),
+          style: { gridArea: t.area, position:'relative', display:'flex', flexDirection:'column', minHeight:0, minWidth:0, cursor:'default',
+            background: t.kind === 'chat' ? 'var(--chat-bg)' : 'var(--card)', borderRadius: d.radius,
+            border: `${d.border}px solid ${f ? 'var(--ring)' : (isBar ? 'transparent' : 'var(--border)')}`,
+            transition:'border-color 160ms cubic-bezier(.2,0,0,1)' },
+          bar: isBar
+            ? { height:22, flex:'none', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 4px 0 8px', fontSize:12, background: f ? 'var(--primary)' : 'var(--muted)', color: f ? 'var(--primary-foreground)' : 'var(--muted-foreground)', transition:'background 160ms' }
+            : { height:32, flex:'none', display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 6px 0 12px', fontSize:13, color: f ? 'var(--foreground)' : 'var(--muted-foreground)', borderBottom:'1px solid var(--border)' },
+          dot: { width:6, height:6, flex:'none', background: f ? (isBar ? 'var(--primary-foreground)' : 'var(--ring)') : 'transparent', border: f ? 'none' : '1px solid currentColor' },
+          body: { flex:1, minHeight:0, overflow:'hidden', borderRadius: `0 0 ${Math.max(0, d.radius - d.border)}px ${Math.max(0, d.radius - d.border)}px`,
+            ...(t.kind === 'chat' ? { backgroundImage:'radial-gradient(var(--grid-dot) 1px, transparent 1.2px)', backgroundSize:'16px 16px' } : {}) }
+        };
+      })
+    }));
+    const crmRows = [
+      { n:'ТОВ «Сокіл»', s:'Negotiation', v:'₴84k' },
+      { n:'Northwind Labs', s:'Proposal', v:'$12k' },
+      { n:'Іван Коваль', s:'Won', v:'₴21k' },
+      { n:'Kite & Co', s:'Lead', v:'—' }
+    ];
+    return { themes, typeScale, spaces, switches, chips, agents, menu, themeOpts, presets, crmRows, tileThemeStyle: STY[s.tileTheme] };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,33 +1,42 @@
 # The screen
 
-Aura is a core you fill with apps. It opens on **Home**, the launcher of your apps, and lays out the
-apps you open as **tiles**, like a tiling window manager. Even the built-in parts (Chats, Skills,
-Memory…) are apps, and you can turn off the ones you do not need.
+Aura is a shell you fill with apps. It lays out the apps you open as **tiles**, like a tiling
+window manager. Even the built-in parts (Chats, Helpers, Reminders…) are apps, and you can turn
+off the ones you do not need.
 
-## Home
+## My apps
 
-Click the logo at the top of the rail to open Home, the launcher. It lists every app by **group**,
-each with a line on what it is for:
+Click the **A** at the top of the bar (or press Alt+H) to open **My apps** over your work. It lists
+every app by **group**, each with a line on what it is for:
 
 - **Your groups first:** the apps you built or installed, grouped as their manifest says (_Work_,
   _Home_…; an app without a group is under _Apps_). Ask in an app's chat to change its group or
-  description. The **⋯** menu on an app uninstalls it (see [Apps](Apps#uninstall-and-bring-back)).
-- **Communication, Agents, System:** the built-in apps. Chats, Signals, Skills, Memory and
-  Schedule have a switch; Catalog, Customize, Localization, Restore points and Devices are always
-  there.
-- **Find an app:** type to filter by name, description or group; Enter opens the first match.
-- **Add an app:** start from a template (CRM, Tasks, Notes), browse the [Catalog](Catalog), or, with
-  Chats on, start an empty app that @builder makes from your description.
+  description.
+- **Essentials:** Chats, Alerts, Reminders and Helpers. **Settings:** Look, Language, Phone,
+  Backups and Ready-made packs.
+- **Find an app or a setting:** type to filter by name, description or group; Enter opens the
+  first match, Esc closes the menu.
+- **New app:** a template (CRM, Tasks, Notes) or your own: a name and what it should do, which a
+  helper builds in its chat.
+
+An empty tile, **New window**, shows the same list. There the **⋯** on one of your apps uninstalls
+it (see [Apps](Apps#uninstall-and-bring-back)).
+
+## Plain and advanced
+
+Aura speaks plainly by default. **Advanced mode** (the switch at the bottom of My apps) shows the
+technical side: Skills, Memory and Helper programs as their own apps, the switches that turn
+built-in apps off, the apps' data and keys on their tiles, and keyboard hints. You can also ask
+the orchestrator: _"turn on advanced mode"_.
 
 ## Tiles
 
-- **Open an app:** click its icon in the rail or on Home. It replaces the app in the focused tile
-  (the one with the blue line), or comes to the front if it is open already. There are no tabs: a
-  tile shows one app.
-- **Side by side:** **Shift-click** an icon to open it in a new tile on the right, or use **+** in a
-  tile's bar and choose **Here**, **Right** or **Below**.
-- **Close:** the **×** at the end of a tile's bar. Closing the last tile brings Home back.
-- **Home is a launcher:** it can be open in several tiles; opening an app from one replaces it.
+- **Open an app:** click its icon on the bar or in My apps. It replaces the app in the focused tile
+  (the one with the blue border), or comes to the front if it is open already. There are no tabs:
+  a tile shows one app.
+- **Side by side:** **Shift-click** an icon to open it in a new tile on the right, or use **New
+  window beside** in a tile's bar. **Open another app here** swaps the app in that tile.
+- **Close:** the **×** at the end of a tile's bar. Closing the last tile leaves a New window.
 - **Resize:** drag the line between two tiles (or focus it and use the arrow keys).
 - The screen is saved as you change it and comes back the same next time.
 
@@ -41,18 +50,18 @@ change it back with a click.
 coloured border on the focused tile, thin title bars) or **i3** (no gaps, square, full title bars),
 then gaps, corners, borders and title bars one by one (**Thin** and **Hidden** show a tile's buttons
 when you point at it). **Bar** puts the bar on the left, right, top or bottom. The bar ends with the
-status: approvals waiting, agents at work, the clock and the connection.
+status: the clock, the connection and the number of decisions waiting for you.
 
 Keyboard, with **Mod** set to Alt (default), Ctrl+Alt (best on macOS) or Super:
 
-| Keys                        | Does                                    |
-| --------------------------- | --------------------------------------- |
-| Mod+←↑→↓                    | focus the tile in that direction        |
-| Mod+Shift+←↑→↓              | swap the tile with that one             |
-| Mod+Enter / Mod+Shift+Enter | new tile with Home on the right / below |
-| Mod+Q                       | close the tile                          |
-| Mod+H                       | Home                                    |
-| Mod+1…9                     | the bar's apps, in order                |
+| Keys                        | Does                              |
+| --------------------------- | --------------------------------- |
+| Mod+←↑→↓                    | focus the tile in that direction  |
+| Mod+Shift+←↑→↓              | swap the tile with that one       |
+| Mod+Enter / Mod+Shift+Enter | a New window on the right / below |
+| Mod+Q                       | close the tile                    |
+| Mod+H                       | My apps                           |
+| Mod+1…9                     | the bar's apps, in order          |
 
 They work while the focus is outside an app's own frame (click the tile's title bar or the
 desktop around the tiles first). In a text field Mod+arrows keep moving by word. You can also ask
@@ -86,19 +95,19 @@ again. Nothing opens by itself: a project's chat has an **Apps** button to open 
 
 ## Turning built-in apps off
 
-Not everyone needs agents: you may only want to use the apps you installed. Turn an app off with
-its switch on Home:
+Not everyone needs agents: you may only want to use the apps you installed. In advanced mode, a New
+window has a switch next to each built-in app:
 
-- **Chats** is the messenger with the orchestrator and AI agents, and every app's chat. Skills,
-  Memory, Schedule and Signals work through it, so turning Chats off turns them off too (Home asks
-  first); turning one of them on turns Chats on.
+- **Chats** is the messenger with your helpers, and every app's chat. Skills, Memory, Reminders and
+  Alerts work through it, so turning Chats off turns them off too (Aura asks first); turning one of
+  them on turns Chats on.
 - Off means off: its pages and features are gone, agents get no tools from it, and nothing runs in
   the background for it. Your data stays, and turning it on brings everything back.
 - The choice is saved in `~/.aura/modules.json`, like the rest of your setup.
 
-## Restore points
+## Backups and restore points
 
-**Restore points** (System group) keeps the whole Aura as it was at a moment: agents, skills,
+**Backups** (Settings) keeps restore points and the copies of uninstalled apps. A restore point keeps the whole Aura as it was at a moment: agents, skills,
 themes, tool servers, settings files, the look and layout, the language, and every app with its
 code, versions and data. Chats, memory and secrets are not part of them.
 
@@ -109,7 +118,7 @@ code, versions and data. Chats, memory and secrets are not part of them.
 
 ## Language
 
-**Localization** (System group) sets one language for Aura: its interface, the answers of its
+**Language** (Settings) sets one language for Aura: its interface, the answers of its
 agents, and your apps (they get it as `ctx.language`). _Automatic_ uses this computer's language for
 the interface and lets agents answer in the language you write in. English and Ukrainian are built
 in; texts without a translation stay in English. To add a language or correct a translation, put

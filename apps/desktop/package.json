@@ -1,6 +1,6 @@
 {
   "name": "@aura/desktop",
-  "version": "0.35.0",
+  "version": "0.36.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,8 +15,9 @@
   "dependencies": {
     "@aura/shared": "workspace:*",
     "@elysiajs/eden": "1.4.9",
-    "@fontsource-variable/geist": "5.3.0",
     "@fontsource-variable/geist-mono": "5.3.0",
+    "@fontsource/barlow": "5.3.0",
+    "@fontsource/barlow-condensed": "5.3.0",
     "@streamdown/code": "2.0.0",
     "@tauri-apps/api": "2.12.4",
     "class-variance-authority": "0.7.1",

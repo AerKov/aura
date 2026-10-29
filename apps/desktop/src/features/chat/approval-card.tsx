@@ -53,7 +53,7 @@ export function ApprovalCard({ card }: { card: ApprovalCardData }) {
           <span className="font-semibold">{card.title}</span>
           <span
             className={cn(
-              "ml-auto rounded-full px-2 py-0.5 text-[11px] font-medium",
+              "ml-auto rounded-pill px-2 py-0.5 text-[11px] font-medium",
               card.status === "pending" &&
                 "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-200",
               card.status === "approved" &&

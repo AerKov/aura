@@ -4,18 +4,13 @@ import { PAGE_IDS } from "./layout";
 
 describe("the launcher's catalogue (ADR 0033)", () => {
   test("the user's groups come first, the default one last of them, then the built-in ones", () => {
-    expect(groupOrder(["System", "Work", DEFAULT_APP_GROUP, "Agents", "Home", "Work"])).toEqual([
-      "Home",
-      "Work",
-      DEFAULT_APP_GROUP,
-      "Agents",
-      "System",
-    ]);
+    expect(
+      groupOrder(["Settings", "Work", DEFAULT_APP_GROUP, "Essentials", "Home", "Work"]),
+    ).toEqual(["Home", "Work", DEFAULT_APP_GROUP, "Essentials", "Settings"]);
     // Translated names work the same way.
-    expect(groupOrder(["Система", "Робота"], ["Спілкування", "Система"], "Застосунки")).toEqual([
-      "Робота",
-      "Система",
-    ]);
+    expect(
+      groupOrder(["Налаштування", "Робота"], ["Основне", "Налаштування"], "Застосунки"),
+    ).toEqual(["Робота", "Налаштування"]);
   });
 
   test("search looks at the name, the description and the group", () => {

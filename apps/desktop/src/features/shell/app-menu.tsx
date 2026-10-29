@@ -9,7 +9,7 @@ import { api, call } from "@/lib/api";
 
 /**
  * An app's menu in the launcher (ADR 0033): uninstall it. An app built in Aura leaves a backup
- * (Restore points brings it back); a plain extension is removed as a commit of the data folder.
+ * (Backups brings it back); a plain extension is removed as a commit of the data folder.
  */
 export function AppMenu({ extension }: { extension: ExtensionInfo }) {
   const t = useT();
@@ -64,7 +64,7 @@ export function AppMenu({ extension }: { extension: ExtensionInfo }) {
               <p className="mb-2 text-xs">
                 {extension.app
                   ? t(
-                      "Uninstall {name}? Its chat goes too. A backup of its code, versions and data is kept under Restore points.",
+                      "Uninstall {name}? Its chat goes too. A copy of its code, versions and data is kept in Backups.",
                       { name: extension.name },
                     )
                   : t("Remove {name}? Its files go as a commit of the data folder.", {

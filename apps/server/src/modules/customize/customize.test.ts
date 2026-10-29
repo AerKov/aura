@@ -206,14 +206,14 @@ describe("customization", () => {
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
     const initial = (await api.appearance.get()).data;
     expect(initial?.rail.edge).toBe("left");
-    expect(initial?.wm).toEqual({ gaps: 8, radius: 12, border: 2, titles: "minimal", mod: "alt" });
+    expect(initial?.wm).toEqual({ gaps: 10, radius: 10, border: 2, titles: "minimal", mod: "alt" });
 
     const set = await api.appearance.put({
       rail: { edge: "top" },
       wm: { gaps: 4, mod: "ctrl-alt" },
     });
     expect(set.data?.rail.edge).toBe("top");
-    expect(set.data?.wm).toMatchObject({ gaps: 4, radius: 12, mod: "ctrl-alt" });
+    expect(set.data?.wm).toMatchObject({ gaps: 4, radius: 10, mod: "ctrl-alt" });
     expect((await api.appearance.put({ wm: { gaps: 99 } })).status).toBe(422);
     expect((await api.appearance.put({ rail: { size: 32 } })).data?.rail.size).toBe(32);
     expect((await api.appearance.put({ rail: { size: 200 } })).status).toBe(422);

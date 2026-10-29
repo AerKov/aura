@@ -1,12 +1,12 @@
 /**
- * The launcher's catalogue (ADR 0033): every app has a name, a one-line description and a group.
- * Built-in apps are listed here; installed and built apps say theirs in their manifest.
+ * The launcher's catalogue (ADR 0033, ADR 0034): every app has a name, a one-line description and
+ * a group. Built-in apps are listed here; installed and built apps say theirs in their manifest.
  */
 import type { AppRef } from "./layout";
 import type { ModuleId } from "./modules";
 
 /** Groups of the built-in apps, in launcher order after the user's own groups. */
-export const BUILTIN_GROUPS = ["Communication", "Agents", "System"] as const;
+export const BUILTIN_GROUPS = ["Essentials", "Settings"] as const;
 
 /** The group of an app whose manifest names none. */
 export const DEFAULT_APP_GROUP = "Apps";
@@ -15,14 +15,17 @@ export const MAX_APP_DESCRIPTION = 200;
 export const MAX_APP_GROUP = 30;
 
 export interface BuiltinApp {
-  /** Unique key; several entries may open the same app (Signals live in the messenger). */
+  /** Unique key; several entries may open the same app (Alerts live in the messenger). */
   key: string;
   app: AppRef;
+  /** Plain names for everyone (ADR 0034); the interface translates them. */
   name: string;
   description: string;
   group: (typeof BUILTIN_GROUPS)[number];
   /** The module that turns it on and off; null for the core's own apps. */
   module: ModuleId | null;
+  /** Listed in the plain view; the others only in advanced mode. */
+  simple: boolean;
 }
 
 export const BUILTIN_APPS: BuiltinApp[] = [
@@ -30,97 +33,109 @@ export const BUILTIN_APPS: BuiltinApp[] = [
     key: "chats",
     app: "messenger",
     name: "Chats",
-    description: "The messenger with the orchestrator, your agents and every app's chat.",
-    group: "Communication",
+    description: "Write to your Helper, like in a messenger",
+    group: "Essentials",
     module: "chats",
+    simple: true,
   },
   {
     key: "signals",
     app: "messenger",
-    name: "Signals",
-    description: "Alerts from monitoring tools and apps, triaged by the orchestrator.",
-    group: "Communication",
+    name: "Alerts",
+    description: "When something broke or needs attention",
+    group: "Essentials",
     module: "alerts",
+    simple: true,
+  },
+  {
+    key: "schedule",
+    app: "page:jobs",
+    name: "Reminders",
+    description: "What to do regularly: every morning, every Friday…",
+    group: "Essentials",
+    module: "jobs",
+    simple: true,
   },
   {
     key: "agents",
     app: "page:agents",
-    name: "Agents",
-    description: "Each agent's prompt, engine, tools, memory and tool servers.",
-    group: "Agents",
+    name: "Helpers",
+    description: "AI agents: who they are, what they can do and remember, what runs them",
+    group: "Essentials",
     module: "chats",
+    simple: true,
   },
   {
     key: "skills",
     app: "page:skills",
     name: "Skills",
-    description: "Know-how your agents can use, with versions.",
-    group: "Agents",
+    description: "Instructions your helpers use",
+    group: "Essentials",
     module: "skills",
+    simple: false,
   },
   {
     key: "memory",
     app: "page:memory",
     name: "Memory",
-    description: "What your agents remember, to search and delete.",
-    group: "Agents",
+    description: "What your helpers remember about you",
+    group: "Essentials",
     module: "memory",
-  },
-  {
-    key: "schedule",
-    app: "page:jobs",
-    name: "Schedule",
-    description: "Agents' work on a schedule.",
-    group: "Agents",
-    module: "jobs",
-  },
-  {
-    key: "engines",
-    app: "page:engines",
-    name: "Engines",
-    description: "Which AI runs your agents, and the command sandbox.",
-    group: "System",
-    module: "chats",
-  },
-  {
-    key: "catalog",
-    app: "page:catalog",
-    name: "Catalog",
-    description: "Packs of apps, agents, skills and themes to install.",
-    group: "System",
-    module: null,
+    simple: false,
   },
   {
     key: "customize",
     app: "page:customize",
-    name: "Customize",
-    description: "Theme, window manager, bar and extensions.",
-    group: "System",
+    name: "Look",
+    description: "Theme, windows, side bar",
+    group: "Settings",
     module: null,
+    simple: true,
   },
   {
     key: "localization",
     app: "page:localization",
-    name: "Localization",
-    description: "The language of Aura, its agents and your apps.",
-    group: "System",
+    name: "Language",
+    description: "Українська · English",
+    group: "Settings",
     module: null,
-  },
-  {
-    key: "backups",
-    app: "page:backups",
-    name: "Restore points",
-    description: "Take Aura back or forward: apps, their data and settings. Removed apps' backups.",
-    group: "System",
-    module: null,
+    simple: true,
   },
   {
     key: "devices",
     app: "page:devices",
-    name: "Devices",
-    description: "Phones paired with this computer.",
-    group: "System",
+    name: "Phone",
+    description: "Open Aura from your phone",
+    group: "Settings",
     module: null,
+    simple: true,
+  },
+  {
+    key: "backups",
+    app: "page:backups",
+    name: "Backups",
+    description: "Put everything back as it was",
+    group: "Settings",
+    module: null,
+    simple: true,
+  },
+  {
+    key: "catalog",
+    app: "page:catalog",
+    name: "Ready-made packs",
+    description: "Apps and helpers you can add",
+    group: "Settings",
+    module: null,
+    simple: true,
+  },
+  {
+    key: "engines",
+    app: "page:engines",
+    name: "Helper programs",
+    description: "Claude Code, Codex, Ollama…",
+    group: "Settings",
+    module: "chats",
+    simple: false,
   },
 ];
 

@@ -57,6 +57,7 @@ conversations, small **mono uppercase "kicker" labels** (RUN, APPROVAL, SYSTEM) 
 ## 4. The shell
 
 ### The bar (rail)
+
 - A thin bar on **any edge** (left by default; top, right, bottom possible), thickness 24–96px.
 - Top: the Aura logo = **Home**. Then app icons (Chats, Skills, Memory, Agents, Catalog, Schedule,
   user apps…, Engines, Customize, Localization, Restore points, Devices). Active app: highlighted.
@@ -65,6 +66,7 @@ conversations, small **mono uppercase "kicker" labels** (RUN, APPROVAL, SYSTEM) 
 - The user can replace the bar with their own app (code), so keep it simple and modular.
 
 ### Tiles
+
 - The screen is a tree of splits (horizontal/vertical) with resizable gutters.
 - Each tile: a **minimal title bar** (app icon + name, `+` "open an app here / right / below",
   close ×). The **focused tile** has an accent border.

@@ -75,6 +75,7 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         body: t.Object({
           theme: t.Optional(t.Nullable(t.String({ maxLength: 48 }))),
           snippets: t.Optional(t.Array(t.String({ maxLength: 48 }))),
+          advanced: t.Optional(t.Boolean()),
           rail: t.Optional(
             t.Object({
               order: t.Optional(t.Array(t.String({ maxLength: 52 }), { maxItems: 64 })),

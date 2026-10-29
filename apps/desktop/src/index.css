@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource-variable/geist";
+@import "@fontsource/barlow/400.css";
+@import "@fontsource/barlow/500.css";
+@import "@fontsource/barlow/700.css";
+@import "@fontsource/barlow-condensed/400.css";
+@import "@fontsource/barlow-condensed/600.css";
 @import "@fontsource-variable/geist-mono";
 
 @source "../node_modules/streamdown/dist/*.js";
@@ -9,80 +13,112 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Aura tokens (ADR 0010): a cool, airy surface, slate ink, soft rounded shapes and one signal
- * colour (clear blue). Dark is deep slate. Themes (themes/<name>/theme.css) override these variables.
+ * Aura tokens (ADR 0034, the "Industry" look): square corners, hairline borders, steel blue as the
+ * one signal colour, Barlow for text and Barlow Condensed for headings. Every colour, font and
+ * radius is a variable: themes (themes/<name>/theme.css) override them, e.g. `--radius` and
+ * `--radius-pill` for a soft, rounded look.
  */
 :root {
-  --radius: 0.875rem;
+  --radius: 0px;
+  /* Pills (chips, small buttons) follow it; a soft theme sets 9999px. */
+  --radius-pill: var(--radius);
+  --font-body: "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Barlow Condensed", "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --font-code: "Geist Mono Variable", ui-monospace, monospace;
   /* The tiles (ADR 0028), set from the appearance settings; themes may override them. */
-  --wm-gap: 8px;
-  --wm-radius: 12px;
+  --wm-gap: 10px;
+  --wm-radius: 10px;
   --wm-border: 2px;
-  --background: oklch(0.985 0.003 247);
-  --foreground: oklch(0.22 0.02 258);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 258);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 258);
-  --primary: oklch(0.57 0.18 252);
-  --primary-foreground: oklch(0.99 0.005 247);
-  --secondary: oklch(0.955 0.008 250);
-  --secondary-foreground: oklch(0.27 0.02 258);
-  --muted: oklch(0.96 0.006 250);
-  --muted-foreground: oklch(0.52 0.02 256);
-  --accent: oklch(0.945 0.016 248);
-  --accent-foreground: oklch(0.22 0.02 258);
-  --destructive: oklch(0.58 0.2 25);
-  --border: oklch(0.91 0.008 252);
-  --input: oklch(0.89 0.01 252);
-  --ring: oklch(0.57 0.18 252);
-  --sidebar: oklch(0.972 0.005 250);
-  --rail: oklch(0.972 0.005 250);
-  --rail-foreground: oklch(0.45 0.02 256);
-  --chat-bg: var(--background);
-  --grid-dot: oklch(0.89 0.01 252);
-  --bubble-own: oklch(0.94 0.03 248);
-  --bubble-other: transparent;
-  --signal: oklch(0.57 0.18 252);
+  --background: #f2f2f3;
+  --foreground: #1d1f20;
+  --card: #f5f5f8;
+  --card-foreground: #1d1f20;
+  --popover: #f5f5f8;
+  --popover-foreground: #1d1f20;
+  --primary: #416180;
+  --primary-hover: #2c455d;
+  --primary-foreground: #f5f5f8;
+  --secondary: #e7e7ea;
+  --secondary-foreground: #2b2b2d;
+  --muted: #e9e9ea;
+  --muted-foreground: #5d5d60;
+  --accent: #d6ebff;
+  --accent-foreground: #2c455d;
+  --destructive: oklch(0.52 0.15 27);
+  --warning: oklch(0.6 0.13 70);
+  --warning-text: oklch(0.48 0.11 65);
+  --success: oklch(0.55 0.12 150);
+  --border: color-mix(in srgb, #1d1f20 16%, transparent);
+  --input: color-mix(in srgb, #1d1f20 22%, transparent);
+  --input-bg: #e9e9ea;
+  --ring: #5980a6;
+  --sidebar: #f5f5f8;
+  --rail: #1d2d3d;
+  --rail-foreground: #d6ebff;
+  --chat-bg: #f2f2f3;
+  --grid-dot: color-mix(in srgb, #1d1f20 13%, transparent);
+  --bubble-own: #d6ebff;
+  --bubble-own-foreground: #1d2d3d;
+  --bubble-other: #f5f5f8;
+  --signal: #5980a6;
+  --signal-text: #416180;
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2b2b2d 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2b2b2d 22%, transparent);
+  --ease: cubic-bezier(0.2, 0, 0, 1);
 }
 
 .dark {
-  --background: oklch(0.18 0.012 256);
-  --foreground: oklch(0.94 0.006 250);
-  --card: oklch(0.215 0.014 256);
-  --card-foreground: oklch(0.94 0.006 250);
-  --popover: oklch(0.225 0.014 256);
-  --popover-foreground: oklch(0.94 0.006 250);
-  --primary: oklch(0.7 0.15 248);
-  --primary-foreground: oklch(0.17 0.03 256);
-  --secondary: oklch(0.25 0.015 256);
-  --secondary-foreground: oklch(0.9 0.006 250);
-  --muted: oklch(0.235 0.013 256);
-  --muted-foreground: oklch(0.68 0.015 252);
-  --accent: oklch(0.27 0.02 254);
-  --accent-foreground: oklch(0.94 0.006 250);
-  --destructive: oklch(0.68 0.19 25);
-  --border: oklch(0.3 0.016 256);
-  --input: oklch(0.34 0.016 256);
-  --ring: oklch(0.7 0.15 248);
-  --sidebar: oklch(0.195 0.013 256);
-  --rail: oklch(0.195 0.013 256);
-  --rail-foreground: oklch(0.72 0.012 252);
-  --chat-bg: var(--background);
-  --grid-dot: oklch(0.28 0.015 256);
-  --bubble-own: oklch(0.3 0.045 252);
-  --bubble-other: transparent;
-  --signal: oklch(0.7 0.15 248);
+  --background: #17191b;
+  --foreground: #e7e7ea;
+  --card: #1e2022;
+  --card-foreground: #e7e7ea;
+  --popover: #232527;
+  --popover-foreground: #e7e7ea;
+  --primary: #94bce3;
+  --primary-hover: #b5d9fd;
+  --primary-foreground: #1d2d3d;
+  --secondary: #2b2b2d;
+  --secondary-foreground: #e7e7ea;
+  --muted: #26282a;
+  --muted-foreground: #a6a6a9;
+  --accent: #2c455d;
+  --accent-foreground: #d6ebff;
+  --destructive: oklch(0.7 0.14 27);
+  --warning: oklch(0.78 0.12 75);
+  --warning-text: oklch(0.82 0.11 78);
+  --success: oklch(0.75 0.12 150);
+  --border: color-mix(in srgb, #e7e7ea 14%, transparent);
+  --input: color-mix(in srgb, #e7e7ea 20%, transparent);
+  --input-bg: #1e2022;
+  --ring: #94bce3;
+  --sidebar: #1e2022;
+  --rail: #0f161d;
+  --rail-foreground: #b5d9fd;
+  --chat-bg: #17191b;
+  --grid-dot: color-mix(in srgb, #e7e7ea 9%, transparent);
+  --bubble-own: #2c455d;
+  --bubble-own-foreground: #eef6ff;
+  --bubble-other: #1e2022;
+  --signal: #94bce3;
+  --signal-text: #b5d9fd;
+  --shadow-md: 0 0 0 1px color-mix(in srgb, #e7e7ea 8%, transparent), 0 8px 24px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 0 0 1px color-mix(in srgb, #e7e7ea 8%, transparent), 0 16px 40px rgb(0 0 0 / 0.55);
 }
 
 @theme inline {
-  --font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono Variable", ui-monospace, monospace;
-  --radius-sm: calc(var(--radius) - 6px);
-  --radius-md: calc(var(--radius) - 4px);
+  --font-sans: var(--font-body);
+  --font-heading: var(--font-heading);
+  --font-mono: var(--font-code);
+  /* One radius scale from --radius, so a theme changes every corner at once. */
+  --radius-xs: calc(var(--radius) * 0.25);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-xl: calc(var(--radius) * 1.25);
+  --radius-2xl: calc(var(--radius) * 1.5);
+  --radius-3xl: calc(var(--radius) * 2);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -90,6 +126,7 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -98,12 +135,25 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-warning-text: var(--warning-text);
+  --color-success: var(--success);
   --color-border: var(--border);
   --color-input: var(--input);
+  --color-input-bg: var(--input-bg);
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
   --color-rail: var(--rail);
   --color-rail-foreground: var(--rail-foreground);
+  --color-signal: var(--signal);
+  --color-signal-text: var(--signal-text);
+  --color-bubble-own: var(--bubble-own);
+  --color-bubble-own-foreground: var(--bubble-own-foreground);
+}
+
+/* Chips and small buttons: pills in a soft theme, square in Industry. */
+@utility rounded-pill {
+  border-radius: var(--radius-pill);
 }
 
 @layer base {
@@ -112,7 +162,24 @@
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "ss01", "cv11";
+    font-size: 14.5px;
+    line-height: 1.5;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.12;
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 30%, transparent);
   }
   code,
   pre,
@@ -127,9 +194,9 @@
 
 /* A faint dot grid behind conversations: the workbench surface. */
 .dot-grid {
-  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1px);
-  background-size: 22px 22px;
-  background-position: -11px -11px;
+  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1.3px);
+  background-size: 16px 16px;
+  background-position: -8px -8px;
 }
 
 /* Small monospaced uppercase labels: RUN, APPROVAL, author lines. */
@@ -139,18 +206,6 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted-foreground);
-}
-
-/* Agent marks: rounded monogram tiles tinted by the agent's hue (--h). */
-.mark {
-  background: oklch(0.95 0.035 var(--h));
-  color: oklch(0.42 0.13 var(--h));
-  border: 1px solid oklch(0.86 0.06 var(--h));
-}
-.dark .mark {
-  background: oklch(0.27 0.045 var(--h));
-  color: oklch(0.86 0.1 var(--h));
-  border-color: oklch(0.38 0.06 var(--h));
 }
 
 /* A thin moving stripe under something that is working. */

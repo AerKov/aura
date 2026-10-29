@@ -8,16 +8,25 @@ import {
   visibleApps,
 } from "@aura/shared";
 import type { LucideIcon } from "lucide-react";
-import { Bot, LayoutGrid, MessagesSquare, ShieldCheck } from "lucide-react";
+import { LayoutGrid } from "lucide-react";
 import { createElement, useCallback, useEffect, useMemo, useState } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { AuraLogo } from "@/components/logo";
-import { setState, useChatStore } from "@/features/chat/store";
+import { openChat } from "@/features/chat/actions";
+import { getState, setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
-import { appAvailable, PAGES, railApp, useExtensionApps, useModules } from "./apps";
+import {
+  appAvailable,
+  BUILTIN_ICONS,
+  openEntry,
+  PAGES,
+  railApp,
+  useExtensionApps,
+  useModules,
+} from "./apps";
 import { BarFrame, barThickness } from "./bar-frame";
+import { useAdvanced } from "./launcher";
 import { openAppRef, phoneAppOf } from "./layout";
 import { arrangeRail } from "./rail-layout";
 import { useIsPhone } from "./shell";
@@ -28,15 +37,40 @@ export interface RailItem {
   key: string;
   label: string;
   icon: LucideIcon;
-  /** Open somewhere on the screen. */
+  /** Shown in a tile now. */
   active: boolean;
+  /** Shown in the focused tile. */
+  focused: boolean;
 }
 
 /** Setup pages stay on the desktop; the phone's tab bar keeps the daily ones. */
-const DESKTOP_ONLY = new Set(["catalog", "engines", "customize", "devices"]);
+const DESKTOP_ONLY = new Set([
+  "catalog",
+  "engines",
+  "customize",
+  "devices",
+  "localization",
+  "backups",
+]);
 
-const PAGE_ORDER: PageId[] = ["skills", "memory", "agents", "catalog", "jobs"];
-const PAGE_TAIL: PageId[] = ["engines", "customize", "localization", "backups", "devices"];
+/**
+ * The bar's built-in items around the user's apps (ADR 0034). The plain view keeps the daily ones;
+ * advanced mode adds the rest.
+ */
+const SIMPLE_HEAD = ["chats", "signals"];
+const SIMPLE_TAIL: PageId[] = ["agents", "customize"];
+const ADVANCED_HEAD = ["chats", "signals", "jobs"];
+const ADVANCED_TAIL: PageId[] = [
+  "agents",
+  "skills",
+  "memory",
+  "catalog",
+  "engines",
+  "customize",
+  "localization",
+  "backups",
+  "devices",
+];
 
 /** Every rail item in its default order, before the user's layout is applied. */
 export function useRailItems(): RailItem[] {
@@ -45,51 +79,75 @@ export function useRailItems(): RailItem[] {
   const phone = useIsPhone();
   const extensions = useExtensionApps();
   const modules = useModules();
+  const advanced = useAdvanced();
   const t = useT();
   const open = new Set(phone ? [phoneApp] : visibleApps(layout));
-  const page = (id: PageId): RailItem => ({
-    key: id,
-    label: t(PAGES[id].label),
-    icon: PAGES[id].icon,
-    active: open.has(`page:${id}`),
-  });
+  const focusedApp = phone ? phoneApp : focusedAppOf(layout);
+  const builtin = (key: string): RailItem => {
+    const app = railApp(key);
+    const label =
+      key === "chats" ? "Chats" : key === "signals" ? "Alerts" : PAGES[key as PageId].label;
+    const icon =
+      key === "chats" || key === "signals"
+        ? (BUILTIN_ICONS[key] ?? LayoutGrid)
+        : PAGES[key as PageId].icon;
+    const shown = key !== "signals" && open.has(app);
+    return { key, label: t(label), icon, active: shown, focused: shown && focusedApp === app };
+  };
+  const head = advanced ? ADVANCED_HEAD : SIMPLE_HEAD;
+  const tail = advanced ? ADVANCED_TAIL : SIMPLE_TAIL;
   return [
-    { key: "chats", label: t("Chats"), icon: MessagesSquare, active: open.has("messenger") },
-    ...PAGE_ORDER.map(page),
+    ...head.map(builtin),
     ...extensions.map((ext) => ({
       key: `ext:${ext.id}`,
       label: ext.name,
       icon: extensionIcon(ext.icon),
       active: open.has(`ext:${ext.id}`),
+      focused: focusedApp === `ext:${ext.id}`,
     })),
-    ...PAGE_TAIL.map(page),
-  ].filter((item) => appAvailable(railApp(item.key), modules));
+    ...tail.map(builtin),
+  ].filter(
+    (item) =>
+      appAvailable(railApp(item.key), modules) && (item.key !== "signals" || modules.alerts),
+  );
+}
+
+function focusedAppOf(layout: ReturnType<typeof getState>["layout"]): string | null {
+  const find = (node: typeof layout.root): string | null => {
+    if (node.kind === "tile") return node.id === layout.focused ? node.app : null;
+    for (const child of node.children) {
+      const app = find(child);
+      if (app) return app;
+    }
+    return null;
+  };
+  return find(layout.root);
 }
 
 /** Where the bar's parts go for each edge: tooltips, the active mark, the push to the end. */
 const EDGE = {
   left: {
-    bar: "md:w-14 md:flex-col md:py-2 md:border-r",
+    bar: "md:w-14 md:flex-col md:py-2.5",
     tip: "md:left-12",
-    mark: "md:-left-2 md:top-1/2 md:h-5 md:w-1 md:-translate-y-1/2",
+    mark: "md:left-0 md:inset-y-0 md:w-0.5",
     end: "md:mt-auto",
   },
   right: {
-    bar: "md:w-14 md:flex-col md:py-2 md:border-l",
+    bar: "md:w-14 md:flex-col md:py-2.5",
     tip: "md:right-12",
-    mark: "md:-right-2 md:top-1/2 md:h-5 md:w-1 md:-translate-y-1/2",
+    mark: "md:right-0 md:inset-y-0 md:w-0.5",
     end: "md:mt-auto",
   },
   top: {
-    bar: "md:h-12 md:w-full md:flex-row md:px-2 md:border-b",
+    bar: "md:h-12 md:w-full md:flex-row md:px-2.5",
     tip: "md:top-11",
-    mark: "md:-bottom-1 md:left-1/2 md:h-1 md:w-5 md:-translate-x-1/2",
+    mark: "md:top-0 md:inset-x-0 md:h-0.5",
     end: "md:ml-auto",
   },
   bottom: {
-    bar: "md:h-12 md:w-full md:flex-row md:px-2 md:border-t",
+    bar: "md:h-12 md:w-full md:flex-row md:px-2.5",
     tip: "md:bottom-11",
-    mark: "md:-top-1 md:left-1/2 md:h-1 md:w-5 md:-translate-x-1/2",
+    mark: "md:bottom-0 md:inset-x-0 md:h-0.5",
     end: "md:ml-auto",
   },
 } as const;
@@ -110,6 +168,7 @@ export function Rail() {
   const items = arrangeRail(useRailItems(), rail);
   const layout = useChatStore((s) => s.layout);
   const homeOpen = phone ? current === "home" : visibleApps(layout).includes("home");
+  const menuOpen = useChatStore((s) => s.menuOpen);
   const edge = EDGE[rail?.edge ?? "left"];
   const pendingApprovals = usePendingApprovals();
   const vertical = rail?.edge !== "top" && rail?.edge !== "bottom";
@@ -118,7 +177,8 @@ export function Rail() {
   const open = useCallback(
     (key: string, shift = false) => {
       if (key === "chats" && phone) setState(() => ({ pane: "list" }));
-      openAppRef(railApp(key), shift && !phone ? "right" : "here");
+      setState(() => ({ menuOpen: false, addOpen: false }));
+      openEntry(key, railApp(key), shift && !phone ? "right" : "here");
     },
     [phone],
   );
@@ -175,7 +235,7 @@ export function Rail() {
       <nav
         aria-label="Main"
         className={cn(
-          "bg-rail text-rail-foreground z-20 flex shrink-0 items-center gap-1 max-md:border-t",
+          "bg-rail text-rail-foreground z-50 flex shrink-0 items-center gap-1",
           edge.bar,
           "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:h-16 max-md:justify-around max-md:px-2 max-md:pb-[env(safe-area-inset-bottom)]",
           hideOnPhone && "max-md:hidden",
@@ -191,47 +251,59 @@ export function Rail() {
       >
         <button
           type="button"
-          title={t("Home: all your apps (Shift-click: open on the right)")}
-          aria-label={t("Home")}
-          aria-current={homeOpen ? "page" : undefined}
-          onClick={(e) => openAppRef("home", e.shiftKey && !phone ? "right" : "here")}
+          title={t("My apps ({keys})", { keys: `${modLabel(mod)}+H` })}
+          aria-label={t("My apps")}
+          aria-expanded={menuOpen}
+          onClick={() =>
+            phone
+              ? openAppRef("home")
+              : setState((s) => ({ menuOpen: !s.menuOpen, addOpen: false }))
+          }
           className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-xl",
-            vertical ? "md:mb-2" : "md:mr-2",
+            "grid size-[30px] shrink-0 place-items-center border font-mono text-[13px] font-semibold transition-colors duration-150",
+            menuOpen || (phone && homeOpen)
+              ? "border-rail-foreground bg-rail-foreground text-rail"
+              : "border-rail-foreground/60 hover:bg-rail-foreground/15",
+            vertical ? "md:mb-2.5" : "md:mr-2.5",
           )}
         >
-          <AuraLogo className="size-8" />
+          A
         </button>
         {items.map((item, index) => (
           <button
             key={item.key}
             type="button"
-            title={`${item.label}${index < 9 ? ` (${modLabel(mod)}+${index + 1})` : ""}; Shift-click: open on the right`}
+            title={`${item.label}${index < 9 ? ` (${modLabel(mod)}+${index + 1})` : ""}`}
             aria-label={item.label}
-            aria-current={item.active ? "page" : undefined}
+            aria-current={item.focused ? "page" : undefined}
             onClick={(e) => open(item.key, e.shiftKey)}
             className={cn(
-              "group relative flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors",
-              item.active
-                ? "bg-accent text-foreground"
-                : "hover:bg-accent/70 hover:text-foreground",
-              item.key === "customize" && edge.end,
+              "group relative grid size-[38px] shrink-0 place-items-center transition-colors duration-150",
+              item.focused
+                ? "bg-rail-foreground/[0.16] text-rail-foreground"
+                : "text-rail-foreground/80 hover:bg-rail-foreground/10 hover:text-rail-foreground",
               DESKTOP_ONLY.has(item.key) && "max-md:hidden",
             )}
           >
-            <item.icon className="size-5" />
+            <item.icon className="size-[18px]" strokeWidth={1.5} />
             {item.key === "chats" && pendingApprovals > 0 && (
               <span
-                className="bg-primary absolute top-1.5 right-1.5 size-2 rounded-full md:hidden"
+                className="bg-warning absolute top-1.5 right-1.5 size-2 rounded-full md:hidden"
                 title="Approvals waiting"
               />
             )}
             {item.active && (
-              <span className={cn("bg-primary absolute hidden rounded-full md:block", edge.mark)} />
+              <span
+                className={cn(
+                  "bg-rail-foreground absolute hidden md:block",
+                  edge.mark,
+                  !item.focused && "opacity-35",
+                )}
+              />
             )}
             <span
               className={cn(
-                "bg-foreground text-background pointer-events-none absolute z-30 hidden rounded-lg px-2 py-1 font-mono text-[11px] whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100 md:block",
+                "bg-foreground text-background pointer-events-none absolute z-30 hidden px-2 py-1 font-mono text-[11px] whitespace-nowrap opacity-0 transition-opacity group-hover:opacity-100 md:block",
                 edge.tip,
               )}
             >
@@ -239,6 +311,7 @@ export function Rail() {
             </span>
           </button>
         ))}
+        <span className={cn("hidden md:block", edge.end)} />
         <Status vertical={vertical} />
       </nav>
     </>
@@ -284,7 +357,7 @@ function useBarState(
     size,
     vertical,
     mod,
-    home: { key: "home", label: "Home", svg: svgOf(LayoutGrid), active: homeOpen },
+    home: { key: "home", label: "My apps", svg: svgOf(LayoutGrid), active: homeOpen },
     items: items.map((item, i) => ({
       key: item.key,
       label: item.label,
@@ -310,71 +383,62 @@ export function modLabel(mod: ModKey): string {
   return mod === "alt" ? "Alt" : mod === "ctrl-alt" ? "Ctrl+Alt" : "Super";
 }
 
-/** The bar's status, like waybar's modules: approvals, working agents, the clock, the connection. */
+/** The bar's status, like waybar's modules: the clock, the connection, approvals waiting. */
 function Status({ vertical }: { vertical: boolean }) {
   const connection = useChatStore((s) => s.connection);
   const chats = useModules().chats;
   const pendingApprovals = usePendingApprovals();
-  const working = useChatStore((s) => Object.keys(s.streaming).length);
+  const t = useT();
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 15_000);
     return () => clearInterval(timer);
   }, []);
   // A vertical bar is narrow: hours over minutes, 24-hour.
-  const time = vertical
-    ? `${String(now.getHours()).padStart(2, "0")}\n${String(now.getMinutes()).padStart(2, "0")}`
-    : now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const openDirect = () => {
+    const direct = Object.values(getState().chats).find((c) => c.kind === "direct");
+    if (direct) openChat(direct.id);
+    else openAppRef("messenger");
+  };
   return (
     <div
       className={cn(
-        "hidden items-center gap-1.5 font-mono text-[11px] md:flex",
-        vertical ? "mt-2 flex-col" : "ml-3 flex-row",
+        "hidden items-center gap-2 font-mono text-xs font-medium tabular-nums md:flex",
+        vertical ? "flex-col" : "flex-row",
       )}
     >
-      {chats && pendingApprovals > 0 && (
-        <button
-          type="button"
-          onClick={() => openAppRef("messenger")}
-          title={`${pendingApprovals} waiting for your approval`}
-          className="bg-primary text-primary-foreground flex items-center gap-1 rounded-full px-1.5 py-0.5"
-        >
-          <ShieldCheck className="size-3" />
-          {pendingApprovals}
-        </button>
-      )}
-      {chats && working > 0 && (
-        <span
-          title={`${working} agent${working === 1 ? "" : "s"} working`}
-          className="text-primary flex items-center gap-1"
-        >
-          <Bot className="size-3.5 animate-pulse" />
-          {working}
-        </span>
-      )}
-      <span
-        className="text-muted-foreground text-center leading-tight whitespace-pre tabular-nums"
-        title={now.toLocaleString()}
-      >
-        {time}
+      <span className="text-center leading-tight whitespace-pre" title={now.toLocaleString()}>
+        {vertical ? `${hh}\n${mm}` : `${hh}:${mm}`}
       </span>
       <span
         title={
           connection === "open"
-            ? "Connected"
+            ? t("Connected")
             : connection === "connecting"
-              ? "Connecting…"
-              : "Offline"
+              ? t("Connecting…")
+              : t("Offline")
         }
         className={cn(
-          "size-2 rounded-full",
+          "size-[7px] rounded-full",
           connection === "open"
-            ? "bg-emerald-400"
+            ? "bg-rail-foreground"
             : connection === "connecting"
-              ? "bg-amber-400"
-              : "bg-rose-500",
+              ? "bg-warning"
+              : "bg-destructive",
         )}
       />
+      {chats && pendingApprovals > 0 && (
+        <button
+          type="button"
+          onClick={openDirect}
+          title={t("{n} waiting for your decision", { n: pendingApprovals })}
+          className="bg-warning grid min-w-5 place-items-center px-1 text-[11px] text-black"
+        >
+          {pendingApprovals}
+        </button>
+      )}
     </div>
   );
 }

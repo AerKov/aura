@@ -3,13 +3,11 @@ import {
   type LayoutNode,
   MODULES,
   moduleOfApp,
-  PAGE_IDS,
-  type Placement,
   type Project,
   type Tile,
   tiles,
 } from "@aura/shared";
-import { Pin, PinOff, Plus, X } from "lucide-react";
+import { PanelRight, Pin, PinOff, SquarePlus, X } from "lucide-react";
 import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { AuraLogo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
@@ -33,9 +31,12 @@ import { SkillsView } from "@/features/skills/skills-view";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { AppControls, AppSecretsMenu } from "./app-controls";
-import { appAvailable, appInfo, useExtensionApps, useModules } from "./apps";
+import { appAvailable, appInfo, openEntry, useExtensionApps, useModules } from "./apps";
 import { HomeView } from "./home";
+import { useAdvanced, useLauncher } from "./launcher";
 import { closeTileId, focusTile, openAppRef, PHONE_QUERY, phoneAppOf, resizeSplit } from "./layout";
+import { NewAppSheet } from "./new-app-sheet";
+import { AppRow, StartMenu } from "./start-menu";
 
 /** True on phone-sized screens, where the shell shows one app at a time. */
 export function useIsPhone(): boolean {
@@ -59,15 +60,19 @@ export function Shell() {
   const phone = useIsPhone();
   if (phone) {
     return (
-      <div className="flex min-h-0 min-w-0 flex-1">
+      <div className="relative flex min-h-0 min-w-0 flex-1">
         <AppView app={phoneApp} />
+        <NewAppSheet />
       </div>
     );
   }
   return (
-    // The desktop behind the tiles; its padding and the handles make the gaps (ADR 0028).
-    <div className="bg-sidebar flex min-h-0 min-w-0 flex-1 p-[var(--wm-gap)]">
+    // The desktop behind the tiles; its padding and the handles make the gaps (ADR 0028). The
+    // "My apps" menu and the "New app" sheet open over it (ADR 0034).
+    <div className="bg-background relative flex min-h-0 min-w-0 flex-1 p-[var(--wm-gap)]">
       <NodeView node={layout.root} focused={layout.focused} many={tiles(layout.root).length > 1} />
+      <StartMenu />
+      <NewAppSheet />
     </div>
   );
 }
@@ -93,7 +98,7 @@ function NodeView({ node, focused, many }: { node: LayoutNode; focused: string; 
       {node.children.map((child, i) => (
         <Fragment key={child.id}>
           {i > 0 && (
-            <ResizableHandle className="hover:bg-primary/40 aria-[orientation=horizontal]:min-h-px aria-[orientation=horizontal]:h-[var(--wm-gap)] min-w-px w-[var(--wm-gap)] rounded-full bg-transparent" />
+            <ResizableHandle className="hover:bg-primary/40 aria-[orientation=horizontal]:min-h-px aria-[orientation=horizontal]:h-[var(--wm-gap)] min-w-px w-[var(--wm-gap)] rounded-pill bg-transparent" />
           )}
           <ResizablePanel id={child.id} minSize="12%" className="flex min-h-0 min-w-0">
             <NodeView node={child} focused={focused} many={many} />
@@ -108,6 +113,7 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
   const extensions = useExtensionApps();
   const modules = useModules();
   const titles = useChatStore((s) => s.appearance?.wm.titles ?? "minimal");
+  const advanced = useAdvanced();
   const t = useT();
   const info = appInfo(tile.app, extensions);
   const label = tile.app.startsWith("ext:") ? info.label : t(info.label);
@@ -117,17 +123,13 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
     : undefined;
   const chatOpen = useChatStore((s) => (ext?.app ? (s.appChat[ext.id] ?? false) : false));
   const chatId = modules.chats && chatOpen ? ext?.app?.chatId : undefined;
-  // Buttons show on hover in the thin and hidden title bars, and always in the full one.
-  const hoverOnly =
-    titles !== "full" &&
-    "opacity-0 transition-opacity group-hover/tile:opacity-100 focus-within:opacity-100";
   return (
     <section
       data-tile-id={tile.id}
       aria-label={label}
       className={cn(
         "group/tile bg-background relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-solid",
-        focused && (many || titles !== "full") ? "border-primary" : "border-border",
+        focused && many ? "border-ring" : "border-border",
       )}
       style={{ borderWidth: "var(--wm-border)", borderRadius: "var(--wm-radius)" }}
       onMouseDownCapture={() => focusTile(tile.id)}
@@ -135,26 +137,25 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
     >
       <header
         className={cn(
-          "flex shrink-0 items-center gap-0.5 px-1",
-          titles === "full" && "bg-sidebar h-9 border-b",
-          titles === "minimal" && "h-7",
+          "flex shrink-0 items-center gap-0.5 border-b pr-1 pl-3",
+          titles === "minimal" && "bg-card h-[38px]",
+          titles === "full" &&
+            (focused && many ? "bg-primary text-primary-foreground h-[30px]" : "bg-muted h-[30px]"),
           titles === "none" &&
-            "bg-background/90 absolute inset-x-0 top-0 z-20 h-9 border-b opacity-0 backdrop-blur transition-opacity group-hover/tile:opacity-100 focus-within:opacity-100",
-          titles === "full" && many && focused && "shadow-[inset_0_-2px_0_var(--primary)]",
+            "bg-card/95 absolute inset-x-0 top-0 z-20 h-[38px] opacity-0 backdrop-blur transition-opacity group-hover/tile:opacity-100 focus-within:opacity-100",
         )}
       >
         <div
           className={cn(
-            "flex min-w-0 flex-1 items-center gap-1.5 px-2 font-medium",
-            titles === "minimal" ? "text-muted-foreground text-[11px]" : "text-xs",
-            titles === "minimal" && focused && "text-foreground",
+            "flex min-w-0 flex-1 items-center gap-2",
+            titles === "full" ? "text-[13px]" : "text-sm",
           )}
         >
-          <Icon className="size-3.5 shrink-0" />
+          <Icon className="size-4 shrink-0" strokeWidth={1.5} />
           <span className="truncate">{label}</span>
         </div>
-        <div className={cn("flex items-center gap-0.5", hoverOnly)}>
-          {ext && ext.secrets.length > 0 && <AppSecretsMenu appId={ext.id} />}
+        <div className="flex items-center gap-0.5">
+          {ext && ext.secrets.length > 0 && advanced && <AppSecretsMenu appId={ext.id} />}
           {ext &&
             (ext.app ? (
               <AppControls ext={ext} chat={modules.chats} />
@@ -162,16 +163,26 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
               modules.chats && <PinButton app={tile.app} />
             ))}
           <OpenMenu />
+          <Button
+            size="icon"
+            variant="ghost"
+            className="text-muted-foreground hover:text-foreground size-7"
+            aria-label={t("New window beside")}
+            title={t("New window beside")}
+            onClick={() => openAppRef("home", "right")}
+          >
+            <PanelRight strokeWidth={1.5} />
+          </Button>
           {(many || tile.app !== "home") && (
             <Button
               size="icon"
               variant="ghost"
-              className="size-7"
-              aria-label={`Close ${label}`}
-              title={many ? `Close ${label}` : `Close ${label} and go home`}
+              className="text-muted-foreground hover:text-foreground size-7"
+              aria-label={t("Close")}
+              title={t("Close")}
               onClick={() => closeTileId(tile.id)}
             >
-              <X />
+              <X strokeWidth={1.5} />
             </Button>
           )}
         </div>
@@ -189,93 +200,56 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
   );
 }
 
-/** Opens any app in this tile, or in a new tile to the right or below. */
+/** "Open another app here": every app by group, opened in this tile (ADR 0034). */
 function OpenMenu() {
   const [open, setOpen] = useState(false);
-  const [where, setWhere] = useState<Placement>("right");
   const box = useRef<HTMLDivElement>(null);
-  const extensions = useExtensionApps();
-  const modules = useModules();
+  const groups = useLauncher();
+  const t = useT();
   useEffect(() => {
     if (!open) return;
     const close = (e: MouseEvent) => {
       if (box.current && !box.current.contains(e.target as Node)) setOpen(false);
     };
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
     document.addEventListener("mousedown", close);
-    return () => document.removeEventListener("mousedown", close);
+    window.addEventListener("keydown", esc);
+    return () => {
+      document.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", esc);
+    };
   }, [open]);
-  const t = useT();
-  const yours: AppRef[] = extensions.map((e) => `ext:${e.id}` as AppRef);
-  const aura: AppRef[] = (
-    ["home", "messenger", ...PAGE_IDS.map((p) => `page:${p}`)] as AppRef[]
-  ).filter((app) => appAvailable(app, modules));
-  const item = (app: AppRef) => {
-    const info = appInfo(app, extensions);
-    const label = app.startsWith("ext:") ? info.label : t(info.label);
-    const Icon = info.icon;
-    return (
-      <li key={app}>
-        <button
-          type="button"
-          className="hover:bg-accent flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
-          onClick={() => {
-            openAppRef(app, where);
-            setOpen(false);
-          }}
-        >
-          <Icon className="size-4" /> {label}
-        </button>
-      </li>
-    );
-  };
   return (
     <div className="relative" ref={box}>
       <Button
         size="icon"
         variant="ghost"
-        className="size-7"
-        aria-label="Open an app"
-        title="Open an app here, to the right or below"
+        className="text-muted-foreground hover:text-foreground size-7"
+        aria-label={t("Open another app here")}
+        title={t("Open another app here")}
+        aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
-        <Plus />
+        <SquarePlus strokeWidth={1.5} />
       </Button>
       {open && (
-        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-60 rounded-xl border p-2 shadow-lg">
-          <div className="mb-2 flex gap-1 text-xs">
-            {(
-              [
-                ["here", "Here"],
-                ["right", "Right"],
-                ["below", "Below"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={where === key}
-                onClick={() => setWhere(key)}
-                className={cn(
-                  "flex-1 rounded-lg border px-2 py-1",
-                  where === key ? "border-primary bg-primary/10" : "hover:bg-accent",
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            <p className="kicker px-2 pt-1 pb-1">Your apps</p>
-            {yours.length > 0 ? (
-              <ul>{yours.map(item)}</ul>
-            ) : (
-              <p className="text-muted-foreground px-2 pb-2 text-xs">
-                None yet. Add one on the Home shelf.
-              </p>
-            )}
-            <p className="kicker px-2 pt-2 pb-1">Aura</p>
-            <ul>{aura.map(item)}</ul>
-          </div>
+        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 max-h-[70vh] w-72 overflow-y-auto border p-2 shadow-md">
+          {groups.map(({ group, entries }) => (
+            <div key={group} className="mb-1.5 flex flex-col">
+              <span className="text-muted-foreground px-2 py-1 text-xs font-medium">{group}</span>
+              {entries.map((entry) => (
+                <AppRow
+                  key={entry.key}
+                  entry={entry}
+                  onOpen={() => {
+                    if (entry.off) return;
+                    openEntry(entry.key, entry.app);
+                    setOpen(false);
+                  }}
+                />
+              ))}
+            </div>
+          ))}
         </div>
       )}
     </div>

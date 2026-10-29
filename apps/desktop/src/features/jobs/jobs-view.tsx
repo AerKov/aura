@@ -35,7 +35,7 @@ export function JobsView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Schedule" icon={<CalendarClock className="text-primary size-7" />}>
+        <PageHeader title="Reminders" icon={<CalendarClock className="text-primary size-7" />}>
           Recurring jobs wake an agent with a prompt. Ask the orchestrator to create one; you
           approve it.
         </PageHeader>

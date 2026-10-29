@@ -57,7 +57,7 @@ export function DevicesView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Devices" icon={<Smartphone className="text-primary size-7" />}>
+        <PageHeader title="Phone" icon={<Smartphone className="text-primary size-7" />}>
           Your phone connects to this computer's Aura server. Start the server with{" "}
           <code>AURA_REMOTE=1</code> so it is reachable on your network, then pair the phone with a
           one-time code.

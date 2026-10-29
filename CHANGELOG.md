@@ -5,10 +5,20 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
-- Docs: the alpha notes, README, architecture overview and ADR table are up to date with the
-  launcher, restore points and Localization; Integrations and project containers are gone from
-  them.
-- Unused code removed.
+## [0.36.0] - 2026-10-29: A new look and the "My apps" menu
+
+- **A new look** (the "Industry" design): square corners, hairline borders, steel blue, Barlow
+  fonts, in light and dark. Agents' marks are told apart by their fill, not colour.
+- **Plain words by default.** Apps are called Chats, Alerts, Reminders, Helpers, Look, Language,
+  Phone, Backups and Ready-made packs. **Advanced mode** (a switch in "My apps") shows the
+  technical names, details and every app.
+- **"My apps"**: the A at the top of the bar (or Alt+H) opens every app by group over your work,
+  with a search. An empty tile ("New window") shows the same list. **New app** opens on the right.
+- The bar and the tiles' title bars follow the new design: the clock, the connection and the
+  number of decisions waiting at the bottom of the bar; "Open another app here" and "New window
+  beside" on every tile.
+- Docs: the alpha notes, README, architecture overview and ADR table are up to date; unused code
+  removed.
 
 ## [0.35.0] - 2026-10-29: Aura as a shell
 

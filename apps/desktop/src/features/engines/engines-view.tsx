@@ -74,7 +74,7 @@ export function EnginesView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-4xl">
-        <PageHeader title="Engines" icon={<Cpu className="text-primary size-7" />}>
+        <PageHeader title="Helper programs" icon={<Cpu className="text-primary size-7" />}>
           What runs your agents: an agent app you already use (Claude Code, Gemini CLI, Codex,
           OpenCode) under your own login, or Aura's own agent on any model, free with local models.
           Each agent can use a different engine.
@@ -272,12 +272,12 @@ function EngineCard({
         </div>
         <div className="flex shrink-0 gap-1.5">
           {engine.free && (
-            <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[11px] font-medium">
+            <span className="bg-primary/10 text-primary rounded-pill px-2 py-0.5 text-[11px] font-medium">
               free option
             </span>
           )}
           {engine.isDefault && (
-            <span className="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-[11px] font-medium">
+            <span className="bg-primary text-primary-foreground rounded-pill px-2 py-0.5 text-[11px] font-medium">
               default
             </span>
           )}
@@ -380,13 +380,13 @@ function EngineCard({
       )}
 
       <div className="mt-auto flex flex-wrap gap-2 pt-1">
-        <Button size="sm" variant="outline" className="rounded-full" onClick={() => void save()}>
+        <Button size="sm" variant="outline" className="rounded-pill" onClick={() => void save()}>
           <Check /> Save
         </Button>
         {!engine.isDefault && engine.status.ok && (
           <Button
             size="sm"
-            className="rounded-full"
+            className="rounded-pill"
             onClick={() => void save().then(() => onSave({ default: engine.id }))}
           >
             Use for all agents
@@ -502,7 +502,7 @@ function AgentRow({
       <Button
         size="sm"
         variant={dirty ? "default" : "ghost"}
-        className="rounded-full"
+        className="rounded-pill"
         disabled={!dirty}
         onClick={() => void save()}
       >

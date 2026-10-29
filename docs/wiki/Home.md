@@ -8,7 +8,7 @@ anything that matters.
 Everything runs on your computer. Your chats, projects and agents stay on your machine, in plain
 files and a local database.
 
-> **Status:** alpha (version 0.35). It works end to end, but expect rough edges.
+> **Status:** alpha (version 0.36). It works end to end, but expect rough edges.
 
 ## Start here
 
@@ -19,7 +19,7 @@ files and a local database.
 
 ## Guides
 
-- [The screen](The-Screen): the Home launcher, tiles, the bar, restore points, language
+- [The screen](The-Screen): My apps, tiles, the bar, plain and advanced mode, backups, language
 - [Apps](Apps): build, change, uninstall and bring back your own apps
 - [Approvals and safety](Approvals-and-Safety): what agents may do, and what needs your OK
 - [Skills](Skills): reusable know-how that agents improve over time

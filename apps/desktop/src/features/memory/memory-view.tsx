@@ -138,7 +138,7 @@ export function MemoryView() {
                         type="button"
                         aria-label="Delete note"
                         onClick={() => void remove(note.id)}
-                        className="text-muted-foreground hover:text-destructive rounded-full p-1.5 opacity-60 transition-opacity group-hover:opacity-100"
+                        className="text-muted-foreground hover:text-destructive rounded-pill p-1.5 opacity-60 transition-opacity group-hover:opacity-100"
                       >
                         <Trash2 className="size-4" />
                       </button>
@@ -181,7 +181,7 @@ function LongChats({ on, onSaved }: { on: boolean; onSaved: (on: boolean) => voi
       </div>
       <Button
         variant={on ? "default" : "outline"}
-        className="h-auto shrink-0 rounded-full"
+        className="h-auto shrink-0 rounded-pill"
         disabled={busy}
         aria-pressed={on}
         onClick={() => void toggle()}
@@ -265,7 +265,7 @@ function SemanticSearch({
           />
         )}
         <Button
-          className="h-auto rounded-full"
+          className="h-auto rounded-pill"
           disabled={busy || !dirty || (engine !== "" && !model.trim())}
           onClick={() => void save()}
         >

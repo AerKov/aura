@@ -54,7 +54,7 @@ export function AgentsView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Agents" icon={<Bot className="text-primary size-7" />}>
+        <PageHeader title="Helpers" icon={<Bot className="text-primary size-7" />}>
           What each agent runs on, its full prompt and its versions, which tools and variables it
           has, what it remembers, where you can reach it, and anything that stops it from working.
           Changes apply from its next reply.
@@ -66,7 +66,7 @@ export function AgentsView() {
               type="button"
               onClick={() => setSelected(a.handle)}
               className={cn(
-                "flex items-center gap-1.5 rounded-full border py-1 pr-3 pl-1 text-sm transition-colors",
+                "flex items-center gap-1.5 rounded-pill border py-1 pr-3 pl-1 text-sm transition-colors",
                 current === a.handle ? "border-primary bg-primary/10" : "hover:bg-accent/60",
               )}
             >
@@ -238,7 +238,7 @@ function AgentCard({ handle }: { handle: string }) {
                     e.set ? `From "${e.from}"` : `From "${e.from}", no value: set it under Secrets`
                   }
                   className={cn(
-                    "rounded-full border px-2 py-0.5 font-mono text-[11px]",
+                    "rounded-pill border px-2 py-0.5 font-mono text-[11px]",
                     !e.set && "border-amber-500/50 text-amber-600 dark:text-amber-400",
                   )}
                 >
@@ -253,7 +253,7 @@ function AgentCard({ handle }: { handle: string }) {
         <div className="mt-4">
           <Button
             size="sm"
-            className="rounded-full"
+            className="rounded-pill"
             disabled={busy || !dirty}
             onClick={() => void save()}
           >

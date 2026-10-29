@@ -97,7 +97,7 @@ export function CatalogView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Catalog" icon={<Package className="text-primary size-7" />}>
+        <PageHeader title="Ready-made packs" icon={<Package className="text-primary size-7" />}>
           Ready-made teams, skills, themes and panels. You see every file before anything is
           installed, and each install is one commit in your data folder, so you can revert it. You
           can also ask the orchestrator: "set me up with a dev team".
@@ -128,7 +128,7 @@ export function CatalogView() {
             <Button
               type="submit"
               variant="outline"
-              className="h-auto rounded-full"
+              className="h-auto rounded-pill"
               disabled={!url.trim() || busy === "url"}
             >
               {busy === "url" ? <RefreshCw className="animate-spin" /> : null} Preview
@@ -149,7 +149,7 @@ export function CatalogView() {
                       <span className="font-medium">{pack.name}</span>
                       <span className="kicker">{pack.version}</span>
                       {pack.installed && (
-                        <span className="bg-primary/10 text-primary rounded-full px-2 py-0.5 text-[11px]">
+                        <span className="bg-primary/10 text-primary rounded-pill px-2 py-0.5 text-[11px]">
                           {pack.installed.version === pack.version
                             ? "installed"
                             : `installed ${pack.installed.version}`}
@@ -161,7 +161,7 @@ export function CatalogView() {
                   </div>
                   <Button
                     variant={pack.installed ? "outline" : "default"}
-                    className="h-auto shrink-0 rounded-full"
+                    className="h-auto shrink-0 rounded-pill"
                     disabled={busy === pack.id || open?.key === pack.id}
                     onClick={() => void preview(pack.id, { id: pack.id })}
                   >
@@ -196,7 +196,7 @@ function Contents({ pack }: { pack: PackSummary }) {
   return (
     <div className="mt-2 flex flex-wrap gap-1.5">
       {chips.map((chip) => (
-        <span key={chip} className="bg-muted rounded-full px-2 py-0.5 font-mono text-[11px]">
+        <span key={chip} className="bg-muted rounded-pill px-2 py-0.5 font-mono text-[11px]">
           {chip}
         </span>
       ))}
@@ -231,10 +231,10 @@ function PreviewPanel({
         </ul>
       )}
       <div className="mt-3 flex items-center gap-2">
-        <Button className="h-auto rounded-full" disabled={busy} onClick={onInstall}>
+        <Button className="h-auto rounded-pill" disabled={busy} onClick={onInstall}>
           {busy ? <RefreshCw className="animate-spin" /> : <Check />} Install these files
         </Button>
-        <Button variant="ghost" className="h-auto rounded-full" onClick={onCancel}>
+        <Button variant="ghost" className="h-auto rounded-pill" onClick={onCancel}>
           <X /> Cancel
         </Button>
         <span className="kicker ml-auto" title={preview.sha256}>

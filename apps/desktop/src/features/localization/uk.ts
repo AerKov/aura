@@ -3,70 +3,81 @@
  * translates has an entry here.
  */
 export const UK: Record<string, string> = {
+  // The shell (ADR 0034): the bar, "My apps", tiles, the new app sheet.
+  "Write to your Helper, like in a messenger": "Пишіть Помічнику, як у месенджері",
+  Alerts: "Сповіщення",
+  "When something broke or needs attention": "Коли щось зламалося або потребує уваги",
+  Reminders: "Нагадування",
+  "What to do regularly: every morning, every Friday…": "Що робити регулярно: щоранку, щопʼятниці…",
+  Helpers: "Помічники",
+  "AI agents: who they are, what they can do and remember, what runs them":
+    "ШІ-агенти: хто вони, що вміють і памʼятають, через що працюють",
+  "Instructions your helpers use": "Інструкції, якими користуються помічники",
+  "What your helpers remember about you": "Що помічники запамʼятали про вас",
+  Look: "Вигляд",
+  "Theme, windows, side bar": "Тема, вікна, бічна панель",
+  Language: "Мова",
+  "Українська · English": "Українська · English",
+  Phone: "Телефон",
+  "Open Aura from your phone": "Відкривайте Aura з телефона",
+  Backups: "Резервні копії",
+  "Put everything back as it was": "Повернути все, як було раніше",
+  "Ready-made packs": "Готові набори",
+  "Apps and helpers you can add": "Застосунки й помічники, які можна додати",
+  "Helper programs": "Програми помічників",
+  "Claude Code, Codex, Ollama…": "Claude Code, Codex, Ollama…",
+  Essentials: "Основне",
+  Settings: "Налаштування",
+  "New window": "Нове вікно",
+  "Find an app or a setting": "Знайти застосунок або налаштування",
+  "Nothing found.": "Нічого не знайшли.",
+  "New window beside": "Нове вікно поруч",
+  Close: "Закрити",
+  "Open another app here": "Відкрити тут інший застосунок",
+  "Open an app": "Відкрийте застосунок",
+  "Click it here or on the bar. You can open two side by side.":
+    "Натисніть на нього тут або на панелі зліва. Можна відкрити два поруч.",
+  "Write in its chat": "Напишіть у чаті",
+  "Every app has a Chat button. Tell the AI helper in plain words: “add a phone column”, “make a monthly report”.":
+    "Кнопка «Чат» у кожному застосунку. Напишіть ШІ-помічнику звичайними словами: «додай колонку з телефоном», «зроби звіт за місяць».",
+  "Approve the change": "Погодьте зміну",
+  "The helper shows exactly what will change. Nothing changes without your “Yes”, and any version can come back.":
+    "Помічник покаже, що саме зміниться. Без вашого «Так» нічого не зміниться, а будь-яку версію можна повернути.",
+  "My apps": "Мої застосунки",
+  "How it all works": "Як тут усе працює",
+  "Got it": "Зрозуміло",
+  "Make such an app?": "Створити такий застосунок?",
+  "Advanced mode": "Розширений режим",
+  "Enter: open · Esc: close": "Enter — відкрити · Esc — закрити",
+  "Your own": "Свій варіант",
+  "Describe it, and a helper builds it": "Опишіть його, і помічник збере",
+  Name: "Назва",
+  "e.g. Warehouse": "напр. Склад",
+  "e.g. keep what is in stock and remind me when something runs out":
+    "напр. облік того, що є на складі, і нагадування, коли щось закінчується",
+  "My apps ({keys})": "Мої застосунки ({keys})",
+  Connected: "Зʼєднано",
+  "Connecting…": "Зʼєднуємось…",
+  Offline: "Немає зʼєднання",
+  "{n} waiting for your decision": "Чекають вашого рішення: {n}",
+
   // Built-in apps, their groups and descriptions.
-  Home: "Головна",
-  "Home: all your apps (Shift-click: open on the right)":
-    "Головна: усі ваші застосунки (Shift-клік: відкрити праворуч)",
-  Chats: "Чати",
-  Signals: "Сигнали",
-  Agents: "Агенти",
+  Chats: "Розмови",
   Skills: "Навички",
   Memory: "Пам'ять",
-  Schedule: "Розклад",
-  Engines: "Рушії",
-  Catalog: "Каталог",
-  Customize: "Налаштування",
   Localization: "Локалізація",
   "Restore points": "Точки відновлення",
-  Devices: "Пристрої",
-  Communication: "Спілкування",
-  System: "Система",
   Apps: "Застосунки",
-  "The messenger with the orchestrator, your agents and every app's chat.":
-    "Месенджер з оркестратором, вашими агентами і чатом кожного застосунку.",
-  "Alerts from monitoring tools and apps, triaged by the orchestrator.":
-    "Сповіщення від моніторингу й застосунків; оркестратор їх розбирає.",
-  "Each agent's prompt, engine, tools, memory and tool servers.":
-    "Промпт, рушій, інструменти, пам'ять і сервери інструментів кожного агента.",
-  "Know-how your agents can use, with versions.":
-    "Знання, якими користуються ваші агенти, з версіями.",
-  "What your agents remember, to search and delete.":
-    "Що пам'ятають ваші агенти: пошук і видалення.",
-  "Agents' work on a schedule.": "Робота агентів за розкладом.",
-  "Which AI runs your agents, and the command sandbox.":
-    "Який ШІ запускає ваших агентів, і пісочниця для команд.",
-  "Packs of apps, agents, skills and themes to install.":
-    "Набори застосунків, агентів, навичок і тем для встановлення.",
-  "Theme, window manager, bar and extensions.": "Тема, віконний менеджер, бар і розширення.",
-  "The language of Aura, its agents and your apps.": "Мова Aura, її агентів і ваших застосунків.",
-  "Take Aura back or forward: apps, their data and settings. Removed apps' backups.":
-    "Повернути Aura назад або вперед: застосунки, їхні дані й налаштування. Резервні копії видалених застосунків.",
-  "Phones paired with this computer.": "Телефони, під'єднані до цього комп'ютера.",
 
   // The launcher.
   "Your apps": "Ваші застосунки",
-  "Find an app": "Знайти застосунок",
-  "Add an app": "Додати застосунок",
-  Hide: "Сховати",
-  "Welcome to Aura": "Вітаємо в Aura",
-  "Aura is a shell for your apps. Add one from a template or the catalog, or build your own by describing it to AI agents in its chat. Even the built-in parts (chats, skills, memory) are apps: turn off what you do not need. Click an app to open it here; Shift-click opens it beside.":
-    "Aura — оболонка для ваших застосунків. Додайте застосунок із шаблону чи каталогу або створіть свій, описавши його ШІ-агентам у його чаті. Навіть вбудовані частини (чати, навички, пам'ять) — це застосунки: вимкніть те, що не потрібно. Клік відкриває застосунок тут; Shift-клік — поруч.",
-  "No app matches “{query}”.": "Жоден застосунок не відповідає «{query}».",
-  "No description yet. Ask in its chat to add one.":
-    "Опису ще немає. Попросіть додати його в чаті застосунку.",
-  "Off with {name}.": "Вимкнено разом із «{name}».",
   "Turn off {name}": "Вимкнути «{name}»",
   "Turn on {name}": "Увімкнути «{name}»",
   "Also turns off {list}.": "Також вимкне: {list}.",
   "Turn off": "Вимкнути",
   Cancel: "Скасувати",
   "New app": "Новий застосунок",
-  Empty: "Порожній",
-  "App name": "Назва застосунку",
-  "Name, e.g. Clients": "Назва, напр. Клієнти",
   "What it should do": "Що він має робити",
-  "What it should do (optional: you can tell @builder in its chat)":
-    "Що він має робити (необов'язково: можна сказати @builder у його чаті)",
   "No templates left to add. Turn on Chats to build your own app with agents.":
     "Шаблонів більше немає. Увімкніть Чати, щоб створити власний застосунок з агентами.",
   Create: "Створити",
@@ -76,12 +87,10 @@ export const UK: Record<string, string> = {
   "More for {name}": "Ще для «{name}»",
   "Uninstall…": "Видалити…",
   Uninstall: "Видалити",
-  "Uninstall {name}? Its chat goes too. A backup of its code, versions and data is kept under Restore points.":
-    "Видалити «{name}»? Його чат теж зникне. Резервна копія коду, версій і даних залишиться в Точках відновлення.",
+  "Uninstall {name}? Its chat goes too. A copy of its code, versions and data is kept in Backups.":
+    "Видалити «{name}»? Його чат теж зникне. Копія коду, версій і даних збережеться в «Резервних копіях».",
   "Remove {name}? Its files go as a commit of the data folder.":
     "Видалити «{name}»? Його файли буде видалено комітом у теці даних.",
-
-  // Restore points.
   "A restore point keeps the whole Aura as it was: agents, skills, themes, tool servers, settings, and every app with its code, versions and data. Chats, memory and secrets stay as they are. Going to a point saves the present first, so you can come back forward.":
     "Точка відновлення зберігає всю Aura такою, як вона була: агентів, навички, теми, сервери інструментів, налаштування і кожен застосунок з його кодом, версіями й даними. Чати, пам'ять і секрети залишаються як є. Перед переходом до точки теперішній стан зберігається, тож можна повернутися вперед.",
   "Name of the restore point": "Назва точки відновлення",

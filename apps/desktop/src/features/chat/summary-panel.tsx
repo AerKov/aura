@@ -57,7 +57,7 @@ export function SummaryPanel({
         </div>
       </div>
       <div className="border-t p-3">
-        <Button variant="ghost" size="sm" className="rounded-full" onClick={() => void clear()}>
+        <Button variant="ghost" size="sm" className="rounded-pill" onClick={() => void clear()}>
           <Trash2 /> Forget this summary
         </Button>
       </div>
