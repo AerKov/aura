@@ -17,11 +17,6 @@ export function secretRef(name: string): string {
   return ["$", "{secret:", name, "}"].join("");
 }
 
-/** A reference to a variable of the server's own environment. */
-export function envRef(name: string): string {
-  return ["$", "{env:", name, "}"].join("");
-}
-
 export function looksSecret(name: string): boolean {
   return SECRET_LIKE.test(name);
 }

@@ -205,7 +205,6 @@ export class ChatRepo {
     });
   }
 
-  /** Last `limit` messages before `before` (exclusive), oldest first. */
   /**
    * Newest messages of a chat, oldest first. `topic`: a topic id, null for General, or absent for
    * every topic.

@@ -49,7 +49,3 @@ export function tryCss(css: string | null): void {
   style.textContent = css;
   document.head.appendChild(style);
 }
-
-export function isTrying(): boolean {
-  return document.getElementById(TRY_ID) !== null;
-}

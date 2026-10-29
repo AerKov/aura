@@ -3,5 +3,3 @@ export interface LocalSession {
   token: string;
   user: { id: string; name: string };
 }
-
-export const SESSION_HEADER = "authorization";

@@ -14,7 +14,6 @@ import type { EventHub } from "../realtime/hub";
 import { type Contract, ContractError, checkRecord, NAME } from "./contract";
 
 export type StoreKind = "database" | "files";
-export const STORE_KINDS: StoreKind[] = ["database", "files"];
 
 export type DataRecord = Record<string, unknown> & { id: string };
 

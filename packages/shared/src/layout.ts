@@ -3,7 +3,7 @@
  * Pure functions, shared by the server (storage, the orchestrator's tool) and the client.
  */
 
-/** An app the shell can open: the home shelf, the messenger, a built-in page, or an extension. */
+/** An app the shell can open: the Home launcher, the messenger, a built-in page, or an extension. */
 export type AppRef = "home" | "messenger" | `page:${PageId}` | `ext:${string}`;
 
 export const PAGE_IDS = [

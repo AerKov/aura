@@ -5,7 +5,6 @@ import type { LocalSessions } from "../auth/sessions";
 import { JobError, type JobService } from "../jobs/service";
 import type { AlertService } from "./service";
 
-export const HOOKS_PREFIX = "/hooks/";
 const MAX_BODY = 64 * 1024;
 
 function sameToken(a: string, b: string): boolean {

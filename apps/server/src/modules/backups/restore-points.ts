@@ -5,11 +5,11 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
 import { RecordId, type Surreal } from "surrealdb";
+import { sizeOf, timeStamp } from "../../lib/files";
 import { commitAll } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
 import type { AppLifecycle } from "../apps/lifecycle";
@@ -38,15 +38,8 @@ const ID = /^\d{8}T\d{6}-[a-z0-9]{4}$/;
 /** Automatic points kept; the user's own are kept until they delete them. */
 const KEEP_AUTO = 10;
 
-function sizeOf(path: string): number {
-  const stat = statSync(path);
-  if (!stat.isDirectory()) return stat.size;
-  return readdirSync(path).reduce((sum, name) => sum + sizeOf(join(path, name)), 0);
-}
-
 function newId(): string {
-  const stamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15);
-  return `${stamp}-${Math.random().toString(36).slice(2, 6).padEnd(4, "0")}`;
+  return `${timeStamp()}-${Math.random().toString(36).slice(2, 6).padEnd(4, "0")}`;
 }
 
 /**

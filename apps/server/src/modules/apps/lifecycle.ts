@@ -5,11 +5,11 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
 import { APP_ID_PATTERN } from "@aura/shared";
+import { sizeOf, timeStamp } from "../../lib/files";
 import { errorMessage, log } from "../../lib/log";
 import type { ChatRepo } from "../chat/repo";
 import type { ExtensionService, GrantedState } from "../customize/extensions";
@@ -61,16 +61,6 @@ function copyCode(from: string, to: string): void {
       return top !== "data" && top !== "node_modules";
     },
   });
-}
-
-function sizeOf(path: string): number {
-  const stat = statSync(path);
-  if (!stat.isDirectory()) return stat.size;
-  return readdirSync(path).reduce((sum, name) => sum + sizeOf(join(path, name)), 0);
-}
-
-function stamp(date = new Date()): string {
-  return date.toISOString().replace(/[-:]/g, "").slice(0, 15);
 }
 
 /**
@@ -156,7 +146,7 @@ export class AppLifecycle {
   async uninstall(id: string): Promise<AppBackup> {
     const source = this.deps.apps.sources().find((a) => a.id === id);
     if (!source) throw new LifecycleError(`No app "${id}"`);
-    const name = `${id}-${stamp()}`;
+    const name = `${id}-${timeStamp()}`;
     const dir = join(this.backupRoot, name);
     const meta = await this.archive(id, dir);
     writeFileSync(join(dir, "chat.md"), await this.chatText(source.chatId, meta.name));

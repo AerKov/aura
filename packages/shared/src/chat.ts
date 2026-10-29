@@ -280,9 +280,6 @@ export type ProjectKind = "project" | "app";
 /** App ids are extension ids: a letter, then letters, digits and dashes. */
 export const APP_ID_PATTERN = /^[a-z][a-z0-9-]{1,47}$/;
 
-/** Engines billed by their API, where a dollar limit is real money (ADR 0023). */
-export const PAID_ENGINES = ["openrouter", "openai-compatible"] as const;
-
 /** 1234 → "1.2K", 2500000 → "2.5M". */
 export function formatTokens(n: number): string {
   if (n >= 1_000_000) return `${trimZero((n / 1_000_000).toFixed(1))}M`;

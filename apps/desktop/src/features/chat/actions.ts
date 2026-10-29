@@ -128,10 +128,6 @@ export function refreshProjectsSoon(): void {
 
 export { upsertChat };
 
-export function showDevices(): void {
-  openAppRef("page:devices");
-}
-
 export function showList(): void {
   setState(() => ({ pane: "list" }));
 }
@@ -168,41 +164,10 @@ export async function loadTasks(projectId: string): Promise<void> {
   setState((s) => ({ tasks: { ...s.tasks, [projectId]: tasks } }));
 }
 
-export async function setTaskStatus(
-  taskId: string,
-  status: "todo" | "doing" | "done" | "blocked",
-): Promise<void> {
-  await call(() => api.tasks({ taskId }).patch({ status }));
-}
-
-export function showSkills(): void {
-  openAppRef("page:skills");
-}
-
-export function showJobs(): void {
-  openAppRef("page:jobs");
-}
-
-export function showMemory(): void {
-  openAppRef("page:memory");
-}
-
 export function showAgents(): void {
   openAppRef("page:agents");
 }
 
-export function showCatalog(): void {
-  openAppRef("page:catalog");
-}
-
 export function showEngines(): void {
   openAppRef("page:engines");
-}
-
-export function showCustomize(): void {
-  openAppRef("page:customize");
-}
-
-export function showExtension(id: string): void {
-  openAppRef(`ext:${id}`);
 }

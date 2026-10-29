@@ -2,17 +2,6 @@ import { RecordId, type Surreal } from "surrealdb";
 
 export type RunStatus = "running" | "done" | "error" | "stopped";
 
-export interface RunRecord {
-  id: string;
-  agent: string;
-  chatId: string;
-  projectId: string | null;
-  status: RunStatus;
-  tokensIn: number;
-  tokensOut: number;
-  costUsd: number;
-}
-
 export interface RecentRun {
   id: string;
   chatId: string;

@@ -34,7 +34,6 @@ export type ServerEvent =
 export type ClientEvent = { type: "ping"; nonce: string };
 
 export type ServerEventType = ServerEvent["type"];
-export type ClientEventType = ClientEvent["type"];
 
 const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "hello",
