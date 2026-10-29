@@ -112,7 +112,12 @@ export function createApp(deps: AppDeps) {
     .use(authModule(deps))
     .use(modulesModule(deps))
     .use(healthModule(deps))
-    .use(chatModule(deps))
+    .use(
+      chatModule({
+        ...deps,
+        agentExists: async (handle) => (await deps.agents.get(handle)) !== null,
+      }),
+    )
     .use(agentsModule(deps))
     .use(enginesModule(deps))
     .use(memoryModule(deps))

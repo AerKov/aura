@@ -459,12 +459,12 @@ Round 4 of the redesign: Industry tokens and fonts, square marks, a plain interf
 advanced mode, the "My apps" menu over the tiles, "New window", the "New app" sheet, the bar and
 tile bars.
 
-**Phase 37: Chats and app tiles** (next, ADR 0034)
+**Phase 37: Chats and app tiles** (done, ADR 0034)
 The chat list, a calmer feed (run cards collapsed, approvals in plain words with technical details
 on request, alerts by severity), the composer, and an app's tile with its chat panel, draft and
-versions.
+versions. A chat's helpers are added and removed from its header ("+ Helper").
 
-**Phase 38: Helpers** (ADR 0034)
+**Phase 38: Helpers** (next, ADR 0034)
 One app for everything about agents: Team, Skills, Memory and AI connection.
 
 **Phase 39: Splash and onboarding** (ADR 0034)

@@ -9,7 +9,9 @@ import { ChevronLeft, PanelRight, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
+import { useT } from "@/features/localization/i18n";
 import { useExtensionApps } from "@/features/shell/apps";
+import { useAdvanced } from "@/features/shell/launcher";
 import { closeAppRef, openAppRef } from "@/features/shell/layout";
 import {
   loadMembers,
@@ -24,10 +26,11 @@ import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
 import { isGrouped } from "./message-utils";
-import { chatSubtitle } from "./participants";
+import { agentName, chatTitle } from "./participants";
 import { SetupPanel } from "./setup-panel";
 import { getState, useChatStore } from "./store";
 import { loadSummary, SummaryPanel } from "./summary-panel";
+import { TeamButton } from "./team-button";
 import { TopicBar } from "./topic-bar";
 import { WebhookInfo } from "./webhook-info";
 
@@ -36,17 +39,24 @@ const EMPTY: Message[] = [];
 const GREETING: Record<"direct" | "system" | "group", { title: string; text: string }> = {
   direct: {
     title: "What are we making?",
-    text: "Talk an idea through with the orchestrator. When it is ready, it proposes a team and a budget for you to approve.",
+    text: "Talk an idea through with your Helper. When it is ready, it proposes a team and a budget for you to approve.",
   },
   system: {
     title: "All quiet",
-    text: "Alerts from your monitoring tools land here, and the orchestrator triages them.",
+    text: "Alerts from your monitoring tools and apps land here, and your Helper sorts them out.",
   },
   group: {
     title: "The team is getting ready",
-    text: "Agents post here as they work. Mention one with @ to ask it something.",
+    text: "Helpers post here as they work. Call one with @ to ask it something.",
   },
 };
+
+const SUBTITLE = {
+  direct: "Your own chat with your main AI helper",
+  group: "A project: helpers work on it together",
+  app: "An app's chat: change it by asking",
+  system: "When something broke or needs attention",
+} as const;
 
 /**
  * A chat. `inApp`: shown as the panel inside its app's tile (ADR 0027), so without the back button
@@ -73,6 +83,16 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
   const ownApp = project?.kind === "app" ? project.id : (project?.app ?? null);
   const appId = ownApp && apps.some((a) => a.id === ownApp) ? ownApp : null;
   const appOpen = useChatStore((s) => (appId ? !!tileOf(s.layout, `ext:${appId}`) : false));
+  const t = useT();
+  const agentList = useChatStore((s) => s.agents);
+  const agentNames = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.values(agentList).map((a) => [a.handle, agentName(a.handle, a.name, t)]),
+      ),
+    [agentList, t],
+  );
+  const advanced = useAdvanced();
 
   // Nothing opens by itself next to a chat (ADR 0027): the user opens the app when they want it.
   useEffect(() => {
@@ -122,100 +142,113 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
   };
 
   if (!chat) return null;
-  const agents = (members ?? []).filter((m) => m.kind === "agent");
+  const helpers = (members ?? []).filter((m) => m.kind === "agent");
   const greeting = GREETING[chat.kind];
 
   return (
     <div className="relative flex min-w-0 flex-1">
       <section className="chat-bg dot-grid flex min-w-0 flex-1 flex-col">
-        <header className="bg-background flex h-14 items-center gap-3 border-b px-5 max-md:px-2">
-          {!inApp && (
+        {inApp ? (
+          <header className="bg-card flex min-h-[52px] items-center gap-3 border-b px-3.5 py-2">
+            <div className="min-w-0 flex-1 leading-tight">
+              <h2 className="text-[17px]">{t("App chat")}</h2>
+              <p className="text-muted-foreground truncate text-xs">
+                {t("Working: {names}", {
+                  names:
+                    helpers
+                      .filter((h) => h.id !== "orchestrator")
+                      .map((h) => agentNames[h.id] ?? h.id)
+                      .join(", ") || "—",
+                })}
+              </p>
+            </div>
+            <TeamButton chatId={chatId} />
+          </header>
+        ) : (
+          <header className="bg-card flex min-h-[60px] items-center gap-3 border-b px-4 py-2.5 max-md:px-2">
             <button
               type="button"
-              aria-label="Back to chats"
+              aria-label={t("Back to chats")}
               onClick={showList}
-              className="text-muted-foreground md:hidden"
+              className="text-muted-foreground @min-[640px]:hidden"
             >
               <ChevronLeft className="size-5" />
             </button>
-          )}
-          <ChatMark chat={chat} size="md" working={working.length > 0} />
-          <div className="min-w-0">
-            <h1 className="truncate text-[17px] leading-tight font-semibold tracking-tight">
-              {chat.title}
-            </h1>
-            <p className="text-muted-foreground truncate text-xs">
-              {working.length > 0 ? (
-                <span className="text-primary font-mono text-xs">
-                  ●{working.map((h) => `@${h}`).join(", ")} working…
-                </span>
-              ) : chat.kind === "group" && agents.length > 0 ? (
-                `project · ${agents.filter((a) => a.id !== "orchestrator").length} agents`
-              ) : (
-                chatSubtitle(chat)
+            <div className="min-w-0 flex-1 leading-tight">
+              <h1 className="truncate text-xl">{chatTitle(chat, t)}</h1>
+              <p className="text-muted-foreground truncate text-[12.5px]">
+                {working.length > 0 ? (
+                  <span className="text-signal-text">
+                    {t("{name} is working…", {
+                      name: working.map((h) => agentNames[h] ?? h).join(", "),
+                    })}
+                  </span>
+                ) : (
+                  t(SUBTITLE[chat.kind === "group" && appId ? "app" : chat.kind])
+                )}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {chat.kind === "group" && helpers.length > 0 && (
+                <div
+                  className="flex gap-1 max-sm:hidden"
+                  title={helpers.map((a) => agentNames[a.id] ?? a.id).join(", ")}
+                >
+                  {helpers.map((a) => (
+                    <Mark
+                      key={a.id}
+                      name={a.id}
+                      kind={a.id === "orchestrator" ? "orchestrator" : "agent"}
+                      size="xs"
+                      working={working.includes(a.id)}
+                    />
+                  ))}
+                </div>
               )}
-            </p>
-          </div>
-          <div className="ml-auto flex items-center gap-3">
-            {chat.kind === "group" && agents.length > 0 && (
-              <div
-                className="flex -space-x-2 max-sm:hidden"
-                title={agents.map((a) => `@${a.id}`).join(", ")}
-              >
-                {agents.map((a) => (
-                  <Mark
-                    key={a.id}
-                    name={a.id}
-                    kind={a.id === "orchestrator" ? "orchestrator" : "agent"}
-                    size="sm"
-                    working={working.includes(a.id)}
-                    className="ring-background ring-2"
-                  />
-                ))}
-              </div>
-            )}
-            {chat.kind === "system" && <WebhookInfo />}
-            {project && <BudgetButton project={project} />}
-            {summary && (
-              <Button
-                variant={panel === "summary" ? "secondary" : "ghost"}
-                size="sm"
-                title="What agents keep of older messages"
-                onClick={() => setPanel(panel === "summary" ? null : "summary")}
-              >
-                <ScrollText /> <span className="max-sm:hidden">Summary</span>
-              </Button>
-            )}
-            {appId && !inApp && (
-              <Button
-                variant={appOpen ? "secondary" : "ghost"}
-                size="sm"
-                title={
-                  appOpen ? "Close the app next to this chat" : "Open the app next to this chat"
-                }
-                onClick={() =>
-                  appOpen ? closeAppRef(`ext:${appId}`) : openAppRef(`ext:${appId}`, "right")
-                }
-              >
-                <PanelRight /> <span className="max-sm:hidden">Apps</span>
-              </Button>
-            )}
-          </div>
-        </header>
+              {chat.kind === "group" && <TeamButton chatId={chatId} />}
+              {chat.kind === "system" && advanced && <WebhookInfo />}
+              {project && advanced && <BudgetButton project={project} />}
+              {summary && advanced && (
+                <Button
+                  variant={panel === "summary" ? "secondary" : "ghost"}
+                  size="sm"
+                  title={t("What helpers keep of older messages")}
+                  onClick={() => setPanel(panel === "summary" ? null : "summary")}
+                >
+                  <ScrollText /> <span className="max-sm:hidden">{t("Summary")}</span>
+                </Button>
+              )}
+              {appId && (
+                <Button
+                  variant={appOpen ? "secondary" : "outline"}
+                  size="sm"
+                  onClick={() =>
+                    appOpen ? closeAppRef(`ext:${appId}`) : openAppRef(`ext:${appId}`, "right")
+                  }
+                >
+                  <PanelRight />{" "}
+                  <span className="max-sm:hidden">
+                    {appOpen ? t("Close the app") : t("Open the app")}
+                  </span>
+                </Button>
+              )}
+            </div>
+          </header>
+        )}
         <TopicBar chatId={chatId} topics={topics} active={topicId} />
         <div
           ref={scroller}
           onScroll={onScroll}
-          className="flex-1 overflow-y-auto px-6 py-4 max-md:px-3"
+          className="flex-1 overflow-y-auto px-5 py-4 max-md:px-3"
         >
-          <div className="mx-auto max-w-3xl pb-4">
+          <div className="mx-auto max-w-[760px] pb-4">
             {messages.length === 0 && (
               <div className="mx-auto mt-[12vh] max-w-sm text-center">
                 <div className="mb-5 flex justify-center">
                   <ChatMark chat={chat} size="lg" />
                 </div>
-                <h2 className="mb-2 text-2xl font-semibold tracking-tight">{greeting.title}</h2>
-                <p className="text-muted-foreground text-sm">{greeting.text}</p>
+                <h2 className="mb-2 text-2xl">{t(greeting.title)}</h2>
+                <p className="text-muted-foreground text-sm">{t(greeting.text)}</p>
               </div>
             )}
             {messages.map((message, index) => (
@@ -242,7 +275,13 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
           chatKind={chat.kind}
           replyTo={replyTo}
           onCancelReply={() => setReplyTo(null)}
-          placeholder={chat.kind === "direct" ? "What do you have in mind?" : undefined}
+          placeholder={
+            chat.kind === "direct"
+              ? t("Write to {name}…", { name: agentNames.orchestrator ?? t("Helper") })
+              : inApp
+                ? t("Write what to change…")
+                : undefined
+          }
         />
       </section>
       {panel === "summary" && summary && (

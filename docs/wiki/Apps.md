@@ -22,22 +22,23 @@ otherwise it waits for you in the chat.
 ## Change it
 
 Say what you want in the app's chat: _"add an email column"_, _"sort by status"_,
-_"make the Add button green"_. @builder edits the app's files, then you get a card with the diff:
+_"make the Add button green"_. @builder edits the app's files, then you get a card that says in
+plain words what will change (the diff is under **Technical details**):
 
-- **Approve**: the change goes live and the app reloads.
-- **Reject**: the change is thrown away.
-- Before deciding, **Draft** on the app's tile shows the change running; **Live** goes back.
-  The bin next to it discards the change too.
+- **Yes, do it**: the change goes live and the app reloads.
+- **No, thanks**: the change is thrown away.
+- Before deciding, **After the change** on the app's tile shows the change running; **Now** goes
+  back. In advanced mode the bin next to it discards the change too.
 
 If a change asks for more than the app has now (another permission, a host, a secret), the card
-says so in bold. Until you approve, the app keeps what it had.
+warns you. Until you approve, the app keeps what it had.
 
 Use [topics](Chats-and-Agents#topics) to keep changes apart from everyday use, for example a
 _Customization_ topic.
 
 ## Versions
 
-The clock button on the app's tile lists its versions. **Restore** brings an older one back as a
+The clock button on the app's tile (**History of changes**) lists its versions. **Bring back** brings an older one back as a
 new version, so that can be undone too. The app's folder is `~/.aura/projects/<app>` (a git
 repository).
 
@@ -112,5 +113,5 @@ and buttons, posting alert cards to the Signals chat (`alerts.write`, see
 
 **@builder can look at the app.** After a change it can ask to see the app as you see it: an outline
 of the page (headings, buttons, fields, tables) and its recent errors. This works while the app is
-open on your screen; to let it see a change before you approve it, click **Draft** on the app's
+open on your screen; to let it see a change before you approve it, click **After the change** on the app's
 tile.

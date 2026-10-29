@@ -18,7 +18,8 @@ read and run tests), an optional lifetime budget, its [skills](Skills), and its 
 You usually do not write these files. Ask the orchestrator ("I need someone who writes good
 documentation"); it proposes the agent and you approve it. It can also change an agent ("give
 @coder a shell and the GITLAB_URL variable"), again on an approval card that shows the exact change, and add
-an agent to a project. The orchestrator has this guide built in, so you can ask it how Aura works.
+an agent to a project. You can also add one yourself: **+ Helper** in a group chat's header adds
+a helper to the chat or removes one, and the chat notes it ("@x joined the chat."). The orchestrator has this guide built in, so you can ask it how Aura works.
 
 The **Agents** page shows each agent's engine and model, its tools (and the ones its engine does
 not provide), the variables its commands get, its tool servers, its chats and its last error,
@@ -80,9 +81,9 @@ A project is a chat, a folder at `~/.aura/projects/<slug>` (a git repository) an
 
 ## Run cards
 
-Each agent reply shows what happened during the run: the tools it used (expand to see them), the
-commit it made and the tokens it used (hover for the estimated price at API rates). **Stop** ends a
-running reply.
+Each agent reply shows what happened during the run in one line: who worked and how it went
+("looked at 2, changed files: 3, checked, all works"). **Details** lists the tools it used and what
+it spent (tokens and the commit in advanced mode). **Stop** ends a running reply.
 
 ## Budgets
 

@@ -104,6 +104,65 @@ export const UK: Record<string, string> = {
   "The app's settings file has an error, so this change cannot go live.":
     "У файлі налаштувань застосунку помилка, тож цю зміну не можна застосувати.",
 
+  // Chats and app tiles (ADR 0034).
+  Now: "Зараз",
+  "Shows the change that waits for your decision": "Показує зміну, яка чекає вашого рішення",
+  "After the change": "Після зміни",
+  "Discard the change that waits for your decision": "Відкинути зміну, яка чекає рішення",
+  "The app's chat: use it and change it by asking":
+    "Чат застосунку: користуйтеся ним і змінюйте його проханнями",
+  Chat: "Чат",
+  "History of changes": "Історія змін",
+  now: "зараз",
+  "This topic is closed. Reopen it from its ⋯ menu above to write here.":
+    "Ця тема закрита. Відкрийте її знову в меню ⋯ вгорі, щоб писати тут.",
+  "Cancel reply": "Скасувати відповідь",
+  "Write a message…": "Напишіть повідомлення…",
+  Send: "Надіслати",
+  "Answers:": "Відповість:",
+  "@ calls another helper": "@ — покликати іншого помічника",
+  "nobody: call a helper with @": "ніхто: покличте помічника через @",
+  "Move to another topic": "Перенести в іншу тему",
+  Reply: "Відповісти",
+  writing: "пише",
+  "Nothing yet": "Поки нічого",
+  "App chat": "Чат застосунку",
+  "Working: {names}": "Працює: {names}",
+  "Back to chats": "Назад до розмов",
+  "What helpers keep of older messages": "Що помічники памʼятають зі старих повідомлень",
+  Summary: "Підсумок",
+  "Close the app": "Закрити застосунок",
+  "Open the app": "Відкрити застосунок",
+  "Write to {name}…": "Напишіть: {name}…",
+  "Write what to change…": "Напишіть, що змінити…",
+  Helper: "Помічник",
+  working: "працює",
+  add: "додати",
+  "What are we making?": "Що створюємо?",
+  "Talk an idea through with your Helper. When it is ready, it proposes a team and a budget for you to approve.":
+    "Обговоріть ідею з Помічником. Коли вона буде готова, він запропонує команду й бюджет на ваше погодження.",
+  "All quiet": "Усе спокійно",
+  "Alerts from your monitoring tools and apps land here, and your Helper sorts them out.":
+    "Сюди приходять сповіщення від моніторингу й застосунків, а Помічник їх розбирає.",
+  "The team is getting ready": "Команда готується",
+  "Helpers post here as they work. Call one with @ to ask it something.":
+    "Помічники пишуть сюди, поки працюють. Покличте когось через @, щоб запитати.",
+  "Your own chat with your main AI helper": "Особистий чат із головним ШІ-помічником",
+  "A project: helpers work on it together": "Проєкт: помічники працюють над ним разом",
+  "An app's chat: change it by asking": "Чат застосунку: змінюйте його проханнями",
+  Projects: "Проєкти",
+
+  "New topic": "Нова тема",
+  "A new topic: its messages stay in it, and helpers there see only them":
+    "Нова тема: її повідомлення лишаються в ній, і помічники там бачать лише їх",
+  Topic: "Тема",
+  "Topic title": "Назва теми",
+  Save: "Зберегти",
+  Rename: "Перейменувати",
+  Reopen: "Відкрити знову",
+  "Close (read-only)": "Закрити (лише читання)",
+  General: "Загальне",
+
   // Built-in apps, their groups and descriptions.
   Chats: "Розмови",
   Skills: "Навички",

@@ -60,7 +60,7 @@ export function Shell() {
   const phone = useIsPhone();
   if (phone) {
     return (
-      <div className="relative flex min-h-0 min-w-0 flex-1">
+      <div className="@container relative flex min-h-0 min-w-0 flex-1">
         <AppView app={phoneApp} />
         <NewAppSheet />
       </div>
@@ -128,7 +128,7 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
       data-tile-id={tile.id}
       aria-label={label}
       className={cn(
-        "group/tile bg-background relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-solid",
+        "group/tile bg-background @container relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-solid",
         focused && many ? "border-ring" : "border-border",
       )}
       style={{ borderWidth: "var(--wm-border)", borderRadius: "var(--wm-radius)" }}
@@ -191,7 +191,7 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
         <AppView app={tile.app} />
         {chatId && (
           // The app's chat, inside its tile (ADR 0027): use and change the app without leaving it.
-          <aside className="bg-background flex w-[min(440px,50%)] shrink-0 border-l max-md:absolute max-md:inset-0 max-md:w-full">
+          <aside className="bg-background flex w-[min(380px,42%)] shrink-0 border-l @max-[640px]:absolute @max-[640px]:inset-0 @max-[640px]:z-10 @max-[640px]:w-full">
             <ChatView key={chatId} chatId={chatId} inApp />
           </aside>
         )}
@@ -418,7 +418,7 @@ function Messenger() {
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
       <Sidebar />
-      <div className={cn("flex min-w-0 flex-1", pane === "list" && "max-md:hidden")}>
+      <div className={cn("flex min-w-0 flex-1", pane === "list" && "@max-[640px]:hidden")}>
         {activeChatId ? (
           <ChatView key={activeChatId} chatId={activeChatId} />
         ) : (

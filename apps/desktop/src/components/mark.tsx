@@ -42,6 +42,7 @@ export function Mark({
   size = "md",
   working = false,
   icon: Icon,
+  label,
   className,
 }: {
   name: string;
@@ -49,6 +50,8 @@ export function Mark({
   size?: keyof typeof SIZES;
   working?: boolean;
   icon?: LucideIcon;
+  /** The name to take initials from, when it differs from the handle (e.g. "Helper"). */
+  label?: string;
   className?: string;
 }) {
   const look =
@@ -69,7 +72,7 @@ export function Mark({
         className,
       )}
     >
-      {Icon ? <Icon className="size-[50%]" /> : kind === "alert" ? "!" : initialsOf(name)}
+      {Icon ? <Icon className="size-[50%]" /> : kind === "alert" ? "!" : initialsOf(label ?? name)}
       {working && (
         <span className="bg-primary ring-background absolute -right-1 -bottom-1 size-2.5 animate-pulse rounded-full ring-2" />
       )}

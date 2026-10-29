@@ -5,6 +5,21 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-10-29: Chats and app tiles in the new look
+
+- **The chat list** is grouped into your chat with the Helper, Projects, Apps and Alerts. A row
+  says who is working ("Coder is working…") and how many decisions wait there.
+- **Calmer chats.** A helper's work is one line ("looked at 2, changed files: 3, checked, all
+  works") with **Details** on request. **Decision cards** say in plain words what will change and
+  warn when an app asks for more; "Technical details" shows the diff. **Alerts** show how urgent
+  they are with a coloured bar.
+- **The composer** says who will answer ("Answers: Helper") and that @ calls another helper.
+- **+ Helper** in a group chat's header adds a helper to the chat or removes one; the chat says
+  "@x joined the chat." Budgets, summary and webhooks are in advanced mode.
+- **App tiles:** "Now / After the change" to try a change before you decide, "History of changes"
+  with "Bring back", and the app's chat beside it ("App chat", who is working).
+- Fix: saving to the data folder retries when git is busy, instead of failing.
+
 ## [0.36.0] - 2026-10-29: A new look and the "My apps" menu
 
 - **A new look** (the "Industry" design): square corners, hairline borders, steel blue, Barlow

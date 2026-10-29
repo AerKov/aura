@@ -1,6 +1,7 @@
 import { GENERAL_TOPIC_TITLE, MAX_TOPIC_TITLE, type Topic } from "@aura/shared";
 import { Check, Hash, Lock, MoreHorizontal, Plus, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";
 import { createTopic, openTopic, reportError, updateTopic } from "./actions";
 
@@ -19,6 +20,7 @@ export function TopicBar({
   topics?: Topic[];
   active: string | null;
 }) {
+  const t = useT();
   const [adding, setAdding] = useState(false);
   const [menu, setMenu] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -45,10 +47,10 @@ export function TopicBar({
             setMenu(id);
           }}
           className={cn(
-            "flex h-7 items-center gap-1 rounded-pill border px-2.5 text-xs whitespace-nowrap",
+            "flex h-7 items-center gap-1 rounded-pill border px-2.5 text-[13px] whitespace-nowrap",
             active === id
-              ? "border-primary bg-primary/10 text-foreground"
-              : "text-muted-foreground hover:bg-accent",
+              ? "border-ring bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-foreground/[0.06]",
           )}
         >
           {closed ? <Lock className="size-3" /> : id ? <Hash className="size-3" /> : null}
@@ -58,7 +60,7 @@ export function TopicBar({
       {id && active === id && renaming !== id && (
         <button
           type="button"
-          aria-label={`More for ${title}`}
+          aria-label={t("More for {name}", { name: title })}
           className="text-muted-foreground hover:text-foreground ml-0.5 rounded p-0.5"
           onClick={() => setMenu(menu === id ? null : id)}
         >
@@ -83,13 +85,13 @@ export function TopicBar({
   );
 
   return (
-    <div className="bg-background flex items-center gap-1.5 overflow-x-auto border-b px-5 py-1.5 max-md:px-2">
-      {chip(null, GENERAL_TOPIC_TITLE)}
-      {topics.map((t) => chip(t.id, t.title, t.closed))}
+    <div className="bg-card flex items-center gap-1.5 overflow-x-auto border-b px-4 py-2 max-md:px-2">
+      {chip(null, t(GENERAL_TOPIC_TITLE))}
+      {topics.map((topic) => chip(topic.id, topic.title, topic.closed))}
       {adding ? (
         <TitleInput
           initial=""
-          placeholder="New topic"
+          placeholder={t("New topic")}
           onDone={(title) => {
             setAdding(false);
             if (title) void createTopic(chatId, title).catch(reportError);
@@ -99,10 +101,10 @@ export function TopicBar({
         <button
           type="button"
           onClick={() => setAdding(true)}
-          className="text-muted-foreground hover:bg-accent flex h-7 shrink-0 items-center gap-1 rounded-pill px-2 text-xs"
-          title="A new topic: its messages stay in it, and agents there see only them"
+          className="text-muted-foreground hover:bg-foreground/[0.06] flex h-7 shrink-0 items-center gap-1 rounded-pill px-2 text-[13px]"
+          title={t("A new topic: its messages stay in it, and helpers there see only them")}
         >
-          <Plus className="size-3.5" /> Topic
+          <Plus className="size-3.5" /> {t("Topic")}
         </button>
       )}
     </div>
@@ -118,6 +120,7 @@ function TitleInput({
   placeholder?: string;
   onDone: (title: string | null) => void;
 }) {
+  const t = useT();
   const [value, setValue] = useState(initial);
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => ref.current?.focus(), []);
@@ -126,7 +129,7 @@ function TitleInput({
     <div className="flex shrink-0 items-center gap-0.5">
       <input
         ref={ref}
-        aria-label={placeholder ?? "Topic title"}
+        aria-label={placeholder ?? t("Topic title")}
         value={value}
         maxLength={MAX_TOPIC_TITLE}
         placeholder={placeholder}
@@ -139,7 +142,7 @@ function TitleInput({
       />
       <button
         type="button"
-        aria-label="Save"
+        aria-label={t("Save")}
         onClick={() => finish(true)}
         className="hover:bg-accent rounded p-1"
       >
@@ -147,7 +150,7 @@ function TitleInput({
       </button>
       <button
         type="button"
-        aria-label="Cancel"
+        aria-label={t("Cancel")}
         onClick={() => finish(false)}
         className="hover:bg-accent rounded p-1"
       >
@@ -168,6 +171,7 @@ function TopicMenu({
   onRename: () => void;
   onToggle: () => void;
 }) {
+  const t = useT();
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const close = (e: MouseEvent) => {
@@ -179,21 +183,21 @@ function TopicMenu({
   return (
     <div
       ref={box}
-      className="bg-popover text-popover-foreground fixed z-30 mt-24 w-40 rounded-xl border p-1 text-sm shadow-lg"
+      className="bg-popover text-popover-foreground fixed z-30 mt-24 w-44 border p-1 text-sm shadow-md"
     >
       <button
         type="button"
-        className="hover:bg-accent w-full rounded-lg px-2 py-1.5 text-left"
+        className="hover:bg-accent w-full px-2 py-1.5 text-left"
         onClick={onRename}
       >
-        Rename
+        {t("Rename")}
       </button>
       <button
         type="button"
-        className="hover:bg-accent w-full rounded-lg px-2 py-1.5 text-left"
+        className="hover:bg-accent w-full px-2 py-1.5 text-left"
         onClick={onToggle}
       >
-        {closed ? "Reopen" : "Close (read-only)"}
+        {closed ? t("Reopen") : t("Close (read-only)")}
       </button>
     </div>
   );

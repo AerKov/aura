@@ -76,9 +76,8 @@ export function RunCard({
             card.status === "stopped" && "border-muted-foreground border",
           )}
         />
-        <span className="min-w-0 flex-1 text-[13.5px]">
-          <span className="font-medium">{t(STATUS[card.status], { name })}</span>
-          {parts.length > 0 && <span className="text-muted-foreground"> · {parts.join(", ")}</span>}
+        <span className="min-w-0 flex-1 text-[13.5px] font-medium">
+          {t(STATUS[card.status], { name })}
         </span>
         {running && onStop && (
           <Button size="sm" variant="outline" className="h-7" onClick={onStop}>
@@ -97,6 +96,9 @@ export function RunCard({
           </Button>
         )}
       </div>
+      {parts.length > 0 && (
+        <p className="text-muted-foreground mt-0.5 pl-5 text-[13px]">{parts.join(", ")}</p>
+      )}
       {card.error && <p className="text-destructive mt-1.5 text-[13px]">{card.error}</p>}
       {open && (
         <ul className="mt-2 flex flex-col gap-1 border-t pt-2 text-[13px]">

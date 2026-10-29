@@ -1,11 +1,13 @@
 import { addresseesOf, type ChatKind, type Message } from "@aura/shared";
-import { ArrowUp, CornerDownRight, X } from "lucide-react";
+import { CornerDownRight, SendHorizontal, X } from "lucide-react";
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Mark } from "@/components/mark";
+import { useT } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";
 import { reportError, sendMessage } from "./actions";
 import { activeToken, matchAgents } from "./mentions";
 import { displayName, previewOf } from "./message-utils";
+import { agentName } from "./participants";
 import { type AgentInfo, useChatStore } from "./store";
 
 const ORCHESTRATOR = "orchestrator";
@@ -33,6 +35,7 @@ export function Composer({
   onCancelReply: () => void;
   placeholder?: string;
 }) {
+  const t = useT();
   const me = useChatStore((s) => s.me);
   const members = useChatStore((s) => s.members[chatId]);
   const directory = useChatStore((s) => s.agents);
@@ -72,6 +75,7 @@ export function Composer({
     orchestrator: ORCHESTRATOR,
     replyTarget: replyTo?.author ?? null,
   });
+  const answerers = answerersOf(addressees, directory, t);
 
   const pick = (agent: AgentInfo) => {
     if (!token) return;
@@ -138,7 +142,7 @@ export function Composer({
   if (closed)
     return (
       <p className="text-muted-foreground border-t px-6 py-4 text-center text-sm">
-        This topic is closed. Reopen it from its ⋯ menu above to write here.
+        {t("This topic is closed. Reopen it from its ⋯ menu above to write here.")}
       </p>
     );
 
@@ -149,8 +153,8 @@ export function Composer({
         {menuOpen && (
           <div
             role="listbox"
-            aria-label="Agents"
-            className="bg-popover absolute right-0 bottom-full left-0 z-20 mb-2 overflow-hidden rounded-2xl border p-1 shadow-lg"
+            aria-label={t("Helpers")}
+            className="bg-popover absolute right-0 bottom-full left-0 z-20 mb-2 overflow-hidden border p-1 shadow-md"
           >
             {suggestions.map((agent, index) => (
               <button
@@ -163,8 +167,8 @@ export function Composer({
                 onMouseEnter={() => setMenuIndex(index)}
                 onClick={() => pick(agent)}
                 className={cn(
-                  "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left",
-                  index === selected && "bg-accent",
+                  "flex w-full items-center gap-3 px-3 py-2 text-left",
+                  index === selected && "bg-accent text-accent-foreground",
                 )}
               >
                 <Mark
@@ -181,86 +185,76 @@ export function Composer({
             ))}
           </div>
         )}
-        <div className="bg-card focus-within:border-primary/60 focus-within:ring-primary/15 rounded-2xl border shadow-sm transition-shadow focus-within:ring-4">
-          {replyTo && (
-            <div className="flex items-center gap-2 border-b px-4 py-2 text-sm">
-              <CornerDownRight className="text-muted-foreground size-4 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <span className="font-medium">{displayName(replyTo.author, me)}</span>
-                <span className="text-muted-foreground ml-2 truncate">{previewOf(replyTo)}</span>
+        <div className="flex items-end gap-2">
+          <div className="bg-input-bg border-input focus-within:border-ring min-w-0 flex-1 border transition-colors">
+            {replyTo && (
+              <div className="flex items-center gap-2 border-b px-4 py-2 text-sm">
+                <CornerDownRight className="text-muted-foreground size-4 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <span className="font-medium">{displayName(replyTo.author, me)}</span>
+                  <span className="text-muted-foreground ml-2 truncate">{previewOf(replyTo)}</span>
+                </div>
+                <button
+                  type="button"
+                  aria-label={t("Cancel reply")}
+                  onClick={onCancelReply}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="size-4" />
+                </button>
               </div>
-              <button
-                type="button"
-                aria-label="Cancel reply"
-                onClick={onCancelReply}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                <X className="size-4" />
-              </button>
+            )}
+            <div className="flex items-end">
+              <textarea
+                ref={ref}
+                value={text}
+                onChange={(e) => {
+                  setText(e.target.value);
+                  setCaret(e.target.selectionStart);
+                  setMenuClosed(false);
+                  setMenuIndex(0);
+                }}
+                onKeyDown={onKeyDown}
+                onKeyUp={updateCaret}
+                onClick={updateCaret}
+                onBlur={() => setMenuClosed(true)}
+                onFocus={() => setMenuClosed(false)}
+                placeholder={placeholder ?? t("Write a message…")}
+                rows={1}
+                aria-autocomplete="list"
+                className="placeholder:text-muted-foreground field-sizing-content max-h-48 min-h-[38px] flex-1 resize-none bg-transparent px-3 py-2 text-[14.5px] outline-none"
+              />
             </div>
-          )}
-          <div className="flex items-end gap-2 p-2 pl-4">
-            <textarea
-              ref={ref}
-              value={text}
-              onChange={(e) => {
-                setText(e.target.value);
-                setCaret(e.target.selectionStart);
-                setMenuClosed(false);
-                setMenuIndex(0);
-              }}
-              onKeyDown={onKeyDown}
-              onKeyUp={updateCaret}
-              onClick={updateCaret}
-              onBlur={() => setMenuClosed(true)}
-              onFocus={() => setMenuClosed(false)}
-              placeholder={placeholder ?? "Message · @ to call an agent"}
-              rows={1}
-              aria-autocomplete="list"
-              className="placeholder:text-muted-foreground field-sizing-content max-h-48 min-h-10 flex-1 resize-none bg-transparent py-2 text-[15px] outline-none"
-            />
-            <button
-              type="button"
-              aria-label="Send"
-              disabled={!text.trim() || sending}
-              onClick={() => void send()}
-              className={cn(
-                "flex size-9 shrink-0 items-center justify-center rounded-full transition-colors",
-                text.trim()
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground",
-              )}
-            >
-              <ArrowUp className="size-4" />
-            </button>
           </div>
+          <button
+            type="button"
+            aria-label={t("Send")}
+            disabled={!text.trim() || sending}
+            onClick={() => void send()}
+            className="bg-primary text-primary-foreground hover:bg-primary-hover grid size-[38px] shrink-0 place-items-center transition-colors disabled:opacity-45"
+          >
+            <SendHorizontal className="size-4" strokeWidth={1.5} />
+          </button>
         </div>
-        <div className="kicker mt-1.5 flex gap-4 px-1">
-          {chatKind !== "direct" && (text.trim() || replyTo) ? (
-            <span className="text-primary normal-case">{addresseeLine(addressees)}</span>
-          ) : (
-            <>
-              <span className="max-md:hidden">⏎ send</span>
-              <span className="max-md:hidden">⇧⏎ new line</span>
-              <span>@ call an agent</span>
-              <span className="max-md:hidden">reply to answer one</span>
-            </>
-          )}
+        <div className="text-muted-foreground mt-1.5 flex flex-wrap justify-between gap-x-4 px-0.5 text-xs">
+          <span>
+            {t("Answers:")} <span className="text-signal-text">{answerers}</span>
+          </span>
+          <span className="max-sm:hidden">{t("@ calls another helper")}</span>
         </div>
       </div>
     </div>
   );
 }
 
-function addresseeLine({ handles, via }: ReturnType<typeof addresseesOf>): string {
-  if (handles.length === 0) return "Nobody will answer: mention an agent";
-  const who = handles.map((h) => `@${h}`).join(", ");
-  switch (via) {
-    case "reply":
-      return `→ ${who} (you are replying)`;
-    case "routed":
-      return "→ @orchestrator will pass it to the right agent";
-    default:
-      return `→ ${who}`;
-  }
+/** Who will answer (ADR 0014), by name: the mentioned helpers, the one replied to, or the Helper. */
+function answerersOf(
+  { handles, via }: ReturnType<typeof addresseesOf>,
+  names: Record<string, AgentInfo>,
+  t: (text: string) => string,
+): string {
+  const name = (h: string) => agentName(h, names[h]?.name, t);
+  if (handles.length === 0) return t("nobody: call a helper with @");
+  if (via === "routed") return name(ORCHESTRATOR);
+  return handles.map(name).join(", ");
 }

@@ -1,11 +1,13 @@
 import type { ExtensionInfo } from "@aura/shared";
-import { Database, Eye, EyeOff, History, KeyRound, MessagesSquare, Trash2 } from "lucide-react";
+import { Database, History, KeyRound, MessageSquare, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
+import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { useAdvanced } from "./launcher";
 
 type Version = { hash: string; author: string; at: string; subject: string };
 
@@ -14,61 +16,73 @@ type Version = { hash: string; author: string; at: string; subject: string };
  * preview of changes waiting for approval, and its versions. `chat`: whether chats are on.
  */
 export function AppControls({ ext, chat }: { ext: ExtensionInfo; chat: boolean }) {
+  const t = useT();
+  const advanced = useAdvanced();
   const preview = useChatStore((s) => s.previewDraft[ext.id] ?? false);
   const chatOpen = useChatStore((s) => s.appChat[ext.id] ?? false);
   const app = ext.app;
   if (!app) return null;
-  const togglePreview = () =>
-    setState((s) => ({ previewDraft: { ...s.previewDraft, [ext.id]: !preview } }));
+  const show = (draft: boolean) =>
+    setState((s) => ({ previewDraft: { ...s.previewDraft, [ext.id]: draft } }));
   return (
     <>
+      {app.draft && (
+        // "Now / After the change" (ADR 0034): the live app or the change waiting for a "Yes".
+        <div className="flex border text-xs @max-[520px]:hidden">
+          <button
+            type="button"
+            aria-pressed={!preview}
+            onClick={() => show(false)}
+            className={cn(
+              "px-2 py-1 transition-colors",
+              !preview ? "bg-primary text-primary-foreground" : "hover:bg-foreground/[0.07]",
+            )}
+          >
+            {t("Now")}
+          </button>
+          <button
+            type="button"
+            aria-pressed={preview}
+            title={t("Shows the change that waits for your decision")}
+            onClick={() => show(true)}
+            className={cn(
+              "border-l px-2 py-1 transition-colors",
+              preview ? "bg-primary text-primary-foreground" : "hover:bg-foreground/[0.07]",
+            )}
+          >
+            {t("After the change")}
+          </button>
+        </div>
+      )}
+      {app.draft && advanced && (
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-muted-foreground size-7"
+          aria-label={t("Discard the change that waits for your decision")}
+          title={t("Discard the change that waits for your decision")}
+          onClick={() => {
+            show(false);
+            void call(() => api.apps({ appId: ext.id }).discard.post()).catch(reportError);
+          }}
+        >
+          <Trash2 strokeWidth={1.5} />
+        </Button>
+      )}
+      <Versions appId={ext.id} />
+      {advanced && <DataMenu appId={ext.id} />}
       {chat && (
         <Button
           size="sm"
           variant={chatOpen ? "secondary" : "ghost"}
-          className="h-7 gap-1 px-2 text-xs"
+          className={cn("h-7 gap-1 px-2 text-xs", chatOpen && "border-ring")}
           aria-pressed={chatOpen}
-          title="The app's chat: use it and change it with @builder"
+          title={t("The app's chat: use it and change it by asking")}
           onClick={() => setAppChat(ext.id, !chatOpen)}
         >
-          <MessagesSquare /> Chat
+          <MessageSquare strokeWidth={1.5} /> {t("Chat")}
         </Button>
       )}
-      {app.draft && (
-        <>
-          <Button
-            size="sm"
-            variant={preview ? "secondary" : "ghost"}
-            className={cn(
-              "h-7 gap-1 px-2 text-xs",
-              !preview && "text-amber-600 dark:text-amber-400",
-            )}
-            title={
-              preview
-                ? "Showing the changes that wait for your approval; click to show the live version"
-                : "There are changes waiting for your approval; click to try them"
-            }
-            onClick={togglePreview}
-          >
-            {preview ? <EyeOff /> : <Eye />} {preview ? "Live" : "Draft"}
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="size-7"
-            aria-label="Discard the changes waiting for approval"
-            title="Discard the changes waiting for approval"
-            onClick={() => {
-              setState((s) => ({ previewDraft: { ...s.previewDraft, [ext.id]: false } }));
-              void call(() => api.apps({ appId: ext.id }).discard.post()).catch(reportError);
-            }}
-          >
-            <Trash2 />
-          </Button>
-        </>
-      )}
-      <DataMenu appId={ext.id} />
-      <Versions appId={ext.id} />
     </>
   );
 }
@@ -79,6 +93,7 @@ export function setAppChat(appId: string, open: boolean): void {
 }
 
 export function Versions({ appId }: { appId: string }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [versions, setVersions] = useState<Version[]>([]);
   const box = useRef<HTMLDivElement>(null);
@@ -98,27 +113,29 @@ export function Versions({ appId }: { appId: string }) {
       <Button
         size="icon"
         variant="ghost"
-        className="size-7"
-        aria-label="Versions"
-        title="Versions: go back to any of them"
+        className="text-muted-foreground hover:text-foreground size-7"
+        aria-label={t("History of changes")}
+        title={t("History of changes")}
         onClick={() => setOpen(!open)}
       >
-        <History />
+        <History strokeWidth={1.5} />
       </Button>
       {open && (
-        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-80 rounded-xl border p-2 shadow-lg">
-          <p className="kicker px-2 pb-1">Versions</p>
+        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-80 border p-2 shadow-md">
+          <p className="text-muted-foreground px-2 pb-1 text-xs font-medium">
+            {t("History of changes")}
+          </p>
           <ul className="max-h-80 overflow-y-auto">
             {versions.map((v, i) => (
-              <li key={v.hash} className="flex items-start gap-2 rounded-lg px-2 py-1.5 text-xs">
+              <li key={v.hash} className="flex items-start gap-2 px-2 py-1.5 text-[13px]">
                 <div className="min-w-0 flex-1">
                   <div className="truncate">{v.subject}</div>
-                  <div className="text-muted-foreground font-mono">
-                    {v.hash} · {new Date(v.at).toLocaleString()}
+                  <div className="text-muted-foreground font-mono text-[11px]">
+                    {new Date(v.at).toLocaleString()}
                   </div>
                 </div>
                 {i === 0 ? (
-                  <span className="text-muted-foreground shrink-0">live</span>
+                  <span className="text-muted-foreground shrink-0 text-xs">{t("now")}</span>
                 ) : (
                   <Button
                     size="sm"
@@ -131,7 +148,7 @@ export function Versions({ appId }: { appId: string }) {
                       );
                     }}
                   >
-                    Restore
+                    {t("Bring back")}
                   </Button>
                 )}
               </li>

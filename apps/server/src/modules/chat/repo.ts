@@ -149,6 +149,15 @@ export class ChatRepo {
       .collect();
   }
 
+  async removeMember(chatId: string, participant: Participant): Promise<void> {
+    await this.db
+      .query(
+        "DELETE member WHERE chat = $chat AND participant.kind = $p.kind AND participant.id = $p.id",
+        { chat: new RecordId("chat", chatId), p: participant },
+      )
+      .collect();
+  }
+
   async members(chatId: string): Promise<{ participant: Participant; role: "owner" | "member" }[]> {
     const [rows] = await this.db
       .query<[Row[]]>(

@@ -4,7 +4,9 @@ Agents are useful because they can act. Aura keeps you in charge of anything tha
 
 ## What needs your approval
 
-An **approval card** appears in the chat; nothing happens until you press **Approve**:
+An **approval card** appears in the chat; nothing happens until you press **Yes, do it**. The
+card says in plain words what will change and warns when something asks for more; the exact diff
+or plan is under **Technical details**:
 
 - creating a project (with its new agents) or a new agent;
 - changing a skill (you see the exact diff);

@@ -15,12 +15,6 @@ export function displayName(
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-export function chatSubtitle(chat: Chat): string {
-  if (chat.kind === "direct") return "your orchestrator";
-  if (chat.kind === "system") return "alerts and system events";
-  return "project";
-}
-
 export function formatTime(iso: string): string {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
@@ -31,4 +25,19 @@ export function formatListTime(iso: string | null): string {
   const now = new Date();
   if (date.toDateString() === now.toDateString()) return formatTime(iso);
   return date.toLocaleDateString([], { day: "numeric", month: "short" });
+}
+
+/**
+ * Plain names for the built-in chats and the orchestrator (ADR 0034): "Helper" and "Alerts" in
+ * the interface's language, unless the user renamed them.
+ */
+export function chatTitle(chat: Chat, t: (text: string) => string): string {
+  if (chat.kind === "direct" && chat.title === "Orchestrator") return t("Helper");
+  if (chat.kind === "system" && chat.title === "Alerts") return t("Alerts");
+  return chat.title;
+}
+
+export function agentName(handle: string, name: string | undefined, t: (text: string) => string) {
+  if (handle === "orchestrator" && (!name || name === "Orchestrator")) return t("Helper");
+  return name ?? handle;
 }
