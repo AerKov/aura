@@ -27,6 +27,13 @@ bun run dev:server                      # http://127.0.0.1:4517
 bun run --cwd apps/desktop dev:vite     # http://localhost:1420 in a browser
 ```
 
+## Look around, and screenshots
+
+`bun scripts/demo.ts` starts a server on an in-memory database with sample chats, an app with data
+and a waiting decision, so the UI is never empty (run `bun run --cwd apps/desktop dev:vite` for
+the client). `scripts/screenshots.cjs` retakes the images in `docs/assets` from it; its header says
+how. Retake them when the look of the screen changes.
+
 ## Checks
 
 Run all three before you open a pull request; CI runs the same:

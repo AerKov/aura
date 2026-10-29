@@ -8,7 +8,7 @@ Aura is customized by talking to the orchestrator, in three levels. Each change 
 > Make the chat background a little warmer and the accent green.
 
 The orchestrator proposes CSS. Press **Try it** on the card to preview, then approve or reject.
-Themes live in `themes/<name>/theme.css`, small tweaks in `snippets/<name>.css`. The **Customize**
+Themes live in `themes/<name>/theme.css`, small tweaks in `snippets/<name>.css`. The **Look**
 screen (palette icon) switches themes and snippets on and off.
 
 Themes change CSS variables such as `--background`, `--foreground`, `--primary` (the accent),
@@ -65,8 +65,8 @@ history.
 
 ## Navigation
 
-The **Navigation** list on the Customize page sets the order of the icons on the left and hides the
-ones you do not use (Chats and Customize always stay). Items after Customize sit at the bottom. You
+The **Navigation** list in Look sets the order of the icons on the left and hides the
+ones you do not use (Chats and Look always stay). Items after Look sit at the bottom. You
 can also ask the orchestrator ("move the tracker app to the top, hide Memory"). Extensions pick
 their icon from Aura's set.
 
@@ -74,4 +74,4 @@ their icon from Aura's set.
 
 If a customization breaks Aura, start it with `AURA_SAFE_MODE=1`, or simply restart it a few times:
 after 3 starts in a row that did not last a minute, Aura starts in safe mode by itself. Safe mode
-turns off MCP servers and extensions so you can fix things from the Customize screen.
+turns off MCP servers and extensions so you can fix things from Look.

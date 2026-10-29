@@ -1,10 +1,10 @@
 import type { MemoryNote } from "@aura/shared";
 import { Brain, RefreshCw, Search, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Mark } from "@/components/mark";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
+import { AgentMark } from "@/features/chat/agent-mark";
 import { useChatStore } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -114,11 +114,7 @@ export function MemoryView() {
             return (
               <section key={key} className="mb-6">
                 <h2 className="mb-2 flex items-center gap-2">
-                  <Mark
-                    name={first.owner}
-                    kind={first.owner === "orchestrator" ? "orchestrator" : "agent"}
-                    size="xs"
-                  />
+                  <AgentMark handle={first.owner} size="xs" />
                   <span className="text-sm font-medium">{title}</span>
                   <span className="kicker">
                     {first.scope === "project" ? "project notes" : "agent notes"}

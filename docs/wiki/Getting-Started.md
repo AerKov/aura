@@ -19,8 +19,8 @@ bun run dev
 
 ## 2. Pick an engine
 
-Agents need something to think with. Open **Engines** (the chip icon in the left rail) and get one
-engine to **Ready**. The quickest options:
+Helpers need something to think with. In **My apps** (the **A** at the top of the bar) turn on
+**Advanced mode**, open **Helper programs** and get one engine to **Ready**. The quickest options:
 
 | You have                      | Do this                                                                                                                 |
 | ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -31,27 +31,31 @@ engine to **Ready**. The quickest options:
 
 Then press **Use for all agents** on that engine. Details: [Engines](Engines).
 
-## 3. Talk to the orchestrator
+## 3. Talk to your Helper
 
-Aura opens with **Chats** on the whole screen and a welcome from your **orchestrator**, the first
-chat in the list. It explains what Aura is; your apps will later sit next to it as tiles (see
-[The screen](The-Screen)). Tell it what you want, in any language:
+Aura opens on **Chats**, with a welcome from your **Helper** (the orchestrator), the first chat in
+the list. Tell it what you want, in any language:
 
-> I want a small CLI that converts temperatures, with tests.
+> I run a small design studio. Keep track of my clients and deals, please.
 
-The orchestrator asks what it needs, then proposes a **project**: a name, a team (for
-example `@coder` and `@reviewer`). Nothing happens until you press **Approve** on that card.
+The Helper asks what it needs, then makes an **app** (or, for bigger work, proposes a **project**
+with a team, for example a coder and a reviewer). The new app appears in **My apps**; open it, and
+use its **Chat** button to change it by asking. Every change comes as a card that says what will
+change: nothing happens until you press **Yes, do it**.
+
+![A decision card in an app's chat](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/app-chat.png)
 
 ## 4. Watch the team work
 
-The project gets its own chat and its own folder (a git repository). Agents mention each other to
-hand work over, every run shows a card with the tools it used and what it cost, and the files are
-committed after each run. The button in the chat header shows the tokens used; click it to set a
+A project has its own chat and its own folder (a git repository). Helpers mention each other to
+hand work over, every run shows a short card of what it did and what it cost, and the files are
+committed after each run. The ring in the chat header shows the tokens used; click it to set a
 limit.
 
-You can step in at any time: just write in the project chat and the orchestrator passes it to the
-right agent, reply to an agent's message to answer it, or type `@` to pick an agent yourself. Press
-**Stop** on a running reply to end it.
+You can step in at any time: write in the project chat and the Helper passes it to the right agent,
+reply to a message to answer it, or type `@` to pick a helper yourself. Press **Stop** on a running
+reply to end it. **New group** at the top of the chat list makes a chat of your own with the
+helpers you choose.
 
 ## Next
 

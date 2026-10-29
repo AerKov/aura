@@ -7,7 +7,7 @@ cloud is involved.
 
 1. Start Aura with `AURA_REMOTE=1` so it listens on your local network (by default it only listens
    on your computer).
-2. Open **Devices** (phone icon) and press **Pair a device**. You get a one-time code (valid 5
+2. Open **Phone** (phone icon) and press **Pair a device**. You get a one-time code (valid 5
    minutes) and the address to open, like `http://192.168.1.20:4517/app/`.
 3. Open that address on the phone, enter the code and a name for the device.
 4. Optional: **Add to Home Screen** to use it like an app, and **Enable notifications**.

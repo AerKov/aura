@@ -9,12 +9,15 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Mark } from "@/components/mark";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { loadProjects, openChat, reportError } from "@/features/chat/actions";
+import { AgentMark } from "@/features/chat/agent-mark";
 import { BudgetEditor } from "@/features/chat/budget";
+import { agentName } from "@/features/chat/participants";
 import { setState, useChatStore } from "@/features/chat/store";
+import { useT } from "@/features/localization/i18n";
+import { useAdvanced } from "@/features/shell/launcher";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
@@ -41,6 +44,8 @@ const TOOLS: { name: string; text: string }[] = [
  * (MCP) and the secrets agents use.
  */
 export function AgentsView() {
+  const t = useT();
+  const advanced = useAdvanced();
   const agentMap = useChatStore((s) => s.agents);
   const agents = useMemo(() => Object.values(agentMap), [agentMap]);
   const focus = useChatStore((s) => s.agentFocus);
@@ -77,12 +82,8 @@ export function AgentsView() {
                 current === a.handle ? "border-primary bg-primary/10" : "hover:bg-accent/60",
               )}
             >
-              <Mark
-                name={a.handle}
-                kind={a.handle === "orchestrator" ? "orchestrator" : "agent"}
-                size="xs"
-              />
-              @{a.handle}
+              <AgentMark handle={a.handle} size="xs" />
+              {advanced ? `@${a.handle}` : agentName(a.handle, a.name, t)}
             </button>
           ))}
         </div>
@@ -94,6 +95,8 @@ export function AgentsView() {
 }
 
 function AgentCard({ handle }: { handle: string }) {
+  const t = useT();
+  const advanced = useAdvanced();
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tools, setTools] = useState<string[]>([]);
@@ -147,15 +150,13 @@ function AgentCard({ handle }: { handle: string }) {
     <div className="grid gap-4">
       <div className="bg-card rounded-2xl border p-5">
         <div className="flex items-start gap-3">
-          <Mark
-            name={handle}
-            kind={handle === "orchestrator" ? "orchestrator" : "agent"}
-            size="md"
-          />
+          <AgentMark handle={handle} size="md" />
           <div className="min-w-0 flex-1">
             <div className="font-semibold">
-              {status.name}{" "}
-              <span className="text-muted-foreground font-mono text-sm">@{handle}</span>
+              {agentName(handle, status.name, t)}{" "}
+              {advanced && (
+                <span className="text-muted-foreground font-mono text-sm">@{handle}</span>
+              )}
             </div>
             <p className="text-muted-foreground text-sm">{status.role}</p>
             <p className="mt-2 flex items-center gap-1.5 text-[13px]">

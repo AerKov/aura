@@ -1,10 +1,10 @@
 import { addresseesOf, type ChatKind, type Message } from "@aura/shared";
 import { CornerDownRight, SendHorizontal, X } from "lucide-react";
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Mark } from "@/components/mark";
 import { useT } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";
 import { reportError, sendMessage } from "./actions";
+import { AgentMark } from "./agent-mark";
 import { activeToken, matchAgents } from "./mentions";
 import { displayName, previewOf } from "./message-utils";
 import { agentName } from "./participants";
@@ -171,11 +171,7 @@ export function Composer({
                   index === selected && "bg-accent text-accent-foreground",
                 )}
               >
-                <Mark
-                  name={agent.handle}
-                  kind={agent.handle === ORCHESTRATOR ? "orchestrator" : "agent"}
-                  size="sm"
-                />
+                <AgentMark handle={agent.handle} size="sm" />
                 <span className="text-sm font-medium">{agent.name}</span>
                 <span className="kicker">@{agent.handle}</span>
                 <span className="text-muted-foreground min-w-0 flex-1 truncate text-right text-xs">

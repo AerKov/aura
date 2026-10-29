@@ -27,7 +27,7 @@ prompts, skills, themes, CSS snippets and panel extensions.
    `pack(<id>): install <version>`. You can revert it like any other change
    (see [Your data](Your-Data)).
 3. New agents appear right away. Add them to a project, or mention them. Themes appear under
-   Customize. Panel extensions are enabled with the permissions you saw.
+   Look. Panel extensions are enabled with the permissions you saw.
 
 You can also ask the orchestrator in your direct chat, for example: _"set me up with a dev team"_.
 It finds the matching pack and asks for approval with the same preview.
@@ -67,6 +67,6 @@ Allowed files:
 - `extensions/<id>/manifest.json`, `main.js` and `styles.css`
 
 Limits: 60 files, 200 KB per file and 1 MB in total. MCP servers cannot be part of a pack, because
-they run programs on your computer. Add those yourself under Customize.
+they run programs on your computer. Add those yourself on the Helpers page.
 
 Push the folder to GitHub and share the link.

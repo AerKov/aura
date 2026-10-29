@@ -21,6 +21,8 @@ otherwise it waits for you in the chat.
 
 ## Change it
 
+![A change waiting for a decision](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/app-chat.png)
+
 Say what you want in the app's chat: _"add an email column"_, _"sort by status"_,
 _"make the Add button green"_. @builder edits the app's files, then you get a card that says in
 plain words what will change (the diff is under **Technical details**):
@@ -108,7 +110,7 @@ it; it reloads when you change the language.
 
 Apps run in a sandbox and use the [extension permissions](Customization): their own data, the
 hosts you allowed (with keys kept by Aura), asking agents for you, reading project files, forms
-and buttons, posting alert cards to the Signals chat (`alerts.write`, see
+and buttons, posting alert cards to the Alerts chat (`alerts.write`, see
 [Alerts](Alerts-and-Schedules)). A new app starts with a panel and its own data only.
 
 **@builder can look at the app.** After a change it can ask to see the app as you see it: an outline

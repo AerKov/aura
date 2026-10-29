@@ -1,21 +1,29 @@
 # Aura
 
-**Aura is a messenger for you and your team of AI agents.** You talk to an orchestrator; it plans with
-you, puts together a team of agents, and they work in project chats: they write code and files,
-review each other, handle monitoring alerts and improve their own skills, with your approval for
-anything that matters.
+**Aura holds your own small apps next to a team of AI helpers who make and change them for you.**
+You say what you want in plain words; a helper does it and shows what will change; nothing happens
+until you say yes. Everything runs on your computer: your apps, their data and your chats stay on
+your machine, in plain files and a local database.
 
-Everything runs on your computer. Your chats, projects and agents stay on your machine, in plain
-files and a local database.
+![Aura: a chat with a helper on the left, the app it is changing on the right](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/shell-light.png)
 
 > **Status:** alpha (version 0.37). It works end to end, but expect rough edges.
+
+## In a minute
+
+- **Apps** sit as tiles side by side. Every app has a **Chat** button: use the app there, and change
+  it by asking ("add an email column").
+- **Helpers** are AI agents. Your main **Helper** plans with you and calls the others (a coder, a
+  reviewer…). They write code and files, review each other and handle alerts.
+- **You decide.** A change to an app, a new helper or a schedule comes as a card that says in plain
+  words what will change: **Yes, do it** or **No, thanks**. Every version can be brought back.
 
 ## Start here
 
 1. [Getting started](Getting-Started): install, first run, first project.
-2. [Engines](Engines): pick what runs your agents: Claude Code, Gemini CLI, Codex, OpenCode, or
+2. [Engines](Engines): pick what runs your helpers: Claude Code, Gemini CLI, Codex, OpenCode, or
    Aura's own agent on OpenRouter, Ollama or LM Studio (free options included).
-3. [Chats and agents](Chats-and-Agents): how the orchestrator, projects and agents work together.
+3. [Chats and agents](Chats-and-Agents): how the Helper, groups, projects and agents work together.
 
 ## Guides
 

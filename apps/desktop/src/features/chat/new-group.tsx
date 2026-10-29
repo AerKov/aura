@@ -1,11 +1,11 @@
 import { Check, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { openChat, reportError } from "./actions";
+import { AgentMark } from "./agent-mark";
 import { upsertChat, useChatStore } from "./store";
 
 /**
@@ -99,7 +99,7 @@ export function NewGroupButton() {
                       }
                       className="hover:bg-foreground/[0.06] flex w-full items-center gap-2.5 px-2 py-1.5 text-left"
                     >
-                      <Mark name={a.handle} size="sm" />
+                      <AgentMark handle={a.handle} size="sm" />
                       <span className="min-w-0 flex-1 truncate text-sm">{a.name}</span>
                       <Check className={cn("size-4", on ? "text-foreground" : "invisible")} />
                     </button>

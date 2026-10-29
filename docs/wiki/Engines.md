@@ -69,7 +69,7 @@ is `http://127.0.0.1:1234/v1`), add a key if the server needs one, and pick a mo
 ## Default engine and per-agent engines
 
 - **Use for all agents** makes an engine the default for every agent without its own choice.
-- **Per agent** (bottom of the Engines page) picks an engine and model for one agent. This is saved in
+- **Per agent** (bottom of the Helper programs page) picks an engine and model for one agent. This is saved in
   the agent's file (`agents/<handle>/agent.md`, fields `engine:` and `model:`).
 - The orchestrator can also suggest an engine when it proposes a new agent; you see it on the
   approval card.

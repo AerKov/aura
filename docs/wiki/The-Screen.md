@@ -4,6 +4,8 @@ Aura is a shell you fill with apps. It lays out the apps you open as **tiles** s
 Even the built-in parts (Chats, Helpers, Reminders…) are apps, and you can turn
 off the ones you do not need.
 
+![My apps](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/my-apps.png)
+
 ## My apps
 
 Click the **A** at the top of the bar (or press Alt+H) to open **My apps** over your work. It lists
@@ -16,8 +18,8 @@ every app by **group**, each with a line on what it is for:
   Backups and Ready-made packs.
 - **Find an app or a setting:** type to filter by name, description or group; Enter opens the
   first match, Esc closes the menu.
-- **New app:** a template (CRM, Tasks, Notes) or your own: a name and what it should do, which a
-  helper builds in its chat.
+- **New app:** a template from a pack you installed, or your own: a name and what it should do,
+  which a helper builds in its chat.
 
 An empty tile, **New window**, shows the same list. There the **⋯** on one of your apps uninstalls
 it (see [Apps](Apps#uninstall-and-bring-back)).
@@ -46,7 +48,7 @@ change it back with a click.
 
 ## Windows and keys
 
-**Customize → Windows** sets how it looks: the **Airy** preset (gaps, round corners, a
+**Look → Windows** sets how it looks: the **Airy** preset (gaps, round corners, a
 coloured border on the focused tile, thin title bars) or **Compact** (no gaps, square, full title bars),
 then gaps, corners, borders and title bars one by one (**Thin** and **Hidden** show a tile's buttons
 when you point at it). **Bar** puts the bar on the left, right, top or bottom. The bar ends with the
@@ -69,7 +71,7 @@ the orchestrator: _"make the windows compact with the bar on top"_.
 
 ## Your own bar
 
-**Customize → Window manager → Bar** chooses the bar:
+**Look → Windows → Bar** chooses the bar:
 
 - **Built-in**: Aura's own bar.
 - **Your own (code)**: the bar becomes an app you can change completely: other widgets, another
@@ -80,9 +82,9 @@ the orchestrator: _"make the windows compact with the bar on top"_.
 - **Off**: no bar. Use Home (Mod+H) and the keyboard. Phones keep their tab bar.
 
 If your bar fails (an error, or it does not start), Aura shows the built-in bar instead and
-Customize says why; fix it or restore a version, then **try again**.
+Look says why; fix it or restore a version, then **try again**.
 
-**Bar thickness** (Customize → Window manager) sets how thick the bar is, 24–96 px (the built-in
+**Bar thickness** (Look → Windows) sets how thick the bar is, 24–96 px (the built-in
 bar needs at least 44). Your own bar can use the same permissions as other apps: `storage` for its
 settings, `net` with the hosts it needs (a weather widget, for example); see the README in its
 folder. Whatever its CSS does, the bar stays inside its strip.

@@ -43,7 +43,7 @@ folder), cannot read credentials such as `~/.ssh` or your agent apps' logins, an
 network**. Agents reach the web through their engine's own web tools (WebSearch, WebFetch), not
 through commands, so installing packages from the internet in a command does not work.
 
-- See and change it on the **Engines** page, card **Command sandbox**: `Auto` (sandbox when
+- See and change it on the **Helper programs** page (advanced mode), card **Command sandbox**: `Auto` (sandbox when
   available), `Required` (refuse commands without it) or `Off`.
 - macOS works out of the box. On Linux install `bubblewrap` and `socat`
   (`sudo apt install bubblewrap socat`). On Windows the sandbox is not available yet.

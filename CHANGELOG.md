@@ -15,6 +15,12 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 - **A click on a helper's mark** in a chat opens that helper's settings.
 - The window presets are called **Airy** and **Compact**.
 - The catalog no longer offers the CRM, Tasks and Notes apps.
+- **A clearer README, wiki and screenshots.** The README says what Aura is up front; the images in
+  `docs/assets` are retaken from the real app. `bun scripts/demo.ts` starts a demo with sample
+  chats and an app; `scripts/screenshots.cjs` retakes the images from it.
+- Helpers' marks show their names' initials ("H" for the Helper) everywhere; the Helpers page shows
+  names, not @handles, in plain mode; the chat list shows a decision's title instead of
+  "[approval]"; chat headers fit narrow tiles.
 
 ## [0.37.0] - 2026-10-29: Chats and app tiles in the new look
 

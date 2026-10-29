@@ -7,7 +7,6 @@ import {
 } from "@aura/shared";
 import { ChevronLeft, PanelRight, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/features/localization/i18n";
 import { useExtensionApps } from "@/features/shell/apps";
@@ -21,6 +20,7 @@ import {
   reportError,
   showList,
 } from "./actions";
+import { AgentMark } from "./agent-mark";
 import { BudgetButton } from "./budget";
 import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
@@ -203,14 +203,13 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
             <div className="flex items-center gap-2">
               {chat.kind === "group" && helpers.length > 0 && (
                 <div
-                  className="flex gap-1 max-sm:hidden"
+                  className="flex gap-1 @max-[560px]:hidden"
                   title={helpers.map((a) => agentNames[a.id] ?? a.id).join(", ")}
                 >
                   {helpers.map((a) => (
-                    <Mark
+                    <AgentMark
                       key={a.id}
-                      name={a.id}
-                      kind={a.id === "orchestrator" ? "orchestrator" : "agent"}
+                      handle={a.id}
                       size="xs"
                       working={working.includes(a.id)}
                     />
@@ -227,7 +226,7 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
                   title={t("What helpers keep of older messages")}
                   onClick={() => setPanel(panel === "summary" ? null : "summary")}
                 >
-                  <ScrollText /> <span className="max-sm:hidden">{t("Summary")}</span>
+                  <ScrollText /> <span className="@max-[560px]:hidden">{t("Summary")}</span>
                 </Button>
               )}
               {chat.kind === "group" && !appId && (
@@ -242,7 +241,7 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
                   }
                 >
                   <PanelRight />{" "}
-                  <span className="max-sm:hidden">
+                  <span className="@max-[560px]:hidden">
                     {appOpen ? t("Close the app") : t("Open the app")}
                   </span>
                 </Button>

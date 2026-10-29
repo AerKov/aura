@@ -68,6 +68,11 @@ function toTopic(row: Row): Topic {
   };
 }
 
+/** What a card says in the chat list: the decision, the alert or the task, not "[approval]". */
+function cardPreview(card: Card): string {
+  return card.type === "run" ? "[run]" : card.title;
+}
+
 export { toChat as rowToChat, toMessage as rowToMessage, toTopic as rowToTopic };
 
 export interface NewMessage {
@@ -387,7 +392,7 @@ export class ChatRepo {
     const preview = message.body
       ? previewText(message.body)
       : message.card
-        ? `[${message.card.type}]`
+        ? cardPreview(message.card)
         : "";
     // Many writers touch the same chat record; retry optimistic-concurrency conflicts.
     await retryOnConflict(() =>

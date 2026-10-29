@@ -1,11 +1,11 @@
 import { Check, UserPlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Mark } from "@/components/mark";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { reportError } from "./actions";
+import { AgentMark } from "./agent-mark";
 import { setState, useChatStore } from "./store";
 
 /**
@@ -68,7 +68,7 @@ export function TeamButton({ chatId }: { chatId: string }) {
                   onClick={() => void toggle(a.handle)}
                   className="hover:bg-foreground/[0.06] flex w-full items-center gap-2.5 px-2 py-1.5 text-left"
                 >
-                  <Mark name={a.handle} size="sm" />
+                  <AgentMark handle={a.handle} size="sm" />
                   <span className="min-w-0 flex-1 leading-tight">
                     <span className="block text-sm font-medium">{a.name}</span>
                     <span className="text-muted-foreground block truncate text-xs">{a.role}</span>

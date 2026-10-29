@@ -5,8 +5,8 @@
 <h1 align="center">Aura</h1>
 
 <p align="center">
-  <b>A messenger for you and your team of AI agents.</b><br>
-  Local-first. Bring your own agent: Claude Code, Gemini CLI, Codex, OpenCode, or local models.
+  <b>Your own apps, built and changed by chatting with a team of AI helpers.</b><br>
+  Local-first and open source. Bring your own AI: Claude Code, Gemini CLI, Codex, OpenCode, or a model on your computer.
 </p>
 
 <p align="center">
@@ -17,67 +17,88 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/project-light.png" alt="A project chat: a coder and a reviewer finish a CLI tool" width="900">
+  <img src="docs/assets/shell-light.png" alt="Aura: a chat with a helper on the left, the app it is changing on the right" width="900">
 </p>
 
-You talk to an **orchestrator**. It plans with you, puts together a team of **agents**, and they
-work in project chats like people do: they write code and files, hand work to each other with
-@mentions, review each other, handle monitoring alerts and improve their own skills. Anything that
-matters waits for your **approval**.
+## What is Aura?
 
-Everything runs on your computer: chats in a local database, agents, skills and projects as plain
-files in a git repository you own.
+Aura is a desktop app that holds **your own small apps** (a client list, a tracker, a dashboard…)
+next to a **team of AI helpers** who make and change them for you.
 
-## Features
+You do not write code. You say what you want, in plain words and any language:
 
-- **Everything is a chat.** Your orchestrator, one chat per project, and a chat for alerts. Replies
-  like a messenger; no channels, threads or workspaces.
-- **Agents as files.** Each agent has a role, tools (least privilege), a budget, skills and its own
-  engine. Ask the orchestrator for a new one; approve it.
-- **Projects that ship.** A project is a chat, a git folder and a budget. Agents take turns, every
-  run is committed, every reply shows the tools used and the cost.
-- **Choose the engine per agent.** Claude Code, Gemini CLI, Codex or OpenCode under your own login,
-  or Aura's built-in agent on OpenRouter, Ollama or LM Studio, free options included.
-- **Approvals for side effects.** New projects and agents, skill changes, schedules, CSS, MCP servers
-  and extensions all show a card with exactly what will change.
-- **Talk like in a messenger.** Type `@` to pick an agent, reply to a message to answer its author,
-  or just write: the orchestrator passes it to the right agent.
-- **Sandboxed shell.** Agents' commands write only in the project, cannot read your credentials, and
-  have no network.
-- **Safe by default.** Agents stay inside their project folder, wake each other only by mention, stop at
-  their budget and treat web pages, alerts and files as data, never as instructions.
-- **Alerts and schedules.** Monitoring webhooks wake the orchestrator for triage; recurring jobs run
-  agents on a schedule.
-- **Memory.** Agents keep notes across runs (their own, and shared per project) and get the relevant
-  ones every time; you can read and delete all of them. Long chats are summarized, so earlier
-  decisions are not lost.
-- **Skills that improve.** Agents propose changes to their own know-how; you approve the diff;
-  every version is a git commit you can roll back.
-- **A shell for your apps.** Describe a tool (a CRM, a board, a tracker) and @builder makes it as an
-  app with its own chat and data; every change is a diff you approve. Apps sit as tiles side by side,
-  listed by group on the Home launcher; uninstalling keeps a backup.
-- **Restore points.** Take the whole Aura back, or forward again, after a round of customizing:
-  agents, skills, themes, settings and every app with its data.
-- **Your language.** English and Ukrainian built in, for the interface, the agents and your apps.
-- **Catalog.** Install a ready-made dev team, writers, researchers, on-call, themes or panels in one
-  click, or a pack from a GitHub link; you see every file and diff first.
-- **Customize by asking.** Themes, MCP tool servers and sandboxed panel extensions, built by the
-  orchestrator in chat.
-- **On your phone.** Pair a phone with a one-time code; it connects to your desktop, with
-  notifications. No cloud.
+> Add an email column to the clients table and a button to export to CSV.
+
+A helper makes the change, and Aura shows **what will change** in plain words. Nothing happens
+until you press **Yes, do it**; every version can be brought back. Your apps, your data and your
+chats stay on your computer.
+
+## How it works
+
+1. **Open an app, or ask for one.** Apps sit as tiles side by side. Every app has a **Chat** button:
+   that is where you use it and where you change it. To start a new app, tell your **Helper** what
+   it is for.
+2. **Helpers do the work.** Your main Helper plans with you and calls the others: a coder, a
+   reviewer, whoever you add. They write code and files, hand work to each other with @mentions,
+   and handle alerts from your monitoring tools.
+3. **You decide.** Anything that matters (a change to an app, a new helper, a schedule, a new
+   skill) shows up as a card with the exact change. Yes or no.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/engines.png" alt="Engines: choose what runs your agents"></td>
-    <td width="50%"><img src="docs/assets/alerts-dark.png" alt="Alert triage in the dark theme; an injected instruction is flagged, not followed"></td>
+    <td width="50%"><img src="docs/assets/my-apps.png" alt="My apps: every app by group, with a search"></td>
+    <td width="50%"><img src="docs/assets/project.png" alt="A project chat: a coder and a reviewer finish a landing page"></td>
   </tr>
   <tr>
-    <td align="center"><sub>Pick an engine for all agents or per agent</sub></td>
-    <td align="center"><sub>Alert triage: an injected instruction is flagged, not followed</sub></td>
+    <td align="center"><sub><b>My apps.</b> Everything you have, by group, with a search</sub></td>
+    <td align="center"><sub><b>A project chat.</b> Helpers work together and show what they did</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/alerts.png" alt="An alert from a monitoring tool and the Helper's suggestion"></td>
+    <td width="50%"><img src="docs/assets/helpers.png" alt="The Helpers page: a helper's whole prompt, tools and memory"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Alerts.</b> The Helper reads them first and tells you what to do</sub></td>
+    <td align="center"><sub><b>Nothing hidden.</b> See each helper's full prompt, tools and memory</sub></td>
   </tr>
 </table>
 
-<p align="center"><img src="docs/assets/phone.png" alt="Aura on a phone" width="600"></p>
+## What you get
+
+**Apps**
+- **Apps as tiles.** Open several side by side; the screen comes back as you left it. A **My apps**
+  menu lists everything by group, with a search.
+- **Apps made by asking.** Describe a tool and the builder helper writes it; it has its own chat and
+  its own data. Every change is a diff you approve, and every version can be brought back.
+- **Uninstall without fear.** An uninstalled app leaves a backup; **restore points** take the whole
+  Aura back (or forward again) after a round of changes.
+- **Ready-made packs.** Add a dev team, writers, researchers, themes or panels in one click, or a
+  pack from a GitHub link. You see every file first.
+
+**Helpers**
+- **Agents are files.** Each has a role, tools (the fewest it needs), a budget, skills and its own
+  engine. Ask the Helper for a new one and approve it.
+- **Projects that ship.** A project is a chat, a git folder and a limit. Agents take turns, every run
+  is committed, every reply shows what was done and what it cost.
+- **Choose the AI per helper.** Claude Code, Gemini CLI, Codex or OpenCode under your own login, or
+  Aura's built-in agent on OpenRouter, Ollama or LM Studio, free options included.
+- **Memory and skills that improve.** Helpers keep notes between runs (you can read and delete all of
+  them) and propose changes to their own know-how; you approve the diff.
+- **Alerts and reminders.** Monitoring webhooks wake the Helper for triage; recurring jobs run
+  helpers on a schedule.
+
+**You stay in charge**
+- **Plain by default.** Words like "Helper" and "Alerts", not jargon; **advanced mode** shows the
+  technical side.
+- **Approvals for side effects.** New projects and helpers, skill changes, schedules, CSS, tool
+  servers, extensions: each shows a card with exactly what will change.
+- **Safe by default.** Helpers stay in their folder, wake each other only by mention, stop at their
+  budget, run commands in a sandbox with no network, and treat web pages, alerts and files as data,
+  never as instructions.
+- **Your language.** English and Ukrainian built in, for the interface, the helpers and your apps.
+- **On your phone.** Pair a phone with a one-time code; it connects to your desktop. No cloud.
+
+<p align="center"><img src="docs/assets/phone-chat.png" alt="Aura on a phone" width="300"></p>
 
 ## Get started
 
@@ -94,7 +115,8 @@ files in a git repository you own.
    From source you need [Bun](https://bun.sh) 1.4+ and the
    [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 
-2. **Pick an engine** on the **Engines** page. Any one is enough:
+2. **Pick an engine**: what your helpers think with. In **My apps** turn on **Advanced mode** and open
+   **Helper programs**. Any one engine is enough:
 
    | Engine                                        | Setup                                                              | Cost                  |
    | --------------------------------------------- | ------------------------------------------------------------------ | --------------------- |
@@ -106,10 +128,14 @@ files in a git repository you own.
    | OpenRouter                                    | paste a key from openrouter.ai/keys, pick a `:free` model          | free models available |
    | LM Studio and other OpenAI-compatible servers | the server URL                                                     | free, local           |
 
-3. **Tell the orchestrator what you want**, in any language, and approve its plan.
+3. **Tell your Helper what you want**, in any language: _"make me an app to track clients and
+   deals"_. Approve its plan, then open the new app from **My apps**.
 
-The [wiki](https://github.com/AerKov/aura/wiki) covers everything else: engines, agents and
-projects, approvals and safety, skills, alerts, customization, the phone app, and your data.
+   Want to look around first? `bun scripts/demo.ts` starts a demo with sample chats and an app
+   (see [Development](#development)).
+
+The [wiki](https://github.com/AerKov/aura/wiki) covers everything else: the screen, apps, engines,
+helpers and projects, approvals and safety, skills, alerts, the phone app, and your data.
 
 ## Privacy
 
@@ -120,9 +146,8 @@ models). Agent apps keep their own logins; Aura never reads them. API keys you p
 ## Status
 
 Proof of concept: the full loop works and is tested, with rough edges. Shell commands run in an OS
-sandbox where available (macOS; Linux with bubblewrap and socat); check its status on the Engines
-page. See the roadmap in
-[docs/SPEC.md](docs/SPEC.md) and what changed in [CHANGELOG.md](CHANGELOG.md).
+sandbox where available (macOS; Linux with bubblewrap and socat); its status is on the Helper programs
+page. See the roadmap in [docs/SPEC.md](docs/SPEC.md) and what changed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 
@@ -133,13 +158,15 @@ bun run typecheck
 bun run lint           # biome; lint:fix applies fixes
 bun test
 bun run build          # compile the server sidecar, then tauri build
+bun scripts/demo.ts    # a demo with sample content on :4517 (then dev:vite in apps/desktop)
 ```
 
 ```
 apps/server      Bun + Elysia: API, WebSocket, agents, engines, embedded SurrealDB
 apps/desktop     Tauri 2 + React/Vite/Tailwind UI (also served to phones as a web app)
 packages/shared  message protocol and shared types
-docs/            spec, architecture decisions, wiki sources
+scripts/         dev launcher, sidecar build, and a demo with sample content
+docs/            spec, architecture decisions, wiki sources, screenshots
 ```
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) first; architecture decisions are in

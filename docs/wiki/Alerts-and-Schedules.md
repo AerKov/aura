@@ -2,8 +2,10 @@
 
 ## Alerts
 
-Monitoring systems can send alerts to Aura's **Alerts** chat. Open it and press **Connect** to see
-your webhook URL and a `curl` example.
+![An alert and the Helper's suggestion](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/alerts.png)
+
+Monitoring systems can send alerts to Aura's **Alerts** chat. In advanced mode, open it and press
+**Connect** to see your webhook URL and a `curl` example.
 
 ```sh
 curl -X POST "http://127.0.0.1:4517/hooks/alerts/uptime?token=<your token>" \
@@ -31,5 +33,5 @@ every run costs money. Jobs run at most every 10 minutes.
 
 The target chat is your direct chat, a project chat, or the alerts chat (for example a nightly
 check that reports there). At the scheduled time a scheduler bot mentions the agent in the target chat, so the usual budgets
-and guards apply. The **Schedule** screen (calendar icon) lists jobs with their next run and can
+and guards apply. The **Reminders** app (clock icon) lists jobs with their next run and can
 pause, resume or delete them.

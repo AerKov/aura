@@ -1,7 +1,6 @@
 import {
   type AppRef,
   BUILTIN_APPS,
-  type BuiltinApp,
   defaultModules,
   type ExtensionInfo,
   type ModuleStates,
@@ -45,11 +44,6 @@ export const BUILTIN_ICONS: Record<string, LucideIcon> = {
   catalog: Package,
   engines: Cpu,
 };
-
-/** The catalogue entry of a built-in app (its first one: Chats, not Alerts, for the messenger). */
-export function builtinOf(app: AppRef): BuiltinApp | undefined {
-  return BUILTIN_APPS.find((b) => b.app === app);
-}
 
 /** Labels and icons of the built-in pages, from the shared catalogue. */
 export const PAGES = Object.fromEntries(

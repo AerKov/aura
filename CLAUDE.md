@@ -54,7 +54,7 @@ apps/
       db/           SurrealDB client, schema, migrations
 packages/
   shared/           shared types, message protocol, schemas (single source of truth)
-  extension-api/    types for the extension API (Phase 6)
+scripts/            dev launcher, sidecar build, demo with sample content, screenshots
 docs/
   SPEC.md           product + architecture spec, roadmap
   decisions/        ADRs: NNNN-short-title.md

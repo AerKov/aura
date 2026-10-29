@@ -1,7 +1,7 @@
 # Aura alpha
 
-Aura is a messenger where you work with an AI orchestrator and a team of AI agents. It works end
-to end, but expect rough edges. Please
+Aura holds your own small apps next to a team of AI helpers who make and change them for you. It
+works end to end, but expect rough edges. Please
 [report what breaks](https://github.com/AerKov/aura/issues/new/choose).
 
 ## Install
@@ -32,15 +32,15 @@ Then follow [Getting started](https://github.com/AerKov/aura/wiki/Getting-Starte
 
 ## Your apps
 
-Home is a launcher: your apps by group, and the built-in ones (Chats, Agents, Skills, Memory,
-Schedule, Signals…), which you can turn off. Describe a tool you need and @builder makes it as an
-app with its own chat; every change waits for your approval. **Restore points** take the whole Aura
-back, or forward again, and **Localization** switches Aura to Ukrainian. Details:
+**My apps** (the **A** at the top of the bar) lists your apps by group, and the built-in ones
+(Chats, Alerts, Reminders, Helpers…); advanced mode shows more and lets you turn them off.
+Describe a tool you need and @builder makes it as an app with its own chat; every change waits for your approval. **Restore points** take the whole Aura
+back, or forward again, and **Language** switches Aura to Ukrainian. Details:
 [The screen](https://github.com/AerKov/aura/wiki/The-Screen), [Apps](https://github.com/AerKov/aura/wiki/Apps).
 
 ## Connecting your tools
 
-Trackers, databases and internal APIs connect on the **Agents** page: an MCP server (a command or
+Trackers, databases and internal APIs connect on the **Helpers** page: an MCP server (a command or
 a URL), its keys stored as secrets, and a **Test** button that says what is wrong. Each agent's card
 shows its full prompt, what it can do and what stops it. Or just ask the orchestrator: it knows how
 Aura works and can check the setup for you. Details:
@@ -50,7 +50,7 @@ Aura works and can check the setup for you. Details:
 
 - **Command sandbox:** macOS works out of the box. On Linux install `bubblewrap` and `socat`.
   Agents' commands have no network; they use the web through their engine's web tools.
-- **Phone:** start with `AURA_REMOTE=1` and pair from the Devices page.
+- **Phone:** start with `AURA_REMOTE=1` and pair from the Phone app.
 
 ## Your data
 

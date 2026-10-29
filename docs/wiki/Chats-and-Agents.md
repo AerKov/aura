@@ -4,7 +4,7 @@ Aura has only three kinds of chats, so there is little to learn:
 
 - **Orchestrator**: your direct chat. Plan, ask questions, create agents and projects, customize Aura.
 - **Projects**: one group chat per project, with its agents. The work happens here.
-- **Signals**: alerts from monitoring and other systems.
+- **Alerts**: alerts from monitoring and other systems.
 
 There are no channels or threads. You can **reply** to any message (hover it and press the reply
 arrow), like in a messenger.
@@ -88,6 +88,8 @@ A project is a chat, a folder at `~/.aura/projects/<slug>` (a git repository) an
   changes are committed as that agent, so every step can be inspected and reverted with git.
 - **Tasks** (the Tasks button in the header): agents create and update tasks as they plan; you can
   change their status too. A new task wakes the agent it is assigned to.
+
+![A project chat](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/project.png)
 
 ## Run cards
 
