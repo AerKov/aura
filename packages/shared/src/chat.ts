@@ -76,8 +76,12 @@ export interface ApprovalCard {
   title: string;
   /** Markdown: why this is needed. */
   why: string;
-  /** Markdown preview of the effect (a plan or a diff). */
+  /** Markdown preview of the effect (a plan or a diff): the technical details. */
   preview: string;
+  /** What will change, in plain words, one line each (ADR 0034); empty when not known. */
+  changes: string[];
+  /** A plain warning, e.g. that it asks for more permissions. */
+  warning: string | null;
   status: ApprovalStatus;
   /** Outcome text after the decision (e.g. what was created, or the error). */
   result: string | null;

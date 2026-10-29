@@ -77,6 +77,8 @@ DEFINE FIELD OVERWRITE message ON approval TYPE option<record<message>>;
 DEFINE FIELD OVERWRITE title ON approval TYPE string;
 DEFINE FIELD OVERWRITE why ON approval TYPE string;
 DEFINE FIELD OVERWRITE preview ON approval TYPE string;
+DEFINE FIELD OVERWRITE changes ON approval TYPE array<string> DEFAULT [];
+DEFINE FIELD OVERWRITE warning ON approval TYPE option<string>;
 DEFINE FIELD OVERWRITE payload ON approval TYPE object FLEXIBLE;
 DEFINE FIELD OVERWRITE status ON approval TYPE string ASSERT $value IN ["pending", "approved", "rejected", "failed"];
 DEFINE FIELD OVERWRITE result ON approval TYPE option<string>;

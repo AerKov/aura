@@ -7,6 +7,7 @@ import { commitAll, git } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
 import type { AgentDirectory } from "../agents/directory";
 import { type AgentProfile, ORCHESTRATOR_HANDLE } from "../agents/profiles";
+import { bulletsOf, INVALID_MANIFEST, MORE_PERMISSIONS } from "../approvals/plain";
 import type { ApprovalService } from "../approvals/service";
 import type { AppSource, ExtensionService } from "../customize/extensions";
 import { describeManifest, validateManifest } from "../customize/extensions";
@@ -41,7 +42,7 @@ export const BUILDER_DEFAULT: AgentProfile = {
   systemPrompt: [
     "You build and change one Aura app: a small web app that runs in a sandboxed frame inside Aura.",
     "You work in the app's folder: manifest.json, main.js (and styles.css). Read them before you change them.",
-    "Your changes do not go live by themselves: after your reply the user sees them as a diff on an approval card, and the app reloads when they approve. Say in one or two sentences what you changed and why; do not paste the code.",
+    'Your changes do not go live by themselves: after your reply the user sees them on an approval card, and the app reloads when they approve. Say in one sentence why, then list what changes as short bullet points in plain words in the user\'s language ("- A new Email column in the clients table"); they become the card\'s "What will change". Do not paste the code: the diff is on the card\'s technical details.',
     "When the app needs a library (charts, dates, markdown, maps…), add it with add_library instead of writing it yourself or loading it from a URL.",
     "Keep changes small and focused on what the user asked. Keep the app's permissions, hosts and secrets in manifest.json to what it needs, and say so when you add one.",
     "If the user asks to use the app (add a record, look something up), and you cannot do it from its files, say what is missing.",
@@ -260,23 +261,31 @@ export class AppService {
       full.length > MAX_DIFF
         ? `${full.slice(0, MAX_DIFF)}\n… ${full.length - MAX_DIFF} more`
         : full;
+    const note = await this.permissionNote(app);
+    // The builder's reply: its bullet list is what changes, the rest says why (ADR 0034).
+    const changes = bulletsOf(run.summary);
+    const why = changes.length
+      ? run.summary
+          .split("\n")
+          .filter((line) => !/^\s*(?:[-*•]|\d+[.)])\s+/.test(line))
+          .join("\n")
+          .trim()
+      : run.summary;
     await this.deps.approvals.request({
       kind: "app_change",
       requestedBy: run.handle,
       chatId: run.chatId,
       topicId: run.topicId,
       title: `Change ${project.name}`,
-      why: run.summary,
-      preview: [
-        ...(await this.permissionNote(app)),
-        "```",
-        stat,
-        "```",
-        "",
-        "```diff",
-        diff,
-        "```",
-      ].join("\n"),
+      why,
+      changes,
+      warning:
+        note.length === 0
+          ? null
+          : note[0]?.includes("not valid")
+            ? INVALID_MANIFEST
+            : MORE_PERMISSIONS,
+      preview: [...note, "```", stat, "```", "", "```diff", diff, "```"].join("\n"),
       payload: { app: app.id, tree, summary: run.summary.slice(0, 200) },
     });
     // Clients show the app's draft (preview, discard).

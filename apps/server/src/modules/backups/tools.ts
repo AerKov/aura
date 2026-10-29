@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
+import { PLAIN_CHANGES, plainChanges } from "../approvals/plain";
 import type { ApprovalService } from "../approvals/service";
 import type { RestorePointService } from "./restore-points";
 
@@ -53,7 +54,11 @@ export function restorePointTools(
       name: "go_to_restore_point",
       description:
         "Ask the user to approve taking Aura to a restore point (back or forward). The present is saved first as an automatic point; apps made since are uninstalled with a backup.",
-      inputSchema: { id: z.string(), why: z.string() },
+      inputSchema: {
+        ...PLAIN_CHANGES,
+        id: z.string(),
+        why: z.string(),
+      },
       async handler(input) {
         try {
           const id = String(input.id ?? "");
@@ -66,6 +71,7 @@ export function restorePointTools(
             topicId: ctx.topicId ?? null,
             title: `Go to the restore point “${point.label}”`,
             why: String(input.why ?? ""),
+            changes: plainChanges(input),
             preview: [
               `Saved ${point.createdAt.slice(0, 16).replace("T", " ")}. Apps: ${point.apps.join(", ") || "none"}.`,
               "",

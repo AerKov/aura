@@ -4,6 +4,7 @@ import { unifiedDiff } from "../../lib/diff";
 import { commitAll } from "../../lib/git";
 import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
+import { PLAIN_CHANGES, plainChanges } from "../approvals/plain";
 import type { ApprovalService } from "../approvals/service";
 import { type ChatRepo, SYSTEM_CHAT_ID } from "../chat/repo";
 import type { ChatService } from "../chat/service";
@@ -304,7 +305,11 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
       name: "create_agent",
       description:
         "Ask the user to approve a new agent. The agent exists only after approval; to start a project with new agents, use create_project with new_agents instead.",
-      inputSchema: { ...agentShape, why: z.string().describe("why this agent is needed") },
+      inputSchema: {
+        ...PLAIN_CHANGES,
+        ...agentShape,
+        why: z.string().describe("why this agent is needed"),
+      },
       async handler(input) {
         try {
           const profile = profileFrom(input);
@@ -317,6 +322,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             topicId: ctx.topicId,
             title: `Create agent @${profile.handle}`,
             why: String(input.why ?? ""),
+            changes: plainChanges(input),
             preview: `${describeAgent(profile, true)}\n\n**Prompt**\n\n${profile.systemPrompt}`,
             payload: input,
           });
@@ -332,6 +338,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
       name: "propose_agent_change",
       description: `Ask the user to approve a change to an existing agent: its tools, the variables its commands get, its role or its instructions. The card shows the exact diff of its agent.md. Only the fields you pass change. Secret values never go here: use ${secretRef("NAME")} and ask the user to store the value under Secrets on the Agents page.`,
       inputSchema: {
+        ...PLAIN_CHANGES,
         agent: z.string().describe("handle without @"),
         tools: z
           .array(z.enum(BUILTIN_TOOLS))
@@ -370,6 +377,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             topicId: ctx.topicId,
             title: `Change @${handle}: ${changed.join(", ")}`,
             why: String(input.why ?? ""),
+            changes: plainChanges(input),
             preview: `\`\`\`diff\n${unifiedDiff(before, after, `agents/${handle}/agent.md`)}\n\`\`\``,
             payload: {
               handle,
@@ -391,6 +399,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
       description:
         "Ask the user to approve a new limit for a project or an agent (it replaces both limits). Tokens suit subscription engines (Claude Code, Gemini CLI, Codex, OpenCode, local models); dollars only paid APIs. Pass neither to remove the limit.",
       inputSchema: {
+        ...PLAIN_CHANGES,
         project: z.string().optional().describe("project id (slug), or"),
         agent: z.string().optional().describe("agent handle without @"),
         tokens: z.number().int().optional().describe("token limit"),
@@ -430,6 +439,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             topicId: ctx.topicId,
             title: `Budget of ${target.name}: ${budgetText({ usd, tokens })}`,
             why: String(input.why ?? ""),
+            changes: plainChanges(input),
             preview: `Now: ${target.now}.\nAfter: ${budgetText({ usd, tokens })}.`,
             payload: { target: target.target, id: target.id, usd, tokens },
           });
@@ -490,6 +500,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
       description:
         "Ask the user to approve a project plan: a group chat with the agents, a git workspace and an optional budget, plus any new agents. Nothing is created until the user approves. The brief becomes your first message in the project chat and must @mention the agent who starts. Without a budget the project has no limit (the chain-depth guard still applies); suggest one only when the user asks or the work is open-ended.",
       inputSchema: {
+        ...PLAIN_CHANGES,
         name: z.string().describe("short project name"),
         slug: z
           .string()
@@ -564,6 +575,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             topicId: ctx.topicId,
             title: `Start project "${valid.name}"`,
             why: String(input.why ?? ""),
+            changes: plainChanges(input),
             preview: [
               `**Workspace:** \`projects/${valid.slug}\` · **budget:** ${budgetText({ usd: valid.budgetUsd, tokens: valid.budgetTokens })} · **starts:** @${valid.startWith}`,
               "",
@@ -805,6 +817,7 @@ function operationsTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
       description:
         "Ask the user to approve a recurring job: on a cron schedule, the prompt is posted to a chat and wakes the agent. Each run costs budget, so keep schedules sparse (at most every 10 minutes).",
       inputSchema: {
+        ...PLAIN_CHANGES,
         name: z.string(),
         schedule: z
           .string()
@@ -832,6 +845,7 @@ function operationsTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             topicId: ctx.topicId,
             title: `Schedule "${valid.name}"`,
             why: String(input.why ?? ""),
+            changes: plainChanges(input),
             preview: [
               `**When:** \`${valid.schedule}\`${next ? ` · first run ${next.toLocaleString()}` : ""}`,
               `**Where:** ${chat.title} · **who:** @${valid.agent}`,

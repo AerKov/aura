@@ -36,7 +36,11 @@ export function MessageBubble({
   const me = useChatStore((s) => s.me);
   const streamingText = useChatStore((s) => s.streaming[message.id]);
   const mine = message.author.kind === "user" && message.author.id === me?.id;
-  const name = displayName(message.author, me);
+  // Agents go by their profile's name ("Builder"); the handle shows in advanced places.
+  const agentName = useChatStore((s) =>
+    message.author.kind === "agent" ? s.agents[message.author.id]?.name : undefined,
+  );
+  const name = agentName ?? displayName(message.author, me);
   const streaming = message.status === "streaming";
   const body = streaming ? (streamingText ?? message.body) : message.body;
 
@@ -138,12 +142,30 @@ export function MessageBubble({
           ) : (
             streaming && <Thinking />
           )}
-          {message.card?.type === "run" && <RunCard card={message.card} />}
-          {message.card?.type === "approval" && <ApprovalCard card={message.card} />}
+          {message.card?.type === "run" && (
+            <RunCard
+              card={message.card}
+              name={name}
+              usage={
+                message.usage
+                  ? {
+                      tokens: message.usage.inputTokens + message.usage.outputTokens,
+                      costUsd: message.usage.costUsd,
+                    }
+                  : null
+              }
+              onStop={
+                message.runId
+                  ? () => void stopRun(message.runId ?? "").catch(reportError)
+                  : undefined
+              }
+            />
+          )}
+          {message.card?.type === "approval" && <ApprovalCard card={message.card} name={name} />}
           {message.card?.type === "task" && <TaskCard card={message.card} />}
           {message.card?.type === "alert" && <AlertCard card={message.card} />}
           {message.error && <p className="text-destructive mt-1 text-sm">{message.error}</p>}
-          {(message.usage || (streaming && message.runId)) && (
+          {message.card?.type !== "run" && (message.usage || (streaming && message.runId)) && (
             <div className="text-muted-foreground mt-1 flex items-center gap-3 text-[11px]">
               {streaming && message.runId && (
                 <button

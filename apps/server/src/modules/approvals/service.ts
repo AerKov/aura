@@ -37,6 +37,8 @@ export interface ApprovalRecord {
   title: string;
   why: string;
   preview: string;
+  changes: string[];
+  warning: string | null;
   payload: Record<string, unknown>;
   status: ApprovalStatus;
   result: string | null;
@@ -81,6 +83,9 @@ export class ApprovalService {
     title: string;
     why: string;
     preview: string;
+    /** What will change in plain words (ADR 0034); the preview stays as technical details. */
+    changes?: string[];
+    warning?: string | null;
     payload: Record<string, unknown>;
     tryCss?: string;
   }): Promise<ApprovalRecord> {
@@ -97,6 +102,8 @@ export class ApprovalService {
           title: input.title,
           why: input.why,
           preview: input.preview,
+          changes: (input.changes ?? []).map((c) => c.slice(0, 300)).slice(0, 12),
+          warning: input.warning ?? undefined,
           payload: input.payload,
           try_css: input.tryCss,
           status: "pending",
@@ -201,6 +208,8 @@ function toRecord(row: Row): ApprovalRecord {
     title: String(row.title),
     why: String(row.why),
     preview: String(row.preview),
+    changes: Array.isArray(row.changes) ? row.changes.map(String) : [],
+    warning: typeof row.warning === "string" ? row.warning : null,
     payload: (row.payload as Record<string, unknown>) ?? {},
     status: row.status as ApprovalStatus,
     result: (row.result as string | undefined) ?? null,
@@ -217,6 +226,8 @@ export function toCard(record: ApprovalRecord): ApprovalCard {
     title: record.title,
     why: record.why,
     preview: record.preview,
+    changes: record.changes,
+    warning: record.warning,
     status: record.status,
     result: record.result,
     tryCss: record.tryCss,

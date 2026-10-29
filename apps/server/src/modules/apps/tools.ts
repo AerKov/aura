@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { errorMessage } from "../../lib/log";
 import type { AgentTool } from "../../providers/types";
+import { PLAIN_CHANGES, plainChanges } from "../approvals/plain";
 import type { ApprovalService } from "../approvals/service";
 import type { ChatService } from "../chat/service";
 import type { AppearanceService } from "../customize/appearance";
@@ -18,6 +19,7 @@ export function appTools(
       name: "create_app",
       description: `Ask the user to approve a new app: a tool they run on their screen (a CRM, a board, a tracker…) with its own chat, where @${BUILDER_HANDLE} builds it from your description and later changes it on request; every change is shown to the user as a diff first. Prefer this over propose_extension when the user wants something they will keep using and changing.`,
       inputSchema: {
+        ...PLAIN_CHANGES,
         name: z.string().describe("short name, e.g. Clients"),
         id: z.string().optional().describe("lowercase-with-dashes; derived from the name"),
         description: z
@@ -36,6 +38,7 @@ export function appTools(
             topicId: ctx.topicId ?? null,
             title: `Create the app "${name}"`,
             why: String(input.why ?? ""),
+            changes: plainChanges(input),
             preview: [
               `It gets its own chat, where @${BUILDER_HANDLE} builds it; each change waits for your approval.`,
               "",
