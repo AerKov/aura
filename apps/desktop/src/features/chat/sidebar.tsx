@@ -3,20 +3,22 @@ import { useT } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";
 import { openChat } from "./actions";
 import { ChatMark } from "./chat-mark";
+import { NewGroupButton } from "./new-group";
 import { agentName, chatTitle, formatListTime } from "./participants";
 import { useChatStore } from "./store";
 
-type Section = "direct" | "projects" | "apps" | "system";
+type Section = "direct" | "groups" | "projects" | "apps" | "system";
 
 const SECTIONS: { key: Section; label: string | null }[] = [
   { key: "direct", label: null },
+  { key: "groups", label: "Groups" },
   { key: "projects", label: "Projects" },
   { key: "apps", label: "Apps" },
   { key: "system", label: "Alerts" },
 ];
 
 /**
- * The chat list (ADR 0034): the Helper's chat pinned on top, then projects, apps and alerts. A row
+ * The chat list (ADR 0034): the Helper's chat pinned on top, then your groups, projects, apps and alerts. A row
  * says who is working right now and how many decisions wait in it.
  */
 export function Sidebar() {
@@ -29,9 +31,11 @@ export function Sidebar() {
   // An app's chat is a project chat whose project is an app (ADR 0024).
   const sectionOf = (chat: Chat): Section =>
     chat.kind === "group"
-      ? chat.projectId && projects[chat.projectId]?.kind === "app"
-        ? "apps"
-        : "projects"
+      ? !chat.projectId
+        ? "groups"
+        : projects[chat.projectId]?.kind === "app"
+          ? "apps"
+          : "projects"
       : chat.kind;
   // Who is writing a reply in each chat right now, and the decisions waiting there.
   const working = useChatStore((s) => {
@@ -77,6 +81,7 @@ export function Sidebar() {
         pane === "main" && "@max-[640px]:hidden",
       )}
     >
+      <NewGroupButton />
       <nav className="flex-1 overflow-y-auto pb-3">
         {SECTIONS.map(({ key, label }) => {
           const group = sorted.filter((c) => sectionOf(c) === key);

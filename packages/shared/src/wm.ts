@@ -1,5 +1,5 @@
 /**
- * The shell as a tiling window manager (ADR 0028): how tiles look, where the bar sits, which key is
+ * The window layout (ADR 0028): how tiles look, where the bar sits, which key is
  * Mod, and pure helpers for keyboard navigation. Shared by the server (settings, the orchestrator's
  * tool) and the client.
  */
@@ -27,7 +27,7 @@ export const TITLE_STYLES: readonly TitleStyle[] = ["full", "minimal", "none"];
 
 /**
  * The modifier of the shortcuts. Option+digits type symbols on macOS, so there Ctrl+Option fits;
- * "meta" is Super/Cmd, which a desktop tiling window manager may already use.
+ * "meta" is Super/Cmd, which the desktop may already use.
  */
 export type ModKey = "alt" | "ctrl-alt" | "meta";
 export const MOD_KEYS: readonly ModKey[] = ["alt", "ctrl-alt", "meta"];
@@ -44,13 +44,13 @@ export interface WindowStyle {
 }
 
 export const WM_PRESETS = {
-  hyprland: { gaps: 10, radius: 10, border: 2, titles: "minimal" },
-  i3: { gaps: 0, radius: 0, border: 1, titles: "full" },
+  airy: { gaps: 10, radius: 10, border: 2, titles: "minimal" },
+  compact: { gaps: 0, radius: 0, border: 1, titles: "full" },
 } as const satisfies Record<string, Omit<WindowStyle, "mod">>;
 export type WmPreset = keyof typeof WM_PRESETS;
 
 export function defaultWindowStyle(): WindowStyle {
-  return { ...WM_PRESETS.hyprland, mod: "alt" };
+  return { ...WM_PRESETS.airy, mod: "alt" };
 }
 
 const LIMITS = { gaps: 24, radius: 24, border: 4 } as const;
@@ -83,7 +83,7 @@ export interface Rect {
 
 /**
  * The tile next to `from` in a direction, by their rectangles on screen: the nearest one beyond
- * the edge that overlaps it across, like i3's focus.
+ * the edge that overlaps it across, like a keyboard-driven layout's focus.
  */
 export function neighbour(
   rects: Record<string, Rect>,

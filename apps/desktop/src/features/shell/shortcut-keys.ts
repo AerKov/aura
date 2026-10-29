@@ -1,6 +1,6 @@
 import type { Direction, ModKey } from "@aura/shared";
 
-/** What a key press asks the window manager to do (ADR 0028). */
+/** What a key press asks the shell to do (ADR 0028). */
 export type WmAction =
   | { type: "focus"; dir: Direction }
   | { type: "move"; dir: Direction }

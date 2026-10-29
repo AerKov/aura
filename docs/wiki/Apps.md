@@ -9,7 +9,7 @@ own chat**. Every change is shown to you first, and every version can be brought
 Every app has a name, a one-line **description** and a **group**, shown in My apps. @builder keeps them
 in the app's manifest; say in its chat if you want them changed.
 
-- **My apps** → **New app**: start from a template (**CRM**, **Tasks**, **Notes**), or empty:
+- **My apps** → **New app**: start from a template pack you installed, or empty:
   give it a name and, if you like, say what it should do (an empty app needs Chats on).
 - Or ask the orchestrator: _"make me an app to track clients and deals"_. It proposes the app on a
   card; approve it.
@@ -56,7 +56,7 @@ Restoring an older version of the app does not touch its data.
 ## Its secrets
 
 An app that talks to a service (a weather API, your tracker) gets its key from **its own
-secrets**: the key button on its tile lists the names its manifest uses; type a value and save.
+secrets**: the key button next to the **Chat** button on its tile lists the names its manifest uses; type a value and save. @builder names the secrets and tells you to enter them there; it never asks for a value in the chat.
 Only that app can use it, and only in its requests to the hosts you approved for it: the app's code
 never sees the value, other apps and agents cannot read it, and Aura never shows it again. Agents'
 secrets are separate (see [Agents](Agents)).

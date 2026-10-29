@@ -71,6 +71,7 @@ export function AppControls({ ext, chat }: { ext: ExtensionInfo; chat: boolean }
       )}
       <Versions appId={ext.id} />
       {advanced && <DataMenu appId={ext.id} />}
+      {ext.secrets.length > 0 && <AppSecretsMenu appId={ext.id} />}
       {chat && (
         <Button
           size="sm"
@@ -294,6 +295,7 @@ type SecretState = { name: string; set: boolean };
  * the server only; nobody (not the app, not other apps, not agents) can read them back.
  */
 export function AppSecretsMenu({ appId }: { appId: string }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [list, setList] = useState<SecretState[]>([]);
   const [drafts, setDrafts] = useState<Record<string, string>>({});
@@ -322,17 +324,19 @@ export function AppSecretsMenu({ appId }: { appId: string }) {
         size="icon"
         variant="ghost"
         className="size-7"
-        aria-label="Secrets"
-        title="The app's secrets: keys it puts into its requests; only it can use them"
+        aria-label={t("Secrets")}
+        title={t("The app's secrets: keys it puts into its requests; only it can use them")}
         onClick={() => setOpen(!open)}
       >
         <KeyRound />
       </Button>
       {open && (
         <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-80 rounded-xl border p-3 text-sm shadow-lg">
-          <p className="kicker mb-1">Secrets</p>
+          <p className="kicker mb-1">{t("Secrets")}</p>
           <p className="text-muted-foreground mb-2 text-xs">
-            Only this app can use them, in requests to its approved hosts. Values are never shown.
+            {t(
+              "Only this app can use them, in requests to its approved hosts. Values are never shown.",
+            )}
           </p>
           <ul className="grid gap-2">
             {list.map((s) => (
@@ -340,14 +344,14 @@ export function AppSecretsMenu({ appId }: { appId: string }) {
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs">{s.name}</span>
                   <span className={cn("text-xs", s.set ? "text-emerald-600" : "text-amber-600")}>
-                    {s.set ? "set" : "no value"}
+                    {s.set ? t("set") : t("no value")}
                   </span>
                 </div>
                 <div className="flex gap-1">
                   <input
                     type="password"
-                    aria-label={`Value of ${s.name}`}
-                    placeholder={s.set ? "New value" : "Value"}
+                    aria-label={t("Value of {name}", { name: s.name })}
+                    placeholder={s.set ? t("New value") : t("Value")}
                     value={drafts[s.name] ?? ""}
                     onChange={(e) => setDrafts((d) => ({ ...d, [s.name]: e.target.value }))}
                     className="bg-background min-w-0 flex-1 rounded-lg border px-2 py-1 text-xs"
@@ -358,7 +362,7 @@ export function AppSecretsMenu({ appId }: { appId: string }) {
                     disabled={!drafts[s.name]}
                     onClick={() => void save(s.name, drafts[s.name] ?? "")}
                   >
-                    Save
+                    {t("Save")}
                   </Button>
                   {s.set && (
                     <Button
@@ -367,7 +371,7 @@ export function AppSecretsMenu({ appId }: { appId: string }) {
                       className="h-7"
                       onClick={() => void save(s.name, null)}
                     >
-                      Clear
+                      {t("Clear")}
                     </Button>
                   )}
                 </div>

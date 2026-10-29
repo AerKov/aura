@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 import { AppControls, AppSecretsMenu } from "./app-controls";
 import { appAvailable, appInfo, openEntry, useExtensionApps, useModules } from "./apps";
 import { HomeView } from "./home";
-import { useAdvanced, useLauncher } from "./launcher";
+import { useLauncher } from "./launcher";
 import { closeTileId, focusTile, openAppRef, PHONE_QUERY, phoneAppOf, resizeSplit } from "./layout";
 import { NewAppSheet } from "./new-app-sheet";
 import { AppRow, StartMenu } from "./start-menu";
@@ -113,7 +113,6 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
   const extensions = useExtensionApps();
   const modules = useModules();
   const titles = useChatStore((s) => s.appearance?.wm.titles ?? "minimal");
-  const advanced = useAdvanced();
   const t = useT();
   const info = appInfo(tile.app, extensions);
   const label = tile.app.startsWith("ext:") ? info.label : t(info.label);
@@ -155,7 +154,7 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
           <span className="truncate">{label}</span>
         </div>
         <div className="flex items-center gap-0.5">
-          {ext && ext.secrets.length > 0 && advanced && <AppSecretsMenu appId={ext.id} />}
+          {ext && !ext.app && ext.secrets.length > 0 && <AppSecretsMenu appId={ext.id} />}
           {ext &&
             (ext.app ? (
               <AppControls ext={ext} chat={modules.chats} />

@@ -1,5 +1,5 @@
-import { existsSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { existsSync, mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import {
   budgetText,
   type Chat,
@@ -11,6 +11,7 @@ import {
 } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 import { isoOf, keyOf } from "../../db/convert";
+import { timeStamp } from "../../lib/files";
 import { commitAll, ensureRepo } from "../../lib/git";
 import type { AgentDirectory } from "../agents/directory";
 import { ORCHESTRATOR_HANDLE, validTokens } from "../agents/profiles";
@@ -231,6 +232,21 @@ export class ProjectService {
       })
       .collect();
     rmSync(this.workspaceOf(slug), { recursive: true, force: true });
+  }
+
+  /**
+   * Removes a project's record and tasks and moves its workspace to `backups/projects`, so the
+   * files can still be taken back by hand. Returns where they went.
+   */
+  async archive(slug: string): Promise<string> {
+    const source = this.workspaceOf(slug);
+    const target = join(this.deps.dataDir, "backups", "projects", `${slug}-${timeStamp()}`);
+    if (existsSync(source)) {
+      mkdirSync(dirname(target), { recursive: true });
+      renameSync(source, target);
+    }
+    await this.remove(slug);
+    return target;
   }
 
   /** User action (or an approved request): changes or removes the project's limits. */

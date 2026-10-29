@@ -2,6 +2,7 @@ import { budgetText, formatTokens, type Project } from "@aura/shared";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { setState } from "@/features/chat/store";
+import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { parseTokens } from "./tokens";
@@ -26,6 +27,7 @@ export function BudgetEditor({
   spent: { usd: number; tokens: number };
   onSave: (limits: Limits) => Promise<void>;
 }) {
+  const t = useT();
   const initial: Unit = value.tokens !== null ? "tokens" : value.usd !== null ? "usd" : "none";
   const [unit, setUnit] = useState<Unit>(initial);
   const [amount, setAmount] = useState(
@@ -43,11 +45,11 @@ export function BudgetEditor({
     let limits: Limits = { usd: null, tokens: null };
     if (unit === "tokens") {
       const tokens = parseTokens(amount);
-      if (tokens === null || tokens < 1000) return setError("Enter tokens, e.g. 2M or 500K");
+      if (tokens === null || tokens < 1000) return setError(t("Enter tokens, e.g. 2M or 500K"));
       limits = { usd: null, tokens };
     } else if (unit === "usd") {
       const usd = Number(amount.replace(",", "."));
-      if (!Number.isFinite(usd) || usd <= 0) return setError("Enter dollars, e.g. 5");
+      if (!Number.isFinite(usd) || usd <= 0) return setError(t("Enter dollars, e.g. 5"));
       limits = { usd, tokens: null };
     }
     setBusy(true);
@@ -63,16 +65,16 @@ export function BudgetEditor({
   return (
     <div className="grid gap-2 text-sm">
       <p className="text-muted-foreground text-xs">
-        Used {formatTokens(spent.tokens)} tokens
-        {spent.usd > 0 ? ` (≈ $${spent.usd.toFixed(2)} at API prices)` : ""}. Limit now:{" "}
-        {budgetText(value)}.
+        {t("Used {tokens} tokens", { tokens: formatTokens(spent.tokens) })}
+        {spent.usd > 0 ? ` (≈ $${spent.usd.toFixed(2)} ${t("at API prices")})` : ""}.{" "}
+        {t("Limit now: {limit}", { limit: budgetText(value) })}.
       </p>
       <div className="flex flex-wrap gap-1.5">
         {(
           [
-            ["none", "No limit"],
-            ["tokens", "Tokens"],
-            ["usd", "Dollars"],
+            ["none", t("No limit")],
+            ["tokens", t("Tokens")],
+            ["usd", t("Dollars")],
           ] as const
         ).map(([key, label]) => (
           <button
@@ -91,22 +93,22 @@ export function BudgetEditor({
       </div>
       {unit !== "none" && (
         <input
-          aria-label={unit === "tokens" ? "Token limit" : "Dollar limit"}
+          aria-label={unit === "tokens" ? t("Token limit") : t("Dollar limit")}
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter") void save();
           }}
-          placeholder={unit === "tokens" ? "e.g. 2M" : "e.g. 5"}
+          placeholder={unit === "tokens" ? t("e.g. 2M") : t("e.g. 5")}
           className="bg-background rounded-lg border px-3 py-1.5 font-mono text-sm"
         />
       )}
       <p className="text-muted-foreground text-xs">
         {unit === "tokens"
-          ? "For subscriptions (Claude Code, Gemini CLI, Codex, OpenCode) and local models."
+          ? t("For subscriptions (Claude Code, Gemini CLI, Codex, OpenCode) and local models.")
           : unit === "usd"
-            ? "Real money only on paid APIs (OpenRouter, an OpenAI-compatible API)."
-            : "Agents still stop after 8 replies to each other in a row."}
+            ? t("Real money only on paid APIs (OpenRouter, an OpenAI-compatible API).")
+            : t("Agents still stop after 8 replies to each other in a row.")}
       </p>
       {error && <p className="text-destructive text-xs">{error}</p>}
       <Button
@@ -115,7 +117,7 @@ export function BudgetEditor({
         disabled={busy}
         onClick={() => void save()}
       >
-        Save
+        {t("Save")}
       </Button>
     </div>
   );
@@ -123,6 +125,7 @@ export function BudgetEditor({
 
 /** The project's usage as a ring (when it has a limit) and a button that opens its limit. */
 export function BudgetButton({ project }: { project: Project }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -148,8 +151,8 @@ export function BudgetButton({ project }: { project: Project }) {
         type="button"
         onClick={() => setOpen(!open)}
         className="hover:bg-accent flex items-center gap-2 rounded-xl px-1.5 py-1"
-        title={`Used ${formatTokens(project.spentTokens)} tokens (≈ $${project.spentUsd.toFixed(2)} at API prices) · budget: ${budgetText({ usd: project.budgetUsd, tokens: project.budgetTokens })}. Click to change.`}
-        aria-label="Project budget"
+        title={`${t("Used {tokens} tokens", { tokens: formatTokens(project.spentTokens) })} (≈ $${project.spentUsd.toFixed(2)} ${t("at API prices")}) · ${t("Limit now: {limit}", { limit: budgetText({ usd: project.budgetUsd, tokens: project.budgetTokens }) })}. ${t("Click to change.")}`}
+        aria-label={t("Limit")}
       >
         <svg viewBox="0 0 36 36" className="size-9 -rotate-90" aria-hidden>
           <circle cx="18" cy="18" r={r} fill="none" stroke="var(--muted)" strokeWidth="4" />
@@ -175,14 +178,16 @@ export function BudgetButton({ project }: { project: Project }) {
         <div className="text-left text-xs leading-tight whitespace-nowrap max-sm:hidden">
           <div className="font-medium">
             {show(spent)}
-            {byTokens ? " tok" : ""}
+            {byTokens ? ` ${t("tok")}` : ""}
           </div>
-          <div className="text-muted-foreground">of {limit !== null ? show(limit) : "∞"}</div>
+          <div className="text-muted-foreground">
+            {t("of {limit}", { limit: limit !== null ? show(limit) : "∞" })}
+          </div>
         </div>
       </button>
       {open && (
         <div className="bg-popover text-popover-foreground absolute top-12 right-0 z-30 w-72 rounded-xl border p-4 shadow-lg">
-          <h3 className="mb-2 font-semibold">Project budget</h3>
+          <h3 className="mb-2 font-semibold">{t("Limit")}</h3>
           <BudgetEditor
             value={{ usd: project.budgetUsd, tokens: project.budgetTokens }}
             spent={{ usd: project.spentUsd, tokens: project.spentTokens }}

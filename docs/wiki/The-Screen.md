@@ -1,7 +1,7 @@
 # The screen
 
-Aura is a shell you fill with apps. It lays out the apps you open as **tiles**, like a tiling
-window manager. Even the built-in parts (Chats, Helpers, Reminders…) are apps, and you can turn
+Aura is a shell you fill with apps. It lays out the apps you open as **tiles** side by side.
+Even the built-in parts (Chats, Helpers, Reminders…) are apps, and you can turn
 off the ones you do not need.
 
 ## My apps
@@ -44,10 +44,10 @@ You can also ask the orchestrator: _"open Agents on the right"_, _"close Skills"
 _"what is on my screen?"_. Arranging the screen needs no approval: nothing is deleted, and you can
 change it back with a click.
 
-## Look and keys, like a tiling window manager
+## Windows and keys
 
-**Customize → Window manager** sets how it looks: the **Hyprland** preset (gaps, round corners, a
-coloured border on the focused tile, thin title bars) or **i3** (no gaps, square, full title bars),
+**Customize → Windows** sets how it looks: the **Airy** preset (gaps, round corners, a
+coloured border on the focused tile, thin title bars) or **Compact** (no gaps, square, full title bars),
 then gaps, corners, borders and title bars one by one (**Thin** and **Hidden** show a tile's buttons
 when you point at it). **Bar** puts the bar on the left, right, top or bottom. The bar ends with the
 status: the clock, the connection and the number of decisions waiting for you.
@@ -65,7 +65,7 @@ Keyboard, with **Mod** set to Alt (default), Ctrl+Alt (best on macOS) or Super:
 
 They work while the focus is outside an app's own frame (click the tile's title bar or the
 desktop around the tiles first). In a text field Mod+arrows keep moving by word. You can also ask
-the orchestrator: _"make it look like i3 with the bar on top"_.
+the orchestrator: _"make the windows compact with the bar on top"_.
 
 ## Your own bar
 

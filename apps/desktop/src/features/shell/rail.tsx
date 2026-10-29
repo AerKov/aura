@@ -153,7 +153,7 @@ const EDGE = {
 } as const;
 
 /**
- * Aura's bar, like a tiling window manager's (ADR 0028): on any edge of the screen on desktop, a
+ * Aura's bar (ADR 0028): on any edge of the screen on desktop, a
  * tab bar at the bottom on phones. It opens apps into the shell's tiles; an item is lit while its
  * app is on screen. It ends with the status (approvals, working agents, the clock, the
  * connection) and carries the keyboard shortcuts. The user arranges it on the Customize page.

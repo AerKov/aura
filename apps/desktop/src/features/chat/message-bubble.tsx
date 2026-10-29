@@ -7,7 +7,7 @@ import { useT } from "@/features/localization/i18n";
 import { useAdvanced } from "@/features/shell/launcher";
 import { highlightMentions } from "@/lib/mentions";
 import { cn } from "@/lib/utils";
-import { reportError, stopRun } from "./actions";
+import { openAgentSettings, reportError, stopRun } from "./actions";
 import { AlertCard } from "./alert-card";
 import { ApprovalCard } from "./approval-card";
 import { displayName, formatTime, previewOf } from "./message-utils";
@@ -132,7 +132,19 @@ export function MessageBubble({
       className={cn("group message-in relative flex gap-3", showAuthor ? "mt-5" : "mt-1")}
     >
       <div className="w-[26px] shrink-0 pt-0.5">
-        {showAuthor && <Mark name={message.author.id} label={name} kind={kind} size="sm" />}
+        {showAuthor &&
+          (message.author.kind === "agent" ? (
+            <button
+              type="button"
+              aria-label={t("Settings of {name}", { name })}
+              title={t("Settings of {name}", { name })}
+              onClick={() => openAgentSettings(message.author.id)}
+            >
+              <Mark name={message.author.id} label={name} kind={kind} size="sm" />
+            </button>
+          ) : (
+            <Mark name={message.author.id} label={name} kind={kind} size="sm" />
+          ))}
       </div>
       <div className="min-w-0 flex-1">
         {showAuthor && (

@@ -24,6 +24,7 @@ import {
 import { BudgetButton } from "./budget";
 import { ChatMark } from "./chat-mark";
 import { Composer } from "./composer";
+import { DeleteChatButton } from "./delete-chat";
 import { MessageBubble } from "./message-bubble";
 import { isGrouped } from "./message-utils";
 import { agentName, chatTitle } from "./participants";
@@ -54,6 +55,7 @@ const GREETING: Record<"direct" | "system" | "group", { title: string; text: str
 const SUBTITLE = {
   direct: "Your own chat with your main AI helper",
   group: "A project: helpers work on it together",
+  chosen: "Your group: you and the helpers you chose",
   app: "An app's chat: change it by asking",
   system: "When something broke or needs attention",
 } as const;
@@ -184,7 +186,17 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
                     })}
                   </span>
                 ) : (
-                  t(SUBTITLE[chat.kind === "group" && appId ? "app" : chat.kind])
+                  t(
+                    SUBTITLE[
+                      chat.kind === "group"
+                        ? appId
+                          ? "app"
+                          : project
+                            ? "group"
+                            : "chosen"
+                        : chat.kind
+                    ],
+                  )
                 )}
               </p>
             </div>
@@ -207,7 +219,7 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
               )}
               {chat.kind === "group" && <TeamButton chatId={chatId} />}
               {chat.kind === "system" && advanced && <WebhookInfo />}
-              {project && advanced && <BudgetButton project={project} />}
+              {project && <BudgetButton project={project} />}
               {summary && advanced && (
                 <Button
                   variant={panel === "summary" ? "secondary" : "ghost"}
@@ -217,6 +229,9 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
                 >
                   <ScrollText /> <span className="max-sm:hidden">{t("Summary")}</span>
                 </Button>
+              )}
+              {chat.kind === "group" && !appId && (
+                <DeleteChatButton chatId={chatId} project={Boolean(project)} />
               )}
               {appId && (
                 <Button

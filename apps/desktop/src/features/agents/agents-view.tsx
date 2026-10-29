@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { loadProjects, openChat, reportError } from "@/features/chat/actions";
 import { BudgetEditor } from "@/features/chat/budget";
-import { useChatStore } from "@/features/chat/store";
+import { setState, useChatStore } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
@@ -43,7 +43,14 @@ const TOOLS: { name: string; text: string }[] = [
 export function AgentsView() {
   const agentMap = useChatStore((s) => s.agents);
   const agents = useMemo(() => Object.values(agentMap), [agentMap]);
-  const [selected, setSelected] = useState<string | null>(null);
+  const focus = useChatStore((s) => s.agentFocus);
+  const [selected, setSelected] = useState<string | null>(focus);
+  // A click on a helper's mark in a chat lands here, also when this page is already open.
+  useEffect(() => {
+    if (!focus) return;
+    setSelected(focus);
+    setState(() => ({ agentFocus: null }));
+  }, [focus]);
 
   useEffect(() => {
     loadProjects().catch(reportError);

@@ -1,9 +1,0 @@
-{
-  "id": "app-tasks",
-  "name": "Tasks",
-  "version": "1.0.0",
-  "description": "A task board: to do, doing, done, with due dates. Drag tasks between columns, or ask in its chat to add and move them.",
-  "author": "Aura",
-  "tags": ["app", "tasks"],
-  "files": ["apps/tasks/manifest.json", "apps/tasks/main.js"]
-}

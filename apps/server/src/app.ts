@@ -23,6 +23,7 @@ import type { RestorePointService } from "./modules/backups/restore-points";
 import { catalogModule } from "./modules/catalog";
 import type { CatalogService } from "./modules/catalog/service";
 import { chatModule } from "./modules/chat";
+import { groupsModule } from "./modules/chat/groups";
 import type { ChatRepo } from "./modules/chat/repo";
 import type { ChatService } from "./modules/chat/service";
 import { modulesModule } from "./modules/core";
@@ -116,6 +117,17 @@ export function createApp(deps: AppDeps) {
       chatModule({
         ...deps,
         agentExists: async (handle) => (await deps.agents.get(handle)) !== null,
+      }),
+    )
+    .use(
+      groupsModule({
+        sessions: deps.sessions,
+        repo: deps.repo,
+        hub: deps.hub,
+        agentExists: async (handle) => (await deps.agents.get(handle)) !== null,
+        busyIn: (chatId) => deps.runtime.busyIn(chatId),
+        projectOf: (slug) => deps.projects.get(slug),
+        archiveProject: (slug) => deps.projects.archive(slug),
       }),
     )
     .use(agentsModule(deps))

@@ -52,6 +52,8 @@ export interface ChatState {
   previewDraft: Record<string, boolean>;
   /** Apps whose chat is open as a panel inside their tile (ADR 0027). */
   appChat: Record<string, boolean>;
+  /** The helper whose settings the Helpers app shows (a click on its mark in a chat). */
+  agentFocus: string | null;
   /** Why the bar app is not shown (it failed), so the built-in bar stands in (ADR 0029). */
   barFailed: string | null;
   /** The "My apps" menu next to the bar, and the "New app" sheet (ADR 0034). */
@@ -83,6 +85,7 @@ let state: ChatState = {
   phoneApp: null,
   previewDraft: {},
   appChat: {},
+  agentFocus: null,
   barFailed: null,
   menuOpen: false,
   addOpen: false,

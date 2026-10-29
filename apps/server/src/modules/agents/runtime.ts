@@ -96,6 +96,7 @@ export interface RuntimeDeps {
 
 interface ActiveRun {
   runId: string;
+  chatId: string;
   abort: AbortController;
 }
 
@@ -181,6 +182,12 @@ export class AgentRuntime {
   whenIdle(): Promise<void> {
     if (!this.isBusy()) return Promise.resolve();
     return new Promise((resolve) => this.idleWaiters.add(resolve));
+  }
+
+  /** Whether a helper is working in the chat right now (it cannot be deleted then). */
+  busyIn(chatId: string): boolean {
+    for (const run of this.active.values()) if (run.chatId === chatId) return true;
+    return false;
   }
 
   stop(runId: string): boolean {
@@ -288,7 +295,7 @@ export class AgentRuntime {
       this.queues.set(lane, queue);
       return;
     }
-    const run: ActiveRun = { runId: "", abort: new AbortController() };
+    const run: ActiveRun = { runId: "", chatId: chat.id, abort: new AbortController() };
     this.active.set(lane, run);
     void this.execute(handle, chat, trigger, team, run, reason)
       .catch((error: unknown) => {

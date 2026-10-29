@@ -182,7 +182,6 @@ export const UK: Record<string, string> = {
   "What it should do": "Що він має робити",
   "No templates left to add. Turn on Chats to build your own app with agents.":
     "Шаблонів більше немає. Увімкніть Чати, щоб створити власний застосунок з агентами.",
-  Create: "Створити",
   "Browse the catalog": "Переглянути каталог",
 
   // An app's menu.
@@ -228,4 +227,59 @@ export const UK: Record<string, string> = {
   "Showing: {name}.": "Зараз: {name}.",
   "Texts without a translation stay in English. To add a language or correct a translation, put locales/<code>.json in Aura's data folder: a name, its English name and the strings.":
     "Тексти без перекладу лишаються англійською. Щоб додати мову чи виправити переклад, покладіть locales/<code>.json у теку даних Aura: назву, англійську назву і рядки.",
+
+  // Groups, deleting chats and limits.
+  Groups: "Групи",
+  "New group": "Нова група",
+  "Name of the group": "Назва групи",
+  "e.g. Planning": "напр. Планування",
+  "Who is in it (the Helper always is)": "Хто в ній (Помічник є завжди)",
+  Create: "Створити",
+  "Could not create the group": "Не вдалося створити групу",
+  "Your group: you and the helpers you chose": "Ваша група: ви і помічники, яких ви обрали",
+  "Delete this chat": "Видалити цей чат",
+  "Delete this chat?": "Видалити цей чат?",
+  Delete: "Видалити",
+  "Yes, delete": "Так, видалити",
+  "No, keep it": "Ні, лишити",
+  "Could not delete the chat": "Не вдалося видалити чат",
+  "The messages and the project are removed. Its files are kept in the backups folder.":
+    "Повідомлення й проєкт буде видалено. Його файли залишаться в теці резервних копій.",
+  "The messages are deleted for good.": "Повідомлення буде видалено назавжди.",
+  "Enter tokens, e.g. 2M or 500K": "Введіть токени, напр. 2M або 500K",
+  "Enter dollars, e.g. 5": "Введіть долари, напр. 5",
+  "Used {tokens} tokens": "Витрачено {tokens} токенів",
+  "at API prices": "за цінами API",
+  "Limit now: {limit}": "Зараз ліміт: {limit}",
+  "No limit": "Без ліміту",
+  Tokens: "Токени",
+  Dollars: "Долари",
+  "Token limit": "Ліміт токенів",
+  "Dollar limit": "Ліміт у доларах",
+  "e.g. 2M": "напр. 2M",
+  "e.g. 5": "напр. 5",
+  "For subscriptions (Claude Code, Gemini CLI, Codex, OpenCode) and local models.":
+    "Для підписок (Claude Code, Gemini CLI, Codex, OpenCode) і локальних моделей.",
+  "Real money only on paid APIs (OpenRouter, an OpenAI-compatible API).":
+    "Справжні гроші лише на платних API (OpenRouter, OpenAI-сумісний API).",
+  "Agents still stop after 8 replies to each other in a row.":
+    "Агенти все одно зупиняються після 8 відповідей одне одному підряд.",
+  "Click to change.": "Натисніть, щоб змінити.",
+  Limit: "Ліміт",
+  tok: "ток.",
+  "of {limit}": "з {limit}",
+
+  // App secrets.
+  Secrets: "Секрети",
+  "The app's secrets: keys it puts into its requests; only it can use them":
+    "Секрети застосунку: ключі, які він підставляє у свої запити; користуватися ними може лише він",
+  "Only this app can use them, in requests to its approved hosts. Values are never shown.":
+    "Користуватися ними може лише цей застосунок, у запитах до дозволених адрес. Значення ніколи не показуються.",
+  set: "задано",
+  "no value": "немає значення",
+  "Value of {name}": "Значення {name}",
+  "New value": "Нове значення",
+  Value: "Значення",
+  Clear: "Очистити",
+  "Settings of {name}": "Налаштування: {name}",
 };

@@ -5,6 +5,17 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Your own groups.** "New group" at the top of the chat list: a name and the helpers you choose.
+  Groups have their own section.
+- **Delete a chat** from its header: a group, or a project (its files are kept in the backups
+  folder). An app's chat goes with the app.
+- **Limits are back** in a project's chat header (tokens, dollars or none), in plain mode too.
+- **An app's secrets** are set with the key button next to its Chat button, nowhere else.
+  @builder names the secrets and tells you to enter them.
+- **A click on a helper's mark** in a chat opens that helper's settings.
+- The window presets are called **Airy** and **Compact**.
+- The catalog no longer offers the CRM, Tasks and Notes apps.
+
 ## [0.37.0] - 2026-10-29: Chats and app tiles in the new look
 
 - **The chat list** is grouped into your chat with the Helper, Projects, Apps and Alerts. A row

@@ -11,7 +11,7 @@ const key = (k: Partial<KeyLike>): KeyLike => ({
   ...k,
 });
 
-describe("window manager shortcuts (ADR 0028)", () => {
+describe("window shortcuts (ADR 0028)", () => {
   test("Mod+arrows focus, Mod+Shift+arrows move, Enter splits, Q closes, H goes home, digits open", () => {
     expect(matchShortcut(key({ key: "ArrowLeft", altKey: true }), "alt", false)).toEqual({
       type: "focus",

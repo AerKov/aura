@@ -54,8 +54,8 @@ files in a git repository you own.
 - **Skills that improve.** Agents propose changes to their own know-how; you approve the diff;
   every version is a git commit you can roll back.
 - **A shell for your apps.** Describe a tool (a CRM, a board, a tracker) and @builder makes it as an
-  app with its own chat and data; every change is a diff you approve. Apps sit as tiles in a tiling
-  window manager, listed by group on the Home launcher; uninstalling keeps a backup.
+  app with its own chat and data; every change is a diff you approve. Apps sit as tiles side by side,
+  listed by group on the Home launcher; uninstalling keeps a backup.
 - **Restore points.** Take the whole Aura back, or forward again, after a round of customizing:
   agents, skills, themes, settings and every app with its data.
 - **Your language.** English and Ukrainian built in, for the interface, the agents and your apps.

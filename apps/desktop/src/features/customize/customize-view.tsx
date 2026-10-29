@@ -7,7 +7,6 @@ import {
   Eye,
   EyeOff,
   Globe,
-  KeyRound,
   LayoutDashboard,
   Menu,
   Palette,
@@ -180,19 +179,11 @@ export function CustomizeView() {
                     </li>
                   ))}
                 </ul>
-                {(ext.hosts.length > 0 || ext.secrets.length > 0) && (
+                {ext.hosts.length > 0 && (
                   <p className="text-muted-foreground mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                     {ext.hosts.length > 0 && (
                       <span className="flex items-center gap-1">
                         <Globe className="size-3" /> {ext.hosts.join(", ")}
-                      </span>
-                    )}
-                    {ext.secrets.length > 0 && (
-                      <span
-                        className="flex items-center gap-1"
-                        title="Aura puts these secrets into its requests; the extension never sees them"
-                      >
-                        <KeyRound className="size-3" /> {ext.secrets.join(", ")}
                       </span>
                     )}
                   </p>
@@ -203,7 +194,7 @@ export function CustomizeView() {
         </div>
 
         <h2 className="mb-2 flex items-center gap-2 font-semibold">
-          <LayoutDashboard className="size-4" /> Window manager
+          <LayoutDashboard className="size-4" /> Windows
         </h2>
         <WindowManagerSettings onError={setError} />
 

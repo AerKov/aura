@@ -200,7 +200,7 @@ describe("customization", () => {
     expect(Object.keys(t.mcp.forAgent("coder"))).toEqual(["web"]);
   });
 
-  test("the window manager: bar edge and tile style, from the page and the orchestrator", async () => {
+  test("the window layout: bar edge and tile style, from the page and the orchestrator", async () => {
     const provider = new FakeProvider();
     t = await createTestApp({ provider });
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
@@ -223,7 +223,7 @@ describe("customization", () => {
     await Bun.sleep(20);
     await t.runtime.whenIdle();
     const tool = provider.calls[0]?.tools.find((x) => x.name === "set_appearance");
-    const res = await tool?.handler({ preset: "i3", bar_edge: "bottom", titles: "none" });
+    const res = await tool?.handler({ preset: "compact", bar_edge: "bottom", titles: "none" });
     expect(res?.text).toContain(
       "bar: builtin on the bottom; tiles: gaps 0, radius 0, border 1, titles none; mod: ctrl-alt",
     );

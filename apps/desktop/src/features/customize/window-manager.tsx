@@ -256,7 +256,7 @@ const SHORTCUTS: [string, string][] = [
 ];
 
 /**
- * The window manager's settings (ADR 0028): a preset (Hyprland or i3), then gaps, corners,
+ * The window layout settings (ADR 0028): a preset (Airy or Compact), then gaps, corners,
  * borders and title bars, the bar's edge and the shortcuts' Mod key.
  */
 export function WindowManagerSettings({ onError }: { onError: (message: string | null) => void }) {
@@ -289,7 +289,7 @@ export function WindowManagerSettings({ onError }: { onError: (message: string |
                 active === preset ? "border-primary bg-primary/10" : "hover:bg-accent",
               )}
             >
-              {preset === "i3" ? "i3" : "Hyprland"}
+              {preset === "compact" ? "Compact" : "Airy"}
             </button>
           ))}
           {!active && <span className="text-muted-foreground self-center text-xs">Custom</span>}

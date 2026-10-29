@@ -427,8 +427,8 @@ Chats, Skills, Memory, Schedule and Signals (and Integrations, until ADR 0030) c
 dependencies; off means their routes, background work and agent tools are gone, without a restart.
 Config in `modules.json`.
 
-**Phase 30: A tiling window manager** (done, ADR 0028)
-Tiles with gaps, corners, borders and title bars set by the user (presets Hyprland and i3), the bar
+**Phase 30: Window layout** (done, ADR 0028)
+Tiles with gaps, corners, borders and title bars set by the user (presets Airy and Compact), the bar
 on any edge with status (approvals, working agents, clock, connection), keyboard shortcuts with a
 chosen Mod key, Home as a launcher in any number of tiles.
 
@@ -462,7 +462,7 @@ tile bars.
 **Phase 37: Chats and app tiles** (done, ADR 0034)
 The chat list, a calmer feed (run cards collapsed, approvals in plain words with technical details
 on request, alerts by severity), the composer, and an app's tile with its chat panel, draft and
-versions. A chat's helpers are added and removed from its header ("+ Helper").
+versions. A chat's helpers are added and removed from its header ("+ Helper"). Follow-up (ADR 0035): groups of the user's own, deleting chats, limits in the header, secrets on the app's tile, no bundled apps.
 
 **Phase 38: Helpers** (next, ADR 0034)
 One app for everything about agents: Team, Skills, Memory and AI connection.

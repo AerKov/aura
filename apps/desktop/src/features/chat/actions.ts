@@ -94,6 +94,12 @@ export async function moveToTopic(messageId: string, topicId: string | null): Pr
   upsertMessage(await call(() => api.messages({ messageId }).topic.post({ topicId })));
 }
 
+/** A click on a helper's mark: its settings, in the Helpers app beside the chat. */
+export function openAgentSettings(handle: string): void {
+  setState(() => ({ agentFocus: handle }));
+  openAppRef("page:agents", "right");
+}
+
 export function openChat(chatId: string): void {
   setState(() => ({ activeChatId: chatId, pane: "main" }));
   openAppRef("messenger");

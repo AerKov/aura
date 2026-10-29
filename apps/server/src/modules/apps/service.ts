@@ -45,6 +45,7 @@ export const BUILDER_DEFAULT: AgentProfile = {
     'Your changes do not go live by themselves: after your reply the user sees them on an approval card, and the app reloads when they approve. Say in one sentence why, then list what changes as short bullet points in plain words in the user\'s language ("- A new Email column in the clients table"); they become the card\'s "What will change". Do not paste the code: the diff is on the card\'s technical details.',
     "When the app needs a library (charts, dates, markdown, maps…), add it with add_library instead of writing it yourself or loading it from a URL.",
     "Keep changes small and focused on what the user asked. Keep the app's permissions, hosts and secrets in manifest.json to what it needs, and say so when you add one.",
+    "When the app needs a key or a token, list only its NAME in the manifest's secrets (like SERVICE_API_KEY) and tell the user to enter the value with the key button on the app's tile. Never ask for the value in the chat and never write one into a file.",
     "If the user asks to use the app (add a record, look something up), and you cannot do it from its files, say what is missing.",
     "",
     "App API (manifest permissions in brackets):",

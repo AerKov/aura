@@ -68,6 +68,16 @@ you create with **+ Topic** under the chat's header (for example _Customization_
 - Rename or close a topic from its **⋯** menu (or right-click). A closed topic is read-only until
   you reopen it.
 
+## Groups
+
+**New group** at the top of the chat list makes a chat of your own: a name and the helpers you
+choose (the Helper is always in it). Add or remove helpers later with **+ Helper**. Groups are
+listed under **Groups**.
+
+**Delete** in a group's or a project's header deletes the chat after a question. A project's files
+are not deleted: they move to `~/.aura/backups/projects`. An app's chat goes with the app, and the
+chat with the Helper and the alerts stay. A click on a helper's mark in a chat opens its settings.
+
 ## Projects
 
 A project is a chat, a folder at `~/.aura/projects/<slug>` (a git repository) and a budget.
@@ -90,7 +100,7 @@ it spent (tokens and the commit in advanced mode). **Stop** ends a running reply
 A budget is optional. Without one, a project has no limit; agents still stop after 8 replies to each
 other in a row.
 
-- **Project budget**: the button in the chat header shows the tokens used and the limit (∞ for
+- **Project limit**: the button in the chat header shows the tokens used and the limit (∞ for
   none). Click it to set a limit in **tokens**, in **dollars**, or none. At 80% agents are warned;
   at 100% they stop until you raise or remove it.
 - **Agent budget**: optional, across all projects, on the agent's card on the **Agents** page.

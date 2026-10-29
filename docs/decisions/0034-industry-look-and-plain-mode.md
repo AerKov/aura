@@ -18,7 +18,7 @@ over the earlier soft Geist look and asked for the plain texts in both languages
   signal colour, Barlow for text and Barlow Condensed for headings (Geist Mono for numbers and
   code), the round-4 colour tokens for light and dark, plus `--warning`, `--signal-text`,
   `--input-bg` and shadows. The whole radius scale derives from `--radius`, and pills from
-  `--radius-pill`, so a theme can bring soft corners back. Hyprland tiles are 10 / 10 / 2.
+  `--radius-pill`, so a theme can bring soft corners back. The Airy preset's tiles are 10 / 10 / 2.
 - **Marks.** Agents are squares told apart by fill style (solid primary for the orchestrator,
   solid ink for @builder, tint, outline, dashed), not by hue, so they work with any theme; people
   are round.

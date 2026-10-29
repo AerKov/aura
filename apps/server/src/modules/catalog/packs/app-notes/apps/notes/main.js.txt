@@ -1,9 +1,0 @@
-export default function activate(ctx) {
-  ctx.ui.registerPanel({
-    title: "Notes",
-    render(el) {
-      ctx.kit.form(el, { collection: "notes", title: "New note", fields: ["title", "body", "tag"], multiline: ["body"] });
-      ctx.kit.cards(el, { collection: "notes", title: "title", body: "body", tag: "tag", sort: "-id" });
-    },
-  });
-}

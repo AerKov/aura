@@ -9,7 +9,7 @@ const rects: Record<string, Rect> = {
   c: { left: 8, top: 404, right: 992, bottom: 792 },
 };
 
-describe("tiling window manager (ADR 0028)", () => {
+describe("window layout (ADR 0028)", () => {
   test("focus moves to the nearest tile in a direction, across gaps", () => {
     expect(neighbour(rects, "a", "right")).toBe("b");
     expect(neighbour(rects, "b", "left")).toBe("a");
@@ -40,7 +40,7 @@ describe("tiling window manager (ADR 0028)", () => {
     expect(
       normalizeWindowStyle({ gaps: 99, radius: -3, border: 2.6, titles: "fancy", mod: "x" }),
     ).toEqual({ gaps: 24, radius: 0, border: 3, titles: "minimal", mod: "alt" });
-    expect(normalizeWindowStyle({ ...WM_PRESETS.i3, mod: "ctrl-alt" })).toEqual({
+    expect(normalizeWindowStyle({ ...WM_PRESETS.compact, mod: "ctrl-alt" })).toEqual({
       gaps: 0,
       radius: 0,
       border: 1,
