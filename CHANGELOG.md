@@ -5,6 +5,8 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-10-29: Free AI first, files, groups
+
 - **Free AI services come first.** Google Gemini, Groq, OpenRouter, Cerebras and Mistral: make a free
   key on the service's site and paste it; Aura picks a model and starts. A "Connect an AI to start"
   panel in the Helper's chat does it in one step. **Helper programs** now reads: Start free, On your
