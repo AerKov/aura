@@ -389,6 +389,9 @@ export const UK: Record<string, string> = {
   "no checksum": "без контрольної суми",
   "Choose the llama.cpp build yourself": "Обрати збірку llama.cpp самому",
   "Install another llama.cpp release": "Встановити інший реліз llama.cpp",
+  Start: "Запустити",
+  "Starting {model}… A big model can take a minute to load.":
+    "Запускаю {model}… Велика модель може завантажуватися хвилину.",
   "llama.cpp release": "Реліз llama.cpp",
   "The latest": "Найновіший",
   "This release has no program archives. Choose another release.":

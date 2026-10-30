@@ -1,5 +1,5 @@
 import { formatBytes, LOCAL_MODELS, type LocalAiStatus, type LocalPlan } from "@aura/shared";
-import { Check, Download, HardDrive, Loader, Trash2 } from "lucide-react";
+import { Download, HardDrive, Loader, Play, Square, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { loadProviderStatus, reportError } from "@/features/chat/actions";
@@ -176,21 +176,34 @@ export function LocalAiCard({
             <li key={m.file} className="flex items-center gap-3 px-3 py-2 text-[13px]">
               <span className="min-w-0 flex-1 truncate font-mono text-[12px]">{m.file}</span>
               <span className="text-muted-foreground font-mono text-xs">{formatBytes(m.size)}</span>
-              {status.running === m.file && (
-                <span className="text-signal-text text-xs">{t("running")}</span>
+              {status.running === m.file ? (
+                <>
+                  <span className="text-signal-text text-xs">{t("running")}</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => void act(() => call(() => api["local-ai"].stop.post()))}
+                  >
+                    <Square /> {t("Stop")}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={phase === "starting"}
+                  onClick={() =>
+                    void act(() => call(() => api["local-ai"].use.post({ file: m.file })))
+                  }
+                >
+                  {phase === "starting" && status.job.label === m.file ? (
+                    <Loader className="animate-spin" />
+                  ) : (
+                    <Play />
+                  )}{" "}
+                  {t("Start")}
+                </Button>
               )}
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() =>
-                  void act(async () => {
-                    const next = await call(() => api["local-ai"].use.post({ file: m.file }));
-                    return next;
-                  })
-                }
-              >
-                <Check /> {t("Use")}
-              </Button>
               <Button
                 size="icon"
                 variant="ghost"
@@ -205,6 +218,20 @@ export function LocalAiCard({
             </li>
           ))}
         </ul>
+      )}
+
+      {phase === "starting" && (
+        <p className="flex items-center gap-2 text-[13px]">
+          <Loader className="size-4 animate-spin" />
+          {t("Starting {model}… A big model can take a minute to load.", {
+            model: status.job.label,
+          })}
+        </p>
+      )}
+      {status.job.phase === "error" && status.job.error && (
+        <p className="text-destructive text-[13px]" role="alert">
+          {status.job.error}
+        </p>
       )}
 
       {running ? (
@@ -365,9 +392,6 @@ export function LocalAiCard({
               </Button>
             )}
           </div>
-          {status.job.phase === "error" && status.job.error && (
-            <p className="text-destructive text-[13px]">{status.job.error}</p>
-          )}
         </div>
       )}
     </article>

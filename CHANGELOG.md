@@ -5,6 +5,9 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Start and Stop for local models.** **Start** on a downloaded model loads it right away and shows
+  that it is starting; if llama-server cannot start, the card says why. **Stop** frees the memory.
+
 - **One secret store.** Engine keys, helpers' secrets and apps' secrets live in one file,
   `state/secrets.json`, still kept apart; the old files are moved in on the first start.
 - **Faster pages.** Settings → AI no longer checks every engine on each visit (answers are kept for

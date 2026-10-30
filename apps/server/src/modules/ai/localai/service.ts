@@ -450,7 +450,27 @@ export class LocalAiService {
     this.server.timer.unref?.();
   }
 
+  /**
+   * Starts the model now, in the background, for a user who pressed Start: progress and any error
+   * are in `status().job`, so the card can say what went wrong.
+   */
+  startInBackground(file: string): void {
+    void this.ensureRunning(file).catch((error: unknown) => {
+      log.warn("the local model did not start", { file, error: errorMessage(error) });
+    });
+  }
+
   private async start(file: string): Promise<void> {
+    try {
+      await this.launch(file);
+    } catch (error) {
+      // Whatever stopped it (no program, a crash, a timeout) is shown on the card.
+      if (this.job.phase !== "error") this.setJob("error", "", 0, 0, errorMessage(error));
+      throw error;
+    }
+  }
+
+  private async launch(file: string): Promise<void> {
     const have = this.installed();
     if (!have) throw new LocalAiError("Install llama.cpp first");
     const model = this.modelPath(file);
@@ -476,13 +496,19 @@ export class LocalAiService {
       key,
     ];
     this.setJob("starting", file);
-    const proc = (this.deps.spawn ?? realSpawn)(cmd, join(exe, ".."));
+    let proc: ServerProcess;
+    try {
+      proc = (this.deps.spawn ?? realSpawn)(cmd, join(exe, ".."));
+    } catch (error) {
+      throw new LocalAiError(`llama-server could not be started: ${errorMessage(error)}`);
+    }
     const ready = await this.waitReady(port, key, proc);
     if (!ready) {
       proc.kill();
       const why = proc.tail().trim().split("\n").slice(-3).join(" ");
-      this.setJob("error", "", 0, 0, `The model did not start. ${why}`.trim());
-      throw new LocalAiError(`The model did not start. ${why}`.trim());
+      const message = `The model did not start. ${why || "llama-server stopped without a message."}`;
+      this.setJob("error", "", 0, 0, message);
+      throw new LocalAiError(message);
     }
     const timer = setTimeout(() => this.stop(), IDLE_STOP_MS);
     timer.unref?.();

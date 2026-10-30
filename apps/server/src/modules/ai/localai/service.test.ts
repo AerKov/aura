@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { treaty } from "@elysiajs/eden";
 import { createTestApp } from "../../../testing";
 import { downloadFile } from "./download";
-import type { ServerProcess } from "./service";
+import type { ServerProcess, SpawnServer } from "./service";
 
 setDefaultTimeout(30_000);
 
@@ -91,13 +91,13 @@ describe("built-in llama.cpp (ADR 0038)", () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
-  async function setup(opts: { badSha?: boolean } = {}) {
+  async function setup(opts: { badSha?: boolean; spawn?: SpawnServer } = {}) {
     const archive = await fakeArchive(dir, "src.tar.gz");
     const world = fakeWorld(archive, opts);
     const started: string[][] = [];
     t = await createTestApp({
       fetch: world.fetchFn,
-      llamaSpawn: fakeSpawn(started),
+      llamaSpawn: opts.spawn ?? fakeSpawn(started),
       llamaSystem: { platform: "linux", arch: "x64", ramBytes: 16 * 1024 ** 3 },
     });
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
@@ -148,6 +148,44 @@ describe("built-in llama.cpp (ADR 0038)", () => {
     expect(
       (await api.engines({ engine: "llama-cpp" }).models.get()).data?.map((m) => m.id),
     ).toEqual(["Qwen3-4B-Q4_K_M.gguf"]);
+  });
+
+  async function installed(api: Awaited<ReturnType<typeof setup>>["api"]) {
+    const planned = (await api["local-ai"].plan.post({ model: "qwen3-4b" })).data as { id: string };
+    await api["local-ai"].install.post({ planId: planned.id });
+    await waitDone(api);
+  }
+
+  test("Start runs the model now, Stop stops it", async () => {
+    const { api, started } = await setup();
+    await installed(api);
+    await api["local-ai"].use.post({ file: "Qwen3-4B-Q4_K_M.gguf" });
+    let status = (await api["local-ai"].get()).data;
+    for (let i = 0; i < 100 && status?.running === null; i++) {
+      await Bun.sleep(20);
+      status = (await api["local-ai"].get()).data;
+    }
+    expect(status?.running).toBe("Qwen3-4B-Q4_K_M.gguf");
+    expect(started).toHaveLength(1);
+    expect((await api["local-ai"].stop.post()).data?.running).toBeNull();
+  });
+
+  test("a model that cannot start says why on the card", async () => {
+    const { api } = await setup({
+      spawn: () => {
+        throw new Error("EACCES: permission denied");
+      },
+    });
+    await installed(api);
+    await api["local-ai"].use.post({ file: "Qwen3-4B-Q4_K_M.gguf" });
+    let status = (await api["local-ai"].get()).data;
+    for (let i = 0; i < 100 && status?.job.phase !== "error"; i++) {
+      await Bun.sleep(20);
+      status = (await api["local-ai"].get()).data;
+    }
+    expect(status?.job).toMatchObject({ phase: "error" });
+    expect(status?.job.error).toContain("permission denied");
+    expect(status?.running).toBeNull();
   });
 
   test("a plan is used once, and a made-up plan is refused", async () => {

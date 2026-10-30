@@ -108,9 +108,19 @@ export const localAiModule = ({ sessions, engines }: LocalAiDeps) =>
         if (!engines.localAi.modelPath(body.file))
           return status(404, { error: "That model is not downloaded" });
         await engines.useLocalModel(body.file);
+        // Start it now, so the user sees it load (or why it does not) instead of on the first reply.
+        engines.localAi.startInBackground(body.file);
         return engines.localAi.status();
       },
       { auth: true, body: t.Object({ file: t.String({ maxLength: 200 }) }) },
+    )
+    .post(
+      "/local-ai/stop",
+      () => {
+        engines.localAi.stop();
+        return engines.localAi.status();
+      },
+      { auth: true },
     )
     .delete(
       "/local-ai/models/:file",
