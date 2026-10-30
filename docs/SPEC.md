@@ -77,7 +77,7 @@ shows a preview or diff, applies on approval, commits to git.
 │   ├─ agent runtime + guards    ├─ scheduler / job queue (in DB)         │
 │   └─ LLMProvider ─┬ Claude Agent SDK ── Claude Code (user's own login) │
 │                   ├ ACP ── Gemini CLI / Codex / OpenCode (own logins)  │
-│                   └ Aura loop ── OpenRouter / Ollama / OpenAI-compatible│
+│                   └ Aura loop ── llama.cpp / Ollama / OpenAI-compatible │
 │                │                                                        │
 │  SurrealDB (local, file storage)      ~/.aura/ (user data, git repo)    │
 │                                       ~/.aura/projects/* (git repos)    │
@@ -161,9 +161,9 @@ type AgentEvent =
 ```
 Engines (ADR 0011, 0012): Claude Agent SDK (user's Claude Code login); other agent apps over the
 Agent Client Protocol: Gemini CLI, Codex, OpenCode (each under its own login, app tools served to
-them over a per-run MCP endpoint); and Aura's own agent loop over OpenAI-compatible APIs: OpenRouter
-(free models available), Ollama (local, free) and any compatible server. The default engine and a
-per-agent engine are chosen on the Engines page.
+them over a per-run MCP endpoint); and Aura's own agent loop over OpenAI-compatible APIs: the
+built-in llama.cpp (ADR 0038), Ollama and any compatible server. Engines are connected in
+Settings → AI; each helper picks one on its card (ADR 0039, 0040).
 
 If Claude Code is not installed or not logged in, show a setup screen with instructions. Never handle the
 login ourselves.
@@ -476,8 +476,10 @@ engine choice, with a one-step "paste a key" start; local models next; agent app
 Install llama.cpp from the official release and download a local model (curated list or any
 Hugging Face GGUF) after an approval card; the server runs on demand on 127.0.0.1.
 
-**Phase 38: Helpers** (next, ADR 0034)
-One app for everything about agents: Team, Skills, Memory and AI connection.
+**Phase 38: Settings and helpers** (in progress, ADR 0039, 0040)
+One Settings app with tabs (AI, Helpers, Automations, Look, History); a helper's card holds its AI;
+tool servers and secrets in one place; no free cloud services, no advanced mode, no switches.
+Next: the server by domain and one secret store, then the data migrations of ADR 0039.
 
 **Phase 39: Splash and onboarding** (ADR 0034)
 A splash while Aura starts and three first-run steps: welcome and language, AI connection, the

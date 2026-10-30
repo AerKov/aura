@@ -21,11 +21,10 @@ The builds are **not signed** yet:
 
 ## You need one engine
 
-Agents need a model. The easiest way is a **free service**: make a key on Google AI Studio, Groq,
-OpenRouter, Cerebras or Mistral and paste it when Aura asks (free plans have limits, and some may
-use your prompts to improve their models). Other ways, for those who prefer them:
+Agents need a model. The easiest way is the **built-in local AI**: Aura installs llama.cpp and a
+model that fits your computer when you ask, free and private. Other ways:
 
-- **Ollama** / **LM Studio** on your computer, free and private;
+- **Ollama** / **LM Studio** on your computer;
 - or an agent app you already use, under its own login, which Aura never reads or stores:
   **Claude Code**, **Gemini CLI**, **Codex** or **OpenCode**.
 
@@ -34,7 +33,7 @@ Then follow [Getting started](https://github.com/AerKov/aura/wiki/Getting-Starte
 ## Your apps
 
 **My apps** (the **A** at the top of the bar) lists your apps by group, and the built-in ones
-(Chats, Alerts, Reminders, Helpers…); advanced mode shows more and lets you turn them off.
+(Chats, Alerts, Settings).
 Describe a tool you need and @builder makes it as an app with its own chat; every change waits for your approval. **Restore points** take the whole Aura
 back, or forward again, and **Language** switches Aura to Ukrainian. Details:
 [The screen](https://github.com/AerKov/aura/wiki/The-Screen), [Apps](https://github.com/AerKov/aura/wiki/Apps).

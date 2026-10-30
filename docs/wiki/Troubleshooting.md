@@ -24,16 +24,13 @@ short `PATH`. Set the path explicitly, for example `AURA_GEMINI_EXECUTABLE=/path
 pattern is `AURA_<NAME>_EXECUTABLE`; `AURA_CLAUDE_EXECUTABLE` for Claude Code).
 
 **"… is not logged in".** Run the app's own login once in a terminal (`claude`, `gemini`,
-`codex login`, `opencode auth login`), then **Check again** on the Helper programs page (advanced mode).
+`codex login`, `opencode auth login`), then **Check again** in Settings → AI.
 
 **Ollama: "not running" or "has no models".** Start Ollama, and pull a model with tool calling
 (`ollama pull qwen3:8b`).
 
 **Local model gives odd or empty answers, or ignores tools.** Start Ollama with a longer context
 (`OLLAMA_CONTEXT_LENGTH=32768 ollama serve`), try a bigger model, or give that agent simpler work.
-
-**OpenRouter: rate limit.** Free models are rate limited. Wait a bit, pick another free model, or add
-credit.
 
 **An agent stopped with a budget notice.** The project or agent budget is used up. Raise or remove
 it: the budget button in the project chat header, or the helper's card on the Helpers page.

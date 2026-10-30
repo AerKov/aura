@@ -36,6 +36,6 @@ remote. Do not publish `state/`.
 
 ## What leaves your computer
 
-Only what you choose: prompts and context go to the engine you picked (Anthropic, Google, OpenAI,
-OpenRouter…, or nowhere for local models), web pages that agents fetch, and Web Push notifications
+Only what you choose: prompts and context go to the engine you picked (Anthropic, Google, OpenAI…, or
+nowhere for local models), web pages that agents fetch, and Web Push notifications
 through your browser's push service. Aura has no telemetry and no account.

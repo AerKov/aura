@@ -14,22 +14,21 @@ every app by **group**, each with a line on what it is for:
 - **Your groups first:** the apps you built or installed, grouped as their manifest says (_Work_,
   _Home_…; an app without a group is under _Apps_). Ask in an app's chat to change its group or
   description.
-- **Essentials:** Chats, Alerts, Reminders and Helpers. **Settings:** Look, Language, Phone,
-  Backups and Ready-made packs.
+- **Essentials:** Chats and Alerts. **Settings:** one app with tabs: AI, Helpers (team, skills,
+  memory, tools and keys), Automations (reminders, alerts from your tools), Look (theme, windows,
+  bar, language) and History (restore points, uninstalled apps).
 - **Find an app or a setting:** type to filter by name, description or group; Enter opens the
   first match, Esc closes the menu.
-- **New app:** a template from a pack you installed, or your own: a name and what it should do,
-  which a helper builds in its chat.
+- **New app:** a name and what it should do, which a helper builds in its chat.
 
 An empty tile, **New window**, shows the same list. There the **⋯** on one of your apps uninstalls
 it (see [Apps](Apps#uninstall-and-bring-back)).
 
-## Plain and advanced
+## One view for everyone
 
-Aura speaks plainly by default. **Advanced mode** (the switch at the bottom of My apps) shows the
-technical side: Skills, Memory and Helper programs as their own apps, the switches that turn
-built-in apps off, the apps' data and keys on their tiles, and keyboard hints. You can also ask
-the orchestrator: _"turn on advanced mode"_.
+There is no separate advanced mode (ADR 0040): run cards show tokens and the commit, alerts have
+their technical details, apps show their data and keys on their tiles. Everything built in is always
+on.
 
 ## Tiles
 
@@ -94,18 +93,6 @@ folder. Whatever its CSS does, the bar stays inside its strip.
 Every app you build or install has a chat, where you use it and change it with @builder (see
 [Apps](Apps)). **Chat** in the app's bar opens it as a panel inside the app's tile, and closes it
 again. Nothing opens by itself: a project's chat has an **Apps** button to open its app beside it.
-
-## Turning built-in apps off
-
-Not everyone needs agents: you may only want to use the apps you installed. In advanced mode, a New
-window has a switch next to each built-in app:
-
-- **Chats** is the messenger with your helpers, and every app's chat. Skills, Memory, Reminders and
-  Alerts work through it, so turning Chats off turns them off too (Aura asks first); turning one of
-  them on turns Chats on.
-- Off means off: its pages and features are gone, agents get no tools from it, and nothing runs in
-  the background for it. Your data stays, and turning it on brings everything back.
-- The choice is saved in `~/.aura/modules.json`, like the rest of your setup.
 
 ## Backups and restore points
 

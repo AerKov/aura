@@ -106,7 +106,7 @@ A project is a chat, a folder at `~/.aura/projects/<slug>` (a git repository) an
 
 Each agent reply shows what happened during the run in one line: who worked and how it went
 ("looked at 2, changed files: 3, checked, all works"). **Details** lists the tools it used and what
-it spent (tokens and the commit in advanced mode). **Stop** ends a running reply.
+it spent (tokens and the commit). **Stop** ends a running reply.
 
 ## Budgets
 
@@ -116,10 +116,10 @@ other in a row.
 - **Project limit**: the button in the chat header shows the tokens used and the limit (∞ for
   none). Click it to set a limit in **tokens**, in **dollars**, or none. At 80% agents are warned;
   at 100% they stop until you raise or remove it.
-- **Agent budget**: optional, across all projects, on the agent's card on the **Agents** page.
+- **Agent budget**: optional, across all projects, on the helper's card in **Settings → Helpers**.
 - **Tokens or dollars?** Under a subscription (Claude Code, Gemini CLI, Codex, OpenCode) nobody bills
   you per run: the dollar amount is only an estimate at API prices, and what runs out is your plan's
-  usage, so limit tokens. Use dollars for paid APIs (OpenRouter, an OpenAI-compatible API), where
+  usage, so limit tokens. Use dollars for paid APIs (an OpenAI-compatible API), where
   they are real money.
 - A dollar limit also caps each run; a token limit is checked before each run, so the last run may
   go a little over it.

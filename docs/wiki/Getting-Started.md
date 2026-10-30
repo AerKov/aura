@@ -19,24 +19,13 @@ bun run dev
 
 ## 2. Connect an AI
 
-![The first screen: connect a free AI service](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/connect.png)
+Helpers need something to think with. Aura's first screen asks for it, in the Helper's chat. The
+easiest way is the **built-in local AI**: press **Set up the local AI**, pick the recommended model,
+read what will be downloaded and press **Yes, download**. Aura installs llama.cpp and the model and
+starts using it.
 
-Helpers need something to think with. Aura's first screen asks for it, in the Helper's chat: pick a
-**free service**, make a key on its site (the link is on the card), paste it and press **Connect**.
-Aura picks a model and you are ready.
-
-| Service       | Make a key at               |
-| ------------- | --------------------------- |
-| Google Gemini | aistudio.google.com/apikey  |
-| Groq          | console.groq.com/keys       |
-| OpenRouter    | openrouter.ai/keys          |
-| Cerebras      | cloud.cerebras.ai           |
-| Mistral       | console.mistral.ai/api-keys |
-
-Free plans have limits (a long job may have to wait) and some may use your prompts to improve their
-models; each card says what applies. Prefer to keep everything on your computer, or already use
-Claude Code, Codex, Gemini CLI or OpenCode? In **My apps** turn on **Advanced mode** and open **Helper
-programs**. Details: [Engines](Engines).
+Already use Claude Code, Codex, Gemini CLI or OpenCode, or Ollama? Open **Settings → AI** and
+connect it there. Details: [Engines](Engines).
 
 ## 3. Talk to your Helper
 
@@ -67,6 +56,6 @@ helpers you choose.
 ## Next
 
 - [Chats and agents](Chats-and-Agents) for how conversations and agents behave
-- [The screen](The-Screen): My apps, apps side by side, plain and advanced mode, backups, language
+- [The screen](The-Screen): My apps, apps side by side, Settings, history, language
 - [Customization](Customization) to change the look or add tools by asking the orchestrator
 - [Phone](Phone) to keep an eye on things from your phone

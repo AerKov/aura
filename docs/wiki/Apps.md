@@ -30,7 +30,7 @@ plain words what will change (the diff is under **Technical details**):
 - **Yes, do it**: the change goes live and the app reloads.
 - **No, thanks**: the change is thrown away.
 - Before deciding, **After the change** on the app's tile shows the change running; **Now** goes
-  back. In advanced mode the bin next to it discards the change too.
+  back. The bin next to it discards the change too.
 
 If a change asks for more than the app has now (another permission, a host, a secret), the card
 warns you. Until you approve, the app keeps what it had.

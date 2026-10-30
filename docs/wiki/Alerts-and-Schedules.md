@@ -4,7 +4,7 @@
 
 ![An alert and the Helper's suggestion](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/alerts.png)
 
-Monitoring systems can send alerts to Aura's **Alerts** chat. In advanced mode, open it and press
+Monitoring systems can send alerts to Aura's **Alerts** chat. Open it and press
 **Connect** to see your webhook URL and a `curl` example.
 
 ```sh

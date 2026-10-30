@@ -11,7 +11,7 @@
 │   ├─ apps (code, data, actions, backups) ├─ restore points, language   │
 │   └─ engines ─┬ Claude Agent SDK ── Claude Code                        │
 │               ├ ACP ── Gemini CLI / Codex / OpenCode                   │
-│               └ Aura loop ── OpenRouter / Ollama / OpenAI-compatible   │
+│               └ Aura loop ── llama.cpp / Ollama / OpenAI-compatible    │
 │  SurrealDB (embedded)        ~/.aura (git: agents, skills, themes…)    │
 └────────────────────────────────────────────────────────────────────────┘
       ▲ phones connect over your network (paired, thin client)
@@ -19,9 +19,9 @@
 
 - **Monorepo** (Bun workspaces): `apps/server`, `apps/desktop`, `packages/shared` (the message
   protocol and shared types, the single source of truth).
-- **A core with apps** (ADR 0027, 0033): the core (database, shell, app runtime, catalog,
-  approvals, restore points, localization) is always on; built-in apps (chats, skills, memory,
-  schedule, signals) can be turned off, and every app, built in or the user's, has a chat. The
+- **A core with apps** (ADR 0027, 0033, 0040): everything built in (database, shell, app
+  runtime, approvals, restore points, localization, chats, skills, memory, schedules, alerts) is
+  always on, and every app, built in or the user's, has a chat. The
   user's apps are git repositories with their own data store; uninstalling keeps a backup.
 - **Config in files, state in the database.** Agents, skills, themes, extensions and MCP servers are
   files in a git repository; chats, runs, tasks and approvals live in an embedded SurrealDB with live

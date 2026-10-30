@@ -21,13 +21,13 @@ your machine, in plain files and a local database.
 ## Start here
 
 1. [Getting started](Getting-Started): install, first run, first project.
-2. [Engines](Engines): pick what your helpers think with: a free service (Google Gemini, Groq,
-   OpenRouter…) to start, local models, or an agent app such as Claude Code for advanced use.
+2. [Engines](Engines): pick what your helpers think with: the built-in local AI, other local
+   models, or an agent app such as Claude Code.
 3. [Chats and agents](Chats-and-Agents): how the Helper, groups, projects and agents work together.
 
 ## Guides
 
-- [The screen](The-Screen): My apps, tiles, the bar, plain and advanced mode, backups, language
+- [The screen](The-Screen): My apps, tiles, the bar, Settings, history, language
 - [Apps](Apps): build, change, uninstall and bring back your own apps
 - [Approvals and safety](Approvals-and-Safety): what agents may do, and what needs your OK
 - [Skills](Skills): reusable know-how that agents improve over time

@@ -6,8 +6,8 @@
 
 <p align="center">
   <b>Your own apps, built and changed by chatting with a team of AI helpers.</b><br>
-  Local-first and open source. Start free with a key from Google Gemini, Groq or OpenRouter; or bring your own
-  agent (Claude Code, Codex…) or a model on your computer.
+  Local-first and open source. Runs a model on your computer (Aura installs it for you), or the agent
+  you already use (Claude Code, Codex…).
 </p>
 
 <p align="center">
@@ -75,25 +75,22 @@ chats stay on your computer.
   Aura back (or forward again) after a round of changes.
 - **Files.** Attach files in any chat and helpers read them; apps keep, show and save files of their
   own, and a PDF opens in a window with Print and Save.
-- **Ready-made packs.** Add a dev team, writers, researchers, themes or panels in one click, or a
-  pack from a GitHub link. You see every file first.
 
 **Helpers**
 - **Agents are files.** Each has a role, tools (the fewest it needs), a budget, skills and its own
   engine. Ask the Helper for a new one and approve it.
 - **Projects that ship.** A project is a chat, a git folder and a limit. Agents take turns, every run
   is committed, every reply shows what was done and what it cost.
-- **Start free, choose the AI per helper.** Free services (Google Gemini, Groq, OpenRouter, Cerebras,
-  Mistral) or local models run on Aura's own agent; Claude Code, Codex, Gemini CLI and OpenCode work
-  too, under your own login, for those who want them.
+- **Choose the AI per helper.** The built-in local AI, Ollama or LM Studio run on Aura's own agent;
+  Claude Code, Codex, Gemini CLI and OpenCode work too, under your own login.
 - **Memory and skills that improve.** Helpers keep notes between runs (you can read and delete all of
   them) and propose changes to their own know-how; you approve the diff.
 - **Alerts and reminders.** Monitoring webhooks wake the Helper for triage; recurring jobs run
   helpers on a schedule.
 
 **You stay in charge**
-- **Plain by default.** Words like "Helper" and "Alerts", not jargon; **advanced mode** shows the
-  technical side.
+- **Plain words, one view.** "Helper" and "Alerts", not jargon; all settings in one Settings app
+  with five tabs.
 - **Approvals for side effects.** New projects and helpers, skill changes, schedules, CSS, tool
   servers, extensions: each shows a card with exactly what will change.
 - **Safe by default.** Helpers stay in their folder, wake each other only by mention, stop at their
@@ -119,30 +116,18 @@ chats stay on your computer.
    From source you need [Bun](https://bun.sh) 1.4+ and the
    [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/).
 
-2. **Connect an AI.** The easiest way is a **free service**: Aura's first screen asks for it. Make a
-   free key on the service's site, paste it, and your helpers run. Nothing else to install.
+2. **Connect an AI.** Aura's first screen asks for it. The easiest way is the **built-in local AI**:
+   press **Set up the local AI**, pick a model that fits your computer and approve the download.
+   Aura installs llama.cpp and the model, checks their checksums, and runs it only on this computer.
 
-   | Service           | Where to make a key                                                | Notes                                        |
-   | ----------------- | ------------------------------------------------------------------ | -------------------------------------------- |
-   | Google Gemini     | [aistudio.google.com/apikey](https://aistudio.google.com/apikey)   | free, no card; prompts may be used by Google |
-   | Groq              | [console.groq.com/keys](https://console.groq.com/keys)             | free, very fast open models                  |
-   | OpenRouter        | [openrouter.ai/keys](https://openrouter.ai/keys)                   | many models; pick one marked `:free`         |
-   | Cerebras          | [cloud.cerebras.ai](https://cloud.cerebras.ai/)                    | free key; the plan's terms change            |
-   | Mistral           | [console.mistral.ai/api-keys](https://console.mistral.ai/api-keys) | free Experiment plan; may ask for a phone    |
-   | Built-in local AI | Helper programs: Aura installs llama.cpp and a model               | free and private; needs a capable machine    |
-   | Ollama, LM Studio | on your computer                                                   | free and private; needs a capable machine    |
-
-   Free plans have limits, and some use your prompts to improve their models: each card says so.
-
-   **Advanced:** already use an agent app? Claude Code, Codex, Gemini CLI and OpenCode work too, under
-   your own login (open **Helper programs** in advanced mode):
-
-   | Agent app   | Setup                                                             | Cost                |
-   | ----------- | ----------------------------------------------------------------- | ------------------- |
-   | Claude Code | `npm i -g @anthropic-ai/claude-code`, run `claude`, log in        | Claude plan or API  |
-   | Codex       | `npm i -g @openai/codex @zed-industries/codex-acp`, `codex login` | ChatGPT plan or API |
-   | Gemini CLI  | `npm i -g @google/gemini-cli`, run `gemini`, sign in with Google  | free tier           |
-   | OpenCode    | `npm i -g opencode-ai`, `opencode auth login`                     | depends on provider |
+   | Source            | Setup                                                             | Cost                |
+   | ----------------- | ----------------------------------------------------------------- | ------------------- |
+   | Built-in local AI | Settings → AI: Aura installs llama.cpp and a model                | free and private    |
+   | Ollama, LM Studio | on your computer, then Settings → AI                              | free and private    |
+   | Claude Code       | `npm i -g @anthropic-ai/claude-code`, run `claude`, log in        | Claude plan or API  |
+   | Codex             | `npm i -g @openai/codex @zed-industries/codex-acp`, `codex login` | ChatGPT plan or API |
+   | Gemini CLI        | `npm i -g @google/gemini-cli`, run `gemini`, sign in with Google  | free tier           |
+   | OpenCode          | `npm i -g opencode-ai`, `opencode auth login`                     | depends on provider |
 
 3. **Tell your Helper what you want**, in any language: _"make me an app to track clients and
    deals"_. Approve its plan, then open the new app from **My apps**.
@@ -162,8 +147,8 @@ models). Agent apps keep their own logins; Aura never reads them. API keys you p
 ## Status
 
 Proof of concept: the full loop works and is tested, with rough edges. Shell commands run in an OS
-sandbox where available (macOS; Linux with bubblewrap and socat); its status is on the Helper programs
-page. See the roadmap in [docs/SPEC.md](docs/SPEC.md) and what changed in [CHANGELOG.md](CHANGELOG.md).
+sandbox where available (macOS; Linux with bubblewrap and socat); it is on whenever your system
+has it. See the roadmap in [docs/SPEC.md](docs/SPEC.md) and what changed in [CHANGELOG.md](CHANGELOG.md).
 
 ## Development
 
