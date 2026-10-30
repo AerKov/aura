@@ -32,6 +32,8 @@ export interface AgentStatus {
   role: string;
   engine: { id: string; label: string; kind: "official" | "acp" | "aura"; status: ProviderStatus };
   model: string | null;
+  /** What the agent's profile itself chose; null = the default (ADR 0039). */
+  chosen: { engine: EngineId | null; model: string | null };
   tools: string[];
   /** Granted tools this engine does not provide. */
   unsupported: string[];
@@ -265,6 +267,7 @@ export class AgentSetupService {
       role: profile.role,
       engine: { id: engine, label: engineLabel(engine), kind, status },
       model,
+      chosen: { engine: profile.engine, model: profile.model },
       tools: profile.builtinTools,
       unsupported,
       env: own,

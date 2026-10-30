@@ -20,6 +20,7 @@ import { useT } from "@/features/localization/i18n";
 import { useAdvanced } from "@/features/shell/launcher";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { AgentAi } from "./agent-ai";
 import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
 import { MemoryCard, PromptCard } from "./prompt-card";
 import { AgentToolServers } from "./tool-servers";
@@ -168,6 +169,14 @@ function AgentCard({ handle }: { handle: string }) {
               {!ready && " · not ready"}
             </p>
           </div>
+        </div>
+        <div className="mt-4">
+          <AgentAi
+            handle={handle}
+            engine={status.chosen.engine}
+            model={status.chosen.model}
+            onSaved={() => void loadStatus(handle).then(apply).catch(reportError)}
+          />
         </div>
         {status.warnings.length > 0 && (
           <ul className="mt-4 space-y-1 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[13px]">
