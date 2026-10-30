@@ -39,7 +39,10 @@ export const enginesModule = ({ sessions, engines, agents, dataDir, toolBridge }
       { parse: "none" },
     )
     .use(authGuard(sessions))
-    .get("/engines", () => engines.list(), { auth: true })
+    .get("/engines", ({ query }) => engines.list(query.fresh === "1"), {
+      auth: true,
+      query: t.Object({ fresh: t.Optional(t.Literal("1")) }),
+    })
     .get(
       "/engines/:engine/models",
       async ({ params, status }) => {

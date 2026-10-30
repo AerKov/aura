@@ -11,7 +11,8 @@ import { LocalAiCard } from "./local-ai-card";
 type EnginesData = Awaited<ReturnType<typeof loadEngines>>;
 type Engine = EnginesData["engines"][number];
 
-const loadEngines = () => call(() => api.engines.get());
+const loadEngines = (fresh = false) =>
+  call(() => api.engines.get({ query: fresh ? { fresh: "1" } : {} }));
 
 /** The order of the page: models on this computer first, then agent apps you already use. */
 const GROUPS: { key: string; title: string; text: string; ids: EngineId[] }[] = [
@@ -46,10 +47,11 @@ export function EnginesView() {
   const [data, setData] = useState<EnginesData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const refresh = useCallback(async () => {
+  // `fresh` asks every engine again instead of the answers the server kept for a moment.
+  const refresh = useCallback(async (fresh = false) => {
     setRefreshing(true);
     try {
-      setData(await loadEngines());
+      setData(await loadEngines(fresh));
     } catch (error) {
       reportError(error);
     } finally {
@@ -78,7 +80,12 @@ export function EnginesView() {
         </PageHeader>
 
         <div className="mb-2 flex justify-end">
-          <Button size="sm" variant="ghost" disabled={refreshing} onClick={() => void refresh()}>
+          <Button
+            size="sm"
+            variant="ghost"
+            disabled={refreshing}
+            onClick={() => void refresh(true)}
+          >
             <RefreshCw className={refreshing ? "animate-spin" : ""} /> Check again
           </Button>
         </div>

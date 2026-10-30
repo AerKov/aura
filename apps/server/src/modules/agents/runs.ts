@@ -159,6 +159,21 @@ export class RunRepo {
     return this.spent("project = $value", projectId);
   }
 
+  /** What each project spent, from one query (projects without runs are left out). */
+  async spentByProjects(): Promise<Map<string, { usd: number; tokens: number }>> {
+    const [rows] = await this.db
+      .query<[{ project: unknown; usd: number; tokens: number }[]]>(
+        "SELECT project, math::sum(cost_usd) AS usd, math::sum(tokens_in + tokens_out) AS tokens FROM run WHERE project != NONE GROUP BY project",
+      )
+      .collect();
+    const out = new Map<string, { usd: number; tokens: number }>();
+    for (const row of rows ?? []) {
+      if (typeof row.project !== "string") continue;
+      out.set(row.project, { usd: Number(row.usd ?? 0), tokens: Number(row.tokens ?? 0) });
+    }
+    return out;
+  }
+
   private async spent(where: string, value: string): Promise<{ usd: number; tokens: number }> {
     const [rows] = await this.db
       .query<[{ usd: number; tokens: number }[]]>(

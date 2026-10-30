@@ -10,6 +10,9 @@ import { EngineStore, KEYED_ENGINES, type KeyedEngine } from "./settings";
 import type { ToolBridgeLike } from "./tool-bridge";
 
 /** What the runtime needs: the engine and model for an agent. */
+/** How long an engine's status is kept before it is checked again. */
+const STATUS_TTL_MS = 15_000;
+
 export interface EngineSelector {
   pick(profile: { engine: EngineId | null; model: string | null }): {
     engine: EngineId;
@@ -146,6 +149,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 export class EngineRegistry implements EngineSelector {
   readonly store: EngineStore;
+  private readonly statuses = new Map<EngineId, { at: number; value: Promise<ProviderStatus> }>();
   readonly localAi: LocalAiService;
   private readonly providers: Record<EngineId, LLMProvider>;
   private readonly fetch: typeof fetch;
@@ -169,6 +173,7 @@ export class EngineRegistry implements EngineSelector {
     },
   ) {
     this.store = new EngineStore(opts.dataDir);
+    this.store.onChange = () => this.forgetStatuses();
     this.fetch = opts.fetch ?? fetch;
     this.localAi = new LocalAiService({
       dataDir: opts.dataDir,
@@ -178,6 +183,7 @@ export class EngineRegistry implements EngineSelector {
       onInstalled: async (file) => {
         if (file) await this.useLocalModel(file);
       },
+      onChange: () => this.forgetStatuses(),
     });
     const settings = () => this.store.get();
     const acp = (id: keyof typeof ACP_AGENTS) =>
@@ -259,15 +265,35 @@ export class EngineRegistry implements EngineSelector {
     return { engine, provider: this.providers[engine], model };
   }
 
+  /**
+   * Whether an engine works now. Checks (a program on disk, a server, a key) can take seconds, so
+   * an answer is kept for a short while (ADR 0039); any change to engines forgets it, and `fresh`
+   * asks again.
+   */
+  status(id: EngineId, fresh = false): Promise<ProviderStatus> {
+    const kept = this.statuses.get(id);
+    if (!fresh && kept && Date.now() - kept.at < STATUS_TTL_MS) return kept.value;
+    const value = withTimeout(this.providers[id].isAvailable(), 25_000).catch(
+      (error: unknown): ProviderStatus => ({ ok: false, reason: errorMessage(error) }),
+    );
+    this.statuses.set(id, { at: Date.now(), value });
+    return value;
+  }
+
+  forgetStatuses(): void {
+    this.statuses.clear();
+  }
+
   defaultStatus(): Promise<ProviderStatus> {
-    return this.providers[this.store.get().default].isAvailable();
+    return this.status(this.store.get().default);
   }
 
   resetStatus(): void {
     this.opts.claude.resetStatus?.();
+    this.forgetStatuses();
   }
 
-  async list(): Promise<{
+  async list(fresh = false): Promise<{
     default: EngineId;
     engines: EngineInfo[];
     memory: ReturnType<EngineStore["get"]>["memory"];
@@ -277,9 +303,7 @@ export class EngineRegistry implements EngineSelector {
     const engines = await Promise.all(
       ENGINE_IDS.map(async (id): Promise<EngineInfo> => {
         const d = DESCRIPTIONS[id];
-        const status = await withTimeout(this.providers[id].isAvailable(), 25_000).catch(
-          (error: unknown): ProviderStatus => ({ ok: false, reason: errorMessage(error) }),
-        );
+        const status = await this.status(id, fresh);
         const keyed = (KEYED_ENGINES as readonly string[]).includes(id);
         return {
           id,
@@ -368,10 +392,7 @@ export class EngineRegistry implements EngineSelector {
   async useLocalModel(file: string): Promise<void> {
     const settings = this.store.get();
     const currentWorks =
-      settings.default !== "llama-cpp" &&
-      (await withTimeout(this.providers[settings.default].isAvailable(), 25_000)
-        .then((s) => s.ok)
-        .catch(() => false));
+      settings.default !== "llama-cpp" && (await this.status(settings.default).then((s) => s.ok));
     await this.store.update({
       models: { "llama-cpp": file },
       ...(currentWorks ? {} : { default: "llama-cpp" }),

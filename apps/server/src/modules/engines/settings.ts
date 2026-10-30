@@ -125,9 +125,13 @@ export class EngineStore {
     return join(this.dataDir, "engines.json");
   }
 
+  /** Called after settings or a key change (the registry forgets engine statuses). */
+  onChange: (() => void) | null = null;
+
   /** Drops the cached settings, so the file is read again (a restore point put it back). */
   reload(): void {
     this.cached = null;
+    this.onChange?.();
   }
 
   get(): EngineSettings {
@@ -168,6 +172,7 @@ export class EngineStore {
     if (patch.summaries !== undefined) next.summaries = patch.summaries;
     writeFileSync(this.file, `${JSON.stringify(next, null, 2)}\n`);
     this.cached = next;
+    this.onChange?.();
     await commitAll(this.dataDir, "chore(engines): update engine settings");
     return next;
   }
@@ -179,6 +184,7 @@ export class EngineStore {
   /** Stores a key in the one secret store (ADR 0039). It never leaves the server. */
   setKey(engine: KeyedEngine, key: string | null): void {
     this.vault.setEngineKey(engine, key ? key.trim() : null);
+    this.onChange?.();
     log.info("engine key updated", { engine, set: Boolean(key) });
   }
 }

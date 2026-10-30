@@ -598,60 +598,11 @@ function frameHtml(
   return `<!doctype html>
 <html lang="${language}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(info.name)}</title>
-<style>
-:root { color-scheme: light dark; font-family: system-ui, sans-serif; font-size: 14px; }
-body { margin: 0; padding: 12px; background: transparent; color: var(--foreground, CanvasText); }
-.aura-form { display: flex; flex-direction: column; gap: 10px; }
-.aura-form h3 { margin: 0; font-size: 15px; }
-.aura-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted-foreground, GrayText); }
-.aura-form label.aura-check { flex-direction: row; align-items: center; gap: 6px; }
-.aura-form input:not([type=checkbox]), .aura-form textarea, .aura-form select {
-  font: inherit; font-size: 14px; color: var(--foreground, CanvasText); background: var(--background, Canvas);
-  border: 1px solid var(--border, GrayText); border-radius: calc(var(--radius, 8px) - 2px); padding: 6px 8px;
-}
-.aura-form textarea { min-height: 72px; resize: vertical; }
-.aura-button {
-  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; align-self: flex-start;
-  color: var(--primary-foreground, Canvas); background: var(--primary, AccentColor);
-  border: 0; border-radius: calc(var(--radius, 8px) - 2px); padding: 6px 12px;
-}
-.aura-button:disabled { opacity: .6; cursor: default; }
-.aura-kit-card { background: var(--card, Canvas); border: 1px solid var(--border, GrayText); border-radius: var(--radius, 10px); padding: 12px; margin-bottom: 12px; }
-.aura-kit-muted { color: var(--muted-foreground, GrayText); font-size: 12px; }
-.aura-kit-bar { display: flex; gap: 8px; margin-bottom: 8px; }
-.aura-kit-search { flex: 1; font: inherit; color: inherit; background: var(--background, Canvas); border: 1px solid var(--border, GrayText); border-radius: calc(var(--radius, 8px) - 2px); padding: 5px 8px; }
-.aura-kit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.aura-kit-table th { text-align: left; font-weight: 500; color: var(--muted-foreground, GrayText); cursor: pointer; padding: 6px; border-bottom: 1px solid var(--border, GrayText); white-space: nowrap; }
-.aura-kit-table td { padding: 6px; border-bottom: 1px solid var(--border, GrayText); vertical-align: top; }
-.aura-kit-actions { text-align: right; white-space: nowrap; }
-.aura-kit-link { font: inherit; font-size: 12px; background: none; border: 0; color: var(--primary, LinkText); cursor: pointer; padding: 0 4px; }
-.aura-kit-danger { color: #e11d48; }
-.aura-kit-board { display: flex; gap: 10px; overflow-x: auto; align-items: flex-start; }
-.aura-kit-column { flex: 0 0 220px; background: var(--muted, Canvas); border-radius: var(--radius, 10px); padding: 8px; min-height: 80px; }
-.aura-kit-column.aura-kit-over { outline: 2px dashed var(--primary, AccentColor); }
-.aura-kit-column-title { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--muted-foreground, GrayText); }
-.aura-kit-item { background: var(--card, Canvas); border: 1px solid var(--border, GrayText); border-radius: calc(var(--radius, 8px) - 2px); padding: 8px; margin-bottom: 6px; cursor: grab; }
-.aura-kit-item-title { font-weight: 600; font-size: 13px; }
-.aura-kit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
-.aura-kit-tile { margin: 0; }
-.aura-kit-body { margin: 6px 0; font-size: 13px; white-space: pre-wrap; }
-.aura-kit-tag { display: inline-block; font-size: 11px; border: 1px solid var(--border, GrayText); border-radius: 999px; padding: 1px 8px; margin-right: 6px; }
-.aura-kit-chart-row { display: grid; grid-template-columns: 110px 1fr auto; gap: 8px; align-items: center; margin: 4px 0; font-size: 12px; }
-.aura-kit-chart-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.aura-kit-chart-bar { height: 10px; border-radius: 999px; background: var(--primary, AccentColor); }
-.aura-kit-stat { min-width: 120px; flex: 1; }
-.aura-kit-stat-value { font-size: 24px; font-weight: 600; }
-.aura-kit-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.aura-kit-row > * { flex: 1; }
-.aura-kit-tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--border, GrayText); }
-.aura-kit-tab { font: inherit; font-size: 13px; background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 10px; cursor: pointer; color: var(--muted-foreground, GrayText); }
-.aura-kit-tab.aura-kit-active { color: var(--foreground, CanvasText); border-bottom-color: var(--primary, AccentColor); }
-</style>
+${FRAME_STYLE}
 ${css.map((l) => `<style>${inert(l.source)}</style>`).join("\n")}
 <style>${inert(styles)}</style>
 <script>window.__auraFrame = ${inert(JSON.stringify({ language, libraries: modules }))};</script>
-<script>${inert(KIT)}</script>
-<script>${inert(BRIDGE)}</script>
+${FRAME_RUNTIME}
 ${scripts.map((l) => `<script>${inert(l.source)}</script>`).join("\n")}
 </head><body><div id="root"></div>
 <script type="module">
@@ -907,3 +858,58 @@ const BRIDGE = `(() => {
 
 export const FRAME_CSP =
   "default-src 'none'; script-src 'unsafe-inline' blob:; style-src 'unsafe-inline'; img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'";
+
+/**
+ * What every frame gets, built once (ADR 0039): the base styles, the kit and the bridge. Only the
+ * app's own code, styles and libraries differ from frame to frame.
+ */
+const FRAME_STYLE = `<style>
+:root { color-scheme: light dark; font-family: system-ui, sans-serif; font-size: 14px; }
+body { margin: 0; padding: 12px; background: transparent; color: var(--foreground, CanvasText); }
+.aura-form { display: flex; flex-direction: column; gap: 10px; }
+.aura-form h3 { margin: 0; font-size: 15px; }
+.aura-form label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted-foreground, GrayText); }
+.aura-form label.aura-check { flex-direction: row; align-items: center; gap: 6px; }
+.aura-form input:not([type=checkbox]), .aura-form textarea, .aura-form select {
+  font: inherit; font-size: 14px; color: var(--foreground, CanvasText); background: var(--background, Canvas);
+  border: 1px solid var(--border, GrayText); border-radius: calc(var(--radius, 8px) - 2px); padding: 6px 8px;
+}
+.aura-form textarea { min-height: 72px; resize: vertical; }
+.aura-button {
+  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer; align-self: flex-start;
+  color: var(--primary-foreground, Canvas); background: var(--primary, AccentColor);
+  border: 0; border-radius: calc(var(--radius, 8px) - 2px); padding: 6px 12px;
+}
+.aura-button:disabled { opacity: .6; cursor: default; }
+.aura-kit-card { background: var(--card, Canvas); border: 1px solid var(--border, GrayText); border-radius: var(--radius, 10px); padding: 12px; margin-bottom: 12px; }
+.aura-kit-muted { color: var(--muted-foreground, GrayText); font-size: 12px; }
+.aura-kit-bar { display: flex; gap: 8px; margin-bottom: 8px; }
+.aura-kit-search { flex: 1; font: inherit; color: inherit; background: var(--background, Canvas); border: 1px solid var(--border, GrayText); border-radius: calc(var(--radius, 8px) - 2px); padding: 5px 8px; }
+.aura-kit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.aura-kit-table th { text-align: left; font-weight: 500; color: var(--muted-foreground, GrayText); cursor: pointer; padding: 6px; border-bottom: 1px solid var(--border, GrayText); white-space: nowrap; }
+.aura-kit-table td { padding: 6px; border-bottom: 1px solid var(--border, GrayText); vertical-align: top; }
+.aura-kit-actions { text-align: right; white-space: nowrap; }
+.aura-kit-link { font: inherit; font-size: 12px; background: none; border: 0; color: var(--primary, LinkText); cursor: pointer; padding: 0 4px; }
+.aura-kit-danger { color: #e11d48; }
+.aura-kit-board { display: flex; gap: 10px; overflow-x: auto; align-items: flex-start; }
+.aura-kit-column { flex: 0 0 220px; background: var(--muted, Canvas); border-radius: var(--radius, 10px); padding: 8px; min-height: 80px; }
+.aura-kit-column.aura-kit-over { outline: 2px dashed var(--primary, AccentColor); }
+.aura-kit-column-title { font-size: 12px; font-weight: 600; margin-bottom: 6px; color: var(--muted-foreground, GrayText); }
+.aura-kit-item { background: var(--card, Canvas); border: 1px solid var(--border, GrayText); border-radius: calc(var(--radius, 8px) - 2px); padding: 8px; margin-bottom: 6px; cursor: grab; }
+.aura-kit-item-title { font-weight: 600; font-size: 13px; }
+.aura-kit-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.aura-kit-tile { margin: 0; }
+.aura-kit-body { margin: 6px 0; font-size: 13px; white-space: pre-wrap; }
+.aura-kit-tag { display: inline-block; font-size: 11px; border: 1px solid var(--border, GrayText); border-radius: 999px; padding: 1px 8px; margin-right: 6px; }
+.aura-kit-chart-row { display: grid; grid-template-columns: 110px 1fr auto; gap: 8px; align-items: center; margin: 4px 0; font-size: 12px; }
+.aura-kit-chart-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.aura-kit-chart-bar { height: 10px; border-radius: 999px; background: var(--primary, AccentColor); }
+.aura-kit-stat { min-width: 120px; flex: 1; }
+.aura-kit-stat-value { font-size: 24px; font-weight: 600; }
+.aura-kit-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.aura-kit-row > * { flex: 1; }
+.aura-kit-tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--border, GrayText); }
+.aura-kit-tab { font: inherit; font-size: 13px; background: none; border: 0; border-bottom: 2px solid transparent; padding: 6px 10px; cursor: pointer; color: var(--muted-foreground, GrayText); }
+.aura-kit-tab.aura-kit-active { color: var(--foreground, CanvasText); border-bottom-color: var(--primary, AccentColor); }
+</style>`;
+const FRAME_RUNTIME = `<script>${inert(KIT)}</script>\n<script>${inert(BRIDGE)}</script>`;

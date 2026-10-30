@@ -82,6 +82,22 @@ describe("agent engines", () => {
     expect((await api.engines({ engine: "ollama" }).key.put({ key: KEY })).status).toBe(422);
   });
 
+  test("engine statuses are kept for a moment; a change or Check again asks anew", async () => {
+    const net = fakeNetwork();
+    t = await createTestApp({ fetch: net.fetchFn });
+    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
+    const asked = () => net.calls.filter((c) => c.url.endsWith("/api/tags")).length;
+    await api.engines.get();
+    await api.engines.get();
+    expect(asked()).toBe(1);
+    await api.engines.get({ query: { fresh: "1" } });
+    expect(asked()).toBe(2);
+    await api.engines.settings.put({ ollamaBaseUrl: "http://127.0.0.1:11434" });
+    expect(asked()).toBe(3);
+    await api.engines.get();
+    expect(asked()).toBe(3);
+  });
+
   test("settings switch the default engine; agents run on it with its model", async () => {
     const net = fakeNetwork();
     t = await createTestApp({ fetch: net.fetchFn });

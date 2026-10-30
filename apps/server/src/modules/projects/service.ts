@@ -70,6 +70,8 @@ export function validBudget(input: { usd?: number | null; tokens?: number | null
 }
 
 type Row = Record<string, unknown>;
+type Spent = { usd: number; tokens: number };
+const ZERO: Spent = { usd: 0, tokens: 0 };
 
 /** Projects: a group chat, a git workspace and a budget (docs/SPEC.md section 2). */
 export class ProjectService {
@@ -102,7 +104,11 @@ export class ProjectService {
     const [rows] = await this.deps.db
       .query<[Row[]]>("SELECT * FROM project ORDER BY created_at DESC")
       .collect();
-    return Promise.all((rows ?? []).map((row) => this.toProject(row)));
+    // What every project spent, in one query instead of one per project (ADR 0039).
+    const spent = await this.deps.runs.spentByProjects();
+    return Promise.all(
+      (rows ?? []).map((row) => this.toProject(row, spent.get(keyOf(row.id)) ?? ZERO)),
+    );
   }
 
   /**
@@ -289,9 +295,9 @@ export class ProjectService {
     return project;
   }
 
-  private async toProject(row: Row): Promise<ProjectInfo> {
+  private async toProject(row: Row, known?: Spent): Promise<ProjectInfo> {
     const id = keyOf(row.id);
-    const spent = await this.deps.runs.spentByProject(id);
+    const spent = known ?? (await this.deps.runs.spentByProject(id));
     return {
       id,
       name: String(row.name),
