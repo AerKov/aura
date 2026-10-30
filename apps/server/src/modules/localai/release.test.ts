@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { chooseFile } from "./huggingface";
-import { parseRelease, pickAsset, variantsFor } from "./release";
+import { listBuilds, parseRelease, pickAsset, variantsFor } from "./release";
 
 const URL = "https://github.com/ggml-org/llama.cpp/releases/download/b9999";
 const asset = (name: string, extra: Record<string, unknown> = {}) => ({
@@ -53,6 +53,38 @@ describe("llama.cpp releases (ADR 0038)", () => {
     // No such build in this release.
     expect(name("linux", "arm64", "cpu")).toBeUndefined();
     expect(name("freebsd", "x64", "cpu")).toBeUndefined();
+  });
+
+  test("other spellings of a system are understood, and every archive is listed", () => {
+    const other = parseRelease({
+      tag_name: "b10000",
+      assets: [
+        asset("llama-b10000-bin-linux-x86_64.tar.gz"),
+        asset("llama-b10000-bin-linux-x86_64-vulkan.tar.gz"),
+        asset("llama-b10000-bin-windows-amd64-cpu.zip"),
+        asset("llama-b10000-bin-linux-aarch64.tar.gz"),
+        asset("cudart-llama-bin-win-cuda-12.4-x64.zip"),
+      ],
+    });
+    expect(pickAsset(other.assets, "linux", "x64", "cpu")?.name).toBe(
+      "llama-b10000-bin-linux-x86_64.tar.gz",
+    );
+    expect(pickAsset(other.assets, "linux", "x64", "vulkan")?.name).toBe(
+      "llama-b10000-bin-linux-x86_64-vulkan.tar.gz",
+    );
+    expect(pickAsset(other.assets, "win32", "x64", "cpu")?.name).toBe(
+      "llama-b10000-bin-windows-amd64-cpu.zip",
+    );
+    expect(pickAsset(other.assets, "linux", "arm64", "cpu")?.name).toBe(
+      "llama-b10000-bin-linux-aarch64.tar.gz",
+    );
+    const builds = listBuilds(other.assets);
+    expect(builds.map((b) => [b.os, b.arch, b.variant])).toEqual([
+      ["linux", "x64", "cpu"],
+      ["linux", "x64", "vulkan"],
+      ["win32", "x64", "cpu"],
+      ["linux", "arm64", "cpu"],
+    ]);
   });
 
   test("a model file is chosen by quantization, never a shard or a projector", () => {

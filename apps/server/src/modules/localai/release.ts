@@ -67,8 +67,53 @@ export function variantsFor(platform: string, arch: string): Variant[] {
   return arch === "x64" ? ["vulkan", "cpu"] : ["cpu"];
 }
 
-const OS_TOKEN: Record<string, string> = { darwin: "macos", linux: "ubuntu", win32: "win" };
-const OTHER_BACKENDS = /(vulkan|cuda|rocm|hip|sycl|opencl|openvino|kompute|cudart)/i;
+/** Words in release file names, as llama.cpp has spelled them over time. */
+const OS_WORDS: Record<string, string[]> = {
+  darwin: ["macos", "mac", "osx", "darwin", "apple"],
+  linux: ["ubuntu", "linux"],
+  win32: ["win", "windows"],
+};
+const ARCH_WORDS: Record<string, string[]> = {
+  x64: ["x64", "x86_64", "amd64", "x86-64"],
+  arm64: ["arm64", "aarch64"],
+};
+const GPU_WORDS = [
+  "vulkan",
+  "cuda",
+  "rocm",
+  "hip",
+  "sycl",
+  "opencl",
+  "openvino",
+  "kompute",
+  "musa",
+];
+
+/** What a release file is for, read from its name; null when it is not a program archive. */
+export interface Build extends ReleaseAsset {
+  os: string | null;
+  arch: string | null;
+  /** "cpu", "metal", or the GPU backend in its name. */
+  variant: string;
+}
+
+export function describeAsset(asset: ReleaseAsset): Build | null {
+  const name = asset.name.toLowerCase();
+  if (!/\.(tar\.gz|tgz|zip)$/.test(name) || !name.startsWith("llama")) return null;
+  if (/(cudart|xcframework|source|src\b)/.test(name)) return null;
+  const words = name.replace(/\.(tar\.gz|tgz|zip)$/, "").split(/[-_.]+/);
+  const joined = `-${words.join("-")}-`;
+  const has = (w: string) => joined.includes(`-${w}-`) || (w.includes("_") && name.includes(w));
+  const os = Object.keys(OS_WORDS).find((k) => (OS_WORDS[k] ?? []).some(has)) ?? null;
+  const arch = Object.keys(ARCH_WORDS).find((k) => (ARCH_WORDS[k] ?? []).some(has)) ?? null;
+  const gpu = GPU_WORDS.find((w) => words.some((x) => x.startsWith(w)));
+  return { ...asset, os, arch, variant: gpu ?? (os === "darwin" ? "metal" : "cpu") };
+}
+
+/** Every program archive of a release, for the user to choose from when the guess fails. */
+export function listBuilds(assets: ReleaseAsset[]): Build[] {
+  return assets.map(describeAsset).filter((b): b is Build => b !== null);
+}
 
 /** The archive of a build for this system, or null when the release has none. */
 export function pickAsset(
@@ -77,14 +122,13 @@ export function pickAsset(
   arch: string,
   variant: Variant,
 ): ReleaseAsset | null {
-  const os = OS_TOKEN[platform];
-  if (!os) return null;
   const cpuArch = arch === "arm64" ? "arm64" : "x64";
-  const found = assets.filter((a) => {
-    if (!/^llama-.*-bin-.*\.(tar\.gz|zip)$/.test(a.name)) return false;
-    if (!a.name.includes(`-bin-${os}-`)) return false;
-    if (!new RegExp(`-${cpuArch}\\.(tar\\.gz|zip)$`).test(a.name)) return false;
-    return variant === "vulkan" ? /vulkan/i.test(a.name) : !OTHER_BACKENDS.test(a.name);
+  const found = listBuilds(assets).filter((b) => {
+    if (b.os !== platform || b.arch !== cpuArch) return false;
+    if (variant === "vulkan") return b.variant === "vulkan";
+    return b.variant === "cpu" || b.variant === "metal";
   });
-  return found.sort((a, b) => a.name.length - b.name.length)[0] ?? null;
+  // The plainest name wins: "ubuntu-x64" over "ubuntu-x64-noavx" and the like.
+  const best = found.sort((a, b) => a.name.length - b.name.length)[0];
+  return best ? { name: best.name, size: best.size, url: best.url, sha256: best.sha256 } : null;
 }

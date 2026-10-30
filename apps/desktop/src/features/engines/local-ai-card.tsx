@@ -7,6 +7,9 @@ import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
+const loadBuilds = () => call(() => api["local-ai"].builds.get());
+type Builds = Awaited<ReturnType<typeof loadBuilds>>;
+
 /**
  * The built-in local AI (ADR 0038): Aura installs llama.cpp and downloads a model that fits this
  * computer, after a card says exactly what will come and from where. Progress is shown here.
@@ -25,6 +28,9 @@ export function LocalAiCard({
   const [plan, setPlan] = useState<{ id: string; plan: LocalPlan } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // The llama.cpp builds of the latest release, loaded when the user wants to choose one.
+  const [builds, setBuilds] = useState<Builds | null>(null);
+  const [asset, setAsset] = useState("");
 
   const refresh = useCallback(async () => {
     try {
@@ -64,11 +70,22 @@ export function LocalAiCard({
     setBusy(true);
     setError(null);
     try {
-      setPlan(await call(() => api["local-ai"].plan.post({ model })));
+      setPlan(await call(() => api["local-ai"].plan.post({ model, asset: asset || null })));
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
+      // Auto-detection may fail on an unusual system: offer the list of builds right away.
+      if (!status?.installed && !builds) void chooseBuild();
     } finally {
       setBusy(false);
+    }
+  };
+  const chooseBuild = async () => {
+    try {
+      const next = await loadBuilds();
+      setBuilds(next);
+      setAsset((a) => a || next.suggested || "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
     }
   };
   const approve = async () => {
@@ -260,6 +277,36 @@ export function LocalAiCard({
               onChange={(e) => setCustom(e.target.value)}
             />
           </label>
+          {!status.installed &&
+            (builds ? (
+              <label className="block">
+                <span className="kicker mb-1 block">
+                  {t("llama.cpp build ({tag})", { tag: builds.tag })}
+                </span>
+                <select
+                  className="bg-input-bg border-input focus:border-ring w-full border px-3 py-2 font-mono text-[12.5px] outline-none"
+                  value={asset}
+                  onChange={(e) => setAsset(e.target.value)}
+                >
+                  <option value="">{t("Choose automatically")}</option>
+                  {builds.builds.map((b) => (
+                    <option key={b.name} value={b.name}>
+                      {b.name} · {b.os}/{b.arch}/{b.variant} · {formatBytes(b.size)}
+                      {b.sha256 ? "" : ` · ${t("no checksum")}`}
+                      {b.name === builds.suggested ? ` · ${t("recommended")}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground justify-self-start text-[12.5px] underline-offset-2 hover:underline"
+                onClick={() => void chooseBuild()}
+              >
+                {t("Choose the llama.cpp build yourself")}
+              </button>
+            ))}
           {error && <p className="text-destructive text-[13px]">{error}</p>}
           <div className="flex flex-wrap gap-2">
             <Button disabled={busy || !pick} onClick={() => void makePlan(pick)}>

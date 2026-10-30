@@ -35,7 +35,7 @@ export const localAiModule = ({ sessions, engines }: LocalAiDeps) =>
             error: "Choose a model from the list, or a Hugging Face repository like owner/name",
           });
         try {
-          return await engines.localAi.plan(spec);
+          return await engines.localAi.plan(spec, body.asset ?? null);
         } catch (error) {
           if (
             error instanceof LocalAiError ||
@@ -46,7 +46,26 @@ export const localAiModule = ({ sessions, engines }: LocalAiDeps) =>
           throw error;
         }
       },
-      { auth: true, body: t.Object({ model: t.Nullable(t.String({ maxLength: 160 })) }) },
+      {
+        auth: true,
+        body: t.Object({
+          model: t.Nullable(t.String({ maxLength: 160 })),
+          /** A build chosen by the user from GET /local-ai/builds. */
+          asset: t.Optional(t.Nullable(t.String({ maxLength: 200 }))),
+        }),
+      },
+    )
+    .get(
+      "/local-ai/builds",
+      async ({ status }) => {
+        try {
+          return await engines.localAi.builds();
+        } catch (error) {
+          if (error instanceof ReleaseError) return status(400, { error: error.message });
+          throw error;
+        }
+      },
+      { auth: true },
     )
     .post(
       "/local-ai/install",

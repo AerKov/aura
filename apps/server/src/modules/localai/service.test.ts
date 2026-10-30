@@ -192,6 +192,18 @@ describe("built-in llama.cpp (ADR 0038)", () => {
     expect((await api["local-ai"].delete()).data).toMatchObject({ installed: null });
   });
 
+  test("the user can choose the build; one for another system is refused", async () => {
+    const { api } = await setup();
+    const builds = (await api["local-ai"].builds.get()).data;
+    expect(builds).toMatchObject({ tag: TAG, suggested: "llama-b9999-bin-ubuntu-x64.tar.gz" });
+    const chosen = await api["local-ai"].plan.post({
+      model: null,
+      asset: "llama-b9999-bin-ubuntu-x64.tar.gz",
+    });
+    expect(chosen.status).toBe(200);
+    expect((await api["local-ai"].plan.post({ model: null, asset: "nope.zip" })).status).toBe(400);
+  });
+
   test("an unknown repository is said plainly", async () => {
     const { api } = await setup();
     const res = await api["local-ai"].plan.post({ model: "nobody/nothing" });

@@ -21,7 +21,9 @@ import { downloadFile } from "./download";
 import { extractArchive, findServer } from "./extract";
 import { type ModelFile, resolveModel } from "./huggingface";
 import {
+  type Build,
   fetchLatestRelease,
+  listBuilds,
   pickAsset,
   type Release,
   type ReleaseAsset,
@@ -179,19 +181,29 @@ export class LocalAiService {
    */
   async plan(
     model: { repo: string; quant: string } | null,
+    /** A build the user chose from `builds()`; by default the one that fits this system. */
+    assetName: string | null = null,
   ): Promise<{ id: string; plan: LocalPlan }> {
     if (this.job.phase === "binary" || this.job.phase === "model")
       throw new LocalAiError("An installation is already running");
     let binary: LocalPlan["binary"] = null;
-    if (!this.installed()) {
+    if (!this.installed() || assetName) {
       const release = await this.latest();
-      const variant = variantsFor(this.platform, this.arch)[0];
-      const asset = variant ? pickAsset(release.assets, this.platform, this.arch, variant) : null;
-      const fallback = pickAsset(release.assets, this.platform, this.arch, "cpu");
-      const chosen = asset ?? fallback;
+      let chosen: ReleaseAsset | null;
+      if (assetName) {
+        const build = listBuilds(release.assets).find((b) => b.name === assetName);
+        if (!build) throw new LocalAiError(`The release ${release.tag} has no file ${assetName}`);
+        if (build.os && build.os !== this.platform)
+          throw new LocalAiError(`${assetName} is a build for ${build.os}, not for this computer`);
+        chosen = build;
+      } else {
+        const variant = variantsFor(this.platform, this.arch)[0];
+        const asset = variant ? pickAsset(release.assets, this.platform, this.arch, variant) : null;
+        chosen = asset ?? pickAsset(release.assets, this.platform, this.arch, "cpu");
+      }
       if (!chosen)
         throw new LocalAiError(
-          `This llama.cpp release has no build for ${this.platform}/${this.arch}`,
+          `Aura could not tell which build of llama.cpp ${release.tag} is for ${this.platform}/${this.arch}. Choose one from the list.`,
         );
       if (!chosen.sha256)
         throw new LocalAiError(
@@ -241,6 +253,20 @@ export class LocalAiService {
     } catch {
       return null;
     }
+  }
+
+  /** The program archives of the latest release, and the one Aura would pick for this system. */
+  async builds(): Promise<{ tag: string; suggested: string | null; builds: Build[] }> {
+    const release = await this.latest();
+    const variant = variantsFor(this.platform, this.arch)[0];
+    const suggested =
+      (variant && pickAsset(release.assets, this.platform, this.arch, variant)) ||
+      pickAsset(release.assets, this.platform, this.arch, "cpu");
+    return {
+      tag: release.tag,
+      suggested: suggested?.name ?? null,
+      builds: listBuilds(release.assets),
+    };
   }
 
   /** Runs an approved plan in the background; progress is in `status().job`. */
