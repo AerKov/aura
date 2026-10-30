@@ -2,7 +2,6 @@ import type { AlertCard as AlertCardData } from "@aura/shared";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/features/localization/i18n";
-import { useAdvanced } from "@/features/shell/launcher";
 import { cn } from "@/lib/utils";
 
 const SEVERITY = {
@@ -13,12 +12,11 @@ const SEVERITY = {
 
 /**
  * An alert from monitoring or an app (ADR 0034): a severity bar, how urgent in plain words, the
- * source and how often it repeated. Its raw payload is external data, shown as text in advanced
+ * source and how often it repeated. Its raw payload is external data, shown as text on
  * mode only.
  */
 export function AlertCard({ card }: { card: AlertCardData }) {
   const t = useT();
-  const advanced = useAdvanced();
   const [open, setOpen] = useState(false);
   const severity = SEVERITY[card.severity];
   const at = new Date(card.lastAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -46,7 +44,7 @@ export function AlertCard({ card }: { card: AlertCardData }) {
         </div>
         <span className="text-[15px] font-medium">{card.title}</span>
         {card.summary && <p className="text-sm break-words">{card.summary}</p>}
-        {advanced && (
+        {
           <Button
             variant="ghost"
             size="sm"
@@ -56,7 +54,7 @@ export function AlertCard({ card }: { card: AlertCardData }) {
           >
             {open ? t("Hide details") : t("Technical details")}
           </Button>
-        )}
+        }
         {open && (
           <pre className="bg-background max-h-60 overflow-auto border p-2 font-mono text-xs whitespace-pre-wrap">
             {card.raw}

@@ -7,7 +7,7 @@ import { setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";
 import { openEntry } from "./apps";
-import { closeMenus, type Entry, setAdvanced, useAdvanced, useLauncher } from "./launcher";
+import { closeMenus, type Entry, useLauncher } from "./launcher";
 
 const WELCOMED_KEY = "aura.menu.welcomed";
 
@@ -36,7 +36,6 @@ export function AppRow({
       onClick={(e) => onOpen(e.shiftKey)}
       className={cn(
         "flex min-w-0 items-center gap-2.5 px-2 py-1.5 text-left transition-colors duration-150 hover:bg-foreground/[0.06]",
-        entry.off && "opacity-45",
         highlighted && "outline-ring outline-2 -outline-offset-2",
       )}
     >
@@ -62,9 +61,8 @@ export function StartMenu() {
   const [query, setQuery] = useState("");
   const [welcomed, setWelcomed] = useState(wasWelcomed);
   const groups = useLauncher(query);
-  const advanced = useAdvanced();
   const search = useRef<HTMLInputElement>(null);
-  const first = groups[0]?.entries.find((e) => !e.off);
+  const first = groups[0]?.entries[0];
 
   useEffect(() => {
     if (!open) return;
@@ -79,7 +77,6 @@ export function StartMenu() {
 
   if (!open) return null;
   const launch = (entry: Entry, shift: boolean) => {
-    if (entry.off) return;
     closeMenus();
     openEntry(entry.key, entry.app, shift ? "right" : "here");
   };
@@ -190,14 +187,6 @@ export function StartMenu() {
           )}
         </div>
         <div className="text-muted-foreground flex flex-wrap items-center gap-3.5 border-t px-4 py-2.5 text-xs">
-          <span className="flex items-center gap-2">
-            <Switch
-              checked={advanced}
-              label={t("Advanced mode")}
-              onChange={(next) => void setAdvanced(next).catch(reportError)}
-            />
-            <span className="text-foreground text-[13px]">{t("Advanced mode")}</span>
-          </span>
           <span className="ml-auto">{t("Enter: open · Esc: close")}</span>
         </div>
       </aside>

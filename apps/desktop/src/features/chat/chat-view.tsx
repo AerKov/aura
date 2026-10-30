@@ -10,7 +10,6 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/features/localization/i18n";
 import { useExtensionApps } from "@/features/shell/apps";
-import { useAdvanced } from "@/features/shell/launcher";
 import { closeAppRef, openAppRef } from "@/features/shell/layout";
 import {
   loadMembers,
@@ -94,7 +93,6 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
       ),
     [agentList, t],
   );
-  const advanced = useAdvanced();
 
   // Nothing opens by itself next to a chat (ADR 0027): the user opens the app when they want it.
   useEffect(() => {
@@ -217,9 +215,9 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
                 </div>
               )}
               {chat.kind === "group" && <TeamButton chatId={chatId} />}
-              {chat.kind === "system" && advanced && <WebhookInfo />}
+              {chat.kind === "system" && <WebhookInfo />}
               {project && <BudgetButton project={project} />}
-              {summary && advanced && (
+              {summary && (
                 <Button
                   variant={panel === "summary" ? "secondary" : "ghost"}
                   size="sm"

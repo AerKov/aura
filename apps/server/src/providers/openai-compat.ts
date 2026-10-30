@@ -12,7 +12,7 @@ import type {
 } from "./types";
 
 /**
- * Aura's own agent loop (ADR 0011) over an OpenAI-compatible chat completions API: OpenRouter,
+ * Aura's own agent loop (ADR 0011) over an OpenAI-compatible chat completions API: the built-in llama.cpp,
  * Ollama, LM Studio, vLLM and others. The model streams text and tool calls; the loop runs the
  * tools in-process (built-in file/shell/web tools and the app's tools) until the model answers
  * without calling a tool, or a turn or budget limit stops it.
@@ -21,7 +21,7 @@ export interface OpenAICompatOptions {
   id: string;
   /** Shown in messages; a function because the user can rename a custom server. */
   label: string | (() => string);
-  /** Base URL that ends before `/chat/completions`, e.g. `https://openrouter.ai/api/v1`. */
+  /** Base URL that ends before `/chat/completions`, e.g. `http://127.0.0.1:1234/v1`. */
   baseUrl: () => string;
   apiKey?: () => string | null;
   /** Cloud services refuse requests without a key; local servers do not need one. */

@@ -28,11 +28,21 @@ export const UK: Record<string, string> = {
   "Claude Code, Codex, Ollama…": "Claude Code, Codex, Ollama…",
   Essentials: "Основне",
   Settings: "Налаштування",
+  History: "Історія",
+  "Real money only on paid APIs (an OpenAI-compatible API).":
+    "Справжні гроші лише на платних API (OpenAI-сумісний API).",
+  "Your helpers need an AI to think with. The easiest way is the built-in local AI: Aura installs it and a model that fits this computer.":
+    "Помічникам потрібен ШІ, щоб думати. Найпростіше — вбудований локальний ШІ: Aura встановить його й модель, що підходить цьому комп'ютеру.",
+  "Set up the local AI": "Налаштувати локальний ШІ",
+  "I already use an agent app (Claude Code, Codex…) or Ollama":
+    "Я вже користуюся агентним застосунком (Claude Code, Codex…) або Ollama",
+  "Open Settings → AI": "Відкрити Налаштування → ШІ",
+  "Tools and keys": "Інструменти й ключі",
   AI: "ШІ",
   Automations: "Автоматизації",
   Data: "Дані",
   Advanced: "Додатково",
-  "AI, helpers, automations, look, data": "ШІ, помічники, автоматизації, вигляд, дані",
+  "AI, helpers, automations, look, history": "ШІ, помічники, автоматизації, вигляд, історія",
   "Its AI": "Його ШІ",
   "Pick from the AI you connected.": "Оберіть серед підключених ШІ.",
   "Connect another": "Підключити ще",

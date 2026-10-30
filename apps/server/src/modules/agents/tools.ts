@@ -535,7 +535,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
         budget_usd: z
           .number()
           .optional()
-          .describe("dollar limit; only for paid APIs (OpenRouter, an OpenAI-compatible API)"),
+          .describe("dollar limit; only for paid APIs (an OpenAI-compatible API)"),
         why: z.string().describe("one or two sentences for the user: what this project delivers"),
       },
       async handler(input) {

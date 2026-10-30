@@ -5,6 +5,14 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Fewer settings, one mode** (ADR 0040). Settings has five tabs: AI, Helpers, Automations, Look
+  and History. The free cloud services (Google Gemini, Groq, OpenRouter, Cerebras, Mistral) are gone:
+  the AI tab offers the built-in local AI, Ollama or any compatible server, and your own agent app.
+- **Tools and keys** live in one place, Settings → Helpers → Tools and keys.
+- **History** keeps restore points and uninstalled apps; packs and the Advanced tab are gone, and
+  everything built in is always on.
+- **No advanced mode:** tokens, commits, technical details and app data are shown to everyone.
+
 - **Choose the llama.cpp release.** The local AI card lists recent llama.cpp releases (with the
   date and whether Aura recognizes a build for this computer) and the archives of the chosen one;
   any archive counts, not only names starting with "llama". Also to reinstall another release.

@@ -8,9 +8,9 @@ import { createTestApp } from "../../testing";
 import { parseSettings } from "./settings";
 
 type TestApp = Awaited<ReturnType<typeof createTestApp>>;
-const KEY = "sk-or-v1-test-secret-key";
+const KEY = "sk-test-secret-key";
 
-/** A fake network: Ollama and OpenRouter endpoints, recording every request. */
+/** A fake network: Ollama endpoints, recording every request. */
 function fakeNetwork() {
   const calls: { url: string; auth: string | null; body: unknown }[] = [];
   const fetchFn = (async (input: string | URL | Request, init?: RequestInit) => {
@@ -22,25 +22,6 @@ function fakeNetwork() {
       body: init?.body ? JSON.parse(String(init.body)) : null,
     });
     if (url.endsWith("/api/tags")) return Response.json({ models: [{ name: "qwen3:8b" }] });
-    if (url.endsWith("/api/v1/models"))
-      return Response.json({
-        data: [
-          {
-            id: "big/paid",
-            name: "Paid",
-            pricing: { prompt: "0.001", completion: "0.002" },
-            supported_parameters: ["tools"],
-          },
-          {
-            id: "small/free:free",
-            name: "Free",
-            pricing: { prompt: "0", completion: "0" },
-            supported_parameters: ["tools"],
-          },
-          { id: "no/tools:free", name: "No tools", pricing: {}, supported_parameters: [] },
-        ],
-      });
-    if (url.endsWith("/api/v1/key")) return Response.json({ data: { is_free_tier: true } });
     if (url.endsWith("/chat/completions")) {
       const text = `data: ${JSON.stringify({ choices: [{ delta: { content: "Привіт з Ollama" } }] })}\n\ndata: [DONE]\n\n`;
       return new Response(text, { headers: { "content-type": "text/event-stream" } });
@@ -49,80 +30,6 @@ function fakeNetwork() {
   }) as unknown as typeof fetch;
   return { calls, fetchFn };
 }
-
-describe("free services (ADR 0037)", () => {
-  let t: TestApp | undefined;
-  afterEach(async () => {
-    await t?.close();
-    t = undefined;
-  });
-
-  /** A fake Groq and Google: a model list that needs the key. */
-  function fakeServices() {
-    const calls: { url: string; auth: string | null }[] = [];
-    const fetchFn = (async (input: string | URL | Request, init?: RequestInit) => {
-      const url = String(input);
-      const auth = new Headers(init?.headers).get("authorization");
-      calls.push({ url, auth });
-      const known =
-        url.startsWith("https://api.groq.com/openai/v1/") ||
-        url.startsWith("https://generativelanguage.googleapis.com/v1beta/openai/");
-      if (!known) return new Response("not found", { status: 404 });
-      if (auth !== "Bearer good-key-123") return new Response("no", { status: 401 });
-      if (url.includes("groq"))
-        return Response.json({
-          data: [{ id: "llama-3.1-8b-instant" }, { id: "openai/gpt-oss-120b" }],
-        });
-      return Response.json({
-        data: [{ id: "models/gemini-2.0-flash" }, { id: "models/gemini-2.5-flash" }],
-      });
-    }) as unknown as typeof fetch;
-    return { calls, fetchFn };
-  }
-
-  test("a free service shows up with its key page, and a wrong key is said plainly", async () => {
-    const net = fakeServices();
-    t = await createTestApp({ fetch: net.fetchFn });
-    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
-    // Even with nothing else working, a key the service rejects is not made the default.
-    (t.provider as unknown as { status: unknown }).status = { ok: false, reason: "no login" };
-    await api.engines({ engine: "groq" }).key.put({ key: "wrong-key-1234" });
-    const groq = (await api.engines.get()).data?.engines.find((e) => e.id === "groq");
-    // A rejected key does not take the place of the default engine.
-    expect((await api.engines.get()).data?.default).toBe("claude-code");
-    expect(groq).toMatchObject({
-      kind: "aura",
-      free: true,
-      needsKey: true,
-      hasKey: true,
-      baseUrl: "https://api.groq.com/openai/v1",
-      status: { ok: false, reason: "Groq rejected the API key." },
-    });
-  });
-
-  test("the first key picks the best model and, with nothing else working, becomes the default", async () => {
-    const net = fakeServices();
-    t = await createTestApp({ fetch: net.fetchFn });
-    // Claude Code is not set up on this computer.
-    (t.provider as unknown as { status: unknown }).status = { ok: false, reason: "no login" };
-    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
-
-    const saved = await api.engines({ engine: "google" }).key.put({ key: "good-key-123" });
-    expect(saved.data).toEqual({ hasKey: true, model: "gemini-2.5-flash", isDefault: true });
-    const listed = (await api.engines.get()).data;
-    expect(listed?.default).toBe("google");
-    expect(listed?.engines.find((e) => e.id === "google")).toMatchObject({
-      model: "gemini-2.5-flash",
-      status: { ok: true },
-    });
-    // The service's own prefix is not part of a model id, and keys go only to their service.
-    const models = (await api.engines({ engine: "google" }).models.get()).data;
-    expect(models?.map((m) => m.id)).toEqual(["gemini-2.5-flash", "gemini-2.0-flash"]);
-    expect(net.calls.filter((c) => c.auth).every((c) => c.url.includes("googleapis.com"))).toBe(
-      true,
-    );
-  });
-});
 
 describe("agent engines", () => {
   let t: TestApp | undefined;
@@ -138,13 +45,8 @@ describe("agent engines", () => {
 
     const before = await api.engines.get();
     expect(before.data?.default).toBe("claude-code");
-    // Free services lead, your own agent apps come last (ADR 0037).
+    // Local AI leads, your own agent apps come last.
     expect(before.data?.engines.map((e) => e.id)).toEqual([
-      "google",
-      "groq",
-      "openrouter",
-      "cerebras",
-      "mistral",
       "llama-cpp",
       "ollama",
       "openai-compatible",
@@ -153,18 +55,14 @@ describe("agent engines", () => {
       "codex",
       "opencode",
     ]);
-    expect(before.data?.engines.find((e) => e.id === "openrouter")?.status.ok).toBe(false);
     expect(before.data?.engines.find((e) => e.id === "ollama")?.status).toEqual({
       ok: true,
       detail: "1 local model",
     });
 
-    expect((await api.engines({ engine: "openrouter" }).key.put({ key: KEY })).data).toMatchObject({
-      hasKey: true,
-      model: "small/free:free",
-      // Claude Code works here, so the first key does not take its place.
-      isDefault: false,
-    });
+    expect((await api.engines({ engine: "openai-compatible" }).key.put({ key: KEY })).data).toEqual(
+      { hasKey: true },
+    );
     const secrets = join(t.dataDir, "state", "secrets.json");
     expect(statSync(secrets).mode & 0o777).toBe(0o600);
     expect(readFileSync(secrets, "utf8")).toContain(KEY);
@@ -172,20 +70,15 @@ describe("agent engines", () => {
 
     const after = await api.engines.get();
     expect(JSON.stringify(after.data)).not.toContain(KEY);
-    const openrouter = after.data?.engines.find((e) => e.id === "openrouter");
-    expect(openrouter).toMatchObject({ hasKey: true, status: { ok: true, detail: "free tier" } });
-    expect(net.calls.find((c) => c.url.endsWith("/api/v1/key"))?.auth).toBe(`Bearer ${KEY}`);
+    expect(after.data?.engines.find((e) => e.id === "openai-compatible")).toMatchObject({
+      hasKey: true,
+    });
 
     // Keys only go to their own service.
     expect(net.calls.filter((c) => c.url.includes("11434")).every((c) => c.auth === null)).toBe(
       true,
     );
 
-    const models = await api.engines({ engine: "openrouter" }).models.get();
-    expect(models.data).toEqual([
-      { id: "small/free:free", label: "Free", free: true },
-      { id: "big/paid", label: "Paid", free: false },
-    ]);
     expect((await api.engines({ engine: "ollama" }).key.put({ key: KEY })).status).toBe(422);
   });
 
@@ -226,17 +119,17 @@ describe("agent engines", () => {
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
     const res = await api
       .agents({ handle: "orchestrator" })
-      .engine.put({ engine: "openrouter", model: "small/free:free" });
+      .engine.put({ engine: "ollama", model: "qwen3:8b" });
     expect(res.data).toEqual({
       handle: "orchestrator",
-      engine: "openrouter",
-      model: "small/free:free",
+      engine: "ollama",
+      model: "qwen3:8b",
     });
     const profile = await t.agents.get("orchestrator");
-    expect(profile).toMatchObject({ engine: "openrouter", model: "small/free:free" });
+    expect(profile).toMatchObject({ engine: "ollama", model: "qwen3:8b" });
     expect(t.engines.pick(profile ?? { engine: null, model: null })).toMatchObject({
-      engine: "openrouter",
-      model: "small/free:free",
+      engine: "ollama",
+      model: "qwen3:8b",
     });
     expect(
       (await api.agents({ handle: "nobody" }).engine.put({ engine: null, model: null })).status,
@@ -268,7 +161,7 @@ describe("agent engines", () => {
     expect(
       parseSettings({
         default: "skynet",
-        models: { ollama: "qwen3:8b", openrouter: "bad id!" },
+        models: { ollama: "qwen3:8b", "openai-compatible": "bad id!", google: "gone" },
         ollama: { baseUrl: "javascript:x" },
       }),
     ).toMatchObject({

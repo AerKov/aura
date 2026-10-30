@@ -17,7 +17,7 @@ import { loadAppearance } from "@/features/customize/appearance";
 import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { extensionIcon } from "@/lib/extension-icons";
-import { BUILTIN_ICONS, useExtensionApps, useModules } from "./apps";
+import { BUILTIN_ICONS, useExtensionApps } from "./apps";
 
 /** One app in the launcher: one the user made or installed, or a built-in one (ADR 0034). */
 export interface Entry {
@@ -31,18 +31,6 @@ export interface Entry {
   extension: ExtensionInfo | null;
   /** Shown in a tile now. */
   open: boolean;
-  /** Its module is off. */
-  off: boolean;
-}
-
-/** Advanced mode (ADR 0034): technical names, details and every app. */
-export function useAdvanced(): boolean {
-  return useChatStore((s) => s.appearance?.advanced ?? false);
-}
-
-export async function setAdvanced(advanced: boolean): Promise<void> {
-  await call(() => api.appearance.put({ advanced }));
-  await loadAppearance();
 }
 
 export function closeMenus(): void {
@@ -51,13 +39,11 @@ export function closeMenus(): void {
 
 /**
  * The launcher's groups: the user's own first, then Essentials and Settings, each entry with its
- * translated name and description. The plain view leaves out the technical apps; `query` filters
+ * translated name and description. `query` filters
  * by name, description or group.
  */
 export function useLauncher(query = ""): { group: string; entries: Entry[] }[] {
   const extensions = useExtensionApps();
-  const modules = useModules();
-  const advanced = useAdvanced();
   const layout = useChatStore((s) => s.layout);
   const t = useT();
   return useMemo(() => {
@@ -73,9 +59,8 @@ export function useLauncher(query = ""): { group: string; entries: Entry[] }[] {
         builtin: null,
         extension: ext,
         open: visible.has(`ext:${ext.id}`),
-        off: false,
       })),
-      ...BUILTIN_APPS.filter((b) => advanced || b.simple).map((b) => ({
+      ...BUILTIN_APPS.map((b) => ({
         key: b.key,
         app: b.app,
         name: t(b.name),
@@ -85,7 +70,6 @@ export function useLauncher(query = ""): { group: string; entries: Entry[] }[] {
         builtin: b,
         extension: null,
         open: visible.has(b.app) && b.key !== "signals",
-        off: b.module !== null && !modules[b.module],
       })),
     ];
     const shown = all.filter((e) => matchesSearch(e, query));
@@ -94,5 +78,5 @@ export function useLauncher(query = ""): { group: string; entries: Entry[] }[] {
       BUILTIN_GROUPS.map((g) => t(g)),
       t(DEFAULT_APP_GROUP),
     ).map((group) => ({ group, entries: shown.filter((e) => e.group === group) }));
-  }, [extensions, modules, advanced, layout, query, t]);
+  }, [extensions, layout, query, t]);
 }

@@ -4,7 +4,6 @@
  */
 import type { FileRef } from "./files";
 import type { LocalizationState } from "./locale";
-import type { ModuleStates } from "./modules";
 import type { BarEdge, BarMode, WindowStyle } from "./wm";
 
 export type ChatKind = "direct" | "group" | "system";
@@ -332,8 +331,6 @@ export interface Appearance {
   rail: RailLayout;
   /** How tiles look and the shortcuts' Mod key (ADR 0028). */
   wm: WindowStyle;
-  /** Advanced mode (ADR 0034): technical names, details and every app; off, the plain view. */
-  advanced: boolean;
 }
 
 /** Order and visibility of the navigation rail's items, by key ("skills", "ext:<id>", …). */
@@ -451,7 +448,6 @@ export interface CustomizeState {
   safeMode: { on: boolean; reason: string | null };
   appVersion: string;
   /** Built-in apps that are on (ADR 0027). */
-  modules: ModuleStates;
   /** The chosen language and the ones available (ADR 0033). */
   localization: LocalizationState;
   extensions: ExtensionInfo[];

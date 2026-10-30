@@ -96,7 +96,6 @@ export class AppearanceService {
     snippets: string[];
     rail: RailLayout;
     wm: WindowStyle;
-    advanced: boolean;
   }> {
     const [rows] = await this.deps.db
       .query<
@@ -106,7 +105,6 @@ export class AppearanceService {
             snippets?: string[];
             rail?: Partial<RailLayout>;
             wm?: unknown;
-            advanced?: boolean;
           }[],
         ]
       >("SELECT * FROM setting WHERE id = $id", { id: SETTING })
@@ -127,12 +125,11 @@ export class AppearanceService {
         size: typeof row?.rail?.size === "number" ? row.rail.size : null,
       },
       wm: normalizeWindowStyle(row?.wm),
-      advanced: row?.advanced === true,
     };
   }
 
   async get(): Promise<Appearance> {
-    const { theme, snippets, rail, wm, advanced } = await this.settings();
+    const { theme, snippets, rail, wm } = await this.settings();
     const themes = this.themes();
     const available = this.snippets();
     const css: { name: string; css: string }[] = [];
@@ -141,7 +138,7 @@ export class AppearanceService {
     for (const s of snippets.filter((n) => available.includes(n))) {
       css.push({ name: `snippet:${s}`, css: sanitizeCss(this.read("snippet", s) ?? "") });
     }
-    return { theme, snippets, themes, availableSnippets: available, css, rail, wm, advanced };
+    return { theme, snippets, themes, availableSnippets: available, css, rail, wm };
   }
 
   /**
@@ -153,7 +150,6 @@ export class AppearanceService {
     snippets?: string[];
     rail?: Partial<RailLayout>;
     wm?: Partial<WindowStyle>;
-    advanced?: boolean;
   }): Promise<Appearance> {
     const current = await this.settings();
     const theme = input.theme === undefined ? current.theme : input.theme;
@@ -164,7 +160,7 @@ export class AppearanceService {
     if (unknown.length > 0) throw new AppearanceError(`unknown snippets: ${unknown.join(", ")}`);
     const rail = {
       order: railKeys(input.rail?.order ?? current.rail.order),
-      // Chats and Customize stay, so the user can always get back.
+      // Chats and Settings stay, so the user can always get back.
       hidden: railKeys(input.rail?.hidden ?? current.rail.hidden).filter(
         (k) => !RAIL_PINNED.includes(k),
       ),
@@ -177,12 +173,14 @@ export class AppearanceService {
     if (!BAR_EDGES.includes(rail.edge)) throw new AppearanceError(`"${rail.edge}" is not an edge`);
     if (!BAR_MODES.includes(rail.mode)) throw new AppearanceError(`"${rail.mode}" is not a bar`);
     const wm = normalizeWindowStyle({ ...current.wm, ...input.wm }, current.wm);
-    const advanced = input.advanced ?? current.advanced;
     await this.deps.db
-      .query(
-        "UPSERT $id CONTENT { theme: $theme, snippets: $snippets, rail: $rail, wm: $wm, advanced: $advanced }",
-        { id: SETTING, theme, snippets, rail, wm, advanced },
-      )
+      .query("UPSERT $id CONTENT { theme: $theme, snippets: $snippets, rail: $rail, wm: $wm }", {
+        id: SETTING,
+        theme,
+        snippets,
+        rail,
+        wm,
+      })
       .collect();
     this.deps.hub.publish({ type: "customize.updated" });
     return this.get();

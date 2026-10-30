@@ -4,7 +4,6 @@ import { ArrowRightLeft, CornerDownRight, Reply, Square } from "lucide-react";
 import { Mark } from "@/components/mark";
 import { Markdown } from "@/components/markdown";
 import { useT } from "@/features/localization/i18n";
-import { useAdvanced } from "@/features/shell/launcher";
 import { highlightMentions } from "@/lib/mentions";
 import { cn } from "@/lib/utils";
 import { openAgentSettings, reportError, stopRun } from "./actions";
@@ -38,11 +37,10 @@ export function MessageBubble({
   onMove?: (message: Message) => void;
 }) {
   const me = useChatStore((s) => s.me);
-  const advanced = useAdvanced();
   const t = useT();
   const streamingText = useChatStore((s) => s.streaming[message.id]);
   const mine = message.author.kind === "user" && message.author.id === me?.id;
-  // Agents go by their profile's name ("Builder"); the handle shows in advanced places.
+  // Agents go by their profile's name ("Builder"); the handle shows on their card.
   const profileName = useChatStore((s) =>
     message.author.kind === "agent" ? s.agents[message.author.id]?.name : undefined,
   );
@@ -153,7 +151,6 @@ export function MessageBubble({
           <div className="mb-0.5 flex items-baseline gap-2">
             <span className="text-[13px] font-semibold">{name}</span>
             <span className="text-muted-foreground font-mono text-[11px]">
-              {advanced && message.author.kind === "agent" ? `@${message.author.id} · ` : ""}
               {formatTime(message.createdAt)}
             </span>
           </div>

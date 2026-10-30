@@ -17,13 +17,11 @@ import { BudgetEditor } from "@/features/chat/budget";
 import { agentName } from "@/features/chat/participants";
 import { setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
-import { useAdvanced } from "@/features/shell/launcher";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { AgentAi } from "./agent-ai";
 import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
 import { MemoryCard, PromptCard } from "./prompt-card";
-import { AgentToolServers } from "./tool-servers";
 
 type Status = Awaited<ReturnType<typeof loadStatus>>;
 const loadStatus = (handle: string) => call(() => api.agents({ handle }).status.get());
@@ -40,13 +38,12 @@ const TOOLS: { name: string; text: string }[] = [
 ];
 
 /**
- * Everything about agents in one place (ADR 0020, ADR 0030): each agent's engine, tools on that
- * engine, variables, tool servers, chats, the last error and what stops it; then the tool servers
- * (MCP) and the secrets agents use.
+ * Everything about an agent in one place (ADR 0020, ADR 0039): its AI, tools on that engine,
+ * variables, which tool servers it has, chats, the last error and what stops it. Tool servers (MCP)
+ * and secrets are managed once, under Helpers → Tools and keys.
  */
 export function AgentsView() {
   const t = useT();
-  const advanced = useAdvanced();
   const agentMap = useChatStore((s) => s.agents);
   const agents = useMemo(() => Object.values(agentMap), [agentMap]);
   const focus = useChatStore((s) => s.agentFocus);
@@ -84,12 +81,11 @@ export function AgentsView() {
               )}
             >
               <AgentMark handle={a.handle} size="xs" />
-              {advanced ? `@${a.handle}` : agentName(a.handle, a.name, t)}
+              {agentName(a.handle, a.name, t)}
             </button>
           ))}
         </div>
         <AgentCard key={current} handle={current} />
-        <AgentToolServers />
       </div>
     </section>
   );
@@ -97,7 +93,6 @@ export function AgentsView() {
 
 function AgentCard({ handle }: { handle: string }) {
   const t = useT();
-  const advanced = useAdvanced();
   const [status, setStatus] = useState<Status | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tools, setTools] = useState<string[]>([]);
@@ -155,9 +150,7 @@ function AgentCard({ handle }: { handle: string }) {
           <div className="min-w-0 flex-1">
             <div className="font-semibold">
               {agentName(handle, status.name, t)}{" "}
-              {advanced && (
-                <span className="text-muted-foreground font-mono text-sm">@{handle}</span>
-              )}
+              <span className="text-muted-foreground font-mono text-sm">@{handle}</span>
             </div>
             <p className="text-muted-foreground text-sm">{status.role}</p>
             <p className="mt-2 flex items-center gap-1.5 text-[13px]">
@@ -301,7 +294,9 @@ function AgentCard({ handle }: { handle: string }) {
             <Plug className="size-3.5" /> Tool servers
           </h3>
           {status.mcpServers.length === 0 ? (
-            <p className="text-muted-foreground text-sm">None. Add one under Tool servers below.</p>
+            <p className="text-muted-foreground text-sm">
+              None. Add and assign them in Tools and keys.
+            </p>
           ) : (
             <ul className="space-y-1 text-sm">
               {status.mcpServers.map((s) => (

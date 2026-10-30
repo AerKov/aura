@@ -1,12 +1,4 @@
-import {
-  type AppRef,
-  BUILTIN_APPS,
-  defaultModules,
-  type ExtensionInfo,
-  type ModuleStates,
-  moduleOfApp,
-  type PageId,
-} from "@aura/shared";
+import { type AppRef, BUILTIN_APPS, type ExtensionInfo, type PageId } from "@aura/shared";
 import type { LucideIcon } from "lucide-react";
 import {
   Bell,
@@ -98,16 +90,4 @@ export function railApp(key: string): AppRef {
   if (key === "chats" || key === "signals") return "messenger";
   if (key.startsWith("ext:")) return key as AppRef;
   return `page:${key}` as AppRef;
-}
-
-/** Built-in apps that are on (ADR 0027); all on until the server says otherwise. */
-export function useModules(): ModuleStates {
-  const modules = useChatStore((s) => s.customize?.modules);
-  return useMemo(() => modules ?? defaultModules(), [modules]);
-}
-
-/** Whether an app can open now: its module is on (the core's own apps always can). */
-export function appAvailable(app: AppRef, modules: ModuleStates): boolean {
-  const module = moduleOfApp(app);
-  return module === null || modules[module];
 }

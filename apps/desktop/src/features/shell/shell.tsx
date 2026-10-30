@@ -1,8 +1,6 @@
 import {
   type AppRef,
   type LayoutNode,
-  MODULES,
-  moduleOfApp,
   type PageId,
   type Project,
   type Tile,
@@ -26,7 +24,7 @@ import { SettingsView } from "@/features/settings/settings-view";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { AppControls, AppSecretsMenu } from "./app-controls";
-import { appAvailable, appInfo, openEntry, useExtensionApps, useModules } from "./apps";
+import { appInfo, openEntry, useExtensionApps } from "./apps";
 import { HomeView } from "./home";
 import { useLauncher } from "./launcher";
 import { closeTileId, focusTile, openAppRef, PHONE_QUERY, phoneAppOf, resizeSplit } from "./layout";
@@ -110,7 +108,6 @@ function NodeView({ node, focused, many }: { node: LayoutNode; focused: string; 
 
 function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many: boolean }) {
   const extensions = useExtensionApps();
-  const modules = useModules();
   const titles = useChatStore((s) => s.appearance?.wm.titles ?? "minimal");
   const t = useT();
   const info = appInfo(tile.app, extensions);
@@ -120,7 +117,7 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
     ? extensions.find((e) => e.id === tile.app.slice(4))
     : undefined;
   const chatOpen = useChatStore((s) => (ext?.app ? (s.appChat[ext.id] ?? false) : false));
-  const chatId = modules.chats && chatOpen ? ext?.app?.chatId : undefined;
+  const chatId = chatOpen ? ext?.app?.chatId : undefined;
   return (
     <section
       data-tile-id={tile.id}
@@ -154,12 +151,7 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
         </div>
         <div className="flex items-center gap-0.5">
           {ext && !ext.app && ext.secrets.length > 0 && <AppSecretsMenu appId={ext.id} />}
-          {ext &&
-            (ext.app ? (
-              <AppControls ext={ext} chat={modules.chats} />
-            ) : (
-              modules.chats && <PinButton app={tile.app} />
-            ))}
+          {ext && (ext.app ? <AppControls ext={ext} /> : <PinButton app={tile.app} />)}
           <OpenMenu />
           <Button
             size="icon"
@@ -240,7 +232,6 @@ function OpenMenu() {
                   key={entry.key}
                   entry={entry}
                   onOpen={() => {
-                    if (entry.off) return;
                     openEntry(entry.key, entry.app);
                     setOpen(false);
                   }}
@@ -335,38 +326,13 @@ function AppUnavailable({ id }: { id: string }) {
   );
 }
 
-/** A built-in app whose module is off (ADR 0027): say so and offer to turn it on. */
-function ModuleOff({ app }: { app: AppRef }) {
-  const module = moduleOfApp(app);
-  const [error, setError] = useState<string | null>(null);
-  if (!module) return null;
-  const turnOn = () =>
-    call(() => api.modules({ moduleId: module }).put({ enabled: true }))
-      .then(() => loadCustomize())
-      .then(() => (module === "chats" ? loadInitial() : undefined))
-      .catch((err: unknown) => setError(err instanceof Error ? err.message : String(err)));
-  return (
-    <div className="flex h-full flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
-      <p className="text-muted-foreground max-w-sm text-sm">
-        {MODULES[module].name} is turned off.
-      </p>
-      <Button variant="outline" onClick={() => void turnOn()}>
-        Turn on {MODULES[module].name}
-      </Button>
-      {error && <p className="text-destructive text-sm">{error}</p>}
-    </div>
-  );
-}
-
 /** What an app shows inside its tile. */
 function AppView({ app }: { app: AppRef }) {
   const extensions = useExtensionApps();
   const chatId = useChatStore((s) => s.activeChatId);
   const projectId = useChatStore((s) => (chatId ? (s.chats[chatId]?.projectId ?? null) : null));
   const previewDraft = useChatStore((s) => s.previewDraft);
-  const modules = useModules();
   if (app === "home") return <HomeView />;
-  if (!appAvailable(app, modules)) return <ModuleOff app={app} />;
   if (app === "messenger") return <Messenger />;
   if (app.startsWith("ext:")) {
     const ext = extensions.find((e) => e.id === app.slice(4));

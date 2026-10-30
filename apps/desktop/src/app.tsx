@@ -34,10 +34,9 @@ export function App() {
     setStartError(null);
     loadAppearance().catch(reportError);
     loadLayout().catch(reportError);
-    // Which built-in apps are on decides what else loads (ADR 0027).
     loadCustomize()
-      .then((state) => {
-        if (state.modules.chats) loadProviderStatus().catch(reportError);
+      .then(() => {
+        loadProviderStatus().catch(reportError);
         return loadInitial();
       })
       .catch((error: unknown) => {

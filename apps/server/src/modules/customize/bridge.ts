@@ -84,7 +84,6 @@ export class ExtensionBridge {
           source: string,
           payload: unknown,
         ): Promise<{ messageId: string; deduplicated: boolean; triaged: boolean }>;
-        enabled(): boolean;
       };
       /** Apps built in Aura keep their data in their own store (ADR 0024). */
       apps?: { isApp: (id: string) => boolean; data: AppDataService; actions: AppActions };
@@ -314,7 +313,7 @@ export class ExtensionBridge {
   ): Promise<{ messageId: string; deduplicated: boolean; triaged: boolean }> {
     await this.need(id, "alerts.write");
     const alerts = this.deps.alerts;
-    if (!alerts?.enabled()) throw new ExtensionError("Signals is turned off");
+    if (!alerts) throw new ExtensionError("Alerts are not available");
     const title = String(input.title ?? "").trim();
     if (!title || title.length > 200) throw new ExtensionError("title is required (max 200 chars)");
     const now = (this.deps.now ?? Date.now)();

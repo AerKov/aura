@@ -3,7 +3,6 @@
  * a group. Built-in apps are listed here; installed and built apps say theirs in their manifest.
  */
 import type { AppRef } from "./layout";
-import type { ModuleId } from "./modules";
 
 /** Groups of the built-in apps, in launcher order after the user's own groups. */
 export const BUILTIN_GROUPS = ["Essentials", "Settings"] as const;
@@ -22,10 +21,6 @@ export interface BuiltinApp {
   name: string;
   description: string;
   group: (typeof BUILTIN_GROUPS)[number];
-  /** The module that turns it on and off; null for the core's own apps. */
-  module: ModuleId | null;
-  /** Listed in the plain view; the others only in advanced mode. */
-  simple: boolean;
 }
 
 export const BUILTIN_APPS: BuiltinApp[] = [
@@ -35,8 +30,6 @@ export const BUILTIN_APPS: BuiltinApp[] = [
     name: "Chats",
     description: "Write to your Helper, like in a messenger",
     group: "Essentials",
-    module: "chats",
-    simple: true,
   },
   {
     key: "signals",
@@ -44,17 +37,13 @@ export const BUILTIN_APPS: BuiltinApp[] = [
     name: "Alerts",
     description: "When something broke or needs attention",
     group: "Essentials",
-    module: "alerts",
-    simple: true,
   },
   {
     key: "settings",
     app: "page:settings",
     name: "Settings",
-    description: "AI, helpers, automations, look, data",
+    description: "AI, helpers, automations, look, history",
     group: "Settings",
-    module: null,
-    simple: true,
   },
 ];
 

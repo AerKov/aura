@@ -26,14 +26,7 @@ function isEmbeddingEngine(value: unknown): value is EmbeddingEngine {
 }
 
 /** Engines that use an API key. Keys live in `state/secrets.json`, outside git (ADR 0011). */
-export const KEYED_ENGINES = [
-  "google",
-  "groq",
-  "openrouter",
-  "cerebras",
-  "mistral",
-  "openai-compatible",
-] as const;
+export const KEYED_ENGINES = ["openai-compatible"] as const;
 export type KeyedEngine = (typeof KEYED_ENGINES)[number];
 
 export const DEFAULT_SETTINGS: EngineSettings = {

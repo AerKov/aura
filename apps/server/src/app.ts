@@ -26,8 +26,6 @@ import { chatModule } from "./modules/chat";
 import { groupsModule } from "./modules/chat/groups";
 import type { ChatRepo } from "./modules/chat/repo";
 import type { ChatService } from "./modules/chat/service";
-import { modulesModule } from "./modules/core";
-import type { ModuleService } from "./modules/core/modules";
 import { customizeModule } from "./modules/customize";
 import type { AppearanceService } from "./modules/customize/appearance";
 import type { ExtensionBridge } from "./modules/customize/bridge";
@@ -102,7 +100,6 @@ export interface AppDeps extends HealthDeps {
   appActions: AppActions;
   mcp: McpService;
   safeMode: SafeMode;
-  modules: ModuleService;
   appVersion: string;
   devices: DeviceService;
   pushPublicKey: string | null;
@@ -115,7 +112,6 @@ export function createApp(deps: AppDeps) {
   return new Elysia()
     .use(cors({ origin: deps.corsOrigins }))
     .use(authModule(deps))
-    .use(modulesModule(deps))
     .use(healthModule(deps))
     .use(
       chatModule({

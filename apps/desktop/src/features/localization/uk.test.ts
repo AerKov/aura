@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { BUILTIN_APPS, BUILTIN_GROUPS, DEFAULT_APP_GROUP, MODULES } from "@aura/shared";
+import { BUILTIN_APPS, BUILTIN_GROUPS, DEFAULT_APP_GROUP } from "@aura/shared";
 import { UK } from "./uk";
 
 const SRC = join(import.meta.dir, "..", "..");
@@ -20,7 +20,6 @@ describe("Ukrainian (ADR 0033)", () => {
       ...BUILTIN_APPS.flatMap((a) => [a.name, a.description]),
       ...BUILTIN_GROUPS,
       DEFAULT_APP_GROUP,
-      ...Object.values(MODULES).map((m) => m.name),
     ]);
     for (const file of sources(SRC)) {
       const text = readFileSync(file, "utf8");

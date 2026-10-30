@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { openChat, reportError } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
 import { Versions } from "@/features/shell/app-controls";
-import { useModules } from "@/features/shell/apps";
 import { modLabel } from "@/features/shell/rail";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -35,7 +34,6 @@ function BarChoice({ onError }: { onError: (message: string | null) => void }) {
   const failed = useChatStore((s) => s.barFailed);
   const bar = useChatStore((s) => s.customize?.extensions.find((e) => e.id === BAR_APP_ID));
   const preview = useChatStore((s) => s.previewDraft[BAR_APP_ID] ?? false);
-  const chats = useModules().chats;
   const choose = async (next: BarMode) => {
     onError(null);
     try {
@@ -62,11 +60,11 @@ function BarChoice({ onError }: { onError: (message: string | null) => void }) {
       )}
       {mode === "app" && bar?.app && (
         <div className="flex flex-wrap items-center gap-2 py-1.5 pl-31 text-xs">
-          {chats && (
+          {
             <Button size="sm" variant="outline" onClick={() => openChat(bar.app?.chatId ?? "")}>
               <MessagesSquare /> Change it in its chat
             </Button>
-          )}
+          }
           {bar.app.draft && (
             <Button
               size="sm"

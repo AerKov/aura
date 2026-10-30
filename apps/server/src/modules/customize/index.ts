@@ -6,7 +6,6 @@ import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
 import type { ChatRepo } from "../chat/repo";
 import { ChatError } from "../chat/service";
-import type { ModuleService } from "../core/modules";
 import type { LocalizationService } from "../localization/service";
 import { ProjectError, type ProjectService } from "../projects/service";
 import type { EventHub } from "../realtime/hub";
@@ -22,7 +21,6 @@ export interface CustomizeRouteDeps {
   extensions: ExtensionService;
   mcp: McpService;
   safeMode: SafeMode;
-  modules: ModuleService;
   localization: LocalizationService;
   appSecrets: AppSecrets;
   appSnapshots: AppSnapshots;
@@ -75,7 +73,6 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         body: t.Object({
           theme: t.Optional(t.Nullable(t.String({ maxLength: 48 }))),
           snippets: t.Optional(t.Array(t.String({ maxLength: 48 }))),
-          advanced: t.Optional(t.Boolean()),
           rail: t.Optional(
             t.Object({
               order: t.Optional(t.Array(t.String({ maxLength: 52 }), { maxItems: 64 })),
@@ -113,7 +110,6 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
       async (): Promise<CustomizeState> => ({
         safeMode: deps.safeMode,
         appVersion: deps.appVersion,
-        modules: deps.modules.all(),
         localization: await deps.localization.get(),
         extensions: await deps.extensions.list(),
         mcpServers: deps.mcp.list(),

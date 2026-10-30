@@ -107,7 +107,7 @@ export function BudgetEditor({
         {unit === "tokens"
           ? t("For subscriptions (Claude Code, Gemini CLI, Codex, OpenCode) and local models.")
           : unit === "usd"
-            ? t("Real money only on paid APIs (OpenRouter, an OpenAI-compatible API).")
+            ? t("Real money only on paid APIs (an OpenAI-compatible API).")
             : t("Agents still stop after 8 replies to each other in a row.")}
       </p>
       {error && <p className="text-destructive text-xs">{error}</p>}

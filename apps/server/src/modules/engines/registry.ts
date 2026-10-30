@@ -1,12 +1,4 @@
-import {
-  ENGINE_IDS,
-  type EngineId,
-  type EngineModel,
-  FREE_SERVICES,
-  type FreeService,
-  freeServiceOf,
-  pickStartModel,
-} from "@aura/shared";
+import { ENGINE_IDS, type EngineId, type EngineModel } from "@aura/shared";
 import { errorMessage, log } from "../../lib/log";
 import { type AcpAgentSpec, AcpProvider, type AgentProcess } from "../../providers/acp";
 import { locateExecutable } from "../../providers/claude-locate";
@@ -16,11 +8,6 @@ import type { LLMProvider, ProviderStatus } from "../../providers/types";
 import { LocalAiService, type SpawnServer } from "../localai/service";
 import { EngineStore, KEYED_ENGINES, type KeyedEngine } from "./settings";
 import type { ToolBridgeLike } from "./tool-bridge";
-
-const OPENROUTER_URL = "https://openrouter.ai/api/v1";
-
-/** The free services that are plain OpenAI-compatible endpoints with a key (OpenRouter has its own). */
-const PLAIN_SERVICES = FREE_SERVICES.filter((s) => s.id !== "openrouter");
 
 /** What the runtime needs: the engine and model for an agent. */
 export interface EngineSelector {
@@ -54,15 +41,6 @@ const DESCRIPTIONS: Record<
   EngineId,
   { label: string; kind: EngineInfo["kind"]; free: boolean; text: string }
 > = {
-  ...(Object.fromEntries(
-    PLAIN_SERVICES.map((s) => [
-      s.id,
-      { label: s.label, kind: "aura" as const, free: true, text: `${s.blurb} ${s.note}` },
-    ]),
-  ) as Record<
-    "google" | "groq" | "cerebras" | "mistral",
-    { label: string; kind: EngineInfo["kind"]; free: boolean; text: string }
-  >),
   "llama-cpp": {
     label: "Built-in local AI",
     kind: "aura",
@@ -92,12 +70,6 @@ const DESCRIPTIONS: Record<
     kind: "acp",
     free: true,
     text: "Open-source coding agent that brings its own providers, local models included.",
-  },
-  openrouter: {
-    label: "OpenRouter",
-    kind: "aura",
-    free: true,
-    text: "Hundreds of cloud models with one API key, including free ones (rate limited). Runs on Aura's own agent loop.",
   },
   ollama: {
     label: "Ollama",
@@ -169,7 +141,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * The agent engines (ADR 0011): Claude Code plus Aura's own loop on OpenRouter, Ollama or any
+ * The agent engines (ADR 0011): Claude Code plus Aura's own loop on the built-in local AI, Ollama or any
  * OpenAI-compatible server. Picks the engine and model for each agent run.
  */
 export class EngineRegistry implements EngineSelector {
@@ -214,42 +186,11 @@ export class EngineRegistry implements EngineSelector {
         toolBridge: opts.toolBridge,
         spawn: opts.acpSpawn,
       });
-    const plain = (id: "google" | "groq" | "cerebras" | "mistral") => {
-      const s = freeServiceOf(id);
-      if (!s) throw new Error(`no free service ${id}`);
-      return new OpenAICompatProvider({
-        id,
-        label: s.label,
-        baseUrl: () => s.baseUrl,
-        apiKey: () => this.store.key(id),
-        needsKey: true,
-        pricing: "free",
-        defaultModel: () => settings().models[id] ?? null,
-        check: () => this.checkService(s),
-        fetch: this.fetch,
-      });
-    };
     this.providers = {
       "claude-code": opts.claude,
       "gemini-cli": acp("gemini-cli"),
       codex: acp("codex"),
       opencode: acp("opencode"),
-      google: plain("google"),
-      groq: plain("groq"),
-      cerebras: plain("cerebras"),
-      mistral: plain("mistral"),
-      openrouter: new OpenAICompatProvider({
-        id: "openrouter",
-        label: "OpenRouter",
-        baseUrl: () => OPENROUTER_URL,
-        apiKey: () => this.store.key("openrouter"),
-        needsKey: true,
-        headers: { "HTTP-Referer": "https://github.com/aerkov/aura", "X-Title": "Aura" },
-        pricing: "usage-cost",
-        defaultModel: () => settings().models.openrouter ?? null,
-        check: () => this.checkOpenRouter(),
-        fetch: this.fetch,
-      }),
       "llama-cpp": new OpenAICompatProvider({
         id: "llama-cpp",
         label: "Built-in local AI",
@@ -357,7 +298,7 @@ export class EngineRegistry implements EngineSelector {
               ? settings.ollama.baseUrl
               : id === "openai-compatible"
                 ? settings.custom.baseUrl
-                : (freeServiceOf(id)?.baseUrl ?? null),
+                : null,
         };
       }),
     );
@@ -389,27 +330,8 @@ export class EngineRegistry implements EngineSelector {
         .filter(Boolean)
         .map((id) => ({ id, label: id, free: true }));
     }
-    if (engine === "openrouter") {
-      const body = await this.getJson(`${OPENROUTER_URL}/models`);
-      const data = isRecord(body) && Array.isArray(body.data) ? body.data : [];
-      return data
-        .filter(isRecord)
-        .filter(
-          (m) => Array.isArray(m.supported_parameters) && m.supported_parameters.includes("tools"),
-        )
-        .map((m) => {
-          const id = String(m.id);
-          const pricing = isRecord(m.pricing) ? m.pricing : {};
-          const free =
-            id.endsWith(":free") || (pricing.prompt === "0" && pricing.completion === "0");
-          return { id, label: typeof m.name === "string" ? m.name : id, free };
-        })
-        .sort((a, b) => Number(b.free) - Number(a.free) || a.label.localeCompare(b.label));
-    }
     if (engine === "llama-cpp")
       return this.localAi.models().map((m) => ({ id: m.file, label: m.file, free: true }));
-    const service = freeServiceOf(engine);
-    if (service) return this.serviceModels(service);
     const key = this.store.key("openai-compatible");
     const body = await this.getJson(
       `${settings.custom.baseUrl}/models`,
@@ -456,105 +378,10 @@ export class EngineRegistry implements EngineSelector {
     });
   }
 
-  /** A free service's models, its preferred ones first. */
-  private async serviceModels(service: FreeService): Promise<EngineModel[]> {
-    const key = this.store.key(service.id as KeyedEngine);
-    if (!key) throw new Error(`Add your ${service.label} API key first.`);
-    const body = await this.getJson(`${service.baseUrl}/models`, {
-      authorization: `Bearer ${key}`,
-    });
-    const data = isRecord(body) && Array.isArray(body.data) ? body.data : [];
-    const prefix = service.stripPrefix ?? "";
-    const ids = data
-      .filter(isRecord)
-      .map((m) => String(m.id ?? ""))
-      .filter(Boolean)
-      .map((id) => (prefix && id.startsWith(prefix) ? id.slice(prefix.length) : id));
-    const rank = (id: string) => {
-      const i = service.preferred.indexOf(id);
-      return i === -1 ? service.preferred.length : i;
-    };
-    return ids
-      .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b))
-      .map((id) => ({ id, label: id, free: true }));
-  }
-
-  /**
-   * After a key is saved (ADR 0037): pick the service's best model if none is chosen, and make it
-   * the default engine when the current default does not work, so a newcomer's first key is enough.
-   */
-  async connect(engine: EngineId): Promise<{ model: string | null; isDefault: boolean }> {
-    const service = freeServiceOf(engine);
-    const settings = this.store.get();
-    if (!service || !this.store.key(engine as KeyedEngine))
-      return { model: settings.models[engine] ?? null, isDefault: settings.default === engine };
-    let model = settings.models[engine] ?? null;
-    let offered: string[] = [];
-    try {
-      offered = (await this.models(engine)).map((m) => m.id);
-    } catch (error) {
-      log.debug("models not listed while connecting", { engine, error: errorMessage(error) });
-    }
-    if (!model) model = pickStartModel(service, offered);
-    // Only a key that works can take the place of the default engine.
-    const accepted = await withTimeout(this.providers[engine].isAvailable(), 25_000)
-      .then((s) => s.ok)
-      .catch(() => false);
-    const currentWorks =
-      settings.default !== engine &&
-      (await withTimeout(this.providers[settings.default].isAvailable(), 25_000)
-        .then((s) => s.ok)
-        .catch(() => false));
-    const makeDefault = accepted && !currentWorks;
-    await this.store.update({
-      ...(model ? { models: { [engine]: model } } : {}),
-      ...(makeDefault ? { default: engine } : {}),
-    });
-    return { model, isDefault: this.store.get().default === engine };
-  }
-
-  /** Whether a free service accepts the key, with a plain reason when it does not. */
-  private async checkService(service: FreeService): Promise<ProviderStatus> {
-    const key = this.store.key(service.id as KeyedEngine);
-    if (!key) return { ok: false, reason: `Add your ${service.label} API key.` };
-    try {
-      const res = await this.fetch(`${service.baseUrl}/models`, {
-        headers: { authorization: `Bearer ${key}` },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (res.status === 401 || res.status === 403)
-        return { ok: false, reason: `${service.label} rejected the API key.` };
-      if (res.status === 429) return { ok: true, detail: "limit reached for now" };
-      if (!res.ok) return { ok: false, reason: `${service.label} answered HTTP ${res.status}.` };
-      return { ok: true, detail: "free plan" };
-    } catch (error) {
-      return { ok: false, reason: `${service.label} is not reachable (${errorMessage(error)}).` };
-    }
-  }
-
   private async getJson(url: string, headers: Record<string, string> = {}): Promise<unknown> {
     const res = await this.fetch(url, { headers, signal: AbortSignal.timeout(8000) });
     if (!res.ok) throw new Error(`${url} answered HTTP ${res.status}`);
     return res.json();
-  }
-
-  private async checkOpenRouter(): Promise<ProviderStatus> {
-    const key = this.store.key("openrouter");
-    if (!key) return { ok: false, reason: "Add your OpenRouter API key." };
-    try {
-      const res = await this.fetch(`${OPENROUTER_URL}/key`, {
-        headers: { authorization: `Bearer ${key}` },
-        signal: AbortSignal.timeout(8000),
-      });
-      if (res.status === 401 || res.status === 403)
-        return { ok: false, reason: "OpenRouter rejected the API key." };
-      if (!res.ok) return { ok: false, reason: `OpenRouter answered HTTP ${res.status}.` };
-      const body: unknown = await res.json();
-      const data = isRecord(body) && isRecord(body.data) ? body.data : {};
-      return { ok: true, detail: data.is_free_tier === true ? "free tier" : "paid" };
-    } catch (error) {
-      return { ok: false, reason: `OpenRouter is not reachable (${errorMessage(error)}).` };
-    }
   }
 
   private async checkOllama(): Promise<ProviderStatus> {

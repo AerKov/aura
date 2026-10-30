@@ -1,20 +1,18 @@
 import { type PageId, type SettingsTab, settingsTabOf } from "@aura/shared";
-import { Bot, Cpu, Database, Palette, Settings as SettingsIcon, Wrench, Zap } from "lucide-react";
+import { Bot, Cpu, History, Palette, Settings as SettingsIcon, Zap } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { EmbeddedPage } from "@/components/page";
 import { AgentsView } from "@/features/agents/agents-view";
+import { AgentToolServers } from "@/features/agents/tool-servers";
 import { BackupsView } from "@/features/backups/backups-view";
-import { CatalogView } from "@/features/catalog/catalog-view";
 import { setState, useChatStore } from "@/features/chat/store";
 import { WebhookInfo } from "@/features/chat/webhook-info";
 import { CustomizeView } from "@/features/customize/customize-view";
 import { EnginesView } from "@/features/engines/engines-view";
-import { SandboxCard } from "@/features/engines/sandbox-card";
 import { JobsView } from "@/features/jobs/jobs-view";
 import { useT } from "@/features/localization/i18n";
 import { LocalizationView } from "@/features/localization/localization-view";
 import { MemoryView } from "@/features/memory/memory-view";
-import { ModulesCard } from "@/features/settings/modules-card";
 import { SkillsView } from "@/features/skills/skills-view";
 import { cn } from "@/lib/utils";
 
@@ -23,11 +21,10 @@ const TABS: { id: SettingsTab; label: string; icon: typeof Cpu }[] = [
   { id: "helpers", label: "Helpers", icon: Bot },
   { id: "automations", label: "Automations", icon: Zap },
   { id: "look", label: "Look", icon: Palette },
-  { id: "data", label: "Data", icon: Database },
-  { id: "advanced", label: "Advanced", icon: Wrench },
+  { id: "history", label: "History", icon: History },
 ];
 
-type HelpersPart = "team" | "skills" | "memory";
+type HelpersPart = "team" | "skills" | "memory" | "tools";
 
 /**
  * Settings (ADR 0039): one app with tabs instead of seven. Each tab shows the pages that used to be
@@ -85,11 +82,19 @@ export function SettingsView({ page }: { page: PageId }) {
                   ["team", t("Team")],
                   ["skills", t("Skill library")],
                   ["memory", t("What they remember")],
+                  ["tools", t("Tools and keys")],
                 ]}
               />
               {part === "team" && <AgentsView />}
               {part === "skills" && <SkillsView />}
               {part === "memory" && <MemoryView />}
+              {part === "tools" && (
+                <section className="min-w-0 flex-1 overflow-y-auto px-8 pb-10 max-md:px-4">
+                  <div className="mx-auto max-w-3xl">
+                    <AgentToolServers />
+                  </div>
+                </section>
+              )}
             </>
           )}
           {tab === "automations" && (
@@ -111,20 +116,7 @@ export function SettingsView({ page }: { page: PageId }) {
               <LocalizationView />
             </Column>
           )}
-          {tab === "data" && (
-            <Column>
-              <BackupsView />
-              <CatalogView />
-            </Column>
-          )}
-          {tab === "advanced" && (
-            <Column>
-              <div className="mx-auto grid w-full max-w-4xl gap-6 px-8 py-8 max-md:px-4">
-                <ModulesCard />
-                <SandboxCard />
-              </div>
-            </Column>
-          )}
+          {tab === "history" && <BackupsView />}
         </div>
       </EmbeddedPage.Provider>
     </section>

@@ -1,6 +1,6 @@
 # 0037: Free AI services first, agent apps for advanced users
 
-- Status: accepted
+- Status: replaced by ADR 0040
 - Date: 2026-10-29
 - Phase: 37 (follow-up)
 

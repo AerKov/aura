@@ -4,7 +4,6 @@ import { Check, Loader, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useT } from "@/features/localization/i18n";
-import { useAdvanced } from "@/features/shell/launcher";
 import { cn } from "@/lib/utils";
 
 /** What a tool does, as a verb the user understands (ADR 0034). */
@@ -44,7 +43,6 @@ export function RunCard({
   onStop?: () => void;
 }) {
   const t = useT();
-  const advanced = useAdvanced();
   const [open, setOpen] = useState(false);
   const running = card.status === "running";
   const looked = card.tools.filter((x) => LOOKS.has(x.name)).length;
@@ -128,8 +126,8 @@ export function RunCard({
             <li className="text-muted-foreground mt-1 font-mono text-[11px]">
               {usage.costUsd !== null &&
                 t("Spent ≈ {usd}", { usd: `$${usage.costUsd.toFixed(2)}` })}
-              {advanced && ` · ${formatTokens(usage.tokens)} ${t("tokens")}`}
-              {advanced && card.commit && ` · ${card.commit}`}
+              {` · ${formatTokens(usage.tokens)} ${t("tokens")}`}
+              {card.commit && ` · ${card.commit}`}
             </li>
           )}
         </ul>

@@ -31,9 +31,9 @@ Full product and architecture spec: `docs/SPEC.md`. Read the relevant section be
   `@streamdown/code` (shiki). Use `components/markdown.tsx`. Mermaid/KaTeX later.
 - **LLM:** only through the `LLMProvider` interface ("engines", ADR 0011/0012): Claude Agent SDK
   (`@anthropic-ai/claude-agent-sdk`) under the user's own Claude Code login; Gemini CLI, Codex and
-  OpenCode over ACP (`@agentclientprotocol/sdk`) under their own logins (advanced users); Aura's own
-  agent loop over OpenAI-compatible APIs, which is the default path: free services first (Google
-  Gemini, Groq, OpenRouter, Cerebras, Mistral; ADR 0037), then Ollama, LM Studio…
+  OpenCode over ACP (`@agentclientprotocol/sdk`) under their own logins; Aura's own agent loop
+  over OpenAI-compatible APIs: the built-in llama.cpp first (ADR 0038), then Ollama, LM Studio or
+  any compatible server (ADR 0040).
 - **Agent tools:** MCP.
 - **Lint/format:** Biome. **Tests:** `bun test`.
 
@@ -77,9 +77,9 @@ docs/
 
 1. **Local-first.** The server and SurrealDB run on the user's machine. Mobile is a thin client that
    connects to the user's desktop server; it cannot run the sidecar.
-2. **The core and its apps (ADR 0027).** The core (DB, shell, app runtime, catalog, approvals) is
-   always on; built-in apps (chats, skills, memory, schedule, signals) can be turned
-   off, and off means no routes, tools or background work. **Every app has a chat.** Only three
+2. **The core and its apps (ADR 0027, 0040).** Everything built in (chats, helpers, skills,
+   memory, automations, alerts) is always on; there are no switches and no advanced mode.
+   **Every app has a chat.** Only three
    chat kinds: direct (user + orchestrator), group (a project, an app, or one the user makes), system (alerts). Chats
    have topics, one level, like Telegram forum topics. No workspaces, channels or nested threads.
    Replies to a message, like Telegram.

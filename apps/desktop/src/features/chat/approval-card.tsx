@@ -5,7 +5,6 @@ import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { tryCss } from "@/features/customize/appearance";
 import { useT } from "@/features/localization/i18n";
-import { useAdvanced } from "@/features/shell/launcher";
 import { cn } from "@/lib/utils";
 import { decideApproval, reportError } from "./actions";
 
@@ -16,12 +15,11 @@ import { decideApproval, reportError } from "./actions";
  */
 export function ApprovalCard({ card, name }: { card: ApprovalCardData; name: string }) {
   const t = useT();
-  const advanced = useAdvanced();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [trying, setTrying] = useState(false);
   // Without plain changes the details are all there is to read, so they start open.
-  const [details, setDetails] = useState(card.changes.length === 0 && advanced);
+  const [details, setDetails] = useState(card.changes.length === 0);
   const pending = card.status === "pending";
 
   // Stop the try-on when the card is decided or leaves the screen.

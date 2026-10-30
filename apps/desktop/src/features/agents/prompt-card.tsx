@@ -4,7 +4,6 @@ import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { openChat, reportError } from "@/features/chat/actions";
-import { useModules } from "@/features/shell/apps";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -267,44 +266,38 @@ function PartRow({
  * with the notes each one got in its prompt.
  */
 export function MemoryCard({ handle }: { handle: string }) {
-  const modules = useModules();
   const [runs, setRuns] = useState<Run[] | null>(null);
   const [notes, setNotes] = useState<Note[] | null>(null);
   const [open, setOpen] = useState<string | null>(null);
 
   useEffect(() => {
     loadRuns(handle).then(setRuns).catch(reportError);
-    if (modules.memory) loadNotes(handle).then(setNotes).catch(reportError);
-    else setNotes(null);
-  }, [handle, modules.memory]);
+    loadNotes(handle).then(setNotes).catch(reportError);
+  }, [handle]);
 
   return (
     <div className="bg-card min-w-0 rounded-2xl border p-5">
       <h3 className="kicker mb-2 flex items-center gap-1.5">
         <Brain className="size-3.5" /> Memory and recent runs
       </h3>
-      {modules.memory ? (
-        notes && notes.length > 0 ? (
-          <>
-            <p className="text-muted-foreground mb-1 text-xs">
-              Its notes ({notes.length}). Each run gets the ones that match the message.
-            </p>
-            <ul className="mb-4 max-h-48 space-y-0.5 overflow-auto text-[13px]">
-              {notes.map((n) => (
-                <li key={n.id} className="flex gap-2">
-                  <span className="text-muted-foreground shrink-0 text-[11px]">
-                    {n.createdAt.slice(0, 10)}
-                  </span>
-                  {n.text}
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <p className="text-muted-foreground mb-4 text-sm">No notes yet.</p>
-        )
+      {notes && notes.length > 0 ? (
+        <>
+          <p className="text-muted-foreground mb-1 text-xs">
+            Its notes ({notes.length}). Each run gets the ones that match the message.
+          </p>
+          <ul className="mb-4 max-h-48 space-y-0.5 overflow-auto text-[13px]">
+            {notes.map((n) => (
+              <li key={n.id} className="flex gap-2">
+                <span className="text-muted-foreground shrink-0 text-[11px]">
+                  {n.createdAt.slice(0, 10)}
+                </span>
+                {n.text}
+              </li>
+            ))}
+          </ul>
+        </>
       ) : (
-        <p className="text-muted-foreground mb-4 text-sm">Memory is off, so runs get no notes.</p>
+        <p className="text-muted-foreground mb-4 text-sm">No notes yet.</p>
       )}
 
       {runs === null ? null : runs.length === 0 ? (

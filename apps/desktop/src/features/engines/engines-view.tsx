@@ -1,5 +1,5 @@
-import { type EngineId, type EngineModel, freeServiceOf } from "@aura/shared";
-import { Check, Copy, Cpu, ExternalLink, KeyRound, RefreshCw } from "lucide-react";
+import type { EngineId, EngineModel } from "@aura/shared";
+import { Check, Cpu, KeyRound, RefreshCw } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useId, useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
@@ -8,36 +8,26 @@ import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { LocalAiCard } from "./local-ai-card";
 
-type KeyedId = "google" | "groq" | "openrouter" | "cerebras" | "mistral" | "openai-compatible";
-
 type EnginesData = Awaited<ReturnType<typeof loadEngines>>;
 type Engine = EnginesData["engines"][number];
 
 const loadEngines = () => call(() => api.engines.get());
 
-/** The order of the page (ADR 0037): free services first, then local models, then agent apps. */
-const GROUPS: { key: string; title: string; text: string; ids: EngineId[]; collapsed?: boolean }[] =
-  [
-    {
-      key: "free",
-      title: "Start free",
-      text: "Make a free key on a service's site and paste it here: your helpers run on Aura's own agent loop. Nothing to install.",
-      ids: ["google", "groq", "openrouter", "cerebras", "mistral"],
-    },
-    {
-      key: "local",
-      title: "On your computer",
-      text: "Local models: free and private, but they need a capable machine. Aura can install llama.cpp and a model for you; Ollama, LM Studio and any OpenAI-compatible server work too.",
-      ids: ["llama-cpp", "ollama", "openai-compatible"],
-    },
-    {
-      key: "agent",
-      title: "Advanced: your own agent app",
-      text: "Complete coding agents you install and log in to yourself. Aura drives them and decides what they may touch; your login stays with them.",
-      ids: ["claude-code", "codex", "gemini-cli", "opencode"],
-      collapsed: true,
-    },
-  ];
+/** The order of the page: models on this computer first, then agent apps you already use. */
+const GROUPS: { key: string; title: string; text: string; ids: EngineId[] }[] = [
+  {
+    key: "local",
+    title: "On your computer",
+    text: "Local models: free and private, but they need a capable machine. Aura can install llama.cpp and a model for you; Ollama, LM Studio and any OpenAI-compatible server work too.",
+    ids: ["llama-cpp", "ollama", "openai-compatible"],
+  },
+  {
+    key: "agent",
+    title: "Your own agent app",
+    text: "Complete coding agents you install and log in to yourself. Aura drives them and decides what they may touch; your login stays with them.",
+    ids: ["claude-code", "codex", "gemini-cli", "opencode"],
+  },
+];
 
 const KIND_LABEL: Record<Engine["kind"], string> = {
   official: "Agent SDK",
@@ -49,8 +39,8 @@ export const inputClass =
   "bg-background focus:border-primary/60 focus:ring-primary/15 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-4";
 
 /**
- * Agent engines (ADR 0011): Claude Code under the user's own login, or Aura's own agent loop on
- * OpenRouter (free models available), Ollama (local, free) or any OpenAI-compatible server.
+ * Agent engines (ADR 0011): Claude Code and other agent apps under the user's own login, or Aura's
+ * own agent loop on the built-in local AI, Ollama or any OpenAI-compatible server.
  */
 export function EnginesView() {
   const [data, setData] = useState<EnginesData | null>(null);
@@ -83,9 +73,8 @@ export function EnginesView() {
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-4xl">
         <PageHeader title="Helper programs" icon={<Cpu className="text-primary size-7" />}>
-          Where your helpers' AI comes from. The easiest start is a free AI service: make a key,
-          paste it, done. Local models and agent apps you already use (Claude Code, Codex…) are
-          further down. Which helper uses which AI is set on its card under Helpers.
+          Where your helpers' AI comes from: a model on this computer, or an agent app you already
+          use (Claude Code, Codex…). Which helper uses which AI is set on its card under Helpers.
         </PageHeader>
 
         <div className="mb-2 flex justify-end">
@@ -113,10 +102,10 @@ export function EnginesView() {
                       engine={engine}
                       onSave={saveSettings}
                       onKey={async (key) => {
-                        if (!engine.needsKey && engine.id !== "openai-compatible") return;
+                        if (engine.id !== "openai-compatible") return;
                         try {
                           await call(() =>
-                            api.engines({ engine: engine.id as KeyedId }).key.put({ key }),
+                            api.engines({ engine: "openai-compatible" }).key.put({ key }),
                           );
                           await refresh();
                           await loadProviderStatus();
@@ -129,17 +118,7 @@ export function EnginesView() {
                 )}
               </div>
             );
-            return group.collapsed ? (
-              <details
-                key={group.key}
-                className="mb-8"
-                open={members.some((e) => e.isDefault || e.status.ok)}
-              >
-                <summary className="kicker cursor-pointer">{group.title}</summary>
-                <p className="text-muted-foreground mt-1 mb-4 text-sm">{group.text}</p>
-                {body}
-              </details>
-            ) : (
+            return (
               <section key={group.key} className="mb-8">
                 <h2 className="kicker">{group.title}</h2>
                 <p className="text-muted-foreground mt-1 mb-4 text-sm">{group.text}</p>
@@ -258,17 +237,12 @@ function EngineCard({
   onKey: (key: string | null) => Promise<void>;
 }) {
   const [model, setModel] = useState(engine.model ?? "");
-  // Connecting a key picks a model on the server: show it.
   useEffect(() => setModel(engine.model ?? ""), [engine.model]);
   const [baseUrl, setBaseUrl] = useState(engine.baseUrl ?? "");
   const [label, setLabel] = useState(engine.label);
   const [key, setKey] = useState("");
-  const [freeOnly, setFreeOnly] = useState(true);
   const keyed = engine.needsKey || engine.id === "openai-compatible";
-  const service = freeServiceOf(engine.id);
-  const models = useModels(engine.id, engine.status.ok || engine.kind !== "aura").filter(
-    (m) => !(engine.id === "openrouter" && freeOnly) || m.free,
-  );
+  const models = useModels(engine.id, engine.status.ok || engine.kind !== "aura");
 
   // With no model typed, take the first one the server offers (the placeholder shows it).
   const save = () =>
@@ -358,28 +332,6 @@ function EngineCard({
               )
             )}
           </div>
-          {service && !engine.hasKey && (
-            <span className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-2 text-xs">
-              <a
-                href={service.keyUrl}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="text-signal-text inline-flex items-center gap-1 underline"
-              >
-                Make a free key <ExternalLink className="size-3" />
-              </a>
-              <button
-                type="button"
-                className="hover:text-foreground inline-flex items-center gap-1"
-                onClick={() => void navigator.clipboard?.writeText(service.keyUrl)}
-              >
-                <Copy className="size-3" /> {service.keyUrl.replace("https://", "")}
-              </button>
-              <span className="basis-full">
-                It stays on this computer and goes only to {service.label}.
-              </span>
-            </span>
-          )}
         </Field>
       )}
 
@@ -398,16 +350,6 @@ function EngineCard({
           }
         />
       </Field>
-      {engine.id === "openrouter" && (
-        <label className="text-muted-foreground -mt-1 flex items-center gap-2 text-xs">
-          <input
-            type="checkbox"
-            checked={freeOnly}
-            onChange={(e) => setFreeOnly(e.target.checked)}
-          />
-          Show free models only
-        </label>
-      )}
       {engine.kind === "aura" && (
         <p className="text-muted-foreground text-xs">
           Tools: files, search, shell, web fetch and your MCP servers. Smaller models follow tools

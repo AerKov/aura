@@ -7,17 +7,15 @@ import { setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { useAdvanced } from "./launcher";
 
 type Version = { hash: string; author: string; at: string; subject: string };
 
 /**
  * The bar of an app built in Aura (ADR 0024): its chat (a panel inside the tile, ADR 0027), a
- * preview of changes waiting for approval, and its versions. `chat`: whether chats are on.
+ * preview of changes waiting for approval, and its versions.
  */
-export function AppControls({ ext, chat }: { ext: ExtensionInfo; chat: boolean }) {
+export function AppControls({ ext }: { ext: ExtensionInfo }) {
   const t = useT();
-  const advanced = useAdvanced();
   const preview = useChatStore((s) => s.previewDraft[ext.id] ?? false);
   const chatOpen = useChatStore((s) => s.appChat[ext.id] ?? false);
   const app = ext.app;
@@ -54,7 +52,7 @@ export function AppControls({ ext, chat }: { ext: ExtensionInfo; chat: boolean }
           </button>
         </div>
       )}
-      {app.draft && advanced && (
+      {app.draft && (
         <Button
           size="icon"
           variant="ghost"
@@ -70,20 +68,18 @@ export function AppControls({ ext, chat }: { ext: ExtensionInfo; chat: boolean }
         </Button>
       )}
       <Versions appId={ext.id} />
-      {advanced && <DataMenu appId={ext.id} />}
+      <DataMenu appId={ext.id} />
       {ext.secrets.length > 0 && <AppSecretsMenu appId={ext.id} />}
-      {chat && (
-        <Button
-          size="sm"
-          variant={chatOpen ? "secondary" : "ghost"}
-          className={cn("h-7 gap-1 px-2 text-xs", chatOpen && "border-ring")}
-          aria-pressed={chatOpen}
-          title={t("The app's chat: use it and change it by asking")}
-          onClick={() => setAppChat(ext.id, !chatOpen)}
-        >
-          <MessageSquare strokeWidth={1.5} /> {t("Chat")}
-        </Button>
-      )}
+      <Button
+        size="sm"
+        variant={chatOpen ? "secondary" : "ghost"}
+        className={cn("h-7 gap-1 px-2 text-xs", chatOpen && "border-ring")}
+        aria-pressed={chatOpen}
+        title={t("The app's chat: use it and change it by asking")}
+        onClick={() => setAppChat(ext.id, !chatOpen)}
+      >
+        <MessageSquare strokeWidth={1.5} /> {t("Chat")}
+      </Button>
     </>
   );
 }

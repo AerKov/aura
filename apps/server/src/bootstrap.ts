@@ -28,7 +28,6 @@ import { CatalogService } from "./modules/catalog/service";
 import { catalogTools } from "./modules/catalog/tools";
 import { ChatRepo } from "./modules/chat/repo";
 import { ChatService } from "./modules/chat/service";
-import { ModuleService } from "./modules/core/modules";
 import { AppearanceService } from "./modules/customize/appearance";
 import { ExtensionBridge } from "./modules/customize/bridge";
 import { ExtensionService } from "./modules/customize/extensions";
@@ -100,7 +99,6 @@ export async function createServices(deps: {
   /** Post the orchestrator's welcome on a new install (off in most tests). */
   welcome?: boolean;
 }) {
-  const modules = new ModuleService({ dataDir: deps.dataDir, hub: deps.hub });
   const safeMode: SafeMode = deps.safeMode ?? { on: false, reason: null };
   const repo = new ChatRepo(deps.db);
   const chat = new ChatService(repo);
@@ -124,7 +122,7 @@ export async function createServices(deps: {
     approvals,
   });
   const tasks = new TaskService({ db: deps.db, repo, chat });
-  const jobs = new JobService({ db: deps.db, repo, chat, enabled: () => modules.enabled("jobs") });
+  const jobs = new JobService({ db: deps.db, repo, chat });
   const alerts = new AlertService({
     db: deps.db,
     repo,
@@ -236,7 +234,6 @@ export async function createServices(deps: {
     apps: { isApp: (id) => appService.isApp(id), data: appData, actions: appActions },
     alerts: {
       ingest: (source, payload) => alerts.ingest(source, payload),
-      enabled: () => modules.enabled("alerts"),
     },
   });
   const layout = new LayoutService({ db: deps.db, hub: deps.hub, extensions });
@@ -255,7 +252,6 @@ export async function createServices(deps: {
     afterRestore: async () => {
       deps.reloadEngines?.();
       sandbox.store.reload();
-      modules.reload();
       localization.reload();
       deps.hub.publish({ type: "layout.updated", layout: await layout.get() });
       deps.hub.publish({ type: "customize.updated" });
@@ -299,7 +295,6 @@ export async function createServices(deps: {
   });
   registerExecutors(toolDeps);
   const runtime = new AgentRuntime({
-    enabled: () => modules.enabled("chats"),
     language: () => localization.agentLanguage(),
     chat,
     repo,
@@ -308,66 +303,65 @@ export async function createServices(deps: {
     engines: deps.engines,
     agents: deps.agents,
     projects,
-    appTools: async (ctx) =>
-      modules.filterTools([
-        ...toolsFor(toolDeps, ctx),
-        // In an app's chat, agents use the app through its actions (phase 25) and can look at it.
-        ...(ctx.chat.projectId && appService.isApp(ctx.chat.projectId)
-          ? [
-              ...(await appActions.tools(ctx.chat.projectId, {
-                handle: ctx.handle,
-                chatId: ctx.chat.id,
-                topicId: ctx.topicId,
-              })),
-              snapshotTool(appSnapshots, ctx.chat.projectId),
-              libraryTool(projects.workspaceOf(ctx.chat.projectId), deps.fetch),
-            ]
-          : []),
-        ...(ctx.handle === "orchestrator"
-          ? [
-              ...agentSetupTools(agentSetup),
-              ...helpTools(),
-              ...localizationTools(localization),
-              ...restorePointTools(restorePoints, approvals, {
-                handle: ctx.handle,
-                chatId: ctx.chat.id,
-                topicId: ctx.topicId,
-              }),
-            ]
-          : []),
-        // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
-        // orchestrator had no such tools and claimed to have sent cards).
-        ...(ctx.handle === "orchestrator"
-          ? [
-              ...shellTools(layout),
-              ...appTools(approvals, {
-                handle: ctx.handle,
-                chatId: ctx.chat.id,
-                topicId: ctx.topicId,
-              }),
-              ...barTools(
-                { apps: appService, appearance, chat },
-                { handle: ctx.handle, depth: ctx.depth },
-              ),
-              ...customizeTools(customize, {
-                handle: ctx.handle,
-                chatId: ctx.chat.id,
-                topicId: ctx.topicId,
-              }),
-              ...catalogTools(catalog, {
-                handle: ctx.handle,
-                chatId: ctx.chat.id,
-                topicId: ctx.topicId,
-              }),
-            ]
-          : []),
-      ]),
+    appTools: async (ctx) => [
+      ...toolsFor(toolDeps, ctx),
+      // In an app's chat, agents use the app through its actions (phase 25) and can look at it.
+      ...(ctx.chat.projectId && appService.isApp(ctx.chat.projectId)
+        ? [
+            ...(await appActions.tools(ctx.chat.projectId, {
+              handle: ctx.handle,
+              chatId: ctx.chat.id,
+              topicId: ctx.topicId,
+            })),
+            snapshotTool(appSnapshots, ctx.chat.projectId),
+            libraryTool(projects.workspaceOf(ctx.chat.projectId), deps.fetch),
+          ]
+        : []),
+      ...(ctx.handle === "orchestrator"
+        ? [
+            ...agentSetupTools(agentSetup),
+            ...helpTools(),
+            ...localizationTools(localization),
+            ...restorePointTools(restorePoints, approvals, {
+              handle: ctx.handle,
+              chatId: ctx.chat.id,
+              topicId: ctx.topicId,
+            }),
+          ]
+        : []),
+      // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
+      // orchestrator had no such tools and claimed to have sent cards).
+      ...(ctx.handle === "orchestrator"
+        ? [
+            ...shellTools(layout),
+            ...appTools(approvals, {
+              handle: ctx.handle,
+              chatId: ctx.chat.id,
+              topicId: ctx.topicId,
+            }),
+            ...barTools(
+              { apps: appService, appearance, chat },
+              { handle: ctx.handle, depth: ctx.depth },
+            ),
+            ...customizeTools(customize, {
+              handle: ctx.handle,
+              chatId: ctx.chat.id,
+              topicId: ctx.topicId,
+            }),
+            ...catalogTools(catalog, {
+              handle: ctx.handle,
+              chatId: ctx.chat.id,
+              topicId: ctx.topicId,
+            }),
+          ]
+        : []),
+    ],
     mcpServers: (handle) => mcp.forAgent(handle),
     promptExtras: (profile) => [
       {
         source: "skills",
         title: "Its skills",
-        text: modules.enabled("skills") ? skills.promptFor(profile) : "",
+        text: skills.promptFor(profile),
       },
       {
         source: "guide",
@@ -375,10 +369,7 @@ export async function createServices(deps: {
         text: profile.handle === "orchestrator" ? AURA_GUIDE : "",
       },
     ],
-    memoryPrompt: (input) =>
-      modules.enabled("memory")
-        ? memory.promptFor(input)
-        : Promise.resolve({ text: "", notes: [] }),
+    memoryPrompt: (input) => memory.promptFor(input),
     sandboxPolicy: () => sandbox.policy(),
     // Variables its command tool servers share first; the agent's own win on a clash.
     agentEnv: (profile) =>
@@ -433,7 +424,6 @@ export async function createServices(deps: {
     layout,
     catalog,
     safeMode,
-    modules,
     appVersion: SERVER_VERSION,
     devices,
   };

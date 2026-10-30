@@ -16,17 +16,8 @@ import { getState, setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
-import {
-  appAvailable,
-  BUILTIN_ICONS,
-  openEntry,
-  PAGES,
-  railApp,
-  useExtensionApps,
-  useModules,
-} from "./apps";
+import { BUILTIN_ICONS, openEntry, PAGES, railApp, useExtensionApps } from "./apps";
 import { BarFrame, barThickness } from "./bar-frame";
-import { useAdvanced } from "./launcher";
 import { openAppRef, phoneAppOf } from "./layout";
 import { arrangeRail } from "./rail-layout";
 import { useIsPhone } from "./shell";
@@ -46,14 +37,9 @@ export interface RailItem {
 /** Setup pages stay on the desktop; the phone's tab bar keeps the daily ones. */
 const DESKTOP_ONLY = new Set<string>([]);
 
-/**
- * The bar's built-in items around the user's apps (ADR 0034). The plain view keeps the daily ones;
- * advanced mode adds the rest.
- */
-const SIMPLE_HEAD = ["chats", "signals"];
-const SIMPLE_TAIL: PageId[] = ["settings"];
-const ADVANCED_HEAD = ["chats", "signals"];
-const ADVANCED_TAIL: PageId[] = ["settings"];
+/** The bar's built-in items around the user's apps (ADR 0039). */
+const HEAD = ["chats", "signals"];
+const TAIL: PageId[] = ["settings"];
 
 /** Every rail item in its default order, before the user's layout is applied. */
 export function useRailItems(): RailItem[] {
@@ -61,8 +47,6 @@ export function useRailItems(): RailItem[] {
   const phoneApp = useChatStore(phoneAppOf);
   const phone = useIsPhone();
   const extensions = useExtensionApps();
-  const modules = useModules();
-  const advanced = useAdvanced();
   const t = useT();
   const open = new Set(phone ? [phoneApp] : visibleApps(layout));
   const focusedApp = phone ? phoneApp : focusedAppOf(layout);
@@ -77,10 +61,8 @@ export function useRailItems(): RailItem[] {
     const shown = key !== "signals" && open.has(app);
     return { key, label: t(label), icon, active: shown, focused: shown && focusedApp === app };
   };
-  const head = advanced ? ADVANCED_HEAD : SIMPLE_HEAD;
-  const tail = advanced ? ADVANCED_TAIL : SIMPLE_TAIL;
   return [
-    ...head.map(builtin),
+    ...HEAD.map(builtin),
     ...extensions.map((ext) => ({
       key: `ext:${ext.id}`,
       label: ext.name,
@@ -88,11 +70,8 @@ export function useRailItems(): RailItem[] {
       active: open.has(`ext:${ext.id}`),
       focused: focusedApp === `ext:${ext.id}`,
     })),
-    ...tail.map(builtin),
-  ].filter(
-    (item) =>
-      appAvailable(railApp(item.key), modules) && (item.key !== "signals" || modules.alerts),
-  );
+    ...TAIL.map(builtin),
+  ];
 }
 
 function focusedAppOf(layout: ReturnType<typeof getState>["layout"]): string | null {
@@ -369,7 +348,6 @@ export function modLabel(mod: ModKey): string {
 /** The bar's status, like waybar's modules: the clock, the connection, approvals waiting. */
 function Status({ vertical }: { vertical: boolean }) {
   const connection = useChatStore((s) => s.connection);
-  const chats = useModules().chats;
   const pendingApprovals = usePendingApprovals();
   const t = useT();
   const [now, setNow] = useState(() => new Date());
@@ -412,7 +390,7 @@ function Status({ vertical }: { vertical: boolean }) {
               : "bg-destructive",
         )}
       />
-      {chats && pendingApprovals > 0 && (
+      {pendingApprovals > 0 && (
         <button
           type="button"
           onClick={openDirect}

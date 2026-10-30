@@ -15,6 +15,6 @@ Aura is a home for your own apps. Each app opens as a tile on this screen and ha
 **Around the screen**
 - **Home** (the logo at the top left) shows all your apps. The icons on the left open them; Shift-click opens one beside. Drag the border between tiles to resize them.
 - Nothing changes without you: I show every change first, and it is saved in \`~/.aura\` (a git repository), so it can be undone.
-- **AI connection**: helpers think with an AI you connect. The easiest is a free service (Google Gemini, Groq, OpenRouter…): make a key, paste it. Claude Code and other agent apps or local models are there for advanced use.
+- **AI connection**: helpers think with an AI you connect. The easiest is the built-in local AI: Aura installs llama.cpp and a model that fits this computer. Claude Code and other agent apps you already use work too.
 
 What would you like to make? Write in any language.`;

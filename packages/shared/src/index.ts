@@ -8,6 +8,5 @@ export * from "./health";
 export * from "./layout";
 export * from "./locale";
 export * from "./memory";
-export * from "./modules";
 export * from "./wm";
 export * from "./ws";

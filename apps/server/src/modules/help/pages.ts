@@ -61,7 +61,7 @@ export const HELP_PAGES: HelpPage[] = [
     id: "engines",
     title: "Engines",
     summary:
-      "What runs agents: Claude Code, Gemini CLI, Codex, OpenCode, OpenRouter, Ollama; logins and models",
+      "What runs agents: the built-in local AI, Claude Code, Gemini CLI, Codex, OpenCode, Ollama; logins and models",
     text: Engines,
   },
   {

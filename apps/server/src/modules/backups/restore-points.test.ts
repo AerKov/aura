@@ -22,18 +22,16 @@ describe("restore points of the whole Aura (ADR 0033)", () => {
     await api.apps.post({ name: "Clients" });
     await t.appData.insert("clients", "clients", { name: "Petrenko" });
     await t.appearance.set({ wm: { gaps: 4 } });
-    await t.modules.set("memory", false);
     const original = readFileSync(prompt, "utf8");
 
     const point = (await api["restore-points"].post({ label: "Before the experiment" })).data;
     expect(point).toMatchObject({ label: "Before the experiment", auto: false, apps: ["clients"] });
 
-    // The experiment: a new app, other data, a changed prompt, settings and modules.
+    // The experiment: a new app, other data, a changed prompt, and settings.
     await api.apps.post({ name: "Board" });
     await t.appData.insert("clients", "clients", { name: "Kovalenko" });
     writeFileSync(prompt, `${original}\nExperiment.\n`);
     await t.appearance.set({ wm: { gaps: 16 } });
-    await t.modules.set("memory", true);
 
     const back = await api["restore-points"]({ id: point?.id ?? "" }).restore.post();
     expect(back.status).toBe(200);
@@ -41,7 +39,6 @@ describe("restore points of the whole Aura (ADR 0033)", () => {
     expect(t.apps.sources().map((a) => a.id)).toEqual(["clients"]);
     expect((await t.appData.list("clients", "clients")).map((r) => r.name)).toEqual(["Petrenko"]);
     expect((await t.appearance.get()).wm.gaps).toBe(4);
-    expect(t.modules.enabled("memory")).toBe(false);
     // The app made since left with a backup, not for good.
     expect((await api["app-backups"].get()).data?.map((b) => b.id)).toEqual(["board"]);
 
@@ -61,7 +58,6 @@ describe("restore points of the whole Aura (ADR 0033)", () => {
       "Petrenko",
     ]);
     expect((await t.appearance.get()).wm.gaps).toBe(16);
-    expect(t.modules.enabled("memory")).toBe(true);
 
     const list = (await api["restore-points"].get()).data ?? [];
     expect(list.length).toBe(3);

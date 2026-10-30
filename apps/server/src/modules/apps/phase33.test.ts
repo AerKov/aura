@@ -58,9 +58,6 @@ describe("phase 33: apps post alerts, the orchestrator relays, agents see apps",
       title: "TEST ONLY",
       count: 2,
     });
-
-    await t.modules.set("alerts", false);
-    expect((await post.post({ title: "x" })).status).toBe(404);
   });
 
   test("without alerts.write an app cannot post alerts", async () => {

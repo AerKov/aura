@@ -204,27 +204,6 @@ export function CustomizeView() {
         </h2>
         <RailEditor onError={setError} />
 
-        <h2 className="mb-2 flex items-center gap-2 font-semibold">
-          <Plug className="size-4" /> MCP servers
-        </h2>
-        <div className="space-y-2">
-          <p className="text-muted-foreground text-sm">
-            Add, test and assign them on the{" "}
-            <button type="button" className="text-primary hover:underline" onClick={showAgents}>
-              Agents
-            </button>{" "}
-            page.
-          </p>
-          {state?.mcpServers.map((s) => (
-            <div key={s.name} className="rounded-xl border p-4 text-sm">
-              <span className="font-medium">{s.name}</span>
-              <code className="bg-muted ml-2 rounded px-1.5 text-xs">{s.target}</code>
-              <p className="text-muted-foreground mt-1">
-                for {s.agents.map((a) => `@${a}`).join(", ")}
-              </p>
-            </div>
-          ))}
-        </div>
         <p className="text-muted-foreground mt-6 text-xs">App version {state?.appVersion}</p>
       </div>
     </section>

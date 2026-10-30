@@ -31,7 +31,8 @@ export const inputClass =
 
 /**
  * The agents' tool servers (MCP) and the secrets their variables and servers use (ADR 0020,
- * ADR 0030): part of the Agents page. Changes apply from each agent's next run.
+ * ADR 0030): the one place for them, Settings → Helpers → Tools and keys (ADR 0039). Changes
+ * apply from each agent's next run.
  */
 export function AgentToolServers() {
   const [data, setData] = useState<Overview | null>(null);
@@ -506,8 +507,8 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
       <h2 className="kicker mb-1">Secrets</h2>
       <p className="text-muted-foreground mb-3 text-[13px]">
         Keys and passwords, kept on this computer, outside your data folder's history, and never
-        shown again. A secret does nothing on its own: give it to an agent as a variable on the
-        Agents page (or to a server above), where stored secrets are one click away. In files it
+        shown again. A secret does nothing on its own: give it to an agent as a variable on its
+        helper's card (or to a server above), where stored secrets are one click away. In files it
         appears as{" "}
         <code className="font-mono">
           {"$"}
@@ -649,5 +650,5 @@ function HeadersEditor({
 
 /**
  * Variables for command-line tools and scripts (ADR 0020): a service's address and token, given to
- * the agents that use it. Each agent's own variables, on the Agents page, win on a clash.
+ * the agents that use it. Each agent's own variables, on its card, win on a clash.
  */
