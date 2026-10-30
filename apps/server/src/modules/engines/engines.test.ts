@@ -145,6 +145,7 @@ describe("agent engines", () => {
       "openrouter",
       "cerebras",
       "mistral",
+      "llama-cpp",
       "ollama",
       "openai-compatible",
       "claude-code",

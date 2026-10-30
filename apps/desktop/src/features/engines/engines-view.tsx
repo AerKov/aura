@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { loadProviderStatus, reportError } from "@/features/chat/actions";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { LocalAiCard } from "./local-ai-card";
 import { SandboxCard } from "./sandbox-card";
 
 type KeyedId = "google" | "groq" | "openrouter" | "cerebras" | "mistral" | "openai-compatible";
@@ -29,8 +30,8 @@ const GROUPS: { key: string; title: string; text: string; ids: EngineId[]; colla
     {
       key: "local",
       title: "On your computer",
-      text: "Local models: free and private, but they need a capable machine. Ollama, LM Studio and any OpenAI-compatible server.",
-      ids: ["ollama", "openai-compatible"],
+      text: "Local models: free and private, but they need a capable machine. Aura can install llama.cpp and a model for you; Ollama, LM Studio and any OpenAI-compatible server work too.",
+      ids: ["llama-cpp", "ollama", "openai-compatible"],
     },
     {
       key: "agent",
@@ -105,25 +106,33 @@ export function EnginesView() {
             const members = data.engines.filter((engine) => group.ids.includes(engine.id));
             const body = (
               <div key={`${group.key}-cards`} className="grid gap-4 md:grid-cols-2">
-                {members.map((engine) => (
-                  <EngineCard
-                    key={engine.id}
-                    engine={engine}
-                    onSave={saveSettings}
-                    onKey={async (key) => {
-                      if (!engine.needsKey && engine.id !== "openai-compatible") return;
-                      try {
-                        await call(() =>
-                          api.engines({ engine: engine.id as KeyedId }).key.put({ key }),
-                        );
-                        await refresh();
-                        await loadProviderStatus();
-                      } catch (error) {
-                        reportError(error);
-                      }
-                    }}
-                  />
-                ))}
+                {members.map((engine) =>
+                  engine.id === "llama-cpp" ? (
+                    <LocalAiCard
+                      key={engine.id}
+                      isDefault={engine.isDefault}
+                      onChanged={() => void refresh()}
+                    />
+                  ) : (
+                    <EngineCard
+                      key={engine.id}
+                      engine={engine}
+                      onSave={saveSettings}
+                      onKey={async (key) => {
+                        if (!engine.needsKey && engine.id !== "openai-compatible") return;
+                        try {
+                          await call(() =>
+                            api.engines({ engine: engine.id as KeyedId }).key.put({ key }),
+                          );
+                          await refresh();
+                          await loadProviderStatus();
+                        } catch (error) {
+                          reportError(error);
+                        }
+                      }}
+                    />
+                  ),
+                )}
               </div>
             );
             return group.collapsed ? (

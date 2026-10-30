@@ -5,6 +5,10 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Built-in local AI.** Aura installs llama.cpp for you and runs a model on this computer: pick one
+  that fits your memory (or any GGUF from Hugging Face), approve what will be downloaded, and watch
+  the progress. Checksums are verified; the server listens on this computer only.
+
 ## [0.38.0] - 2026-10-29: Free AI first, files, groups
 
 - **Free AI services come first.** Google Gemini, Groq, OpenRouter, Cerebras and Mistral: make a free

@@ -32,6 +32,8 @@ export interface OpenAICompatOptions {
   /** How spend is known: the service reports it (`usage.cost`), it is free (local), or unknown. */
   pricing: "usage-cost" | "free" | "unknown";
   defaultModel: () => string | null;
+  /** Called before each run, to start a local server on the model (ADR 0038). */
+  prepare?: (model: string, signal: AbortSignal) => Promise<void>;
   /** Readiness check; defaults to listing models. */
   check?: () => Promise<ProviderStatus>;
   fetch?: typeof fetch;
@@ -121,6 +123,12 @@ export class OpenAICompatProvider implements LLMProvider {
         message: `Add your ${this.label} API key in Engines.`,
         code: "auth",
       };
+      return;
+    }
+    try {
+      await this.opts.prepare?.(model, signal);
+    } catch (error) {
+      yield { type: "error", message: errorMessage(error), code: "other" };
       return;
     }
 

@@ -43,6 +43,7 @@ import { filesModule } from "./modules/files";
 import type { FileStore } from "./modules/files/store";
 import { type HealthDeps, healthModule } from "./modules/health";
 import type { JobService } from "./modules/jobs/service";
+import { localAiModule } from "./modules/localai";
 import { localizationModule } from "./modules/localization";
 import type { LocalizationService } from "./modules/localization/service";
 import { memoryModule } from "./modules/memory";
@@ -135,6 +136,7 @@ export function createApp(deps: AppDeps) {
       }),
     )
     .use(filesModule(deps))
+    .use(localAiModule(deps))
     .use(agentsModule(deps))
     .use(enginesModule(deps))
     .use(memoryModule(deps))

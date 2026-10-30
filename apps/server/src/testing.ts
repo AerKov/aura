@@ -37,6 +37,9 @@ export async function createTestApp(
     fetch?: typeof fetch;
     /** Whether the OS sandbox counts as available (default: not, so tests do not depend on it). */
     sandboxSupport?: () => { ok: true } | { ok: false; reason: string };
+    /** A fake llama-server process and system for the built-in local AI. */
+    llamaSpawn?: ConstructorParameters<typeof EngineRegistry>[0]["llamaSpawn"];
+    llamaSystem?: ConstructorParameters<typeof EngineRegistry>[0]["llamaSystem"];
     /** Fake agent CLIs for the ACP engines. */
     acpAgents?: ConstructorParameters<typeof EngineRegistry>[0]["acpAgents"];
     acpSpawn?: ConstructorParameters<typeof EngineRegistry>[0]["acpSpawn"];
@@ -59,6 +62,8 @@ export async function createTestApp(
     toolBridge,
     acpAgents: opts.acpAgents,
     acpSpawn: opts.acpSpawn,
+    llamaSpawn: opts.llamaSpawn,
+    llamaSystem: opts.llamaSystem,
   });
   const agents =
     opts.agents ?? (opts.fileAgents ? new FileAgentDirectory(dataDir) : new MemoryAgentDirectory());

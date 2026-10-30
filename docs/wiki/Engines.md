@@ -9,8 +9,11 @@ into Aura, and Aura's own agent loop runs on it. Aura picks a model for you and 
 default if nothing else works yet. Free plans have limits, and some use your prompts to improve their
 models: the card says what applies.
 
-**Local models.** Ollama, LM Studio, llama.cpp, vLLM: free and private, but they need a capable
-machine and a model that supports tools.
+**Local models.** Free and private, but they need a capable machine and a model that supports tools.
+**Built-in local AI** installs llama.cpp for you: open **Helper programs**, pick a model that fits your
+memory (or type any Hugging Face GGUF as `owner/name:Q4_K_M`), read the card that says what will be
+downloaded and from where, and press **Yes, download**. Checksums are verified; the model runs only on
+this computer, only while a helper uses it. Ollama, LM Studio, vLLM and other servers work too.
 
 **Agent apps (advanced).** Complete coding agents that you install and log in to yourself: Claude
 Code, Codex, Gemini CLI, OpenCode. Aura starts them, streams their work into the chat and decides what

@@ -1,0 +1,97 @@
+import { LOCAL_MODELS, parseRepoSpec } from "@aura/shared";
+import { Elysia, t } from "elysia";
+import { authGuard } from "../auth";
+import type { LocalSessions } from "../auth/sessions";
+import type { EngineRegistry } from "../engines/registry";
+import { ModelError } from "./huggingface";
+import { ReleaseError } from "./release";
+import { LocalAiError } from "./service";
+
+export interface LocalAiDeps {
+  sessions: LocalSessions;
+  engines: EngineRegistry;
+}
+
+/** A model the user named: a catalog id, or a Hugging Face repository like `owner/name:Q4_K_M`. */
+function specOf(name: string): { repo: string; quant: string } | null {
+  const known = LOCAL_MODELS.find((m) => m.id === name);
+  return known ? { repo: known.repo, quant: known.quant } : parseRepoSpec(name);
+}
+
+/**
+ * The built-in llama.cpp (ADR 0038). A plan downloads nothing; an install runs only for a plan the
+ * user approved, which the server remembers, so the addresses always come from the server.
+ */
+export const localAiModule = ({ sessions, engines }: LocalAiDeps) =>
+  new Elysia({ name: "local-ai" })
+    .use(authGuard(sessions))
+    .get("/local-ai", () => engines.localAi.status(), { auth: true })
+    .post(
+      "/local-ai/plan",
+      async ({ body, status }) => {
+        const spec = body.model ? specOf(body.model) : null;
+        if (body.model && !spec)
+          return status(400, {
+            error: "Choose a model from the list, or a Hugging Face repository like owner/name",
+          });
+        try {
+          return await engines.localAi.plan(spec);
+        } catch (error) {
+          if (
+            error instanceof LocalAiError ||
+            error instanceof ReleaseError ||
+            error instanceof ModelError
+          )
+            return status(400, { error: error.message });
+          throw error;
+        }
+      },
+      { auth: true, body: t.Object({ model: t.Nullable(t.String({ maxLength: 160 })) }) },
+    )
+    .post(
+      "/local-ai/install",
+      ({ body, status }) => {
+        try {
+          engines.localAi.install(body.planId);
+          return engines.localAi.status();
+        } catch (error) {
+          if (error instanceof LocalAiError) return status(400, { error: error.message });
+          throw error;
+        }
+      },
+      { auth: true, body: t.Object({ planId: t.String({ maxLength: 64 }) }) },
+    )
+    .post(
+      "/local-ai/cancel",
+      () => {
+        engines.localAi.cancel();
+        return engines.localAi.status();
+      },
+      { auth: true },
+    )
+    .post(
+      "/local-ai/use",
+      async ({ body, status }) => {
+        if (!engines.localAi.modelPath(body.file))
+          return status(404, { error: "That model is not downloaded" });
+        await engines.useLocalModel(body.file);
+        return engines.localAi.status();
+      },
+      { auth: true, body: t.Object({ file: t.String({ maxLength: 200 }) }) },
+    )
+    .delete(
+      "/local-ai/models/:file",
+      ({ params }) => {
+        engines.localAi.removeModel(params.file);
+        return engines.localAi.status();
+      },
+      { auth: true, params: t.Object({ file: t.String({ maxLength: 200 }) }) },
+    )
+    .delete(
+      "/local-ai",
+      () => {
+        engines.localAi.uninstall();
+        return engines.localAi.status();
+      },
+      { auth: true },
+    );

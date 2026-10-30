@@ -472,6 +472,10 @@ Files in chats (attach from the computer, helpers read them and hand files back)
 Free OpenAI-compatible services (Google Gemini, Groq, OpenRouter, Cerebras, Mistral) lead the
 engine choice, with a one-step "paste a key" start; local models next; agent apps as advanced.
 
+**Phase 37d: Built-in llama.cpp** (done, ADR 0038)
+Install llama.cpp from the official release and download a local model (curated list or any
+Hugging Face GGUF) after an approval card; the server runs on demand on 127.0.0.1.
+
 **Phase 38: Helpers** (next, ADR 0034)
 One app for everything about agents: Team, Skills, Memory and AI connection.
 

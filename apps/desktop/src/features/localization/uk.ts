@@ -347,4 +347,50 @@ export const UK: Record<string, string> = {
   "The free plan may ask for a phone number and may use your prompts to train models.":
     "Безкоштовний план може просити номер телефону й використовувати ваші запити для навчання моделей.",
   "Check again": "Перевірити ще раз",
+
+  // Built-in local AI (ADR 0038).
+  "Aura loop": "Цикл Aura",
+  "Built-in local AI": "Вбудований локальний ШІ",
+  free: "безкоштовно",
+  default: "типовий",
+  "Aura installs llama.cpp for you and runs a model on this computer: free and private. Choose a model that fits your memory.":
+    "Aura сама встановить llama.cpp і запустить модель на цьому комп'ютері: безкоштовно й приватно. Оберіть модель, що вміщається у вашу пам'ять.",
+  "llama.cpp {tag} ({variant}) is installed.": "llama.cpp {tag} ({variant}) встановлено.",
+  "llama.cpp is not installed yet.": "llama.cpp ще не встановлено.",
+  "This computer has {gb} GB of memory.": "На цьому комп'ютері {gb} ГБ пам'яті.",
+  running: "працює",
+  Use: "Використати",
+  "Downloading llama.cpp": "Завантаження llama.cpp",
+  "Downloading the model": "Завантаження моделі",
+  "Add another model": "Додати ще одну модель",
+  "Choose a model": "Оберіть модель",
+  recommended: "рекомендовано",
+  fits: "вміщається",
+  "needs ~{gb} GB": "потрібно ~{gb} ГБ",
+  "Or any GGUF model from Hugging Face": "Або будь-яка GGUF-модель з Hugging Face",
+  "Download the model…": "Завантажити модель…",
+  "Install and download…": "Встановити й завантажити…",
+  "Remove llama.cpp and all models": "Видалити llama.cpp і всі моделі",
+  "Your decision is needed": "Потрібне ваше рішення",
+  "Everything is already here": "Усе вже є",
+  "Download to this computer?": "Завантажити на цей комп'ютер?",
+  "The llama.cpp program {tag}, {size}, from github.com/ggml-org/llama.cpp. Its checksum is checked.":
+    "Програма llama.cpp {tag}, {size}, з github.com/ggml-org/llama.cpp. Її контрольну суму буде перевірено.",
+  "The model {file}, {size}, from huggingface.co/{repo}.":
+    "Модель {file}, {size}, з huggingface.co/{repo}.",
+  "Its checksum is checked.": "Її контрольну суму буде перевірено.",
+  "It runs only on this computer, and only while a helper uses it.":
+    "Вона працює лише на цьому комп'ютері й лише поки нею користується помічник.",
+  "Free disk space: {size}.": "Вільно на диску: {size}.",
+  "Yes, download": "Так, завантажити",
+  "A good first model: small, follows tools reasonably, answers in many languages.":
+    "Добра перша модель: мала, непогано користується інструментами, відповідає багатьма мовами.",
+  "Noticeably better at tools and code; wants a machine with 16 GB.":
+    "Помітно краща з інструментами й кодом; потрібен комп'ютер із 16 ГБ.",
+  "The strongest here for agents, but large: for 24 GB or a good GPU.":
+    "Найсильніша тут для агентів, але велика: для 24 ГБ або доброї відеокарти.",
+  "Small and quick; fine for chat, weaker with tools.":
+    "Мала й швидка; добра для розмов, гірша з інструментами.",
+  "Tiny, for weak computers; simple jobs only.":
+    "Крихітна, для слабких комп'ютерів; лише прості завдання.",
 };

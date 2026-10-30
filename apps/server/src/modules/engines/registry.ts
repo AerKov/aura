@@ -13,6 +13,7 @@ import { locateExecutable } from "../../providers/claude-locate";
 import { type Embedder, OpenAICompatEmbedder } from "../../providers/embeddings";
 import { OpenAICompatProvider } from "../../providers/openai-compat";
 import type { LLMProvider, ProviderStatus } from "../../providers/types";
+import { LocalAiService, type SpawnServer } from "../localai/service";
 import { EngineStore, KEYED_ENGINES, type KeyedEngine } from "./settings";
 import type { ToolBridgeLike } from "./tool-bridge";
 
@@ -62,6 +63,12 @@ const DESCRIPTIONS: Record<
     "google" | "groq" | "cerebras" | "mistral",
     { label: string; kind: EngineInfo["kind"]; free: boolean; text: string }
   >),
+  "llama-cpp": {
+    label: "Built-in local AI",
+    kind: "aura",
+    free: true,
+    text: "Aura installs llama.cpp for you and runs a model on this computer: free and private. Choose a model that fits your memory.",
+  },
   "claude-code": {
     label: "Claude Code",
     kind: "official",
@@ -167,6 +174,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  */
 export class EngineRegistry implements EngineSelector {
   readonly store: EngineStore;
+  readonly localAi: LocalAiService;
   private readonly providers: Record<EngineId, LLMProvider>;
   private readonly fetch: typeof fetch;
 
@@ -183,10 +191,22 @@ export class EngineRegistry implements EngineSelector {
       /** Replaces agent CLIs in tests. */
       acpSpawn?: (cmd: string[], cwd: string, env: Record<string, string>) => AgentProcess;
       acpAgents?: Partial<Record<keyof typeof ACP_AGENTS, AcpAgentSpec>>;
+      /** Replaces the llama.cpp server process in tests. */
+      llamaSpawn?: SpawnServer;
+      llamaSystem?: { platform: string; arch: string; ramBytes: number };
     },
   ) {
     this.store = new EngineStore(opts.dataDir);
     this.fetch = opts.fetch ?? fetch;
+    this.localAi = new LocalAiService({
+      dataDir: opts.dataDir,
+      fetch: this.fetch,
+      spawn: opts.llamaSpawn,
+      ...opts.llamaSystem,
+      onInstalled: async (file) => {
+        if (file) await this.useLocalModel(file);
+      },
+    });
     const settings = () => this.store.get();
     const acp = (id: keyof typeof ACP_AGENTS) =>
       new AcpProvider(opts.acpAgents?.[id] ?? ACP_AGENTS[id], {
@@ -228,6 +248,17 @@ export class EngineRegistry implements EngineSelector {
         pricing: "usage-cost",
         defaultModel: () => settings().models.openrouter ?? null,
         check: () => this.checkOpenRouter(),
+        fetch: this.fetch,
+      }),
+      "llama-cpp": new OpenAICompatProvider({
+        id: "llama-cpp",
+        label: "Built-in local AI",
+        baseUrl: () => this.localAi.endpoint()?.baseUrl ?? "http://127.0.0.1:0/v1",
+        apiKey: () => this.localAi.endpoint()?.key ?? null,
+        pricing: "free",
+        defaultModel: () => settings().models["llama-cpp"] ?? null,
+        check: () => this.checkLocal(),
+        prepare: (model) => this.localAi.ensureRunning(model),
         fetch: this.fetch,
       }),
       ollama: new OpenAICompatProvider({
@@ -375,6 +406,8 @@ export class EngineRegistry implements EngineSelector {
         })
         .sort((a, b) => Number(b.free) - Number(a.free) || a.label.localeCompare(b.label));
     }
+    if (engine === "llama-cpp")
+      return this.localAi.models().map((m) => ({ id: m.file, label: m.file, free: true }));
     const service = freeServiceOf(engine);
     if (service) return this.serviceModels(service);
     const key = this.store.key("openai-compatible");
@@ -388,6 +421,39 @@ export class EngineRegistry implements EngineSelector {
       .map((m) => String(m.id ?? ""))
       .filter(Boolean)
       .map((id) => ({ id, label: id, free: false }));
+  }
+
+  private async checkLocal(): Promise<ProviderStatus> {
+    const status = this.localAi.status();
+    if (!status.installed)
+      return {
+        ok: false,
+        reason: "Install the built-in local AI: Aura downloads llama.cpp for you.",
+      };
+    const model = this.store.get().models["llama-cpp"];
+    if (!model || !status.models.some((m) => m.file === model))
+      return { ok: false, reason: "Choose a local model to download." };
+    return {
+      ok: true,
+      detail: status.running ? `${model} (running)` : `${model} (starts when needed)`,
+    };
+  }
+
+  /**
+   * Makes a downloaded model the one the built-in local AI runs and, when nothing else works yet,
+   * the default engine (ADR 0038).
+   */
+  async useLocalModel(file: string): Promise<void> {
+    const settings = this.store.get();
+    const currentWorks =
+      settings.default !== "llama-cpp" &&
+      (await withTimeout(this.providers[settings.default].isAvailable(), 25_000)
+        .then((s) => s.ok)
+        .catch(() => false));
+    await this.store.update({
+      models: { "llama-cpp": file },
+      ...(currentWorks ? {} : { default: "llama-cpp" }),
+    });
   }
 
   /** A free service's models, its preferred ones first. */
