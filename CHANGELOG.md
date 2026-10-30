@@ -5,6 +5,8 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-10-30: One secret store, server by domain, extensions as apps
+
 - **Extensions are apps** (ADR 0039, stage 3). On start, Aura makes a restore point and moves every
   panel extension into an app with its own chat; its data, settings and permissions stay.
 - **A project is a group with a folder.** The chat list shows them with the other groups, and
