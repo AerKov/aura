@@ -10,7 +10,7 @@
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { DIRECT_CHAT_ID, SYSTEM_CHAT_ID } from "../apps/server/src/modules/chat/repo";
+import { DIRECT_CHAT_ID, SYSTEM_CHAT_ID } from "../apps/server/src/modules/chats/chat/repo";
 import { createTestApp } from "../apps/server/src/testing";
 
 /** A one-page PDF with a few lines of text, written by hand: no library needed. */

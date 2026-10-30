@@ -5,18 +5,18 @@ import type { ComponentHealth } from "@aura/shared";
 import { createApp } from "./app";
 import { createServices, prepareDataDir } from "./bootstrap";
 import { connectDb } from "./db/client";
+import { EngineRegistry } from "./modules/ai/engines/registry";
+import { ToolBridge } from "./modules/ai/engines/tool-bridge";
+import type { SafeMode } from "./modules/apps/customize/safe-mode";
 import {
   type AgentDirectory,
   FileAgentDirectory,
   MemoryAgentDirectory,
-} from "./modules/agents/directory";
-import { LocalSessions } from "./modules/auth/sessions";
-import type { SafeMode } from "./modules/customize/safe-mode";
-import { EngineRegistry } from "./modules/engines/registry";
-import { ToolBridge } from "./modules/engines/tool-bridge";
-import { EventHub } from "./modules/realtime/hub";
-import { startLiveBridge } from "./modules/realtime/live";
-import { SandboxService } from "./modules/sandbox/service";
+} from "./modules/helpers/agents/directory";
+import { SandboxService } from "./modules/helpers/sandbox/service";
+import { LocalSessions } from "./modules/system/auth/sessions";
+import { EventHub } from "./modules/system/realtime/hub";
+import { startLiveBridge } from "./modules/system/realtime/live";
 import { FakeProvider } from "./providers/fake";
 import type { LLMProvider } from "./providers/types";
 

@@ -19,6 +19,8 @@
 
 - **Monorepo** (Bun workspaces): `apps/server`, `apps/desktop`, `packages/shared` (the message
   protocol and shared types, the single source of truth).
+- **The server by domain** (ADR 0039): `modules/ai`, `helpers`, `chats`, `apps`, `automations` and
+  `system`, each holding the modules of that part of the product.
 - **A core with apps** (ADR 0027, 0033, 0040): everything built in (database, shell, app
   runtime, approvals, restore points, localization, chats, skills, memory, schedules, alerts) is
   always on, and every app, built in or the user's, has a chat. The

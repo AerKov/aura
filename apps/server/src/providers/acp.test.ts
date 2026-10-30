@@ -13,7 +13,7 @@ import {
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { z } from "zod";
-import { ToolBridge } from "../modules/engines/tool-bridge";
+import { ToolBridge } from "../modules/ai/engines/tool-bridge";
 import { type AcpAgentSpec, AcpProvider, type AgentProcess, decidePermission } from "./acp";
 import type { AgentEvent, AgentRunInput } from "./types";
 

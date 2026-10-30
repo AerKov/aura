@@ -10,9 +10,9 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { SecretStore } from "../modules/agents/secrets";
-import { AppSecrets } from "../modules/apps/secrets";
-import { EngineStore } from "../modules/engines/settings";
+import { EngineStore } from "../modules/ai/engines/settings";
+import { AppSecrets } from "../modules/apps/apps/secrets";
+import { SecretStore } from "../modules/helpers/agents/secrets";
 import { SecretVault } from "./secret-vault";
 
 const dirs: string[] = [];

@@ -49,8 +49,10 @@ apps/
     src-tauri/      Rust shell, sidecar config, plugins
   server/           Bun + Elysia: HTTP API, WebSocket, orchestrator, agent runtime, scheduler
     src/
-      modules/      feature modules (core, chat, agents, apps, approvals, skills, memory, alerts,
-                    customize, backups, localization, shell, auth…)
+      modules/      by domain (ADR 0039): ai (engines, localai), helpers (agents, skills,
+                    memory, sandbox), chats (chat, projects, tasks, files, summaries), apps
+                    (apps, customize, catalog), automations (jobs, alerts), system (auth,
+                    approvals, backups, devices, help, localization, realtime, shell…)
       providers/    LLMProvider implementations
       db/           SurrealDB client, schema, migrations
 packages/

@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
-import { ToolBridge } from "../modules/engines/tool-bridge";
+import { ToolBridge } from "../modules/ai/engines/tool-bridge";
 import { OpenAICompatProvider, ThinkFilter } from "./openai-compat";
 import type { AgentEvent, AgentRunInput } from "./types";
 
