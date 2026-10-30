@@ -7,8 +7,11 @@ import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
-const loadBuilds = () => call(() => api["local-ai"].builds.get());
+const loadBuilds = (tag: string) =>
+  call(() => api["local-ai"].builds.get({ query: tag ? { tag } : {} }));
 type Builds = Awaited<ReturnType<typeof loadBuilds>>;
+const loadReleases = () => call(() => api["local-ai"].releases.get());
+type Releases = Awaited<ReturnType<typeof loadReleases>>;
 
 /**
  * The built-in local AI (ADR 0038): Aura installs llama.cpp and downloads a model that fits this
@@ -31,6 +34,9 @@ export function LocalAiCard({
   // The llama.cpp builds of the latest release, loaded when the user wants to choose one.
   const [builds, setBuilds] = useState<Builds | null>(null);
   const [asset, setAsset] = useState("");
+  // The release to install from; "" = the latest.
+  const [releases, setReleases] = useState<Releases | null>(null);
+  const [tag, setTag] = useState("");
 
   const refresh = useCallback(async () => {
     try {
@@ -70,7 +76,11 @@ export function LocalAiCard({
     setBusy(true);
     setError(null);
     try {
-      setPlan(await call(() => api["local-ai"].plan.post({ model, asset: asset || null })));
+      setPlan(
+        await call(() =>
+          api["local-ai"].plan.post({ model, asset: asset || null, tag: tag || null }),
+        ),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
       // Auto-detection may fail on an unusual system: offer the list of builds right away.
@@ -79,14 +89,22 @@ export function LocalAiCard({
       setBusy(false);
     }
   };
-  const chooseBuild = async () => {
+  const chooseBuild = async (nextTag = tag) => {
     try {
-      const next = await loadBuilds();
+      if (!releases) void loadReleases().then(setReleases, reportError);
+      const next = await loadBuilds(nextTag);
       setBuilds(next);
-      setAsset((a) => a || next.suggested || "");
+      setAsset(next.suggested ?? "");
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     }
+  };
+  const chooseRelease = (next: string) => {
+    setTag(next);
+    setBuilds(null);
+    setAsset("");
+    setError(null);
+    void chooseBuild(next);
   };
   const approve = async () => {
     if (!plan) return;
@@ -277,36 +295,61 @@ export function LocalAiCard({
               onChange={(e) => setCustom(e.target.value)}
             />
           </label>
-          {!status.installed &&
-            (builds ? (
-              <label className="block">
-                <span className="kicker mb-1 block">
-                  {t("llama.cpp build ({tag})", { tag: builds.tag })}
-                </span>
-                <select
-                  className="bg-input-bg border-input focus:border-ring w-full border px-3 py-2 font-mono text-[12.5px] outline-none"
-                  value={asset}
-                  onChange={(e) => setAsset(e.target.value)}
-                >
-                  <option value="">{t("Choose automatically")}</option>
-                  {builds.builds.map((b) => (
-                    <option key={b.name} value={b.name}>
-                      {b.name} · {b.os}/{b.arch}/{b.variant} · {formatBytes(b.size)}
-                      {b.sha256 ? "" : ` · ${t("no checksum")}`}
-                      {b.name === builds.suggested ? ` · ${t("recommended")}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <button
-                type="button"
-                className="text-muted-foreground hover:text-foreground justify-self-start text-[12.5px] underline-offset-2 hover:underline"
-                onClick={() => void chooseBuild()}
+          {releases && (
+            <label className="block">
+              <span className="kicker mb-1 block">{t("llama.cpp release")}</span>
+              <select
+                className="bg-input-bg border-input focus:border-ring w-full border px-3 py-2 font-mono text-[12.5px] outline-none"
+                value={tag}
+                onChange={(e) => chooseRelease(e.target.value)}
               >
-                {t("Choose the llama.cpp build yourself")}
-              </button>
-            ))}
+                <option value="">{t("The latest")}</option>
+                {releases.map((r) => (
+                  <option key={r.tag} value={r.tag}>
+                    {r.tag}
+                    {r.published ? ` · ${new Date(r.published).toLocaleDateString()}` : ""}
+                    {r.fits ? ` · ${t("fits this computer")}` : ` · ${t("no build recognized")}`}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          {builds ? (
+            <label className="block">
+              <span className="kicker mb-1 block">
+                {t("llama.cpp build ({tag})", { tag: builds.tag })}
+              </span>
+              <select
+                className="bg-input-bg border-input focus:border-ring w-full border px-3 py-2 font-mono text-[12.5px] outline-none"
+                value={asset}
+                onChange={(e) => setAsset(e.target.value)}
+              >
+                <option value="">{t("Choose automatically")}</option>
+                {builds.builds.map((b) => (
+                  <option key={b.name} value={b.name}>
+                    {b.name} · {b.os ?? "?"}/{b.arch ?? "?"}/{b.variant} · {formatBytes(b.size)}
+                    {b.sha256 ? "" : ` · ${t("no checksum")}`}
+                    {b.name === builds.suggested ? ` · ${t("recommended")}` : ""}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground justify-self-start text-[12.5px] underline-offset-2 hover:underline"
+              onClick={() => void chooseBuild()}
+            >
+              {status.installed
+                ? t("Install another llama.cpp release")
+                : t("Choose the llama.cpp build yourself")}
+            </button>
+          )}
+          {builds && builds.builds.length === 0 && (
+            <p className="text-warning-text text-[13px]">
+              {t("This release has no program archives. Choose another release.")}
+            </p>
+          )}
           {error && <p className="text-destructive text-[13px]">{error}</p>}
           <div className="flex flex-wrap gap-2">
             <Button disabled={busy || !pick} onClick={() => void makePlan(pick)}>

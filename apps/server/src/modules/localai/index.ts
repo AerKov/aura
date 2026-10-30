@@ -35,7 +35,7 @@ export const localAiModule = ({ sessions, engines }: LocalAiDeps) =>
             error: "Choose a model from the list, or a Hugging Face repository like owner/name",
           });
         try {
-          return await engines.localAi.plan(spec, body.asset ?? null);
+          return await engines.localAi.plan(spec, body.asset ?? null, body.tag ?? null);
         } catch (error) {
           if (
             error instanceof LocalAiError ||
@@ -52,20 +52,34 @@ export const localAiModule = ({ sessions, engines }: LocalAiDeps) =>
           model: t.Nullable(t.String({ maxLength: 160 })),
           /** A build chosen by the user from GET /local-ai/builds. */
           asset: t.Optional(t.Nullable(t.String({ maxLength: 200 }))),
+          /** A release chosen from GET /local-ai/releases; the latest by default. */
+          tag: t.Optional(t.Nullable(t.String({ maxLength: 64 }))),
         }),
       },
     )
     .get(
-      "/local-ai/builds",
+      "/local-ai/releases",
       async ({ status }) => {
         try {
-          return await engines.localAi.builds();
+          return await engines.localAi.releases();
         } catch (error) {
           if (error instanceof ReleaseError) return status(400, { error: error.message });
           throw error;
         }
       },
       { auth: true },
+    )
+    .get(
+      "/local-ai/builds",
+      async ({ query, status }) => {
+        try {
+          return await engines.localAi.builds(query.tag ?? null);
+        } catch (error) {
+          if (error instanceof ReleaseError) return status(400, { error: error.message });
+          throw error;
+        }
+      },
+      { auth: true, query: t.Object({ tag: t.Optional(t.String({ maxLength: 64 })) }) },
     )
     .post(
       "/local-ai/install",

@@ -32,18 +32,26 @@ function fakeWorld(archive: Uint8Array, opts: { badSha?: boolean } = {}) {
   const fetchFn = (async (input: string | URL | Request) => {
     const url = String(input);
     calls.push(url);
-    if (url.includes("api.github.com/repos/ggml-org/llama.cpp/releases/latest"))
-      return Response.json({
-        tag_name: TAG,
-        assets: [
-          {
-            name,
-            size: archive.byteLength,
-            browser_download_url: `https://github.com/ggml-org/llama.cpp/releases/download/${TAG}/${name}`,
-            digest: `sha256:${opts.badSha ? "0".repeat(64) : sha256(archive)}`,
-          },
-        ],
-      });
+    const release = {
+      tag_name: TAG,
+      published_at: "2026-10-01T00:00:00Z",
+      assets: [
+        {
+          name,
+          size: archive.byteLength,
+          browser_download_url: `https://github.com/ggml-org/llama.cpp/releases/download/${TAG}/${name}`,
+          digest: `sha256:${opts.badSha ? "0".repeat(64) : sha256(archive)}`,
+        },
+      ],
+    };
+    const api = "https://api.github.com/repos/ggml-org/llama.cpp/releases";
+    if (url === `${api}/latest` || url === `${api}/tags/${TAG}`) return Response.json(release);
+    if (url === `${api}?per_page=20`)
+      return Response.json([
+        release,
+        { tag_name: "draft", draft: true, assets: [] },
+        { tag_name: "v0.8.0", published_at: null, assets: [] },
+      ]);
     if (url.endsWith(`/releases/download/${TAG}/${name}`)) return new Response(archive);
     if (url.startsWith("https://huggingface.co/api/models/unsloth/Qwen3-4B-GGUF"))
       return Response.json({
@@ -202,6 +210,20 @@ describe("built-in llama.cpp (ADR 0038)", () => {
     });
     expect(chosen.status).toBe(200);
     expect((await api["local-ai"].plan.post({ model: null, asset: "nope.zip" })).status).toBe(400);
+  });
+
+  test("the user can choose the release", async () => {
+    const { api } = await setup();
+    const releases = (await api["local-ai"].releases.get()).data;
+    expect(releases).toEqual([
+      { tag: TAG, published: Date.parse("2026-10-01T00:00:00Z"), builds: 1, fits: true },
+      { tag: "v0.8.0", published: null, builds: 0, fits: false },
+    ]);
+    expect((await api["local-ai"].builds.get({ query: { tag: TAG } })).data?.tag).toBe(TAG);
+    const plan = await api["local-ai"].plan.post({ model: null, tag: TAG });
+    expect(plan.data?.plan.binary?.tag).toBe(TAG);
+    expect((await api["local-ai"].plan.post({ model: null, tag: "v9.9.9" })).status).toBe(400);
+    expect((await api["local-ai"].plan.post({ model: null, tag: "../x" })).status).toBe(400);
   });
 
   test("an unknown repository is said plainly", async () => {

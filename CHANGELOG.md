@@ -5,6 +5,10 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Choose the llama.cpp release.** The local AI card lists recent llama.cpp releases (with the
+  date and whether Aura recognizes a build for this computer) and the archives of the chosen one;
+  any archive counts, not only names starting with "llama". Also to reinstall another release.
+
 ## [0.40.0] - 2026-10-30: Settings in one place
 
 - **One Settings app with tabs** (ADR 0039): AI, Helpers, Automations, Look, Data and Advanced.

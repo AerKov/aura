@@ -378,6 +378,13 @@ export const UK: Record<string, string> = {
   "Choose automatically": "Обрати автоматично",
   "no checksum": "без контрольної суми",
   "Choose the llama.cpp build yourself": "Обрати збірку llama.cpp самому",
+  "Install another llama.cpp release": "Встановити інший реліз llama.cpp",
+  "llama.cpp release": "Реліз llama.cpp",
+  "The latest": "Найновіший",
+  "This release has no program archives. Choose another release.":
+    "У цьому релізі немає архівів програми. Оберіть інший реліз.",
+  "fits this computer": "підходить цьому комп'ютеру",
+  "no build recognized": "збірку не розпізнано",
   free: "безкоштовно",
   default: "типовий",
   "Aura installs llama.cpp for you and runs a model on this computer: free and private. Choose a model that fits your memory.":

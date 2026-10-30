@@ -1,7 +1,7 @@
 import { errorMessage } from "../../lib/log";
 
 /** The llama.cpp release API and the one place its downloads may come from (ADR 0038). */
-const RELEASE_API = "https://api.github.com/repos/ggml-org/llama.cpp/releases/latest";
+const RELEASES_API = "https://api.github.com/repos/ggml-org/llama.cpp/releases";
 const DOWNLOAD_PREFIX = "https://github.com/ggml-org/llama.cpp/releases/download/";
 
 export interface ReleaseAsset {
@@ -14,6 +14,8 @@ export interface ReleaseAsset {
 
 export interface Release {
   tag: string;
+  /** When it was published (ISO); null when GitHub does not say. */
+  published: string | null;
   assets: ReleaseAsset[];
 }
 
@@ -44,21 +46,52 @@ export function parseRelease(raw: unknown): Release {
       sha256: digest ? (digest[1] as string).toLowerCase() : null,
     });
   }
-  return { tag: raw.tag_name, assets };
+  const published = typeof raw.published_at === "string" ? raw.published_at : null;
+  return { tag: raw.tag_name, published, assets };
 }
 
-export async function fetchLatestRelease(fetchFn: typeof fetch = fetch): Promise<Release> {
+/** A release tag as GitHub shows it ("b6500", "v0.8.0"); anything else is refused. */
+export const TAG_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+
+async function getJson(url: string, fetchFn: typeof fetch): Promise<unknown> {
   try {
-    const res = await fetchFn(RELEASE_API, {
+    const res = await fetchFn(url, {
       headers: { accept: "application/vnd.github+json", "user-agent": "aura" },
       signal: AbortSignal.timeout(15_000),
     });
+    if (res.status === 404) throw new ReleaseError("llama.cpp has no such release");
     if (!res.ok) throw new ReleaseError(`GitHub answered HTTP ${res.status}`);
-    return parseRelease(await res.json());
+    return await res.json();
   } catch (error) {
     if (error instanceof ReleaseError) throw error;
     throw new ReleaseError(`Could not reach GitHub to find llama.cpp (${errorMessage(error)})`);
   }
+}
+
+export async function fetchLatestRelease(fetchFn: typeof fetch = fetch): Promise<Release> {
+  return parseRelease(await getJson(`${RELEASES_API}/latest`, fetchFn));
+}
+
+/** One release by its tag, for a user who wants another than the latest. */
+export async function fetchRelease(tag: string, fetchFn: typeof fetch = fetch): Promise<Release> {
+  if (!TAG_PATTERN.test(tag)) throw new ReleaseError(`"${tag}" is not a release tag`);
+  return parseRelease(await getJson(`${RELEASES_API}/tags/${tag}`, fetchFn));
+}
+
+/** The recent releases, newest first; drafts are skipped. */
+export async function fetchReleases(fetchFn: typeof fetch = fetch): Promise<Release[]> {
+  const raw = await getJson(`${RELEASES_API}?per_page=20`, fetchFn);
+  if (!Array.isArray(raw)) throw new ReleaseError("GitHub's answer is not a list of releases");
+  const out: Release[] = [];
+  for (const r of raw) {
+    if (isRecord(r) && r.draft === true) continue;
+    try {
+      out.push(parseRelease(r));
+    } catch {
+      // Not a release we can read: leave it out of the list.
+    }
+  }
+  return out;
 }
 
 /** Builds in the order to try for a system: a GPU build that runs anywhere, then the CPU one. */
@@ -99,7 +132,8 @@ export interface Build extends ReleaseAsset {
 
 export function describeAsset(asset: ReleaseAsset): Build | null {
   const name = asset.name.toLowerCase();
-  if (!/\.(tar\.gz|tgz|zip)$/.test(name) || !name.startsWith("llama")) return null;
+  // Any archive of the release counts: names have changed over time and need not start with "llama".
+  if (!/\.(tar\.gz|tgz|zip)$/.test(name)) return null;
   if (/(cudart|xcframework|source|src\b)/.test(name)) return null;
   const words = name.replace(/\.(tar\.gz|tgz|zip)$/, "").split(/[-_.]+/);
   const joined = `-${words.join("-")}-`;

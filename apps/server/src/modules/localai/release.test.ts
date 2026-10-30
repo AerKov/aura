@@ -64,6 +64,7 @@ describe("llama.cpp releases (ADR 0038)", () => {
         asset("llama-b10000-bin-windows-amd64-cpu.zip"),
         asset("llama-b10000-bin-linux-aarch64.tar.gz"),
         asset("cudart-llama-bin-win-cuda-12.4-x64.zip"),
+        asset("ggml-inference-server-v0.8.0-linux-x86_64.tar.gz"),
       ],
     });
     expect(pickAsset(other.assets, "linux", "x64", "cpu")?.name).toBe(
@@ -84,6 +85,8 @@ describe("llama.cpp releases (ADR 0038)", () => {
       ["linux", "x64", "vulkan"],
       ["win32", "x64", "cpu"],
       ["linux", "arm64", "cpu"],
+      // A name that does not start with "llama" is still a build.
+      ["linux", "x64", "cpu"],
     ]);
   });
 

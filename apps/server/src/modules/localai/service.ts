@@ -22,7 +22,10 @@ import { extractArchive, findServer } from "./extract";
 import { type ModelFile, resolveModel } from "./huggingface";
 import {
   type Build,
+  describeAsset,
   fetchLatestRelease,
+  fetchRelease,
+  fetchReleases,
   listBuilds,
   pickAsset,
   type Release,
@@ -170,9 +173,34 @@ export class LocalAiService {
     this.deps.onChange?.();
   }
 
-  private async latest(): Promise<Release> {
-    this.release = await fetchLatestRelease(this.fetchFn);
+  /** The latest release, or the one the user chose by its tag. */
+  private async releaseOf(tag: string | null): Promise<Release> {
+    this.release = tag
+      ? await fetchRelease(tag, this.fetchFn)
+      : await fetchLatestRelease(this.fetchFn);
     return this.release;
+  }
+
+  private suggest(release: Release): ReleaseAsset | null {
+    const variant = variantsFor(this.platform, this.arch)[0];
+    return (
+      (variant && pickAsset(release.assets, this.platform, this.arch, variant)) ||
+      pickAsset(release.assets, this.platform, this.arch, "cpu")
+    );
+  }
+
+  /** Recent llama.cpp releases, newest first, and whether Aura recognizes a build for this system. */
+  async releases(): Promise<
+    // `published` is a time in ms: an ISO string would turn into a Date on the client.
+    { tag: string; published: number | null; builds: number; fits: boolean }[]
+  > {
+    const list = await fetchReleases(this.fetchFn);
+    return list.map((r) => ({
+      tag: r.tag,
+      published: r.published ? Date.parse(r.published) || null : null,
+      builds: listBuilds(r.assets).length,
+      fits: this.suggest(r) !== null,
+    }));
   }
 
   /**
@@ -183,12 +211,14 @@ export class LocalAiService {
     model: { repo: string; quant: string } | null,
     /** A build the user chose from `builds()`; by default the one that fits this system. */
     assetName: string | null = null,
+    /** A release the user chose from `releases()`; by default the latest. */
+    tag: string | null = null,
   ): Promise<{ id: string; plan: LocalPlan }> {
     if (this.job.phase === "binary" || this.job.phase === "model")
       throw new LocalAiError("An installation is already running");
     let binary: LocalPlan["binary"] = null;
-    if (!this.installed() || assetName) {
-      const release = await this.latest();
+    if (!this.installed() || assetName || tag) {
+      const release = await this.releaseOf(tag);
       let chosen: ReleaseAsset | null;
       if (assetName) {
         const build = listBuilds(release.assets).find((b) => b.name === assetName);
@@ -197,9 +227,7 @@ export class LocalAiService {
           throw new LocalAiError(`${assetName} is a build for ${build.os}, not for this computer`);
         chosen = build;
       } else {
-        const variant = variantsFor(this.platform, this.arch)[0];
-        const asset = variant ? pickAsset(release.assets, this.platform, this.arch, variant) : null;
-        chosen = asset ?? pickAsset(release.assets, this.platform, this.arch, "cpu");
+        chosen = this.suggest(release);
       }
       if (!chosen)
         throw new LocalAiError(
@@ -255,13 +283,12 @@ export class LocalAiService {
     }
   }
 
-  /** The program archives of the latest release, and the one Aura would pick for this system. */
-  async builds(): Promise<{ tag: string; suggested: string | null; builds: Build[] }> {
-    const release = await this.latest();
-    const variant = variantsFor(this.platform, this.arch)[0];
-    const suggested =
-      (variant && pickAsset(release.assets, this.platform, this.arch, variant)) ||
-      pickAsset(release.assets, this.platform, this.arch, "cpu");
+  /** The program archives of a release (the latest by default), and the one Aura would pick. */
+  async builds(
+    tag: string | null = null,
+  ): Promise<{ tag: string; suggested: string | null; builds: Build[] }> {
+    const release = await this.releaseOf(tag);
+    const suggested = this.suggest(release);
     return {
       tag: release.tag,
       suggested: suggested?.name ?? null,
@@ -320,16 +347,15 @@ export class LocalAiService {
       const asset = release && pickAsset(release.assets, this.platform, this.arch, variant);
       if (asset) candidates.push(asset);
     }
-    // The approved asset is the first; later ones are the same release's CPU fallback.
-    const approved = candidates.find((a) => a.url === binary.url);
-    const order = approved ? [approved, ...candidates.filter((a) => a !== approved)] : candidates;
+    // The approved asset is the first (also one the user chose); later ones are the same
+    // release's CPU fallback.
+    const approved = release?.assets.find((a) => a.url === binary.url);
+    const order = approved
+      ? [approved, ...candidates.filter((a) => a.url !== approved.url)]
+      : candidates;
     for (const asset of order) {
       if (!asset.sha256) continue;
-      const variant = /vulkan/i.test(asset.name)
-        ? "vulkan"
-        : this.platform === "darwin"
-          ? "metal"
-          : "cpu";
+      const variant = describeAsset(asset)?.variant ?? "cpu";
       mkdirSync(this.root, { recursive: true });
       const archive = join(this.root, asset.name);
       this.setJob("binary", asset.name, 0, asset.size);
