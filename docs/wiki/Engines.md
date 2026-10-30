@@ -26,6 +26,7 @@ they may touch. Your login stays with the app; Aura never reads it.
 | OpenRouter        | free service          | key from openrouter.ai         | free models (`:free`) available  |
 | Cerebras          | free service          | key from cloud.cerebras.ai     | free plan, terms change          |
 | Mistral           | free service          | key from console.mistral.ai    | free Experiment plan             |
+| Built-in local AI | local                 | none                           | free, installed by Aura          |
 | Ollama            | local                 | none                           | free                             |
 | OpenAI-compatible | local or any API      | optional key                   | LM Studio, llama.cpp, vLLM: free |
 | Claude Code       | agent app (Agent SDK) | your Claude login              | Claude plan or API               |

@@ -129,6 +129,7 @@ chats stay on your computer.
    | OpenRouter        | [openrouter.ai/keys](https://openrouter.ai/keys)                   | many models; pick one marked `:free`         |
    | Cerebras          | [cloud.cerebras.ai](https://cloud.cerebras.ai/)                    | free key; the plan's terms change            |
    | Mistral           | [console.mistral.ai/api-keys](https://console.mistral.ai/api-keys) | free Experiment plan; may ask for a phone    |
+   | Built-in local AI | Helper programs: Aura installs llama.cpp and a model               | free and private; needs a capable machine    |
    | Ollama, LM Studio | on your computer                                                   | free and private; needs a capable machine    |
 
    Free plans have limits, and some use your prompts to improve their models: each card says so.
