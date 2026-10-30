@@ -5,6 +5,8 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-10-30: Fewer settings, one mode
+
 - **Fewer settings, one mode** (ADR 0040). Settings has five tabs: AI, Helpers, Automations, Look
   and History. The free cloud services (Google Gemini, Groq, OpenRouter, Cerebras, Mistral) are gone:
   the AI tab offers the built-in local AI, Ollama or any compatible server, and your own agent app.
