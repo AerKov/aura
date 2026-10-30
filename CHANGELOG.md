@@ -5,6 +5,16 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-10-30: Settings in one place
+
+- **One Settings app with tabs** (ADR 0039): AI, Helpers, Automations, Look, Data and Advanced.
+  My apps now lists Chats, Alerts and Settings; the old pages open Settings at their tab.
+- **A helper's AI is chosen on its card** (Settings → Helpers): the default or any connected AI,
+  and a model. Settings → AI only connects them.
+- **The phone is hidden** from the interface for now; pairing stays in the code for later.
+- **llama.cpp builds are recognized by more names** (ubuntu/linux, x64/x86_64/amd64,
+  arm64/aarch64…), and when Aura still cannot tell, you choose the build from a list.
+
 ## [0.39.0] - 2026-10-30: Built-in local AI
 
 - **Built-in local AI.** Aura installs llama.cpp for you and runs a model on this computer: pick one
