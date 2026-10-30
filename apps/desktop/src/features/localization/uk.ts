@@ -38,6 +38,9 @@ export const UK: Record<string, string> = {
     "Я вже користуюся агентним застосунком (Claude Code, Codex…) або Ollama",
   "Open Settings → AI": "Відкрити Налаштування → ШІ",
   "Tools and keys": "Інструменти й ключі",
+  "With a folder": "З папкою",
+  "Helpers keep files, tasks and a limit there, like a project.":
+    "Помічники тримають там файли, задачі й ліміт, як у проєкті.",
   AI: "ШІ",
   Automations: "Автоматизації",
   Data: "Дані",

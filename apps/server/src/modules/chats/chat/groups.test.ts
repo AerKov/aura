@@ -15,6 +15,25 @@ describe("groups and deleting chats (ADR 0035)", () => {
     t = undefined;
   });
 
+  test("a group with a folder is a project the user made: quiet, with a workspace (ADR 0039)", async () => {
+    t = await createTestApp();
+    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
+    const made = (await api.chats.post({ title: "Планування", folder: true })).data;
+    expect(made).toMatchObject({ kind: "group", title: "Планування", projectId: "group" });
+    const project = await t.projects.get("group");
+    expect(project).toMatchObject({ kind: "project", name: "Планування", chatId: made?.id });
+    expect(existsSync(join(project?.workspace ?? "", "BRIEF.md"))).toBe(true);
+    // Nobody is woken: the user writes first.
+    await t.runtime.whenIdle();
+    expect(
+      (await t.repo.listMessages(made?.id ?? "", { limit: 10 })).map((m) => m.author.id),
+    ).toEqual(["system"]);
+    // Another one with the same name gets its own folder.
+    expect((await api.chats.post({ title: "Планування", folder: true })).data?.projectId).toBe(
+      "group-2",
+    );
+  });
+
   test("the user makes a group with chosen helpers and deletes it", async () => {
     t = await createTestApp();
     await t.agents.create({

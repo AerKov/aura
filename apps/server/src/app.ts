@@ -129,6 +129,8 @@ export function createApp(deps: AppDeps) {
         projectOf: (slug) => deps.projects.get(slug),
         archiveProject: (slug) => deps.projects.archive(slug),
         dropFiles: (chatId) => deps.files.removeScope({ kind: "chat", id: chatId }),
+        createWithFolder: async (title, agents) =>
+          (await deps.projects.createGroup(title, agents)).chat,
       }),
     )
     .use(filesModule(deps))

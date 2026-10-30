@@ -1,5 +1,5 @@
 /// <reference path="../../../providers/vendor-files.d.ts" />
-import { existsSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { APP_ID_PATTERN, BAR_APP_ID, type Chat, MAX_APP_DESCRIPTION, slugify } from "@aura/shared";
@@ -210,6 +210,62 @@ export class AppService {
     // The user created it (or approved the pack): it runs with what its manifest asks for.
     await this.deps.extensions().regrant(id);
     return { project, chat };
+  }
+
+  /**
+   * Panel extensions still in `extensions/<id>` (ADR 0039): before it they were a kind of their
+   * own, without a chat. Each becomes an app.
+   */
+  legacyExtensions(): string[] {
+    const root = join(this.deps.dataDir, "extensions");
+    if (!existsSync(root)) return [];
+    return readdirSync(root, { withFileTypes: true })
+      .filter((e) => e.isDirectory() && !this.isApp(e.name))
+      .map((e) => e.name)
+      .sort();
+  }
+
+  /**
+   * Makes a panel extension an app (ADR 0039): its files move into `projects/<id>` (a git repo,
+   * like every app), it gets a chat with @builder, and keeps its id, so its data, its enabled state
+   * and the permissions the user granted stay as they were.
+   */
+  async adoptExtension(id: string): Promise<void> {
+    const source = join(this.deps.dataDir, "extensions", id);
+    if (!existsSync(source) || this.isApp(id)) return;
+    if (!APP_ID_PATTERN.test(id))
+      throw new AppError(`extension "${id}" cannot become an app: its id is not an app id`);
+    const info = await this.deps.extensions().info(id);
+    await this.ensureBuilder();
+    const { project } = await this.deps.projects.create({
+      name: info.name.slice(0, 60) || id,
+      slug: id,
+      kind: "app",
+      agents: [BUILDER_HANDLE],
+      brief: `@${BUILDER_HANDLE} This is the chat of the app "${info.name}". It was a panel extension before; wait for the user to say what to change.`,
+      kickoff: false,
+    });
+    cpSync(source, project.workspace, { recursive: true, force: true });
+    await commitAll(project.workspace, "feat: move the extension in", ORCHESTRATOR_HANDLE);
+    await this.load();
+    await git(project.workspace, ["branch", UPSTREAM]);
+    rmSync(source, { recursive: true, force: true });
+    await commitAll(this.deps.dataDir, `refactor: extension ${id} is now an app`);
+    log.info("extension became an app", { id });
+  }
+
+  /** Every legacy extension becomes an app; one that cannot is logged and left as it is. */
+  async adoptExtensions(): Promise<string[]> {
+    const moved: string[] = [];
+    for (const id of this.legacyExtensions()) {
+      try {
+        await this.adoptExtension(id);
+        moved.push(id);
+      } catch (error) {
+        log.warn("extension not moved into an app", { id, error: errorMessage(error) });
+      }
+    }
+    return moved;
   }
 
   /**

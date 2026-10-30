@@ -131,18 +131,21 @@ export class ProjectService {
     const agents = [...new Set(input.agents.map((a) => a.replace(/^@/, "")))].filter(
       (h) => h !== ORCHESTRATOR_HANDLE,
     );
-    if (agents.length === 0) throw new ProjectError("a project needs at least one agent");
+    // A group the user makes with a folder (ADR 0039) starts quiet: no brief to act on.
+    const quiet = input.kickoff === false;
+    if (agents.length === 0 && !quiet) throw new ProjectError("a project needs at least one agent");
     for (const handle of agents) {
       if (!pendingAgents.includes(handle) && !(await this.deps.agents.get(handle))) {
         throw new ProjectError(`@${handle} does not exist; create it first`);
       }
     }
     const mentioned = parseMentions(brief).filter((h) => agents.includes(h));
-    if (mentioned.length === 0) {
+    if (mentioned.length === 0 && !quiet) {
       throw new ProjectError("the brief must @mention the agent who starts the work");
     }
-    const startWith = input.startWith?.replace(/^@/, "") ?? mentioned[0];
-    if (!startWith || !agents.includes(startWith)) {
+    const startWith =
+      input.startWith?.replace(/^@/, "") ?? mentioned[0] ?? (quiet ? ORCHESTRATOR_HANDLE : "");
+    if (!quiet && (!startWith || !agents.includes(startWith))) {
       throw new ProjectError("start_with must be one of the project's agents");
     }
     if ((await this.get(slug)) || existsSync(this.workspaceOf(slug))) {
@@ -208,7 +211,7 @@ export class ProjectService {
       chatId: chat.id,
       author: { kind: "bot", id: "system" },
       kind: "system",
-      body: `${input.kind === "app" ? "App" : "Project"} created · budget: ${budgetText({ usd: budgetUsd, tokens: budgetTokens })} · team: ${agents.map((a) => `@${a}`).join(", ")}`,
+      body: `${input.kind === "app" ? "App" : "Group with a folder"} created · budget: ${budgetText({ usd: budgetUsd, tokens: budgetTokens })} · team: ${agents.map((a) => `@${a}`).join(", ") || "the Helper"}`,
     });
 
     // The kickoff comes from the orchestrator and wakes only the agent who starts; the others
@@ -227,6 +230,28 @@ export class ProjectService {
     const project = await this.get(slug);
     if (!project) throw new ProjectError("project was not saved");
     return { project, chat };
+  }
+
+  /**
+   * A group the user makes with a folder (ADR 0039): the same as a project, named after the group,
+   * with no brief to act on until the user writes.
+   */
+  async createGroup(
+    title: string,
+    agents: string[],
+  ): Promise<{ project: ProjectInfo; chat: Chat }> {
+    let base = slugify(title);
+    if (!SLUG_PATTERN.test(base)) base = "group";
+    let slug = base;
+    for (let i = 2; (await this.get(slug)) || existsSync(this.workspaceOf(slug)); i++)
+      slug = `${base.slice(0, 44)}-${i}`;
+    return this.create({
+      name: title,
+      slug,
+      brief: "A group with a folder for its files, tasks and limit. Made by the user.",
+      agents,
+      kickoff: false,
+    });
   }
 
   /** Removes a project's record, its tasks and its workspace (an app being uninstalled). */

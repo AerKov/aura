@@ -5,6 +5,7 @@ import type { Surreal } from "surrealdb";
 import { SERVER_VERSION } from "./config";
 import { openAppDatabase } from "./db/client";
 import { commitAll, ensureRepo } from "./lib/git";
+import { errorMessage, log } from "./lib/log";
 import type { EngineSelector } from "./modules/ai/engines/registry";
 import { AppActions } from "./modules/apps/apps/actions";
 import { AppDataService } from "./modules/apps/apps/data";
@@ -173,6 +174,9 @@ export async function createServices(deps: {
     bindProject: async (slug, id) => {
       await projects.setApp(slug, id);
     },
+    afterInstall: async (id) => {
+      await apps?.adoptExtension(id);
+    },
   });
   apps = new AppService({
     projects,
@@ -261,6 +265,16 @@ export async function createServices(deps: {
     const { restored, saved } = await restorePoints.restore(String(payload.id ?? ""));
     return `Aura is back at “${restored.label}”. The state before is saved as “${saved.label}”.`;
   });
+  // Panel extensions become apps with a chat (ADR 0039), once, after a restore point to go back to.
+  if (appService.legacyExtensions().length > 0) {
+    await restorePoints
+      .create("Before extensions became apps", true)
+      .catch((error: unknown) =>
+        log.warn("no restore point before moving extensions", { error: errorMessage(error) }),
+      );
+    const moved = await appService.adoptExtensions();
+    if (moved.length > 0) deps.hub.publish({ type: "customize.updated" });
+  }
   const customize = { appearance, mcp, extensions };
   const catalog = new CatalogService({
     dataDir: deps.dataDir,

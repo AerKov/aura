@@ -1,3 +1,4 @@
+import type { Chat } from "@aura/shared";
 import { Elysia, t } from "elysia";
 import { authGuard } from "../../system/auth";
 import type { LocalSessions } from "../../system/auth/sessions";
@@ -20,12 +21,15 @@ export interface GroupsDeps {
   archiveProject: (slug: string) => Promise<string>;
   /** Drops the files attached in the chat. */
   dropFiles: (chatId: string) => void;
+  /** A group with a folder (ADR 0039): a git workspace, tasks and a limit behind the chat. */
+  createWithFolder: (title: string, agents: string[]) => Promise<Chat>;
 }
 
 /**
- * Groups the user makes and chats the user deletes (ADR 0035). A group is a plain group chat: a
- * name and the helpers in it, no project or folder behind it. A project's chat can be deleted too
- * (its files are kept in `backups/projects`); an app's chat goes with the app, from "My apps".
+ * Groups the user makes and chats the user deletes (ADR 0035, ADR 0039). A group is a name and the
+ * helpers in it; with `folder` it also gets a folder (a git workspace, tasks and a limit), which is
+ * what a project is. A group's folder is kept in `backups/projects` when the group is deleted; an
+ * app's chat goes with the app, from "My apps".
  */
 export const groupsModule = (deps: GroupsDeps) =>
   new Elysia({ name: "chat-groups" })
@@ -39,6 +43,7 @@ export const groupsModule = (deps: GroupsDeps) =>
         for (const handle of handles)
           if (!(await deps.agentExists(handle)))
             return status(404, { error: `No helper @${handle}` });
+        if (body.folder) return deps.createWithFolder(title, handles);
         return deps.repo.createChat({
           kind: "group",
           title,
@@ -57,6 +62,8 @@ export const groupsModule = (deps: GroupsDeps) =>
         body: t.Object({
           title: t.String({ maxLength: MAX_TITLE }),
           agents: t.Optional(t.Array(HANDLE, { maxItems: 20 })),
+          /** Give the group a folder: files, tasks and a limit (ADR 0039). */
+          folder: t.Optional(t.Boolean()),
         }),
       },
     )

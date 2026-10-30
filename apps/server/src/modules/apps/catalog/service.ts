@@ -50,6 +50,8 @@ export class CatalogService {
           files: Record<string, string>,
           pack: { id: string; version: string },
         ) => Promise<string>;
+        /** Extensions a pack brought become apps (ADR 0039). */
+        adoptExtensions?: () => Promise<string[]>;
       };
       hub: EventHub;
       fetch?: typeof fetch;
@@ -284,6 +286,7 @@ export class CatalogService {
     // The user saw each extension's permissions in the preview, so they are enabled with them.
     for (const id of contentsOf(m.files).extensions)
       await this.deps.extensions.setEnabled(id, true);
+    await this.deps.apps?.adoptExtensions?.();
     this.deps.hub.publish({ type: "customize.updated" });
     const parts = [
       ...apps,

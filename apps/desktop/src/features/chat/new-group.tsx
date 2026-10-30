@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { openChat, reportError } from "./actions";
+import { loadProjects, openChat, reportError } from "./actions";
 import { AgentMark } from "./agent-mark";
 import { upsertChat, useChatStore } from "./store";
 
 /**
- * "New group" (ADR 0035): a chat of the user's own with a name and the helpers they choose. The
- * Helper is always in it; more helpers can be added or removed later with "+ Helper".
+ * "New group" (ADR 0035, ADR 0039): a chat of the user's own with a name and the helpers they
+ * choose, optionally with a folder (files, tasks and a limit: what a project is). The Helper is
+ * always in it; more helpers can be added or removed later with "+ Helper".
  */
 export function NewGroupButton() {
   const t = useT();
@@ -18,6 +19,7 @@ export function NewGroupButton() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [chosen, setChosen] = useState<string[]>([]);
+  const [folder, setFolder] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const box = useRef<HTMLDivElement>(null);
@@ -41,12 +43,14 @@ export function NewGroupButton() {
     setBusy(true);
     setError(null);
     try {
-      const chat = await call(() => api.chats.post({ title, agents: chosen }));
+      const chat = await call(() => api.chats.post({ title, agents: chosen, folder }));
       upsertChat(chat);
       openChat(chat.id);
       setOpen(false);
       setTitle("");
       setChosen([]);
+      setFolder(false);
+      if (folder) void loadProjects().catch(reportError);
     } catch (err) {
       reportError(err);
       setError(err instanceof Error ? err.message : t("Could not create the group"));
@@ -108,6 +112,20 @@ export function NewGroupButton() {
               </div>
             </>
           )}
+          <label className="flex items-start gap-2 text-[13px]">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={folder}
+              onChange={(e) => setFolder(e.target.checked)}
+            />
+            <span>
+              {t("With a folder")}
+              <span className="text-muted-foreground block text-[12px]">
+                {t("Helpers keep files, tasks and a limit there, like a project.")}
+              </span>
+            </span>
+          </label>
           {error && <p className="text-destructive text-xs">{error}</p>}
           <Button size="sm" disabled={!title.trim() || busy} onClick={() => void create()}>
             {t("Create")}

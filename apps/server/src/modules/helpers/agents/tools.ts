@@ -383,7 +383,7 @@ function orchestratorTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
     {
       name: "create_project",
       description:
-        "Ask the user to approve a project plan: a group chat with the agents, a git workspace and an optional budget, plus any new agents. Nothing is created until the user approves. The brief becomes your first message in the project chat and must @mention the agent who starts. Without a budget the project has no limit (the chain-depth guard still applies); suggest one only when the user asks or the work is open-ended.",
+        "Ask the user to approve a project plan: a group with a folder (the user sees projects as groups with a folder): a group chat with the agents, a git workspace and an optional budget, plus any new agents. Nothing is created until the user approves. The brief becomes your first message in the project chat and must @mention the agent who starts. Without a budget the project has no limit (the chain-depth guard still applies); suggest one only when the user asks or the work is open-ended.",
       inputSchema: {
         ...PLAIN_CHANGES,
         name: z.string().describe("short project name"),

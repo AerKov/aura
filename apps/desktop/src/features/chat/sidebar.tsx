@@ -7,18 +7,18 @@ import { NewGroupButton } from "./new-group";
 import { agentName, chatTitle, formatListTime } from "./participants";
 import { useChatStore } from "./store";
 
-type Section = "direct" | "groups" | "projects" | "apps" | "system";
+type Section = "direct" | "groups" | "apps" | "system";
 
 const SECTIONS: { key: Section; label: string | null }[] = [
   { key: "direct", label: null },
   { key: "groups", label: "Groups" },
-  { key: "projects", label: "Projects" },
   { key: "apps", label: "Apps" },
   { key: "system", label: "Alerts" },
 ];
 
 /**
- * The chat list (ADR 0034): the Helper's chat pinned on top, then your groups, projects, apps and alerts. A row
+ * The chat list (ADR 0034): the Helper's chat pinned on top, then your groups (with or without a
+ * folder), apps and alerts. A row
  * says who is working right now and how many decisions wait in it.
  */
 export function Sidebar() {
@@ -28,14 +28,13 @@ export function Sidebar() {
   const pane = useChatStore((s) => s.pane);
   const projects = useChatStore((s) => s.projects);
   const agents = useChatStore((s) => s.agents);
-  // An app's chat is a project chat whose project is an app (ADR 0024).
+  // An app's chat is a group whose folder is an app (ADR 0024); a project is a group with a
+  // folder (ADR 0039), listed with the other groups.
   const sectionOf = (chat: Chat): Section =>
     chat.kind === "group"
-      ? !chat.projectId
-        ? "groups"
-        : projects[chat.projectId]?.kind === "app"
-          ? "apps"
-          : "projects"
+      ? chat.projectId && projects[chat.projectId]?.kind === "app"
+        ? "apps"
+        : "groups"
       : chat.kind;
   // Who is writing a reply in each chat right now, and the decisions waiting there.
   const working = useChatStore((s) => {

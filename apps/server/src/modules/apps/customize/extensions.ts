@@ -241,6 +241,8 @@ export class ExtensionService {
       /** Project apps (ADR 0021): checks a project and pins an extension to it. */
       projectExists?: (project: string) => Promise<boolean>;
       bindProject?: (project: string, extensionId: string) => Promise<void>;
+      /** An installed extension becomes an app with a chat (ADR 0039). */
+      afterInstall?: (id: string) => Promise<void>;
     },
   ) {
     deps.approvals.register("extension_install", async (payload, ctx) =>
@@ -518,6 +520,7 @@ export class ExtensionService {
       ...grants(manifest),
       errors: 0,
     });
+    await this.deps.afterInstall?.(manifest.id);
     if (typeof payload.project === "string" && payload.project) {
       await this.deps.bindProject?.(payload.project, manifest.id);
       return `Installed and enabled "${manifest.name}" as the app of project ${payload.project}.`;

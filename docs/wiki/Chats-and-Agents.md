@@ -3,7 +3,9 @@
 Aura has only three kinds of chats, so there is little to learn:
 
 - **Orchestrator**: your direct chat. Plan, ask questions, create agents and projects, customize Aura.
-- **Projects**: one group chat per project, with its agents. The work happens here.
+- **Groups**: chats you make with the helpers you choose. A group **with a folder** (a project)
+  also has a git folder for files, tasks and a limit; the Helper makes one when you start work, or
+  you tick **With a folder** in **New group**.
 - **Alerts**: alerts from monitoring and other systems.
 
 There are no channels or threads. You can **reply** to any message (hover it and press the reply

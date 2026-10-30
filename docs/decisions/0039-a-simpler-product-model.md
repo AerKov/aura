@@ -86,6 +86,13 @@ but the Phone item, its settings and `AURA_REMOTE` are off in the interface.
   domain, and agent tools living with their domain (`helpers/agents/tool-kit.ts` holds what they
   share).
 
+- Stage 3 done: on start, panel extensions in `extensions/<id>` become apps in `projects/<id>`
+  with a chat (after an automatic restore point; their id, data, enabled state and grants stay),
+  and extensions installed later become apps the same way. A project is shown as a group with a
+  folder; "New group" can make one (`POST /chats` with `folder`). Reminders already live under
+  Settings → Automations. "Only Chats and Alerts can be turned off" is replaced by ADR 0040: nothing
+  is turned off.
+
 ## Consequences
 
 - CLAUDE.md rule 2 keeps three chat kinds; "a project" becomes "a group with a folder" in the
