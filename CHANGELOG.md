@@ -5,6 +5,13 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **One secret store.** Engine keys, helpers' secrets and apps' secrets live in one file,
+  `state/secrets.json`, still kept apart; the old files are moved in on the first start.
+- **Faster pages.** Settings → AI no longer checks every engine on each visit (answers are kept for
+  15 seconds; **Check again** asks anew), and the project list sums spending in one query.
+- **Server by domain** (ADR 0039): ai, helpers, chats, apps, automations and system; agent tools live
+  with the part they act on.
+
 ## [0.41.0] - 2026-10-30: Fewer settings, one mode
 
 - **Fewer settings, one mode** (ADR 0040). Settings has five tabs: AI, Helpers, Automations, Look

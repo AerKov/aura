@@ -78,6 +78,14 @@ but the Phone item, its settings and `AURA_REMOTE` are off in the interface.
 3. **Model changes with migrations**, each on its own commit with tests and a backup first:
    projects become groups with a folder, extensions become apps, reminders move into Automations.
 
+## Progress
+
+- Stage 1 done (0.40), trimmed further by ADR 0040 (0.41).
+- Stage 2 done: one secret store (`state/secrets.json`, version 2), engine statuses kept for 15 s,
+  spending summed in one query, the frame runtime built once, the server's modules grouped by
+  domain, and agent tools living with their domain (`helpers/agents/tool-kit.ts` holds what they
+  share).
+
 ## Consequences
 
 - CLAUDE.md rule 2 keeps three chat kinds; "a project" becomes "a group with a folder" in the
