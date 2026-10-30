@@ -13,9 +13,7 @@ import type { LucideIcon } from "lucide-react";
 import { LayoutGrid } from "lucide-react";
 import { useMemo } from "react";
 import { setState, useChatStore } from "@/features/chat/store";
-import { loadAppearance } from "@/features/customize/appearance";
 import { useT } from "@/features/localization/i18n";
-import { api, call } from "@/lib/api";
 import { extensionIcon } from "@/lib/extension-icons";
 import { BUILTIN_ICONS, useExtensionApps } from "./apps";
 

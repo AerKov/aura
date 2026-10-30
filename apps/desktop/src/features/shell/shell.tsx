@@ -11,7 +11,7 @@ import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from "rea
 import { AuraLogo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { loadInitial, reportError } from "@/features/chat/actions";
+import { reportError } from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
 import { Sidebar } from "@/features/chat/sidebar";
 import { setState, useChatStore } from "@/features/chat/store";

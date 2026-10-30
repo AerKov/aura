@@ -58,7 +58,8 @@ describe("alerts", () => {
       { type: "text-delta", text: "[no reply]" },
       { type: "done" },
     ]);
-    t = await createTestApp({ provider });
+    // A wide window, so a slow machine still gathers the burst into one run.
+    t = await createTestApp({ provider, triageDelayMs: 300 });
     // A burst of different alerts is triaged in one run.
     await t.alerts.ingest("prom", { title: "CPU high", severity: "critical" });
     const first = await t.alerts.ingest("prom", { title: "Disk 90%", severity: "warning" });
@@ -68,6 +69,7 @@ describe("alerts", () => {
     expect(
       (await t.alerts.ingest("prom", { title: "Back to normal", severity: "info" })).triaged,
     ).toBe(false);
+    await Bun.sleep(300);
     await quiet();
     expect(provider.calls).toHaveLength(1);
 

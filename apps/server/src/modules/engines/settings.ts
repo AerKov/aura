@@ -1,8 +1,9 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type EngineId, isEngineId, MODEL_ID_PATTERN } from "@aura/shared";
 import { commitAll } from "../../lib/git";
 import { errorMessage, log } from "../../lib/log";
+import { SecretVault } from "../../lib/secret-vault";
 
 /** Engine configuration, `<dataDir>/engines.json` (config in files, versioned; no secrets). */
 export interface EngineSettings {
@@ -25,7 +26,7 @@ function isEmbeddingEngine(value: unknown): value is EmbeddingEngine {
   return typeof value === "string" && (EMBEDDING_ENGINES as readonly string[]).includes(value);
 }
 
-/** Engines that use an API key. Keys live in `state/secrets.json`, outside git (ADR 0011). */
+/** Engines that use an API key. Keys live in the one secret store, outside git (ADR 0011, 0039). */
 export const KEYED_ENGINES = ["openai-compatible"] as const;
 export type KeyedEngine = (typeof KEYED_ENGINES)[number];
 
@@ -114,16 +115,14 @@ export interface SettingsPatch {
 /** Engine settings and API keys on disk. */
 export class EngineStore {
   private cached: EngineSettings | null = null;
-  private secrets: Partial<Record<KeyedEngine, string>> | null = null;
+  private readonly vault: SecretVault;
 
-  constructor(private readonly dataDir: string) {}
+  constructor(private readonly dataDir: string) {
+    this.vault = SecretVault.for(dataDir);
+  }
 
   private get file(): string {
     return join(this.dataDir, "engines.json");
-  }
-
-  private get secretsFile(): string {
-    return join(this.dataDir, "state", "secrets.json");
   }
 
   /** Drops the cached settings, so the file is read again (a restore point put it back). */
@@ -174,35 +173,12 @@ export class EngineStore {
   }
 
   key(engine: KeyedEngine): string | null {
-    if (!this.secrets) {
-      this.secrets = {};
-      if (existsSync(this.secretsFile)) {
-        try {
-          const raw: unknown = JSON.parse(readFileSync(this.secretsFile, "utf8"));
-          if (isRecord(raw)) {
-            for (const name of KEYED_ENGINES) {
-              const value = raw[name];
-              if (typeof value === "string" && value) this.secrets[name] = value;
-            }
-          }
-        } catch (error) {
-          log.warn("state/secrets.json is unreadable", { error: errorMessage(error) });
-        }
-      }
-    }
-    return this.secrets[engine] ?? null;
+    return this.vault.engineKey(engine);
   }
 
-  /** Stores a key readable only by the user (0600). It never leaves the server. */
+  /** Stores a key in the one secret store (ADR 0039). It never leaves the server. */
   setKey(engine: KeyedEngine, key: string | null): void {
-    this.key(engine);
-    const secrets = { ...this.secrets };
-    if (key) secrets[engine] = key.trim();
-    else delete secrets[engine];
-    mkdirSync(join(this.dataDir, "state"), { recursive: true });
-    writeFileSync(this.secretsFile, `${JSON.stringify(secrets, null, 2)}\n`, { mode: 0o600 });
-    chmodSync(this.secretsFile, 0o600);
-    this.secrets = secrets;
+    this.vault.setEngineKey(engine, key ? key.trim() : null);
     log.info("engine key updated", { engine, set: Boolean(key) });
   }
 }

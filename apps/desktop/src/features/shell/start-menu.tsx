@@ -1,8 +1,6 @@
 import { Plus, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Switch } from "@/components/switch";
 import { Button } from "@/components/ui/button";
-import { reportError } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";

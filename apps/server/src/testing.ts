@@ -32,6 +32,8 @@ export async function createTestApp(
     /** Agents as files in the data dir (a git repo), as in the app, instead of in memory. */
     fileAgents?: boolean;
     maxChainDepth?: number;
+    /** How long alerts are gathered before one triage run (10 ms by default in tests). */
+    triageDelayMs?: number;
     safeMode?: SafeMode;
     /** Network for the OpenAI-compatible engines. */
     fetch?: typeof fetch;
@@ -85,7 +87,7 @@ export async function createTestApp(
     agents,
     dataDir,
     maxChainDepth: opts.maxChainDepth,
-    triageDelayMs: 10,
+    triageDelayMs: opts.triageDelayMs ?? 10,
     safeMode: opts.safeMode,
     welcome: opts.welcome ?? false,
     appDbUrl: () => "mem://",

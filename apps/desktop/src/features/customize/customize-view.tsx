@@ -10,14 +10,13 @@ import {
   LayoutDashboard,
   Menu,
   Palette,
-  Plug,
   ShieldAlert,
   Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
-import { reportError, showAgents } from "@/features/chat/actions";
+import { reportError } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
 import { useRailItems } from "@/features/shell/rail";
 import { arrangeRail, moveRailItem } from "@/features/shell/rail-layout";
