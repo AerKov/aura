@@ -277,11 +277,11 @@ describe("extension API v2 (ADR 0021)", () => {
     ).toBe(400);
   });
 
-  test("the rail layout is saved with the appearance; Chats and Customize cannot be hidden", async () => {
+  test("the rail layout is saved with the appearance; Chats and Settings cannot be hidden", async () => {
     t = await createTestApp();
     const api = apiOf(t);
     const res = await api.appearance.put({
-      rail: { order: ["ext:board", "chats"], hidden: ["memory", "chats", "customize"] },
+      rail: { order: ["ext:board", "chats"], hidden: ["memory", "chats", "settings"] },
     });
     expect(res.data?.rail).toEqual({
       order: ["ext:board", "chats"],

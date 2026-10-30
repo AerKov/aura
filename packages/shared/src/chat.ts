@@ -349,7 +349,7 @@ export interface RailLayout {
 }
 
 /** Rail items that cannot be hidden, so the user can always get back to the settings. */
-export const RAIL_PINNED = ["chats", "customize"];
+export const RAIL_PINNED = ["chats", "settings"];
 
 export type ExtensionPermission =
   | "chat.read"

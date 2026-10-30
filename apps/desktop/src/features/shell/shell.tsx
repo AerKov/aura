@@ -3,6 +3,7 @@ import {
   type LayoutNode,
   MODULES,
   moduleOfApp,
+  type PageId,
   type Project,
   type Tile,
   tiles,
@@ -12,24 +13,16 @@ import { Fragment, useEffect, useRef, useState, useSyncExternalStore } from "rea
 import { AuraLogo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { AgentsView } from "@/features/agents/agents-view";
-import { BackupsView } from "@/features/backups/backups-view";
-import { CatalogView } from "@/features/catalog/catalog-view";
 import { loadInitial, reportError } from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
 import { Sidebar } from "@/features/chat/sidebar";
 import { setState, useChatStore } from "@/features/chat/store";
-import { CustomizeView, loadCustomize } from "@/features/customize/customize-view";
+import { loadCustomize } from "@/features/customize/customize-view";
 import { ExtensionFrame } from "@/features/customize/extension-frame";
-import { DevicesView } from "@/features/devices/devices-view";
-import { EnginesView } from "@/features/engines/engines-view";
 import { FilePicker } from "@/features/files/picker";
 import { FileViewer } from "@/features/files/viewer";
-import { JobsView } from "@/features/jobs/jobs-view";
 import { useT } from "@/features/localization/i18n";
-import { LocalizationView } from "@/features/localization/localization-view";
-import { MemoryView } from "@/features/memory/memory-view";
-import { SkillsView } from "@/features/skills/skills-view";
+import { SettingsView } from "@/features/settings/settings-view";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { AppControls, AppSecretsMenu } from "./app-controls";
@@ -390,30 +383,8 @@ function AppView({ app }: { app: AppRef }) {
       />
     );
   }
-  switch (app.slice(5)) {
-    case "skills":
-      return <SkillsView />;
-    case "memory":
-      return <MemoryView />;
-    case "agents":
-      return <AgentsView />;
-    case "catalog":
-      return <CatalogView />;
-    case "jobs":
-      return <JobsView />;
-    case "engines":
-      return <EnginesView />;
-    case "customize":
-      return <CustomizeView />;
-    case "devices":
-      return <DevicesView />;
-    case "localization":
-      return <LocalizationView />;
-    case "backups":
-      return <BackupsView />;
-    default:
-      return null;
-  }
+  // Every built-in page is Settings at one of its tabs (ADR 0039).
+  return <SettingsView page={app.slice(5) as PageId} />;
 }
 
 /** The first app: the chat list and the open chat. */

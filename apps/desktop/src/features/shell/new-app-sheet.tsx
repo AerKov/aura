@@ -7,6 +7,7 @@ import { loadInitial, loadProjects, reportError } from "@/features/chat/actions"
 import { useChatStore } from "@/features/chat/store";
 import { loadCustomize } from "@/features/customize/customize-view";
 import { useT } from "@/features/localization/i18n";
+import { openSettings } from "@/features/settings/open";
 import { api, call } from "@/lib/api";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
@@ -193,7 +194,7 @@ export function NewAppSheet() {
             variant="ghost"
             onClick={() => {
               closeMenus();
-              openAppRef("page:catalog");
+              openSettings("data");
             }}
           >
             {t("Browse the catalog")}

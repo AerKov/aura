@@ -7,6 +7,7 @@
 export type AppRef = "home" | "messenger" | `page:${PageId}` | `ext:${string}`;
 
 export const PAGE_IDS = [
+  "settings",
   "skills",
   "memory",
   "agents",
@@ -19,6 +20,34 @@ export const PAGE_IDS = [
   "backups",
 ] as const;
 export type PageId = (typeof PAGE_IDS)[number];
+
+/**
+ * The tabs of the Settings app (ADR 0039). The pages that were apps of their own before it open
+ * Settings at their tab, so saved screens and the orchestrator's old names keep working.
+ */
+export const SETTINGS_TABS = ["ai", "helpers", "automations", "look", "data", "advanced"] as const;
+export type SettingsTab = (typeof SETTINGS_TABS)[number];
+
+export function settingsTabOf(page: PageId): SettingsTab {
+  switch (page) {
+    case "agents":
+    case "skills":
+    case "memory":
+      return "helpers";
+    case "jobs":
+      return "automations";
+    case "customize":
+    case "localization":
+      return "look";
+    case "catalog":
+    case "backups":
+      return "data";
+    case "devices":
+      return "advanced";
+    default:
+      return "ai";
+  }
+}
 
 export interface Tile {
   kind: "tile";

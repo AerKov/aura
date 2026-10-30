@@ -19,6 +19,7 @@ import {
   MessageSquare,
   NotebookPen,
   Package,
+  Settings,
   SlidersHorizontal,
   Smartphone,
   WandSparkles,
@@ -43,6 +44,7 @@ export const BUILTIN_ICONS: Record<string, LucideIcon> = {
   backups: History,
   catalog: Package,
   engines: Cpu,
+  settings: Settings,
 };
 
 /** Labels and icons of the built-in pages, from the shared catalogue. */

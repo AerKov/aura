@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { arrangeRail, moveRailItem } from "./rail-layout";
 
-const items = ["chats", "skills", "memory", "ext:notes", "customize"].map((key) => ({ key }));
+const items = ["chats", "skills", "memory", "ext:notes", "settings"].map((key) => ({ key }));
 const keys = (list: { key: string }[]) => list.map((i) => i.key);
 
 describe("rail layout", () => {
@@ -15,13 +15,13 @@ describe("rail layout", () => {
       "chats",
       "skills",
       "memory",
-      "customize",
+      "settings",
     ]);
   });
 
-  test("hidden items are left out, but never Chats or Customize", () => {
-    const layout = { order: [], hidden: ["memory", "chats", "customize"] };
-    expect(keys(arrangeRail(items, layout))).toEqual(["chats", "skills", "ext:notes", "customize"]);
+  test("hidden items are left out, but never Chats or Settings", () => {
+    const layout = { order: [], hidden: ["memory", "chats", "settings"] };
+    expect(keys(arrangeRail(items, layout))).toEqual(["chats", "skills", "ext:notes", "settings"]);
     expect(arrangeRail(items, layout, { withHidden: true })).toHaveLength(5);
   });
 

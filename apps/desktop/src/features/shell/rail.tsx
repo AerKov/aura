@@ -44,33 +44,16 @@ export interface RailItem {
 }
 
 /** Setup pages stay on the desktop; the phone's tab bar keeps the daily ones. */
-const DESKTOP_ONLY = new Set([
-  "catalog",
-  "engines",
-  "customize",
-  "devices",
-  "localization",
-  "backups",
-]);
+const DESKTOP_ONLY = new Set<string>([]);
 
 /**
  * The bar's built-in items around the user's apps (ADR 0034). The plain view keeps the daily ones;
  * advanced mode adds the rest.
  */
 const SIMPLE_HEAD = ["chats", "signals"];
-const SIMPLE_TAIL: PageId[] = ["agents", "customize"];
-const ADVANCED_HEAD = ["chats", "signals", "jobs"];
-const ADVANCED_TAIL: PageId[] = [
-  "agents",
-  "skills",
-  "memory",
-  "catalog",
-  "engines",
-  "customize",
-  "localization",
-  "backups",
-  "devices",
-];
+const SIMPLE_TAIL: PageId[] = ["settings"];
+const ADVANCED_HEAD = ["chats", "signals"];
+const ADVANCED_TAIL: PageId[] = ["settings"];
 
 /** Every rail item in its default order, before the user's layout is applied. */
 export function useRailItems(): RailItem[] {

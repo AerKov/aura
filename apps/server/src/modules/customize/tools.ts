@@ -136,7 +136,7 @@ export function customizeTools(
     {
       name: "set_appearance",
       description:
-        "Switch the theme or the enabled snippets among existing ones, arrange the bar (its items and the screen edge it sits on), or set how tiles look (no approval needed). theme null = default. Rail keys: chats, signals, jobs, agents, skills, memory, catalog, engines, customize, localization, backups, devices, ext:<extension id>; chats and customize cannot be hidden. advanced turns advanced mode on or off (technical names, details and every app; off is the plain view). Window styles: preset airy (gaps 10, radius 10, border 2, minimal titles) or compact (no gaps, square, border 1, full titles), then gaps/radius 0-24 px, border 0-4 px, titles full|minimal|none, mod (the shortcuts' modifier) alt|ctrl-alt|meta.",
+        "Switch the theme or the enabled snippets among existing ones, arrange the bar (its items and the screen edge it sits on), or set how tiles look (no approval needed). theme null = default. Rail keys: chats, signals, settings, ext:<extension id>; chats and settings cannot be hidden. advanced turns advanced mode on or off (technical names, details and every app; off is the plain view). Window styles: preset airy (gaps 10, radius 10, border 2, minimal titles) or compact (no gaps, square, border 1, full titles), then gaps/radius 0-24 px, border 0-4 px, titles full|minimal|none, mod (the shortcuts' modifier) alt|ctrl-alt|meta.",
       inputSchema: {
         theme: z.string().nullable().optional(),
         snippets: z.array(z.string()).optional(),

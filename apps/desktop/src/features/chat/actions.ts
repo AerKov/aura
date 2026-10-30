@@ -1,4 +1,5 @@
 import type { Topic } from "@aura/shared";
+import { openSettings } from "@/features/settings/open";
 import { openAppRef } from "@/features/shell/layout";
 import { api, call, NeedsPairingError } from "@/lib/api";
 import { getState, mergeMessages, setState, upsertChat, upsertMessage } from "./store";
@@ -100,7 +101,7 @@ export async function moveToTopic(messageId: string, topicId: string | null): Pr
 /** A click on a helper's mark: its settings, in the Helpers app beside the chat. */
 export function openAgentSettings(handle: string): void {
   setState(() => ({ agentFocus: handle }));
-  openAppRef("page:agents", "right");
+  openSettings("helpers", "right");
 }
 
 export function openChat(chatId: string): void {
@@ -174,9 +175,9 @@ export async function loadTasks(projectId: string): Promise<void> {
 }
 
 export function showAgents(): void {
-  openAppRef("page:agents");
+  openSettings("helpers");
 }
 
 export function showEngines(): void {
-  openAppRef("page:engines");
+  openSettings("ai");
 }

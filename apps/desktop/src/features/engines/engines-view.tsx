@@ -7,16 +7,13 @@ import { loadProviderStatus, reportError } from "@/features/chat/actions";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { LocalAiCard } from "./local-ai-card";
-import { SandboxCard } from "./sandbox-card";
 
 type KeyedId = "google" | "groq" | "openrouter" | "cerebras" | "mistral" | "openai-compatible";
 
 type EnginesData = Awaited<ReturnType<typeof loadEngines>>;
 type Engine = EnginesData["engines"][number];
-type Agent = Awaited<ReturnType<typeof loadAgents>>[number];
 
 const loadEngines = () => call(() => api.engines.get());
-const loadAgents = () => call(() => api.agents.get());
 
 /** The order of the page (ADR 0037): free services first, then local models, then agent apps. */
 const GROUPS: { key: string; title: string; text: string; ids: EngineId[]; collapsed?: boolean }[] =
@@ -48,7 +45,7 @@ const KIND_LABEL: Record<Engine["kind"], string> = {
   aura: "Aura loop",
 };
 
-const inputClass =
+export const inputClass =
   "bg-background focus:border-primary/60 focus:ring-primary/15 w-full rounded-xl border px-3 py-2 text-sm outline-none focus:ring-4";
 
 /**
@@ -57,15 +54,12 @@ const inputClass =
  */
 export function EnginesView() {
   const [data, setData] = useState<EnginesData | null>(null);
-  const [agents, setAgents] = useState<Agent[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const refresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      const [engines, list] = await Promise.all([loadEngines(), loadAgents()]);
-      setData(engines);
-      setAgents(list);
+      setData(await loadEngines());
     } catch (error) {
       reportError(error);
     } finally {
@@ -89,9 +83,9 @@ export function EnginesView() {
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-4xl">
         <PageHeader title="Helper programs" icon={<Cpu className="text-primary size-7" />}>
-          What your helpers think with. The easiest start is a free AI service: make a key, paste
-          it, done. Local models and agent apps you already use (Claude Code, Codex…) are further
-          down. Each helper can use a different engine.
+          Where your helpers' AI comes from. The easiest start is a free AI service: make a key,
+          paste it, done. Local models and agent apps you already use (Claude Code, Codex…) are
+          further down. Which helper uses which AI is set on its card under Helpers.
         </PageHeader>
 
         <div className="mb-2 flex justify-end">
@@ -154,21 +148,6 @@ export function EnginesView() {
             );
           })
         )}
-
-        <SandboxCard />
-
-        {data && (
-          <AgentEngines
-            agents={agents}
-            engines={data.engines}
-            defaultEngine={data.default}
-            onSaved={(next) =>
-              setAgents((list) =>
-                list.map((a) => (a.handle === next.handle ? { ...a, ...next } : a)),
-              )
-            }
-          />
-        )}
       </div>
     </section>
   );
@@ -215,7 +194,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-function useModels(engine: EngineId, enabled: boolean) {
+export function useModels(engine: EngineId, enabled: boolean) {
   const [models, setModels] = useState<EngineModel[]>([]);
   useEffect(() => {
     if (!enabled) return;
@@ -234,7 +213,7 @@ function useModels(engine: EngineId, enabled: boolean) {
   return models;
 }
 
-function ModelInput({
+export function ModelInput({
   models,
   value,
   onChange,
@@ -451,120 +430,5 @@ function EngineCard({
         )}
       </div>
     </article>
-  );
-}
-
-function AgentEngines({
-  agents,
-  engines,
-  defaultEngine,
-  onSaved,
-}: {
-  agents: Agent[];
-  engines: Engine[];
-  defaultEngine: EngineId;
-  onSaved: (next: { handle: string; engine: EngineId | null; model: string | null }) => void;
-}) {
-  const defaultLabel = engines.find((e) => e.id === defaultEngine)?.label ?? defaultEngine;
-  return (
-    <section className="mt-10">
-      <h2 className="kicker mb-1">Per agent</h2>
-      <p className="text-muted-foreground mb-4 text-sm">
-        Mix engines in one team: a strong model for the coder, a free one for the reviewer.
-      </p>
-      <div className="bg-card divide-y rounded-2xl border">
-        {agents.map((agent) => (
-          <AgentRow
-            key={agent.handle}
-            agent={agent}
-            engines={engines}
-            defaultLabel={defaultLabel}
-            onSaved={onSaved}
-          />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function AgentRow({
-  agent,
-  engines,
-  defaultLabel,
-  onSaved,
-}: {
-  agent: Agent;
-  engines: Engine[];
-  defaultLabel: string;
-  onSaved: (next: { handle: string; engine: EngineId | null; model: string | null }) => void;
-}) {
-  const [engine, setEngine] = useState<EngineId | "">(agent.engine ?? "");
-  const [model, setModel] = useState(agent.model ?? "");
-  const [saved, setSaved] = useState(false);
-  const dirty = (agent.engine ?? "") !== engine || (agent.model ?? "") !== model;
-  const chosen = engines.find((e) => e.id === engine);
-  const models = useModels(
-    engine || "claude-code",
-    engine !== "" && (chosen?.status.ok === true || chosen?.kind !== "aura"),
-  );
-
-  const save = async () => {
-    try {
-      const next = await call(() =>
-        api.agents({ handle: agent.handle }).engine.put({
-          engine: engine || null,
-          model: model.trim() || null,
-        }),
-      );
-      onSaved(next);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
-    } catch (error) {
-      reportError(error);
-    }
-  };
-
-  return (
-    <div className="grid items-center gap-3 p-4 md:grid-cols-[1fr_12rem_14rem_auto]">
-      <div className="min-w-0">
-        <div className="text-sm font-medium">@{agent.handle}</div>
-        <div className="text-muted-foreground truncate text-xs">{agent.role}</div>
-      </div>
-      <select
-        className={inputClass}
-        value={engine}
-        onChange={(e) => {
-          setEngine(e.target.value as EngineId | "");
-          setModel("");
-        }}
-      >
-        <option value="">Default ({defaultLabel})</option>
-        {engines.map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.label}
-          </option>
-        ))}
-      </select>
-      {engine ? (
-        <ModelInput
-          label={`@${agent.handle} model`}
-          models={models}
-          value={model}
-          onChange={setModel}
-          placeholder={chosen?.model ?? "engine default"}
-        />
-      ) : (
-        <span className="text-muted-foreground text-xs">Engine's default model</span>
-      )}
-      <Button
-        size="sm"
-        variant={dirty ? "default" : "ghost"}
-        className="rounded-pill"
-        disabled={!dirty}
-        onClick={() => void save()}
-      >
-        {saved ? <Check /> : null} {saved ? "Saved" : "Save"}
-      </Button>
-    </div>
   );
 }

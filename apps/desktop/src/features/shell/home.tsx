@@ -90,15 +90,12 @@ export function HomeView() {
 
 /** The user's apps always have their menu; built-in apps' switches are for advanced mode. */
 function EntryControl({ entry, advanced }: { entry: Entry; advanced: boolean }) {
-  const module = entry.builtin?.module ?? null;
-  if (module && MODULE_SWITCH[module] === entry.key)
-    return advanced ? <ModuleSwitch id={module} /> : null;
   if (entry.extension) return <AppMenu extension={entry.extension} />;
   return null;
 }
 
 /** A built-in module's switch: turning it off also turns off what needs it, after a confirm. */
-function ModuleSwitch({ id }: { id: ModuleId }) {
+export function ModuleSwitch({ id }: { id: ModuleId }) {
   const modules = useModules();
   const t = useT();
   const [confirm, setConfirm] = useState<ModuleId[] | null>(null);

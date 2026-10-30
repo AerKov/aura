@@ -8,6 +8,7 @@ import {
   type Message,
   type Participant,
   type Project,
+  type SettingsTab,
   type Task,
   type Topic,
 } from "@aura/shared";
@@ -60,6 +61,8 @@ export interface ChatState {
   previewDraft: Record<string, boolean>;
   /** Apps whose chat is open as a panel inside their tile (ADR 0027). */
   appChat: Record<string, boolean>;
+  /** A Settings tab asked for from elsewhere (ADR 0039); taken by Settings when it shows. */
+  settingsTab: SettingsTab | null;
   /** The helper whose settings the Helpers app shows (a click on its mark in a chat). */
   agentFocus: string | null;
   /** Why the bar app is not shown (it failed), so the built-in bar stands in (ADR 0029). */
@@ -98,6 +101,7 @@ let state: ChatState = {
   previewDraft: {},
   appChat: {},
   agentFocus: null,
+  settingsTab: null,
   barFailed: null,
   menuOpen: false,
   addOpen: false,
