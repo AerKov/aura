@@ -7,7 +7,7 @@ your machine, in plain files and a local database.
 
 ![Aura: a chat with a helper on the left, the app it is changing on the right](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/shell-light.png)
 
-> **Status:** alpha (version 0.38). It works end to end, but expect rough edges.
+> **Status:** alpha (version 0.39). It works end to end, but expect rough edges.
 
 ## In a minute
 

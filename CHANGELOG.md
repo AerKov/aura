@@ -5,6 +5,8 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-10-30: Built-in local AI
+
 - **Built-in local AI.** Aura installs llama.cpp for you and runs a model on this computer: pick one
   that fits your memory (or any GGUF from Hugging Face), approve what will be downloaded, and watch
   the progress. Checksums are verified; the server listens on this computer only.
