@@ -39,6 +39,9 @@ export const UK: Record<string, string> = {
   "Open Settings → AI": "Відкрити Налаштування → ШІ",
   "Tools and keys": "Інструменти й ключі",
   "With a folder": "З папкою",
+  "Saving…": "Зберігаю…",
+  "Not saved": "Не збережено",
+  "Looking at what to download…": "Дивлюся, що завантажити…",
   "Helpers keep files, tasks and a limit there, like a project.":
     "Помічники тримають там файли, задачі й ліміт, як у проєкті.",
   AI: "ШІ",

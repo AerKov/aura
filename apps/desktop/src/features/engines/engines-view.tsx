@@ -1,7 +1,8 @@
 import type { EngineId, EngineModel } from "@aura/shared";
-import { Check, Cpu, KeyRound, RefreshCw } from "lucide-react";
+import { Cpu, KeyRound, RefreshCw } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useId, useState } from "react";
 import { PageHeader } from "@/components/page";
+import { SaveButton } from "@/components/save-button";
 import { Button } from "@/components/ui/button";
 import { loadProviderStatus, reportError } from "@/features/chat/actions";
 import { api, call } from "@/lib/api";
@@ -62,13 +63,10 @@ export function EnginesView() {
     void refresh();
   }, [refresh]);
 
+  // Errors go to the button that saved, which says "Not saved" and reports them.
   const saveSettings = async (patch: Parameters<typeof api.engines.settings.put>[0]) => {
-    try {
-      setData(await call(() => api.engines.settings.put(patch)));
-      await loadProviderStatus();
-    } catch (error) {
-      reportError(error);
-    }
+    setData(await call(() => api.engines.settings.put(patch)));
+    await loadProviderStatus();
   };
 
   return (
@@ -110,15 +108,11 @@ export function EnginesView() {
                       onSave={saveSettings}
                       onKey={async (key) => {
                         if (engine.id !== "openai-compatible") return;
-                        try {
-                          await call(() =>
-                            api.engines({ engine: "openai-compatible" }).key.put({ key }),
-                          );
-                          await refresh();
-                          await loadProviderStatus();
-                        } catch (error) {
-                          reportError(error);
-                        }
+                        await call(() =>
+                          api.engines({ engine: "openai-compatible" }).key.put({ key }),
+                        );
+                        await refresh();
+                        await loadProviderStatus();
                       }}
                     />
                   ),
@@ -319,20 +313,20 @@ function EngineCard({
               onChange={(e) => setKey(e.target.value)}
             />
             {key ? (
-              <Button
+              <SaveButton
                 size="sm"
                 className="h-auto rounded-xl"
-                onClick={() => void onKey(key.trim()).then(() => setKey(""))}
+                onSave={() => onKey(key.trim()).then(() => setKey(""))}
               >
                 <KeyRound /> {engine.needsKey ? "Connect" : "Save"}
-              </Button>
+              </SaveButton>
             ) : (
               engine.hasKey && (
                 <Button
                   size="sm"
                   variant="ghost"
                   className="h-auto"
-                  onClick={() => void onKey(null)}
+                  onClick={() => void onKey(null).catch(reportError)}
                 >
                   Remove
                 </Button>
@@ -365,17 +359,15 @@ function EngineCard({
       )}
 
       <div className="mt-auto flex flex-wrap gap-2 pt-1">
-        <Button size="sm" variant="outline" className="rounded-pill" onClick={() => void save()}>
-          <Check /> Save
-        </Button>
+        <SaveButton size="sm" variant="outline" className="rounded-pill" onSave={save} />
         {!engine.isDefault && engine.status.ok && (
-          <Button
+          <SaveButton
             size="sm"
             className="rounded-pill"
-            onClick={() => void save().then(() => onSave({ default: engine.id }))}
+            onSave={() => save().then(() => onSave({ default: engine.id }))}
           >
-            Use for all agents
-          </Button>
+            Use for all helpers
+          </SaveButton>
         )}
       </div>
     </article>

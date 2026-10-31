@@ -1,4 +1,5 @@
 import { budgetText, formatTokens, type Project } from "@aura/shared";
+import { Loader } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { setState } from "@/features/chat/store";
@@ -115,9 +116,10 @@ export function BudgetEditor({
         size="sm"
         className="justify-self-start rounded-pill"
         disabled={busy}
+        aria-busy={busy}
         onClick={() => void save()}
       >
-        {t("Save")}
+        {busy ? <Loader className="animate-spin" /> : null} {busy ? t("Saving…") : t("Save")}
       </Button>
     </div>
   );

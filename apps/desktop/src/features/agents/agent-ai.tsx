@@ -1,7 +1,6 @@
 import type { EngineId } from "@aura/shared";
-import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { SaveButton } from "@/components/save-button";
 import { reportError } from "@/features/chat/actions";
 import { inputClass, ModelInput, useModels } from "@/features/engines/engines-view";
 import { useT } from "@/features/localization/i18n";
@@ -30,7 +29,6 @@ export function AgentAi({
   const [engines, setEngines] = useState<Engines | null>(null);
   const [engine, setEngine] = useState<EngineId | "">(current ?? "");
   const [model, setModel] = useState(currentModel ?? "");
-  const [saved, setSaved] = useState(false);
   useEffect(() => {
     loadEngines().then(setEngines).catch(reportError);
   }, []);
@@ -49,16 +47,10 @@ export function AgentAi({
   );
 
   const save = async () => {
-    try {
-      await call(() =>
-        api.agents({ handle }).engine.put({ engine: engine || null, model: model.trim() || null }),
-      );
-      setSaved(true);
-      setTimeout(() => setSaved(false), 1500);
-      onSaved();
-    } catch (error) {
-      reportError(error);
-    }
+    await call(() =>
+      api.agents({ handle }).engine.put({ engine: engine || null, model: model.trim() || null }),
+    );
+    onSaved();
   };
 
   return (
@@ -104,14 +96,12 @@ export function AgentAi({
             {fallback?.model ?? t("the default model")}
           </span>
         )}
-        <Button
+        <SaveButton
           size="sm"
           variant={dirty ? "default" : "ghost"}
           disabled={!dirty}
-          onClick={() => void save()}
-        >
-          {saved ? <Check /> : null} {saved ? t("Saved") : t("Save")}
-        </Button>
+          onSave={save}
+        />
       </div>
     </div>
   );

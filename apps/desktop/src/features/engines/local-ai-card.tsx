@@ -379,9 +379,13 @@ export function LocalAiCard({
           )}
           {error && <p className="text-destructive text-[13px]">{error}</p>}
           <div className="flex flex-wrap gap-2">
-            <Button disabled={busy || !pick} onClick={() => void makePlan(pick)}>
-              <Download />{" "}
-              {status.installed ? t("Download the model…") : t("Install and download…")}
+            <Button disabled={busy || !pick} aria-busy={busy} onClick={() => void makePlan(pick)}>
+              {busy ? <Loader className="animate-spin" /> : <Download />}{" "}
+              {busy
+                ? t("Looking at what to download…")
+                : status.installed
+                  ? t("Download the model…")
+                  : t("Install and download…")}
             </Button>
             {status.installed && (
               <Button
@@ -449,8 +453,8 @@ function PlanCard({
           : ""}
       </p>
       <div className="flex gap-2">
-        <Button disabled={busy || nothing} onClick={onYes}>
-          {t("Yes, download")}
+        <Button disabled={busy || nothing} aria-busy={busy} onClick={onYes}>
+          {busy ? <Loader className="animate-spin" /> : null} {t("Yes, download")}
         </Button>
         <Button variant="outline" onClick={onNo}>
           {t("No, thanks")}
