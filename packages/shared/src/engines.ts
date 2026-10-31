@@ -1,19 +1,10 @@
 /**
- * Agent engines (ADR 0011, 0012): what actually runs an agent. `claude-code` is the official Claude
- * Agent SDK; `gemini-cli`, `codex` and `opencode` are other agents' own CLIs driven over the Agent
- * Client Protocol, each under the user's own login; the rest run Aura's own agent loop against an
+ * Agent engines (ADR 0011, 0042): what actually runs an agent. `claude-code` is the official Claude
+ * Agent SDK under the user's own login; the rest run Aura's own agent loop against an
  * OpenAI-compatible chat API: the built-in local AI (ADR 0038), a local model server, or any
  * compatible API the user adds.
  */
-export const ENGINE_IDS = [
-  "llama-cpp",
-  "ollama",
-  "openai-compatible",
-  "claude-code",
-  "gemini-cli",
-  "codex",
-  "opencode",
-] as const;
+export const ENGINE_IDS = ["llama-cpp", "ollama", "openai-compatible", "claude-code"] as const;
 export type EngineId = (typeof ENGINE_IDS)[number];
 
 export function isEngineId(value: unknown): value is EngineId {

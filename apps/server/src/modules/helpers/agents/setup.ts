@@ -244,10 +244,6 @@ export class AgentSetupService {
       warnings.push(
         `${engineLabel(engine)} does not provide ${unsupported.join(", ")}, so the agent works without ${unsupported.length > 1 ? "them" : "it"}.`,
       );
-    if (kind === "acp")
-      warnings.push(
-        `${engineLabel(engine)} uses its own tools; Aura allows or denies each one by the agent's tools above.`,
-      );
     if (engine === "ollama")
       warnings.push(
         "On Ollama, tools work only with models that support tool calling (qwen3, llama3.1…).",

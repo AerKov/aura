@@ -6,7 +6,6 @@ import { createApp } from "./app";
 import { createServices, prepareDataDir } from "./bootstrap";
 import { connectDb } from "./db/client";
 import { EngineRegistry } from "./modules/ai/engines/registry";
-import { ToolBridge } from "./modules/ai/engines/tool-bridge";
 import type { SafeMode } from "./modules/apps/customize/safe-mode";
 import {
   type AgentDirectory,
@@ -42,9 +41,6 @@ export async function createTestApp(
     /** A fake llama-server process and system for the built-in local AI. */
     llamaSpawn?: ConstructorParameters<typeof EngineRegistry>[0]["llamaSpawn"];
     llamaSystem?: ConstructorParameters<typeof EngineRegistry>[0]["llamaSystem"];
-    /** Fake agent CLIs for the ACP engines. */
-    acpAgents?: ConstructorParameters<typeof EngineRegistry>[0]["acpAgents"];
-    acpSpawn?: ConstructorParameters<typeof EngineRegistry>[0]["acpSpawn"];
     /** The orchestrator's first-launch welcome in the direct chat (default off). */
     welcome?: boolean;
   } = {},
@@ -56,14 +52,10 @@ export async function createTestApp(
   const stopLive = await startLiveBridge(db.surreal, hub);
   const provider = opts.provider ?? new FakeProvider();
   // The default engine is Claude Code; tests run it on the fake provider.
-  const toolBridge = new ToolBridge(() => "http://127.0.0.1:4517", "test");
   const engines = new EngineRegistry({
     dataDir,
     claude: provider,
     fetch: opts.fetch,
-    toolBridge,
-    acpAgents: opts.acpAgents,
-    acpSpawn: opts.acpSpawn,
     llamaSpawn: opts.llamaSpawn,
     llamaSystem: opts.llamaSystem,
   });
@@ -107,7 +99,6 @@ export async function createTestApp(
     sessions,
     hub,
     engines,
-    toolBridge,
     dataDir,
     agents,
     ...services,
@@ -120,7 +111,6 @@ export async function createTestApp(
     hub,
     provider,
     engines,
-    toolBridge,
     agents,
     sessions,
     token,

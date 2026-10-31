@@ -26,15 +26,14 @@ const GROUPS: { key: string; title: string; text: string; ids: EngineId[] }[] = 
   },
   {
     key: "agent",
-    title: "Your own agent app",
-    text: "Complete coding agents you install and log in to yourself. Aura drives them and decides what they may touch; your login stays with them.",
-    ids: ["claude-code", "codex", "gemini-cli", "opencode"],
+    title: "Claude Code",
+    text: "Anthropic's coding agent, under your own Claude login. Aura drives it and decides what it may touch; your login stays with it.",
+    ids: ["claude-code"],
   },
 ];
 
 const KIND_LABEL: Record<Engine["kind"], string> = {
   official: "Agent SDK",
-  acp: "Agent app · ACP",
   aura: "Aura loop",
 };
 
@@ -350,13 +349,7 @@ function EngineCard({
           models={models}
           value={model}
           onChange={setModel}
-          placeholder={
-            engine.id === "ollama" && models.length === 0
-              ? "qwen3:8b"
-              : engine.kind === "acp" && models.length === 0
-                ? tr("the agent's own default")
-                : undefined
-          }
+          placeholder={engine.id === "ollama" && models.length === 0 ? "qwen3:8b" : undefined}
         />
       </Field>
       {engine.kind === "aura" && (

@@ -2,7 +2,6 @@ import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { enginesModule } from "./modules/ai/engines";
 import type { EngineRegistry } from "./modules/ai/engines/registry";
-import type { ToolBridge } from "./modules/ai/engines/tool-bridge";
 import { localAiModule } from "./modules/ai/localai";
 import { appsModule } from "./modules/apps/apps";
 import type { AppActions } from "./modules/apps/apps/actions";
@@ -67,7 +66,6 @@ export interface AppDeps extends HealthDeps {
   chat: ChatService;
   extraHosts?: string[];
   engines: EngineRegistry;
-  toolBridge: ToolBridge;
   memory: MemoryService;
   catalog: CatalogService;
   summaries: ChatSummaryService;

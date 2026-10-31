@@ -6,7 +6,6 @@ import { connectDb } from "./db/client";
 import { errorMessage, log } from "./lib/log";
 import { isParentAlive, watchParent } from "./lib/parent-watch";
 import { EngineRegistry } from "./modules/ai/engines/registry";
-import { ToolBridge } from "./modules/ai/engines/tool-bridge";
 import { detectSafeMode, HEALTHY_AFTER_MS } from "./modules/apps/customize/safe-mode";
 import { loadWebhookToken } from "./modules/automations/alerts/service";
 import { DIRECT_CHAT_ID } from "./modules/chats/chat/repo";
@@ -35,14 +34,10 @@ async function main(): Promise<void> {
     executablePath: claude ?? (isCompiled() ? null : undefined),
     defaultModel: config.defaultModel,
   });
-  // ACP agents run on this machine and reach the app's tools over loopback.
-  const loopbackHost = ["0.0.0.0", "::"].includes(config.host) ? "127.0.0.1" : config.host;
-  const toolBridge = new ToolBridge(() => `http://${loopbackHost}:${config.port}`, SERVER_VERSION);
   const engines = new EngineRegistry({
     dataDir: config.dataDir,
     claude: claudeProvider,
     defaultModel: config.defaultModel,
-    toolBridge,
     appVersion: SERVER_VERSION,
   });
   log.info("default engine", { engine: engines.store.get().default });
@@ -98,7 +93,6 @@ async function main(): Promise<void> {
     remote: config.remote,
     hub,
     engines,
-    toolBridge,
     dataDir: config.dataDir,
     agents,
     webhookToken: loadWebhookToken(config.dataDir),
