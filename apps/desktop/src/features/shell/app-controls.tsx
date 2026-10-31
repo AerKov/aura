@@ -57,7 +57,7 @@ export function AppControls({ ext }: { ext: ExtensionInfo }) {
         <Button
           size="icon"
           variant="ghost"
-          className="text-muted-foreground size-7"
+          className="text-muted-foreground size-8 rounded-full"
           aria-label={t("Discard the change that waits for your decision")}
           title={t("Discard the change that waits for your decision")}
           onClick={() => {
@@ -96,7 +96,7 @@ export function Versions({ appId }: { appId: string }) {
       <Button
         size="icon"
         variant="ghost"
-        className="text-muted-foreground hover:text-foreground size-7"
+        className="text-muted-foreground hover:text-foreground size-8 rounded-full"
         aria-label={t("History of changes")}
         title={t("History of changes")}
         onClick={() => setOpen(!open)}
@@ -104,7 +104,7 @@ export function Versions({ appId }: { appId: string }) {
         <History strokeWidth={1.5} />
       </Button>
       {open && (
-        <div className="bg-popover text-popover-foreground animate-in fade-in zoom-in-95 absolute top-9 right-0 z-30 w-80 rounded-2xl border p-2 shadow-lg">
+        <div className="bg-popover text-popover-foreground animate-in fade-in zoom-in-95 absolute top-10 right-0 z-30 w-80 rounded-2xl border p-2 shadow-lg">
           <p className="text-muted-foreground px-2 pb-1 text-xs font-medium">
             {t("History of changes")}
           </p>
@@ -193,7 +193,7 @@ function DataMenu({ appId }: { appId: string }) {
       <Button
         size="icon"
         variant="ghost"
-        className="size-7"
+        className="text-muted-foreground hover:text-foreground size-8 rounded-full"
         aria-label={tr("Data")}
         title={tr("The app's data: where it is kept, export, delete")}
         onClick={() => setOpen(!open)}
@@ -201,7 +201,7 @@ function DataMenu({ appId }: { appId: string }) {
         <Database />
       </Button>
       {open && info && (
-        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-72 rounded-xl border p-3 text-sm shadow-lg">
+        <div className="bg-popover text-popover-foreground absolute top-10 right-0 z-30 w-72 rounded-2xl border p-3 text-sm shadow-lg">
           <p className="kicker mb-1">{tr("Kept in")}</p>
           <div className="mb-2 flex gap-1 text-xs">
             {(
@@ -305,7 +305,7 @@ export function AppSecretsMenu({ appId }: { appId: string }) {
       <Button
         size="icon"
         variant="ghost"
-        className="size-7"
+        className="text-muted-foreground hover:text-foreground size-8 rounded-full"
         aria-label={t("Secrets")}
         title={t("The app's secrets: keys it puts into its requests; only it can use them")}
         onClick={() => setOpen(!open)}
@@ -313,34 +313,45 @@ export function AppSecretsMenu({ appId }: { appId: string }) {
         <KeyRound />
       </Button>
       {open && (
-        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-80 rounded-xl border p-3 text-sm shadow-lg">
-          <p className="kicker mb-1">{t("Secrets")}</p>
-          <p className="text-muted-foreground mb-2 text-xs">
+        <div className="bg-popover text-popover-foreground animate-in fade-in zoom-in-[0.97] absolute top-10 right-0 z-30 w-[22rem] max-w-[calc(100vw-2rem)] rounded-2xl border p-4 text-sm shadow-lg duration-150">
+          <div className="mb-3 flex items-center gap-2">
+            <KeyRound className="text-primary size-4" />
+            <p className="font-medium">{t("Secrets")}</p>
+          </div>
+          <p className="text-muted-foreground mb-3 text-xs leading-relaxed">
             {t(
               "Only this app can use them, in requests to its approved hosts. Values are never shown.",
             )}
           </p>
-          <ul className="grid gap-2">
+          <ul className="grid gap-3">
             {list.map((s) => (
-              <li key={s.name} className="grid gap-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs">{s.name}</span>
-                  <span className={cn("text-xs", s.set ? "text-success" : "text-warning-text")}>
+              <li key={s.name} className="grid gap-1.5">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="truncate font-mono text-xs font-medium">{s.name}</span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[11px]",
+                      s.set ? "bg-success/12 text-success" : "bg-warning/15 text-warning-text",
+                    )}
+                  >
                     {s.set ? t("set") : t("no value")}
                   </span>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex items-center gap-1.5">
                   <input
                     type="password"
                     aria-label={t("Value of {name}", { name: s.name })}
                     placeholder={s.set ? t("New value") : t("Value")}
                     value={drafts[s.name] ?? ""}
                     onChange={(e) => setDrafts((d) => ({ ...d, [s.name]: e.target.value }))}
-                    className="bg-background min-w-0 flex-1 rounded-lg border px-2 py-1 text-xs"
+                    onKeyDown={(e) =>
+                      e.key === "Enter" && drafts[s.name] && void save(s.name, drafts[s.name] ?? "")
+                    }
+                    className="bg-input-bg border-input focus-visible:border-ring h-8 min-w-0 flex-1 rounded-full border px-3 text-xs outline-none"
                   />
                   <Button
                     size="sm"
-                    className="h-7"
+                    className="h-8 rounded-full px-3"
                     disabled={!drafts[s.name]}
                     onClick={() => void save(s.name, drafts[s.name] ?? "")}
                   >
@@ -348,12 +359,14 @@ export function AppSecretsMenu({ appId }: { appId: string }) {
                   </Button>
                   {s.set && (
                     <Button
-                      size="sm"
+                      size="icon"
                       variant="ghost"
-                      className="h-7"
+                      className="text-muted-foreground hover:text-destructive size-8 rounded-full"
+                      aria-label={t("Clear")}
+                      title={t("Clear")}
                       onClick={() => void save(s.name, null)}
                     >
-                      {t("Clear")}
+                      <Trash2 className="size-4" />
                     </Button>
                   )}
                 </div>

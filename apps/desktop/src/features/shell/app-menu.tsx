@@ -55,12 +55,12 @@ export function AppMenu({ extension }: { extension: ExtensionInfo }) {
         aria-label={t("More for {name}", { name: extension.name })}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
-        className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1 opacity-60 group-hover:opacity-100"
+        className="text-muted-foreground hover:bg-accent hover:text-foreground grid size-8 place-items-center rounded-full"
       >
         <MoreHorizontal className="size-4" />
       </button>
       {open && (
-        <div className="bg-popover absolute top-7 right-0 z-10 w-64 rounded-xl border p-2 text-sm shadow-lg">
+        <div className="bg-popover absolute top-10 right-0 z-30 w-64 rounded-2xl border p-2 text-sm shadow-lg">
           {confirm ? (
             <div className="p-1">
               <p className="mb-2 text-xs">

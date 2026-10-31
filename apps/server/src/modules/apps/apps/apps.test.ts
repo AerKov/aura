@@ -94,6 +94,33 @@ describe("apps with chats (ADR 0024)", () => {
     expect((await t.apps.history("clients"))[0]?.subject).toBe(`revert: back to ${first}`);
   });
 
+  test("a change that breaks manifest.json is never put to the user: @builder is told to fix it", async () => {
+    t = await createTestApp({ provider: new FakeProvider(), maxChainDepth: 3 });
+    const created = await t.apps.create({ name: "Clients" });
+    const chatId = created.chat.id;
+    const manifest = JSON.parse(
+      readFileSync(join(t.dataDir, "projects", "clients", "manifest.json"), "utf8"),
+    );
+    // Secrets without the hosts they go to: not a valid manifest.
+    edit(t, "manifest.json", JSON.stringify({ ...manifest, secrets: ["TEST_SECRET"] }));
+    await wakeBuilder(t, chatId);
+
+    expect(await t.approvals.listPending()).toHaveLength(0);
+    const notes = (await t.repo.listMessages(chatId, { limit: 50 })).filter(
+      (m) => m.author.kind === "bot" && m.author.id === "aura",
+    );
+    expect(notes[0]?.body).toContain("manifest.json is not valid");
+    expect(notes[0]?.body).toContain("list the hosts");
+    expect(notes[0]?.mentions).toEqual([BUILDER_HANDLE]);
+    // The loop guard stops the reminders when the builder never fixes it.
+    expect(notes.length).toBeLessThanOrEqual(3);
+
+    // Fixed: the next run puts the change to the user as usual.
+    edit(t, "manifest.json", JSON.stringify({ ...manifest, description: "Clients and deals" }));
+    await wakeBuilder(t, chatId, "@builder try again");
+    expect((await t.approvals.listPending())[0]).toMatchObject({ kind: "app_change" });
+  });
+
   test("rejecting discards the draft; a card that is out of date is refused", async () => {
     t = await createTestApp({ provider: new FakeProvider() });
     const { chat } = await t.apps.create({ name: "Clients" });

@@ -116,6 +116,18 @@ export async function createServices(deps: {
     agents: deps.agents,
     hub: deps.hub,
     dataDir: deps.dataDir,
+    remind: async (chatId, body, mention, depth) => {
+      const target = await repo.findChat(chatId);
+      if (!target) return;
+      const note = await repo.createMessage({
+        chatId,
+        author: { kind: "bot", id: "aura" },
+        body,
+        mentions: [mention],
+        chainDepth: depth,
+      });
+      chat.notify(note, target);
+    },
   });
   await apps.load();
   const appService = apps;

@@ -68,7 +68,7 @@ export interface RuntimeDeps {
   /** After a run in an app's chat: offer the agent's changes for approval (ADR 0024). */
   appRun?: (
     project: ProjectInfo,
-    run: { handle: string; chatId: string; summary: string },
+    run: { handle: string; chatId: string; summary: string; depth: number },
   ) => Promise<void>;
   ownerName: string;
   /** Working directory for runs outside a project. */
@@ -552,6 +552,7 @@ export class AgentRuntime {
           handle,
           chatId: chat.id,
           summary: body || "Changes to the app",
+          depth,
         })
         .catch((e: unknown) =>
           log.error("app change card failed", { project: project.id, error: errorMessage(e) }),

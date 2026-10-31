@@ -98,6 +98,11 @@ export class AppService {
       agents: AgentDirectory;
       hub: EventHub;
       dataDir: string;
+      /**
+       * Posts a note from Aura into an app's chat that mentions a helper, waking it at `depth`
+       * (the loop guard counts it like any agent message).
+       */
+      remind?: (chatId: string, body: string, mention: string, depth: number) => Promise<void>;
     },
   ) {
     deps.approvals.register("app_create", async (payload) => {
@@ -221,12 +226,25 @@ export class AppService {
 
   async afterRun(
     project: ProjectInfo,
-    run: { handle: string; chatId: string; summary: string },
+    run: { handle: string; chatId: string; summary: string; depth?: number },
   ): Promise<void> {
     const app = this.source(project.id);
     if (!app) return;
     const status = await git(app.dir, ["status", "--porcelain"]);
     if (!status) return;
+    // A change that breaks manifest.json could never go live: the user is not asked about it;
+    // the helper gets the error and fixes it first.
+    const broken = await this.manifestError(app);
+    if (broken !== null) {
+      log.info("app change held back: invalid manifest", { app: app.id, error: broken });
+      await this.deps.remind?.(
+        run.chatId,
+        `manifest.json is not valid, so this change cannot go live yet: ${broken}. @${run.handle} fix it, then say what changed.`,
+        run.handle,
+        run.depth ?? 1,
+      );
+      return;
+    }
     const tree = await treeOf(app.dir);
     const pending = (await this.deps.approvals.listPending()).some(
       (a) => a.kind === "app_change" && a.payload.app === app.id && a.payload.tree === tree,
@@ -267,6 +285,16 @@ export class AppService {
     });
     // Clients show the app's draft (preview, discard).
     this.deps.hub.publish({ type: "customize.updated" });
+  }
+
+  /** Why the app's manifest.json (as the helper left it) is not valid, or null. */
+  private async manifestError(app: AppSource): Promise<string | null> {
+    try {
+      validateManifest(JSON.parse(await Bun.file(`${app.dir}/manifest.json`).text()), app.id);
+      return null;
+    } catch (error) {
+      return errorMessage(error);
+    }
   }
 
   /** Warns on the card when a change asks for more than the app has now. */
