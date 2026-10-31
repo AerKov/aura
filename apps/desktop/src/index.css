@@ -135,6 +135,8 @@
       transparent 58%
     );
   mask-image: radial-gradient(circle, black 18%, transparent 55%);
+  /* Its own layer, so a breath never repaints the panels above it. */
+  will-change: transform;
   animation: aura-breathe 14s ease-in-out infinite;
 }
 .dark .aura-backdrop::before {
@@ -143,6 +145,27 @@
 @keyframes aura-breathe {
   50% {
     transform: scale(1.06);
+  }
+}
+
+/*
+ * A new screen slides in a few pixels; it never fades from nothing, which looks like the window
+ * blinking (in the desktop webview especially).
+ */
+.view-in {
+  animation: view-in 0.26s var(--ease);
+}
+.view-in-side {
+  animation: view-in-side 0.3s var(--ease);
+}
+@keyframes view-in {
+  from {
+    transform: translateY(6px);
+  }
+}
+@keyframes view-in-side {
+  from {
+    transform: translateX(12px);
   }
 }
 

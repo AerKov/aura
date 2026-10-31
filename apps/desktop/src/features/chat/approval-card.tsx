@@ -47,7 +47,7 @@ export function ApprovalCard({ card, name }: { card: ApprovalCardData; name: str
   return (
     <div
       className={cn(
-        "bg-card animate-in fade-in zoom-in-[0.98] mt-2 flex w-[min(620px,100%)] flex-col gap-2.5 rounded-[20px] border p-4 shadow-md duration-500",
+        "bg-card mt-2 flex w-[min(620px,100%)] flex-col gap-2.5 rounded-[20px] border p-4 shadow-md",
         pending ? "approval-pending" : "opacity-85",
       )}
     >

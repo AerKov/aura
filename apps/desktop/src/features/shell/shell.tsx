@@ -24,15 +24,14 @@ export function Shell() {
     if (view.kind === "app" && customize && !apps.some((a) => a.id === view.id)) openHelper();
   }, [view, apps, customize]);
 
-  const key = view.kind === "app" ? `app:${view.id}` : view.kind;
   return (
     <div className="relative flex min-h-0 min-w-0 flex-1">
       <Nav />
-      <main key={key} className="relative flex min-h-0 min-w-0 flex-1 p-2">
+      <main className="relative flex min-h-0 min-w-0 flex-1 p-2">
         {view.kind === "helper" && <HelperScreen />}
         {view.kind === "app" && <AppScreen id={view.id} />}
         {view.kind === "settings" && (
-          <div className="bg-card animate-in fade-in slide-in-from-bottom-2 flex min-h-0 min-w-0 flex-1 overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-md duration-500">
+          <div className="bg-card view-in flex min-h-0 min-w-0 flex-1 overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-md">
             <SettingsView tab={view.tab} />
           </div>
         )}
@@ -58,7 +57,7 @@ function HelperScreen() {
       </div>
     );
   return (
-    <div className="animate-in fade-in flex min-h-0 min-w-0 flex-1 duration-500">
+    <div className="view-in flex min-h-0 min-w-0 flex-1">
       <ChatView key={chatId} chatId={chatId} />
     </div>
   );

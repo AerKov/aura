@@ -31,7 +31,8 @@ images are not allowed in theme CSS. If your system asks for less motion, Aura s
 
 > Speak Ukrainian.
 
-One language for the interface, the helpers and your apps. English and Ukrainian are built in;
+Ask the Helper, or pick it at the top right of **Settings**: **Auto** (follows this computer),
+**English** or **Українська**. One language for the interface, the helpers and your apps. English and Ukrainian are built in;
 translations of your own go in `locales/<code>.json`.
 
 ## Safe mode

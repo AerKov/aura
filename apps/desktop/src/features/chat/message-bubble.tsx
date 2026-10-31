@@ -24,12 +24,15 @@ export function MessageBubble({
   showAuthor,
   onReply,
   onJumpTo,
+  fresh = false,
 }: {
   message: Message;
   replyTarget: Message | undefined;
   showAuthor: boolean;
   onReply: (message: Message) => void;
   onJumpTo: (messageId: string) => void;
+  /** Arrived while the chat was open: it slides in. Messages already there just show. */
+  fresh?: boolean;
 }) {
   const me = useChatStore((s) => s.me);
   const t = useT();
@@ -84,7 +87,11 @@ export function MessageBubble({
     return (
       <div
         id={`m-${message.id}`}
-        className={cn("group message-in flex flex-col items-end", showAuthor ? "mt-5" : "mt-1.5")}
+        className={cn(
+          "group flex flex-col items-end",
+          fresh && "message-in",
+          showAuthor ? "mt-5" : "mt-1.5",
+        )}
       >
         {reply}
         <div
@@ -116,7 +123,11 @@ export function MessageBubble({
   return (
     <div
       id={`m-${message.id}`}
-      className={cn("group message-in relative flex gap-3", showAuthor ? "mt-5" : "mt-1")}
+      className={cn(
+        "group relative flex gap-3",
+        fresh && "message-in",
+        showAuthor ? "mt-5" : "mt-1",
+      )}
     >
       <div className="w-[26px] shrink-0 pt-0.5">
         {showAuthor &&

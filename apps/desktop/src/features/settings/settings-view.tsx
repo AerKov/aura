@@ -6,6 +6,7 @@ import { AgentAi } from "@/features/agents/agent-ai";
 import { BackupsView } from "@/features/backups/backups-view";
 import { EnginesView } from "@/features/engines/engines-view";
 import { useT } from "@/features/localization/i18n";
+import { LanguagePicker } from "@/features/localization/language-picker";
 import { openSettings } from "@/features/shell/view";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -50,11 +51,14 @@ export function SettingsView({ tab }: { tab: SettingsTab }) {
             </button>
           ))}
         </div>
+        <div className="ml-auto">
+          <LanguagePicker />
+        </div>
       </header>
       <EmbeddedPage.Provider value={true}>
         <div
           key={tab}
-          className="animate-in fade-in slide-in-from-bottom-1 flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto duration-300"
+          className="view-in flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
           role="tabpanel"
         >
           {tab === "ai" && (

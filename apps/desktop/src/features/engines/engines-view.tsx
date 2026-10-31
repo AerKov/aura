@@ -122,8 +122,8 @@ export function EnginesView() {
             );
             return (
               <section key={group.key} className="mb-8">
-                <h2 className="kicker">{group.title}</h2>
-                <p className="text-muted-foreground mt-1 mb-4 text-sm">{group.text}</p>
+                <h2 className="kicker">{tr(group.title)}</h2>
+                <p className="text-muted-foreground mt-1 mb-4 text-sm">{tr(group.text)}</p>
                 {body}
               </section>
             );

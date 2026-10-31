@@ -63,7 +63,7 @@ export function NewAppDialog() {
         type="button"
         aria-label={t("Close")}
         tabIndex={-1}
-        className="animate-in fade-in absolute inset-0 bg-black/25 backdrop-blur-sm duration-300"
+        className="animate-in fade-in absolute inset-0 bg-black/30 duration-200"
         onClick={close}
       />
       <div
@@ -71,7 +71,7 @@ export function NewAppDialog() {
         aria-modal="true"
         aria-label={t("New app")}
         data-part="menu"
-        className="bg-menu text-menu-foreground animate-in fade-in zoom-in-95 slide-in-from-bottom-4 relative w-[min(480px,100%)] overflow-hidden rounded-[calc(var(--radius)*1.5)] border shadow-lg duration-500 ease-[var(--spring)]"
+        className="bg-menu text-menu-foreground animate-in fade-in zoom-in-[0.97] relative w-[min(480px,100%)] overflow-hidden rounded-[calc(var(--radius)*1.5)] border shadow-lg duration-200 ease-[var(--ease)]"
       >
         <div className="aura-band h-1.5" aria-hidden />
         <div className="flex flex-col gap-4 p-6">

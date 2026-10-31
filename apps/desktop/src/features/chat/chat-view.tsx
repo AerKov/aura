@@ -20,6 +20,8 @@ const EMPTY: Message[] = [];
 export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: boolean }) {
   const chat = useChatStore((s) => s.chats[chatId]);
   const messages = useChatStore((s) => s.messages[chatId] ?? EMPTY);
+  // Until the messages arrive the chat is not known to be empty: no greeting flashes by.
+  const loaded = useChatStore((s) => chatId in s.messages);
   const streaming = useChatStore((s) => s.streaming);
   const agentList = useChatStore((s) => s.agents);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
@@ -59,6 +61,11 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
   };
 
   const byId = useMemo(() => new Map(messages.map((m) => [m.id, m])), [messages]);
+  // What was there when the chat opened (or first loaded) shows at once; only newer messages
+  // slide in. Re-animating the whole history on every visit made the screen look like it blinked.
+  const seen = useRef<Set<string> | null>(null);
+  if (seen.current === null && (messages.length > 0 || getState().messages[chatId]))
+    seen.current = new Set(messages.map((m) => m.id));
   const working = messages.filter((m) => m.status === "streaming").map((m) => m.author.id);
   if (!chat) return null;
   const direct = chat.kind === "direct";
@@ -80,7 +87,7 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
       )}
       <div ref={scroller} onScroll={onScroll} className="flex-1 overflow-y-auto px-5 py-5">
         <div className="mx-auto max-w-[760px] pb-4">
-          {messages.length === 0 && (
+          {loaded && messages.length === 0 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 mx-auto mt-[14vh] max-w-sm text-center duration-700">
               <AuraLogo alive className="mx-auto mb-6 size-24 shadow-lg" />
               <h2 className="mb-2 text-2xl">
@@ -103,6 +110,7 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
               showAuthor={!isGrouped(messages[index - 1], message)}
               onReply={setReplyTo}
               onJumpTo={jumpTo}
+              fresh={seen.current !== null && !seen.current.has(message.id)}
             />
           ))}
         </div>

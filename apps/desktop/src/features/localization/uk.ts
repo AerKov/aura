@@ -590,4 +590,12 @@ export const UK: Record<string, string> = {
   "Creating…": "Створюю…",
   "Fold the menu": "Згорнути меню",
   "Unfold the menu": "Розгорнути меню",
+  Auto: "Авто",
+  Language: "Мова",
+  "Follows this computer": "Як на цьому комп'ютері",
+  "On your computer": "На вашому комп'ютері",
+  "Local models: free and private, but they need a capable machine. Aura can install llama.cpp and a model for you; Ollama, LM Studio and any OpenAI-compatible server work too.":
+    "Локальні моделі: безкоштовно й приватно, але потрібен потужний комп'ютер. Aura може сама встановити llama.cpp і модель; Ollama, LM Studio та будь-який OpenAI-сумісний сервер теж підходять.",
+  "Anthropic's coding agent, under your own Claude login. Aura drives it and decides what it may touch; your login stays with it.":
+    "Агент для програмування від Anthropic, під вашим власним входом у Claude. Aura керує ним і вирішує, чого він може торкатися; ваш вхід лишається в ньому.",
 };

@@ -35,7 +35,7 @@ export function AppScreen({ id }: { id: string }) {
       <section
         data-part="app"
         aria-label={ext.name}
-        className="bg-app-card border-app-border animate-in fade-in zoom-in-[0.985] @container relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-md duration-500"
+        className="bg-app-card border-app-border view-in @container relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-md"
       >
         <header className="flex h-[52px] shrink-0 items-center gap-1 border-b px-3">
           <span className="app-icon mr-1.5 flex size-8 items-center justify-center rounded-[10px]">
@@ -84,7 +84,7 @@ export function AppScreen({ id }: { id: string }) {
         </div>
       </section>
       {chatId && !hidden && (
-        <aside className="bg-card border-app-border animate-in fade-in slide-in-from-right-6 flex w-[min(400px,40%)] min-w-[300px] shrink-0 overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-md duration-500 ease-[var(--ease)] max-md:hidden">
+        <aside className="bg-card border-app-border view-in-side flex w-[min(400px,40%)] min-w-[300px] shrink-0 overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-md max-md:hidden">
           <ChatView key={chatId} chatId={chatId} inApp />
         </aside>
       )}
