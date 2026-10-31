@@ -2,6 +2,7 @@ import type { BarEdge, ExtensionInfo, Placement } from "@aura/shared";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { setState, useChatStore } from "@/features/chat/store";
 import { type BarHost, ExtensionFrame } from "@/features/customize/extension-frame";
+import { tr } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";
 
 /** How long the bar app has to ask for its state before the built-in bar stands in. */
@@ -131,7 +132,7 @@ export function BarFrame({
         <>
           <button
             type="button"
-            aria-label="Close the menu"
+            aria-label={tr("Close the menu")}
             className="fixed inset-0 z-30 cursor-default"
             onClick={() => pick(null)}
           />

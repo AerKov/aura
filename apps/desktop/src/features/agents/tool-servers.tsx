@@ -15,6 +15,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
 import { useChatStore } from "@/features/chat/store";
+import { tr } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { EnvEditor, type EnvRow, envFromRows, rowsFromEnv } from "./env-editor";
@@ -54,17 +55,18 @@ export function AgentToolServers() {
     <div className="mt-10">
       <div className="mb-3 flex items-center justify-between">
         <h2 className="flex items-center gap-2 font-semibold">
-          <Plug className="size-4" /> Tool servers (MCP)
+          <Plug className="size-4" /> {tr("Tool servers (MCP)")}
         </h2>
         {editing === null && (
           <Button size="sm" className="rounded-pill" onClick={() => setEditing("new")}>
-            <Plus /> Add server
+            <Plus /> {tr("Add server")}
           </Button>
         )}
       </div>
       <p className="text-muted-foreground mb-3 text-sm">
-        They give agents new abilities: a tracker, a database, an internal API. Choose which agents
-        get each one, keep its keys under Secrets, and test it.
+        {tr(
+          "They give agents new abilities: a tracker, a database, an internal API. Choose which agents get each one, keep its keys under Secrets, and test it.",
+        )}
       </p>
       {editing === "new" && (
         <ServerForm
@@ -76,11 +78,12 @@ export function AgentToolServers() {
         />
       )}
       {data === null ? (
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <p className="text-muted-foreground text-sm">{tr("Loading…")}</p>
       ) : data.servers.length === 0 && editing === null ? (
         <p className="text-muted-foreground mb-8 text-sm">
-          No servers yet. Add one with its command (for example{" "}
-          <code className="font-mono">python3 /path/to/server.py</code>) or its URL.
+          {tr("No servers yet. Add one with its command (for example")}{" "}
+          <code className="font-mono">python3 /path/to/server.py</code>
+          {tr(") or its URL.")}
         </p>
       ) : (
         <ul className="mb-8 grid gap-3">
@@ -183,7 +186,7 @@ function ServerCard({
           </code>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {server.agents.length === 0 ? (
-              <span className="text-xs text-warning-text">No agent has it yet</span>
+              <span className="text-xs text-warning-text">{tr("No agent has it yet")}</span>
             ) : (
               server.agents.map((a) => (
                 <span key={a} className="bg-muted rounded-pill px-2 py-0.5 font-mono text-[11px]">
@@ -194,7 +197,7 @@ function ServerCard({
             {server.env.map((e) => (
               <span
                 key={e.name}
-                title={e.set ? "Has a value" : "No value: set it under Secrets"}
+                title={e.set ? tr("Has a value") : tr("No value: set it under Secrets")}
                 className={cn(
                   "rounded-pill border px-2 py-0.5 font-mono text-[11px]",
                   !e.set && "border-warning/50 text-warning-text",
@@ -213,12 +216,17 @@ function ServerCard({
             disabled={busy}
             onClick={() => void test()}
           >
-            {busy ? <RefreshCw className="animate-spin" /> : <Play />} Test
+            {busy ? <RefreshCw className="animate-spin" /> : <Play />} {tr("Test")}
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Edit" onClick={onEdit}>
+          <Button variant="ghost" size="icon" aria-label={tr("Edit")} onClick={onEdit}>
             <Pencil />
           </Button>
-          <Button variant="ghost" size="icon" aria-label="Remove" onClick={() => void remove()}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={tr("Remove")}
+            onClick={() => void remove()}
+          >
             <Trash2 />
           </Button>
         </div>
@@ -257,7 +265,7 @@ function ProbeResult({
           disabled={busy}
           onClick={() => onGive(probe.unpassed)}
         >
-          <KeyRound /> Give {probe.unpassed.join(", ")} to this server
+          <KeyRound /> {tr("Give")} {probe.unpassed.join(", ")} {tr("to this server")}
         </Button>
       )}
       {probe.tools.length > 0 && (
@@ -274,7 +282,9 @@ function ProbeResult({
       )}
       {probe.log && (
         <details className="mt-2">
-          <summary className="text-muted-foreground cursor-pointer text-xs">Server log</summary>
+          <summary className="text-muted-foreground cursor-pointer text-xs">
+            {tr("Server log")}
+          </summary>
           <pre className="bg-muted mt-1 max-h-48 overflow-auto rounded-lg p-2 font-mono text-[11px] whitespace-pre-wrap">
             {probe.log}
           </pre>
@@ -353,7 +363,7 @@ function ServerForm({
     <div className="bg-card mb-3 rounded-2xl border p-4">
       <div className="grid gap-3">
         <label className="block">
-          <span className="kicker mb-1 block">Name</span>
+          <span className="kicker mb-1 block">{tr("Name")}</span>
           <input
             className={cn(inputClass, "w-full font-mono text-[13px]")}
             placeholder="tracker"
@@ -373,9 +383,11 @@ function ServerForm({
                 kind === k ? "border-primary bg-primary/5" : "hover:bg-accent/60",
               )}
             >
-              <div className="font-medium">{k === "stdio" ? "A command" : "A URL"}</div>
+              <div className="font-medium">{k === "stdio" ? tr("A command") : tr("A URL")}</div>
               <div className="text-muted-foreground text-xs">
-                {k === "stdio" ? "Aura starts it on this computer" : "A server that already runs"}
+                {k === "stdio"
+                  ? tr("Aura starts it on this computer")
+                  : tr("A server that already runs")}
               </div>
             </button>
           ))}
@@ -383,7 +395,7 @@ function ServerForm({
         {kind === "stdio" ? (
           <>
             <label className="block">
-              <span className="kicker mb-1 block">Command</span>
+              <span className="kicker mb-1 block">{tr("Command")}</span>
               <input
                 className={cn(inputClass, "w-full font-mono text-[13px]")}
                 placeholder="/usr/bin/python3"
@@ -392,7 +404,7 @@ function ServerForm({
               />
             </label>
             <label className="block">
-              <span className="kicker mb-1 block">Arguments, one per line</span>
+              <span className="kicker mb-1 block">{tr("Arguments, one per line")}</span>
               <textarea
                 className={cn(inputClass, "h-20 w-full font-mono text-[13px]")}
                 placeholder="/path/to/server.py"
@@ -401,7 +413,7 @@ function ServerForm({
               />
             </label>
             <div>
-              <span className="kicker mb-1 block">Variables</span>
+              <span className="kicker mb-1 block">{tr("Variables")}</span>
               <EnvEditor rows={env} secrets={secrets} onChange={setEnv} />
               <label className="mt-2 flex items-center gap-2 text-[13px]">
                 <input
@@ -409,8 +421,9 @@ function ServerForm({
                   checked={shareEnv}
                   onChange={(e) => setShareEnv(e.target.checked)}
                 />
-                Also give these variables to its agents' commands (for a script or CLI of the same
-                service)
+                {tr(
+                  "Also give these variables to its agents' commands (for a script or CLI of the same service)",
+                )}
               </label>
             </div>
           </>
@@ -427,12 +440,12 @@ function ServerForm({
         )}
         {kind === "http" && (
           <div>
-            <span className="kicker mb-1 block">Headers</span>
+            <span className="kicker mb-1 block">{tr("Headers")}</span>
             <HeadersEditor rows={headers} secrets={secrets} onChange={setHeaders} />
           </div>
         )}
         <div>
-          <span className="kicker mb-1 block">Agents that get its tools</span>
+          <span className="kicker mb-1 block">{tr("Agents that get its tools")}</span>
           <div className="flex flex-wrap gap-1.5">
             {allAgents
               .filter((a) => a.handle !== "orchestrator")
@@ -466,10 +479,10 @@ function ServerForm({
           disabled={busy || !name.trim()}
           onClick={() => void save()}
         >
-          {busy ? <RefreshCw className="animate-spin" /> : <Check />} Save
+          {busy ? <RefreshCw className="animate-spin" /> : <Check />} {tr("Save")}
         </Button>
         <Button variant="ghost" size="sm" className="rounded-pill" onClick={onDone}>
-          <X /> Cancel
+          <X /> {tr("Cancel")}
         </Button>
       </div>
     </div>
@@ -495,12 +508,11 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
 
   return (
     <section className="mb-8">
-      <h2 className="kicker mb-1">Secrets</h2>
+      <h2 className="kicker mb-1">{tr("Secrets")}</h2>
       <p className="text-muted-foreground mb-3 text-[13px]">
-        Keys and passwords, kept on this computer, outside your data folder's history, and never
-        shown again. A secret does nothing on its own: give it to an agent as a variable on its
-        helper's card (or to a server above), where stored secrets are one click away. In files it
-        appears as{" "}
+        {tr(
+          "Keys and passwords, kept on this computer, outside your data folder's history, and never shown again. A secret does nothing on its own: give it to an agent as a variable on its helper's card (or to a server above), where stored secrets are one click away. In files it appears as",
+        )}{" "}
         <code className="font-mono">
           {"$"}
           {"{secret:NAME}"}
@@ -515,7 +527,7 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
                 <KeyRound className="text-muted-foreground size-4" />
                 <code className="flex-1 font-mono text-[13px]">{n}</code>
                 <Button variant="ghost" size="sm" onClick={() => setName(n)}>
-                  Replace
+                  {tr("Replace")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -546,7 +558,7 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
             type="password"
             autoComplete="off"
             className={cn(inputClass, "min-w-40 flex-1")}
-            placeholder="value"
+            placeholder={tr("value")}
             value={value}
             onChange={(e) => setValue(e.target.value)}
           />
@@ -556,7 +568,7 @@ function Secrets({ names, onChanged }: { names: string[]; onChanged: () => void 
             className="h-auto rounded-pill"
             disabled={!name.trim() || !value}
           >
-            <Check /> Save secret
+            <Check /> {tr("Save secret")}
           </Button>
         </form>
         {error && <p className="text-destructive mt-2 text-xs">{error}</p>}
@@ -616,7 +628,7 @@ function HeadersEditor({
           className="rounded-pill"
           onClick={() => onChange([...rows, { id: crypto.randomUUID(), name: "", value: "" }])}
         >
-          <Plus /> Add header
+          <Plus /> {tr("Add header")}
         </Button>
         {secrets.map((s) => (
           <button

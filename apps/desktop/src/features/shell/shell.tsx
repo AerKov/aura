@@ -19,7 +19,7 @@ import { ExtensionFrame } from "@/features/customize/extension-frame";
 import { loadCustomize } from "@/features/customize/state";
 import { FilePicker } from "@/features/files/picker";
 import { FileViewer } from "@/features/files/viewer";
-import { useT } from "@/features/localization/i18n";
+import { tr, useT } from "@/features/localization/i18n";
 import { SettingsView } from "@/features/settings/settings-view";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -370,7 +370,7 @@ function Messenger() {
         ) : (
           <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
             <AuraLogo className="size-12 animate-pulse" />
-            <p className="text-muted-foreground text-sm">Waking up…</p>
+            <p className="text-muted-foreground text-sm">{tr("Waking up…")}</p>
           </main>
         )}
       </div>

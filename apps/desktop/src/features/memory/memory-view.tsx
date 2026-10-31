@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
 import { AgentMark } from "@/features/chat/agent-mark";
 import { useChatStore } from "@/features/chat/store";
+import { tr } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -69,10 +70,10 @@ export function MemoryView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Memory" icon={<Brain className="text-primary size-7" />}>
-          Notes agents save to remember decisions, preferences and facts across runs. Each agent has
-          its own notes; agents in a project share the project's notes. The relevant ones are added
-          to an agent's instructions on every run. Delete anything that is wrong.
+        <PageHeader title={tr("Memory")} icon={<Brain className="text-primary size-7" />}>
+          {tr(
+            "Notes agents save to remember decisions, preferences and facts across runs. Each agent has its own notes; agents in a project share the project's notes. The relevant ones are added to an agent's instructions on every run. Delete anything that is wrong.",
+          )}
         </PageHeader>
 
         {settings && (
@@ -89,19 +90,21 @@ export function MemoryView() {
           <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <input
             className={cn(inputClass, "w-full pl-9")}
-            placeholder="Search notes, in any language"
+            placeholder={tr("Search notes, in any language")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
         </label>
 
         {notes === null ? (
-          <p className="text-muted-foreground text-sm">Loading…</p>
+          <p className="text-muted-foreground text-sm">{tr("Loading…")}</p>
         ) : notes.length === 0 ? (
           <p className="text-muted-foreground text-sm">
             {query
-              ? "Nothing found."
-              : "No notes yet. Agents save them as they work, or ask the orchestrator to remember something."}
+              ? tr("Nothing found.")
+              : tr(
+                  "No notes yet. Agents save them as they work, or ask the orchestrator to remember something.",
+                )}
           </p>
         ) : (
           groups.map(([key, list]) => {
@@ -117,7 +120,7 @@ export function MemoryView() {
                   <AgentMark handle={first.owner} size="xs" />
                   <span className="text-sm font-medium">{title}</span>
                   <span className="kicker">
-                    {first.scope === "project" ? "project notes" : "agent notes"}
+                    {first.scope === "project" ? tr("project notes") : tr("agent notes")}
                   </span>
                 </h2>
                 <ul className="bg-card divide-y rounded-2xl border">
@@ -127,12 +130,12 @@ export function MemoryView() {
                         <p className="text-[14px] leading-relaxed">{note.text}</p>
                         <p className="kicker mt-1">
                           @{note.author} · {new Date(note.createdAt).toLocaleDateString()}
-                          {note.semantic ? " · semantic" : ""}
+                          {note.semantic ? tr(" · semantic") : ""}
                         </p>
                       </div>
                       <button
                         type="button"
-                        aria-label="Delete note"
+                        aria-label={tr("Delete note")}
                         onClick={() => void remove(note.id)}
                         className="text-muted-foreground hover:text-destructive rounded-pill p-1.5 opacity-60 transition-opacity group-hover:opacity-100"
                       >
@@ -167,12 +170,12 @@ function LongChats({ on, onSaved }: { on: boolean; onSaved: (on: boolean) => voi
   return (
     <div className="bg-card mb-6 flex items-start gap-4 rounded-2xl border p-4">
       <div className="min-w-0 flex-1">
-        <div className="mb-1 text-sm font-medium">Long chats</div>
+        <div className="mb-1 text-sm font-medium">{tr("Long chats")}</div>
         <p className="text-muted-foreground text-[13px]">
-          Agents read the last {CONTEXT_MESSAGES} or so messages. With summaries on, the
-          orchestrator folds older ones into a short summary, so decisions are not lost. Each
-          summary is a small run on the orchestrator's engine and counts towards budgets. Open it
-          from a chat's header.
+          {tr("Agents read the last")} {CONTEXT_MESSAGES}{" "}
+          {tr(
+            "or so messages. With summaries on, the orchestrator folds older ones into a short summary, so decisions are not lost. Each summary is a small run on the orchestrator's engine and counts towards budgets. Open it from a chat's header.",
+          )}
         </p>
       </div>
       <Button
@@ -182,7 +185,7 @@ function LongChats({ on, onSaved }: { on: boolean; onSaved: (on: boolean) => voi
         aria-pressed={on}
         onClick={() => void toggle()}
       >
-        {on ? "On" : "Off"}
+        {on ? tr("On") : tr("Off")}
       </Button>
     </div>
   );
@@ -233,10 +236,11 @@ function SemanticSearch({
 
   return (
     <div className="bg-card mb-6 rounded-2xl border p-4">
-      <div className="mb-1 text-sm font-medium">Semantic search</div>
+      <div className="mb-1 text-sm font-medium">{tr("Semantic search")}</div>
       <p className="text-muted-foreground mb-3 text-[13px]">
-        Keyword search always works. With an embedding model, agents also find notes by meaning and
-        across languages. Free and local with Ollama:{" "}
+        {tr(
+          "Keyword search always works. With an embedding model, agents also find notes by meaning and across languages. Free and local with Ollama:",
+        )}{" "}
         <code className="bg-muted rounded px-1 font-mono text-[12px]">
           ollama pull nomic-embed-text
         </code>
@@ -248,9 +252,9 @@ function SemanticSearch({
           value={engine}
           onChange={(e) => setEngine(e.target.value as typeof engine)}
         >
-          <option value="">Off</option>
-          <option value="ollama">Ollama</option>
-          <option value="openai-compatible">OpenAI-compatible server</option>
+          <option value="">{tr("Off")}</option>
+          <option value="ollama">{tr("Ollama")}</option>
+          <option value="openai-compatible">{tr("OpenAI-compatible server")}</option>
         </select>
         {engine && (
           <input
@@ -265,7 +269,7 @@ function SemanticSearch({
           disabled={busy || !dirty || (engine !== "" && !model.trim())}
           onClick={() => void save()}
         >
-          {busy ? <RefreshCw className="animate-spin" /> : null} Save
+          {busy ? <RefreshCw className="animate-spin" /> : null} {tr("Save")}
         </Button>
       </div>
       {status && <p className="text-muted-foreground mt-2 text-xs">{status}</p>}

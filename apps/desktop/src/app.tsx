@@ -12,6 +12,7 @@ import { useChatStore } from "@/features/chat/store";
 import { loadAppearance } from "@/features/customize/appearance";
 import { loadCustomize } from "@/features/customize/state";
 import { PairingScreen } from "@/features/devices/pairing-screen";
+import { tr, useLocaleKey } from "@/features/localization/i18n";
 import { loadLayout } from "@/features/shell/layout";
 import { Rail } from "@/features/shell/rail";
 import { Shell } from "@/features/shell/shell";
@@ -29,6 +30,8 @@ export function App() {
   const needsPairing = useChatStore((s) => s.needsPairing);
   const edge = useChatStore((s) => s.appearance?.rail.edge ?? "left");
   const [startError, setStartError] = useState<StartError | null>(null);
+  // A new language draws everything again, so every text follows (ADR 0033).
+  const localeKey = useLocaleKey();
 
   const load = useCallback(() => {
     setStartError(null);
@@ -62,6 +65,7 @@ export function App() {
   // The shell (ADR 0024): the rail, and the user's apps as tiles.
   return (
     <div
+      key={localeKey}
       className={cn(
         "flex h-dvh overflow-hidden",
         // The bar's edge (ADR 0028); phones keep it at the bottom.
@@ -78,7 +82,7 @@ export function App() {
         <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
           <AuraLogo className="size-12" />
           <p className="text-muted-foreground max-w-sm text-sm">
-            Cannot reach the Aura server at {SERVER_URL}: {startError.message}
+            {tr("Cannot reach the Aura server at")} {SERVER_URL}: {startError.message}
           </p>
           {startError.server && startError.server.lines.length > 0 && (
             <pre className="bg-muted text-muted-foreground max-h-64 w-full max-w-2xl overflow-auto rounded-md p-3 text-left text-xs whitespace-pre-wrap">
@@ -86,7 +90,7 @@ export function App() {
             </pre>
           )}
           <Button variant="outline" onClick={load}>
-            Try again
+            {tr("Try again")}
           </Button>
         </main>
       ) : (

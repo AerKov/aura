@@ -3,7 +3,7 @@ import { Download, HardDrive, Loader, Play, Square, Trash2 } from "lucide-react"
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { loadProviderStatus, reportError } from "@/features/chat/actions";
-import { useT } from "@/features/localization/i18n";
+import { tr, useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -295,7 +295,9 @@ export function LocalAiCard({
                   />
                   <span className="min-w-0 flex-1">
                     <span className="font-medium">{m.label}</span>{" "}
-                    <span className="text-muted-foreground font-mono text-xs">~{m.sizeGb} GB</span>
+                    <span className="text-muted-foreground font-mono text-xs">
+                      ~{m.sizeGb} {tr("GB")}
+                    </span>
                     {m.id === status.recommended && (
                       <span className="text-signal-text ml-2 text-xs">{t("recommended")}</span>
                     )}

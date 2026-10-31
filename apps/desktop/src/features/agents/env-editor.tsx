@@ -1,5 +1,6 @@
 import { KeyRound, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { tr } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";
 
 const inputClass =
@@ -102,9 +103,9 @@ export function EnvEditor({
               placeholder={
                 SECRET_REF.test(row.value)
                   ? row.set
-                    ? "stored (type to replace)"
+                    ? tr("stored (type to replace)")
                     : `no value yet${secrets.length ? "" : ": type it here"}`
-                  : "secret value"
+                  : tr("secret value")
               }
               value={row.secretValue}
               onChange={(e) => update(i, { secretValue: e.target.value })}
@@ -119,7 +120,7 @@ export function EnvEditor({
           )}
           <button
             type="button"
-            title={row.secret ? "Secret: kept out of files and hidden" : "Plain value"}
+            title={row.secret ? tr("Secret: kept out of files and hidden") : tr("Plain value")}
             aria-pressed={row.secret}
             onClick={() => update(i, { secret: !row.secret })}
             className={cn(
@@ -157,11 +158,11 @@ export function EnvEditor({
           ])
         }
       >
-        <Plus /> Add variable
+        <Plus /> {tr("Add variable")}
       </Button>
       {unused.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5 pt-1">
-          <span className="text-muted-foreground text-xs">Stored secrets:</span>
+          <span className="text-muted-foreground text-xs">{tr("Stored secrets:")}</span>
           {unused.map((name) => (
             <button
               key={name}

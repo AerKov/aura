@@ -2,6 +2,7 @@ import type { ChatSummary } from "@aura/shared";
 import { Trash2, X } from "lucide-react";
 import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
+import { tr } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { reportError } from "./actions";
 
@@ -42,15 +43,16 @@ export function SummaryPanel({
   return (
     <aside className="bg-background flex w-80 shrink-0 flex-col border-l max-lg:absolute max-lg:inset-y-0 max-lg:right-0 max-lg:z-10 max-lg:shadow-xl">
       <div className="flex items-center justify-between border-b px-4 py-2">
-        <h2 className="font-semibold">Earlier in this chat</h2>
-        <Button variant="ghost" size="icon" aria-label="Close summary" onClick={onClose}>
+        <h2 className="font-semibold">{tr("Earlier in this chat")}</h2>
+        <Button variant="ghost" size="icon" aria-label={tr("Close summary")} onClick={onClose}>
           <X />
         </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         <p className="text-muted-foreground mb-3 text-xs">
-          Agents see the latest messages as they are. The {summary.covered} older ones reach them as
-          this summary, updated {new Date(summary.updatedAt).toLocaleString()}.
+          {tr("Agents see the latest messages as they are. The")} {summary.covered}{" "}
+          {tr("older ones reach them as this summary, updated")}{" "}
+          {new Date(summary.updatedAt).toLocaleString()}.
         </p>
         <div className="text-[13px]">
           <Markdown>{summary.text}</Markdown>
@@ -58,7 +60,7 @@ export function SummaryPanel({
       </div>
       <div className="border-t p-3">
         <Button variant="ghost" size="sm" className="rounded-pill" onClick={() => void clear()}>
-          <Trash2 /> Forget this summary
+          <Trash2 /> {tr("Forget this summary")}
         </Button>
       </div>
     </aside>

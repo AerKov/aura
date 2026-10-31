@@ -16,7 +16,7 @@ import { AgentMark } from "@/features/chat/agent-mark";
 import { BudgetEditor } from "@/features/chat/budget";
 import { agentName } from "@/features/chat/participants";
 import { setState, useChatStore } from "@/features/chat/store";
-import { useT } from "@/features/localization/i18n";
+import { tr, useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { AgentAi } from "./agent-ai";
@@ -64,10 +64,10 @@ export function AgentsView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Helpers" icon={<Bot className="text-primary size-7" />}>
-          What each agent runs on, its full prompt and its versions, which tools and variables it
-          has, what it remembers, where you can reach it, and anything that stops it from working.
-          Changes apply from its next reply.
+        <PageHeader title={tr("Helpers")} icon={<Bot className="text-primary size-7" />}>
+          {tr(
+            "What each agent runs on, its full prompt and its versions, which tools and variables it has, what it remembers, where you can reach it, and anything that stops it from working. Changes apply from its next reply.",
+          )}
         </PageHeader>
         <div className="mb-6 flex flex-wrap gap-1.5">
           {agents.map((a) => (
@@ -117,7 +117,7 @@ function AgentCard({ handle }: { handle: string }) {
   }, [handle, apply]);
 
   if (error) return <p className="text-destructive text-sm">{error}</p>;
-  if (!status) return <p className="text-muted-foreground text-sm">Loading…</p>;
+  if (!status) return <p className="text-muted-foreground text-sm">{tr("Loading…")}</p>;
 
   const dirty =
     JSON.stringify(tools) !== JSON.stringify(status.tools) ||
@@ -157,7 +157,7 @@ function AgentCard({ handle }: { handle: string }) {
               <span className={cn("size-2 rounded-full", ready ? "bg-success" : "bg-warning")} />
               {status.engine.label}
               {status.model ? ` · ${status.model}` : ""}
-              {!ready && " · not ready"}
+              {!ready && tr(" · not ready")}
             </p>
           </div>
         </div>
@@ -184,7 +184,8 @@ function AgentCard({ handle }: { handle: string }) {
             {status.lastRun.status === "error" && (
               <CircleAlert className="text-destructive size-3.5 shrink-0" />
             )}
-            Last reply {new Date(status.lastRun.at).toLocaleString()}: {status.lastRun.status}
+            {tr("Last reply")} {new Date(status.lastRun.at).toLocaleString()}:{" "}
+            {status.lastRun.status}
           </p>
         )}
       </div>
@@ -197,7 +198,7 @@ function AgentCard({ handle }: { handle: string }) {
       />
 
       <div className="bg-card rounded-2xl border p-5">
-        <h3 className="kicker mb-2">Tools</h3>
+        <h3 className="kicker mb-2">{tr("Tools")}</h3>
         <div className="grid gap-2 sm:grid-cols-2">
           {TOOLS.map((tool) => {
             const on = tools.includes(tool.name);
@@ -227,16 +228,17 @@ function AgentCard({ handle }: { handle: string }) {
           })}
         </div>
 
-        <h3 className="kicker mt-5 mb-1">Variables for its commands</h3>
+        <h3 className="kicker mt-5 mb-1">{tr("Variables for its commands")}</h3>
         <p className="text-muted-foreground mb-2 text-xs">
-          Its commands (Bash) get these on every engine. Keys go in as secrets: kept out of files
-          and hidden in chat. Its commands run in a sandbox without network.
+          {tr(
+            "Its commands (Bash) get these on every engine. Keys go in as secrets: kept out of files and hidden in chat. Its commands run in a sandbox without network.",
+          )}
         </p>
         <EnvEditor rows={env} secrets={secrets} onChange={setEnv} />
         {status.sharedEnv.length > 0 && (
           <div className="mt-3">
             <p className="text-muted-foreground mb-1 text-xs">
-              Also from its command tool servers:
+              {tr("Also from its command tool servers:")}
             </p>
             <div className="flex flex-wrap gap-1.5">
               {status.sharedEnv.map((e) => (
@@ -265,14 +267,15 @@ function AgentCard({ handle }: { handle: string }) {
             disabled={busy || !dirty}
             onClick={() => void save()}
           >
-            {busy ? <RefreshCw className="animate-spin" /> : <Check />} {saved ? "Saved" : "Save"}
+            {busy ? <RefreshCw className="animate-spin" /> : <Check />}{" "}
+            {saved ? tr("Saved") : tr("Save")}
           </Button>
         </div>
       </div>
 
       <div className="bg-card rounded-2xl border p-5">
         <h3 className="kicker mb-2 flex items-center gap-1.5">
-          <Gauge className="size-3.5" /> Budget
+          <Gauge className="size-3.5" /> {tr("Budget")}
         </h3>
         <BudgetEditor
           key={`${status.budget.usd}:${status.budget.tokens}`}
@@ -289,11 +292,11 @@ function AgentCard({ handle }: { handle: string }) {
       <div className="bg-card grid gap-4 rounded-2xl border p-5 sm:grid-cols-2">
         <div>
           <h3 className="kicker mb-2 flex items-center gap-1.5">
-            <Plug className="size-3.5" /> Tool servers
+            <Plug className="size-3.5" /> {tr("Tool servers")}
           </h3>
           {status.mcpServers.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              None. Add and assign them in Tools and keys.
+              {tr("None. Add and assign them in Tools and keys.")}
             </p>
           ) : (
             <ul className="space-y-1 text-sm">
@@ -308,11 +311,11 @@ function AgentCard({ handle }: { handle: string }) {
         </div>
         <div>
           <h3 className="kicker mb-2 flex items-center gap-1.5">
-            <MessagesSquare className="size-3.5" /> Chats
+            <MessagesSquare className="size-3.5" /> {tr("Chats")}
           </h3>
           {status.chats.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              In no chat yet. Ask the orchestrator to start a project with it.
+              {tr("In no chat yet. Ask the orchestrator to start a project with it.")}
             </p>
           ) : (
             <ul className="space-y-1 text-sm">

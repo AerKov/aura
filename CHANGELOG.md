@@ -5,6 +5,10 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Every page follows the language.** The pages that stayed in one language (AI, Helpers, tool
+  servers and keys, memory, skills, reminders, history, app data) are translated, and switching the
+  language redraws the whole interface. A test fails on any text left out of translation.
+
 - **Aura has no look of its own** (ADR 0041). The default look is a theme file of yours,
   `themes/default/theme.css`; ask the Helper to change anything: "make the bar green" now works.
   Every part (the bar, windows, title bars, the chat list, your bubbles, menus) has its own colour.

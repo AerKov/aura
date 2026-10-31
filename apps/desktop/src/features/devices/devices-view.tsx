@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
+import { tr } from "@/features/localization/i18n";
 import { api, call, forgetPairing, IS_REMOTE } from "@/lib/api";
 import { enableNotifications } from "./push";
 
@@ -57,20 +58,20 @@ export function DevicesView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Phone" icon={<Smartphone className="text-primary size-7" />}>
-          Your phone connects to this computer's Aura server. Start the server with{" "}
-          <code>AURA_REMOTE=1</code> so it is reachable on your network, then pair the phone with a
-          one-time code.
+        <PageHeader title={tr("Phone")} icon={<Smartphone className="text-primary size-7" />}>
+          {tr("Your phone connects to this computer's Aura server. Start the server with")}{" "}
+          <code>AURA_REMOTE=1</code>{" "}
+          {tr("so it is reachable on your network, then pair the phone with a one-time code.")}
         </PageHeader>
 
         <div className="mb-6 flex flex-wrap gap-2">
           {!IS_REMOTE && (
             <Button onClick={() => void startPairing()}>
-              <Smartphone /> Pair a device
+              <Smartphone /> {tr("Pair a device")}
             </Button>
           )}
           <Button variant="outline" onClick={() => void notifications()}>
-            <Bell /> Enable notifications
+            <Bell /> {tr("Enable notifications")}
           </Button>
           {IS_REMOTE && (
             <Button
@@ -80,7 +81,7 @@ export function DevicesView() {
                 window.location.reload();
               }}
             >
-              Unpair this device
+              {tr("Unpair this device")}
             </Button>
           )}
         </div>
@@ -89,7 +90,7 @@ export function DevicesView() {
         {pairing && (
           <div className="mb-6 rounded-2xl border p-5">
             <p className="text-muted-foreground text-sm">
-              On the phone, open one of these addresses and enter the code:
+              {tr("On the phone, open one of these addresses and enter the code:")}
             </p>
             <p className="my-3 font-mono text-4xl font-semibold tracking-widest">{pairing.code}</p>
             <ul className="text-sm">
@@ -106,14 +107,15 @@ export function DevicesView() {
               )}
             </ul>
             <p className="text-muted-foreground mt-2 text-xs">
-              The code works once and expires {new Date(pairing.expiresAt).toLocaleTimeString()}.
+              {tr("The code works once and expires")}{" "}
+              {new Date(pairing.expiresAt).toLocaleTimeString()}.
             </p>
           </div>
         )}
 
         <ul className="divide-y rounded-2xl border">
           {devices?.length === 0 && (
-            <li className="text-muted-foreground p-4 text-sm">No paired devices.</li>
+            <li className="text-muted-foreground p-4 text-sm">{tr("No paired devices.")}</li>
           )}
           {devices?.map((d) => (
             <li key={d.id} className="flex items-center gap-3 p-4 text-sm">
@@ -125,9 +127,9 @@ export function DevicesView() {
               <div className="min-w-0 flex-1">
                 <div className="font-medium">{d.name}</div>
                 <div className="text-muted-foreground text-xs">
-                  paired {new Date(d.createdAt).toLocaleDateString()} · last seen{" "}
+                  {tr("paired")} {new Date(d.createdAt).toLocaleDateString()} {tr("· last seen")}{" "}
                   {d.lastSeenAt ? new Date(d.lastSeenAt).toLocaleString() : "never"}{" "}
-                  {d.push && "· push on"}
+                  {d.push && tr("· push on")}
                 </div>
               </div>
               {!IS_REMOTE && (
@@ -140,7 +142,7 @@ export function DevicesView() {
                       .catch(reportError)
                   }
                 >
-                  <Trash2 /> Revoke
+                  <Trash2 /> {tr("Revoke")}
                 </Button>
               )}
             </li>

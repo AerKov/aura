@@ -8,7 +8,7 @@ import {
 import { ChevronLeft, PanelRight, ScrollText } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useT } from "@/features/localization/i18n";
+import { tr, useT } from "@/features/localization/i18n";
 import { useExtensionApps } from "@/features/shell/apps";
 import { closeAppRef, openAppRef } from "@/features/shell/layout";
 import {
@@ -328,9 +328,9 @@ function MoveDialog({
   return (
     <div className="bg-popover text-popover-foreground mx-auto mb-2 w-full max-w-3xl rounded-xl border p-3 shadow-lg">
       <div className="mb-2 flex items-center justify-between text-sm">
-        <span className="font-medium">Move this message to</span>
+        <span className="font-medium">{tr("Move this message to")}</span>
         <Button size="sm" variant="ghost" onClick={onClose}>
-          Cancel
+          {tr("Cancel")}
         </Button>
       </div>
       <div className="flex flex-wrap gap-1.5">

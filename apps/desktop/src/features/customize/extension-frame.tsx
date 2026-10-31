@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { reportError } from "@/features/chat/actions";
 import { getState, useChatStore } from "@/features/chat/store";
 import { askForFiles } from "@/features/files/picker";
-import { useLocale } from "@/features/localization/i18n";
+import { tr, useLocale } from "@/features/localization/i18n";
 import { api, call, SERVER_URL } from "@/lib/api";
 import { fetchFile, openFile, saveBlob } from "@/lib/files";
 import { cn } from "@/lib/utils";
@@ -518,7 +518,7 @@ export function ExtensionFrame({
         <header className="flex items-center gap-3 border-b px-4 py-3">
           <h1 className="font-semibold">{title}</h1>
           <span className="text-muted-foreground text-xs">
-            extension · {extension.permissions.join(", ")}
+            {tr("extension ·")} {extension.permissions.join(", ")}
           </span>
         </header>
       )}

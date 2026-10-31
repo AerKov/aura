@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
+import { tr } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -49,11 +50,11 @@ export function SkillsView() {
     <section className="flex min-w-0 flex-1">
       <div className="w-64 shrink-0 overflow-y-auto border-r p-2">
         <h1 className="flex items-center gap-2 px-2 pt-3 pb-3 text-xl font-semibold tracking-tight">
-          <Sparkles className="text-primary size-5" /> Skills
+          <Sparkles className="text-primary size-5" /> {tr("Skills")}
         </h1>
         {skills?.length === 0 && (
           <p className="text-muted-foreground px-2 text-sm">
-            No skills yet. Agents propose them; you approve.
+            {tr("No skills yet. Agents propose them; you approve.")}
           </p>
         )}
         {skills?.map((s) => (
@@ -76,14 +77,14 @@ export function SkillsView() {
           <h2 className="font-mono text-2xl font-semibold tracking-tight">{skill.name}</h2>
           <p className="text-muted-foreground mb-1">{skill.description}</p>
           <p className="text-muted-foreground mb-4 text-sm">
-            Used by{" "}
-            {skill.agents.length ? skill.agents.map((a) => `@${a}`).join(", ") : "no agents"}
+            {tr("Used by")}{" "}
+            {skill.agents.length ? skill.agents.map((a) => `@${a}`).join(", ") : tr("no agents")}
           </p>
           <div className="mb-6 rounded-xl border p-4">
             <Markdown>{content}</Markdown>
           </div>
           <h3 className="mb-2 flex items-center gap-2 font-semibold">
-            <History className="size-4" /> Versions
+            <History className="size-4" /> {tr("Versions")}
           </h3>
           {error && <p className="text-destructive mb-2 text-sm">{error}</p>}
           <ul className="divide-y rounded-xl border">
@@ -95,14 +96,14 @@ export function SkillsView() {
                   {new Date(v.date).toLocaleString()}
                 </span>
                 {index === 0 ? (
-                  <span className="text-xs font-medium text-success">current</span>
+                  <span className="text-xs font-medium text-success">{tr("current")}</span>
                 ) : (
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => void rollback(skill.name, v.ref)}
                   >
-                    <RotateCcw /> Restore
+                    <RotateCcw /> {tr("Restore")}
                   </Button>
                 )}
               </li>

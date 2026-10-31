@@ -1,6 +1,7 @@
 import { Smartphone } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { tr } from "@/features/localization/i18n";
 import { SERVER_URL, savePairing } from "@/lib/api";
 
 /** First screen on a phone (or any remote browser): exchange the desktop's code for a device token. */
@@ -43,13 +44,14 @@ export function PairingScreen() {
         }}
       >
         <div className="flex items-center gap-2 text-lg font-semibold">
-          <Smartphone className="size-5" /> Connect to your desktop
+          <Smartphone className="size-5" /> {tr("Connect to your desktop")}
         </div>
         <p className="text-muted-foreground text-sm">
-          On your computer open <b>Devices → Pair a device</b> and type the code shown there.
+          {tr("On your computer open")} <b>{tr("Devices → Pair a device")}</b>{" "}
+          {tr("and type the code shown there.")}
         </p>
         <label className="block text-sm">
-          <span className="text-muted-foreground">Server</span>
+          <span className="text-muted-foreground">{tr("Server")}</span>
           <input
             className="bg-background mt-1 w-full rounded-lg border px-3 py-2"
             value={server}
@@ -57,7 +59,7 @@ export function PairingScreen() {
           />
         </label>
         <label className="block text-sm">
-          <span className="text-muted-foreground">Code</span>
+          <span className="text-muted-foreground">{tr("Code")}</span>
           <input
             className="bg-background mt-1 w-full rounded-lg border px-3 py-2 font-mono tracking-widest uppercase"
             placeholder="XXXX-XXXX"
@@ -67,7 +69,7 @@ export function PairingScreen() {
           />
         </label>
         <label className="block text-sm">
-          <span className="text-muted-foreground">This device</span>
+          <span className="text-muted-foreground">{tr("This device")}</span>
           <input
             className="bg-background mt-1 w-full rounded-lg border px-3 py-2"
             value={name}
@@ -80,7 +82,7 @@ export function PairingScreen() {
           className="w-full"
           disabled={busy || code.replace(/\W/g, "").length < 8}
         >
-          Pair
+          {tr("Pair")}
         </Button>
       </form>
     </main>

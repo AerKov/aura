@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { loadInitial, loadProjects, reportError } from "@/features/chat/actions";
 import { loadCustomize } from "@/features/customize/state";
-import { useT } from "@/features/localization/i18n";
+import { tr, useT } from "@/features/localization/i18n";
 import { openAppRef } from "@/features/shell/layout";
 import { api, call } from "@/lib/api";
 
@@ -97,7 +97,7 @@ export function BackupsView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Backups" icon={<History className="text-primary size-7" />}>
+        <PageHeader title={tr("Backups")} icon={<History className="text-primary size-7" />}>
           {t(
             "A restore point keeps the whole Aura as it was: agents, skills, themes, tool servers, settings, and every app with its code, versions and data. Chats, memory and secrets stay as they are. Going to a point saves the present first, so you can come back forward.",
           )}

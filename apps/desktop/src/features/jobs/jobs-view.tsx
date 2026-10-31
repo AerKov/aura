@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
 import { useChatStore } from "@/features/chat/store";
+import { tr } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 
 function when(iso: string | null): string {
@@ -35,11 +36,17 @@ export function JobsView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title="Reminders" icon={<CalendarClock className="text-primary size-7" />}>
-          Recurring jobs wake an agent with a prompt. Ask the orchestrator to create one; you
-          approve it.
+        <PageHeader
+          title={tr("Reminders")}
+          icon={<CalendarClock className="text-primary size-7" />}
+        >
+          {tr(
+            "Recurring jobs wake an agent with a prompt. Ask the orchestrator to create one; you approve it.",
+          )}
         </PageHeader>
-        {jobs?.length === 0 && <p className="text-muted-foreground text-sm">No jobs yet.</p>}
+        {jobs?.length === 0 && (
+          <p className="text-muted-foreground text-sm">{tr("No jobs yet.")}</p>
+        )}
         <ul className="space-y-3">
           {jobs?.map((job) => (
             <li key={job.id} className="rounded-xl border p-4">
@@ -70,20 +77,20 @@ export function JobsView() {
                     }
                   >
                     {job.status === "active" ? <Pause /> : <Play />}
-                    {job.status === "active" ? "Pause" : "Resume"}
+                    {job.status === "active" ? tr("Pause") : tr("Resume")}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => void act(() => call(() => api.jobs({ jobId: job.id }).delete()))}
                   >
-                    <Trash2 /> Delete
+                    <Trash2 /> {tr("Delete")}
                   </Button>
                 </div>
               </div>
               <p className="text-muted-foreground mt-1 text-sm">
-                @{job.agent} in {chats[job.chatId]?.title ?? job.chatId} · next{" "}
-                {when(job.nextRunAt)} · last {when(job.lastRunAt)}
+                @{job.agent} {tr("in")} {chats[job.chatId]?.title ?? job.chatId} {tr("· next")}{" "}
+                {when(job.nextRunAt)} {tr("· last")} {when(job.lastRunAt)}
               </p>
               <p className="mt-2 text-sm whitespace-pre-wrap">{job.prompt}</p>
               {job.lastError && <p className="text-destructive mt-1 text-xs">{job.lastError}</p>}

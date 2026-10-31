@@ -3,7 +3,7 @@ import { formatTokens } from "@aura/shared";
 import { ArrowRightLeft, CornerDownRight, Reply, Square } from "lucide-react";
 import { Mark } from "@/components/mark";
 import { Markdown } from "@/components/markdown";
-import { useT } from "@/features/localization/i18n";
+import { tr, useT } from "@/features/localization/i18n";
 import { highlightMentions } from "@/lib/mentions";
 import { cn } from "@/lib/utils";
 import { openAgentSettings, reportError, stopRun } from "./actions";
@@ -201,7 +201,7 @@ export function MessageBubble({
                   onClick={() => void stopRun(message.runId ?? "").catch(reportError)}
                   className="hover:text-foreground inline-flex items-center gap-1"
                 >
-                  <Square className="size-3 fill-current" /> Stop
+                  <Square className="size-3 fill-current" /> {tr("Stop")}
                 </button>
               )}
               {message.usage && (
@@ -212,7 +212,8 @@ export function MessageBubble({
                       : ""
                   }`}
                 >
-                  {formatTokens(message.usage.inputTokens + message.usage.outputTokens)} tokens
+                  {formatTokens(message.usage.inputTokens + message.usage.outputTokens)}{" "}
+                  {tr("tokens")}
                 </span>
               )}
             </div>

@@ -13,7 +13,7 @@ import { createElement, useCallback, useEffect, useMemo, useState } from "react"
 import { renderToStaticMarkup } from "react-dom/server";
 import { openChat } from "@/features/chat/actions";
 import { getState, setState, useChatStore } from "@/features/chat/store";
-import { useT } from "@/features/localization/i18n";
+import { tr, useT } from "@/features/localization/i18n";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
 import { BUILTIN_ICONS, openEntry, PAGES, railApp, replacementOf, useExtensionApps } from "./apps";
@@ -202,7 +202,7 @@ export function Rail() {
         />
       )}
       <nav
-        aria-label="Main"
+        aria-label={tr("Main")}
         data-part="bar"
         className={cn(
           "bg-bar text-bar-foreground z-50 flex shrink-0 items-center gap-1",
@@ -237,7 +237,7 @@ export function Rail() {
             vertical ? "md:mb-2.5" : "md:mr-2.5",
           )}
         >
-          A
+          {tr("A")}
         </button>
         {items.map((item, index) => (
           <button
@@ -259,7 +259,7 @@ export function Rail() {
             {item.key === "chats" && pendingApprovals > 0 && (
               <span
                 className="bg-warning absolute top-1.5 right-1.5 size-2 rounded-full md:hidden"
-                title="Approvals waiting"
+                title={tr("Approvals waiting")}
               />
             )}
             {item.active && (

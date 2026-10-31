@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page";
 import { SaveButton } from "@/components/save-button";
 import { Button } from "@/components/ui/button";
 import { loadProviderStatus, reportError } from "@/features/chat/actions";
+import { tr } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { LocalAiCard } from "./local-ai-card";
@@ -72,9 +73,10 @@ export function EnginesView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-4xl">
-        <PageHeader title="Helper programs" icon={<Cpu className="text-primary size-7" />}>
-          Where your helpers' AI comes from: a model on this computer, or an agent app you already
-          use (Claude Code, Codex…). Which helper uses which AI is set on its card under Helpers.
+        <PageHeader title={tr("Helper programs")} icon={<Cpu className="text-primary size-7" />}>
+          {tr(
+            "Where your helpers' AI comes from: a model on this computer, or an agent app you already use (Claude Code, Codex…). Which helper uses which AI is set on its card under Helpers.",
+          )}
         </PageHeader>
 
         <div className="mb-2 flex justify-end">
@@ -84,11 +86,11 @@ export function EnginesView() {
             disabled={refreshing}
             onClick={() => void refresh(true)}
           >
-            <RefreshCw className={refreshing ? "animate-spin" : ""} /> Check again
+            <RefreshCw className={refreshing ? "animate-spin" : ""} /> {tr("Check again")}
           </Button>
         </div>
         {!data ? (
-          <p className="text-muted-foreground text-sm">Checking engines…</p>
+          <p className="text-muted-foreground text-sm">{tr("Checking engines…")}</p>
         ) : (
           GROUPS.map((group) => {
             const members = data.engines.filter((engine) => group.ids.includes(engine.id));
@@ -158,7 +160,9 @@ function StatusLine({ engine }: { engine: Engine }) {
         )}
       />
       <span className={status.ok ? "" : "text-muted-foreground"}>
-        {status.ok ? `Ready${status.detail ? ` · ${status.detail}` : ""}` : withCode(status.reason)}
+        {status.ok
+          ? `${tr("Ready")}${status.detail ? ` · ${status.detail}` : ""}`
+          : withCode(tr(status.reason))}
       </span>
     </p>
   );
@@ -214,7 +218,7 @@ export function ModelInput({
         className={cn(inputClass, "font-mono text-[13px]")}
         list={listId}
         value={value}
-        placeholder={placeholder ?? (models[0]?.id || "model id")}
+        placeholder={placeholder ?? (models[0]?.id || tr("model id"))}
         onChange={(e) => onChange(e.target.value)}
       />
       <datalist id={listId}>
@@ -262,34 +266,34 @@ function EngineCard({
     >
       <header className="flex items-start justify-between gap-3">
         <div>
-          <span className="kicker">{KIND_LABEL[engine.kind]}</span>
+          <span className="kicker">{tr(KIND_LABEL[engine.kind])}</span>
           <h3 className="text-[17px] font-semibold tracking-tight">{engine.label}</h3>
         </div>
         <div className="flex shrink-0 gap-1.5">
           {engine.free && (
             <span className="bg-primary/10 text-primary rounded-pill px-2 py-0.5 text-[11px] font-medium">
-              free
+              {tr("free")}
             </span>
           )}
           {engine.isDefault && (
             <span className="bg-primary text-primary-foreground rounded-pill px-2 py-0.5 text-[11px] font-medium">
-              default
+              {tr("default")}
             </span>
           )}
         </div>
       </header>
       <p className="text-muted-foreground text-[13px] leading-relaxed">
-        {withCode(engine.description)}
+        {withCode(tr(engine.description))}
       </p>
       <StatusLine engine={engine} />
 
       {engine.id === "openai-compatible" && (
-        <Field label="Name">
+        <Field label={tr("Name")}>
           <input className={inputClass} value={label} onChange={(e) => setLabel(e.target.value)} />
         </Field>
       )}
       {(engine.id === "ollama" || engine.id === "openai-compatible") && (
-        <Field label="Server URL">
+        <Field label={tr("Server URL")}>
           <input
             className={cn(inputClass, "font-mono text-[13px]")}
             value={baseUrl}
@@ -300,7 +304,11 @@ function EngineCard({
       {keyed && (
         <Field
           label={
-            engine.hasKey ? "API key · saved" : engine.needsKey ? "API key" : "API key (optional)"
+            engine.hasKey
+              ? tr("API key · saved")
+              : engine.needsKey
+                ? tr("API key")
+                : tr("API key (optional)")
           }
         >
           <div className="flex gap-2">
@@ -309,7 +317,7 @@ function EngineCard({
               type="password"
               autoComplete="off"
               value={key}
-              placeholder={engine.hasKey ? "••••••••  (stored on this computer)" : "sk-…"}
+              placeholder={engine.hasKey ? tr("••••••••  (stored on this computer)") : "sk-…"}
               onChange={(e) => setKey(e.target.value)}
             />
             {key ? (
@@ -318,7 +326,7 @@ function EngineCard({
                 className="h-auto rounded-xl"
                 onSave={() => onKey(key.trim()).then(() => setKey(""))}
               >
-                <KeyRound /> {engine.needsKey ? "Connect" : "Save"}
+                <KeyRound /> {engine.needsKey ? tr("Connect") : tr("Save")}
               </SaveButton>
             ) : (
               engine.hasKey && (
@@ -328,7 +336,7 @@ function EngineCard({
                   className="h-auto"
                   onClick={() => void onKey(null).catch(reportError)}
                 >
-                  Remove
+                  {tr("Remove")}
                 </Button>
               )
             )}
@@ -336,7 +344,7 @@ function EngineCard({
         </Field>
       )}
 
-      <Field label="Default model">
+      <Field label={tr("Default model")}>
         <ModelInput
           label={`${engine.label} default model`}
           models={models}
@@ -346,15 +354,16 @@ function EngineCard({
             engine.id === "ollama" && models.length === 0
               ? "qwen3:8b"
               : engine.kind === "acp" && models.length === 0
-                ? "the agent's own default"
+                ? tr("the agent's own default")
                 : undefined
           }
         />
       </Field>
       {engine.kind === "aura" && (
         <p className="text-muted-foreground text-xs">
-          Tools: files, search, shell, web fetch and your MCP servers. Smaller models follow tools
-          less reliably; prefer models marked for tool use.
+          {tr(
+            "Tools: files, search, shell, web fetch and your MCP servers. Smaller models follow tools less reliably; prefer models marked for tool use.",
+          )}
         </p>
       )}
 
@@ -366,7 +375,7 @@ function EngineCard({
             className="rounded-pill"
             onSave={() => save().then(() => onSave({ default: engine.id }))}
           >
-            Use for all helpers
+            {tr("Use for all helpers")}
           </SaveButton>
         )}
       </div>

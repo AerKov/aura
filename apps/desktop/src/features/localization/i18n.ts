@@ -53,6 +53,36 @@ function fill(text: string, vars?: Record<string, string | number>): string {
   return text.replace(/\{(\w+)\}/g, (m, k: string) => (k in vars ? String(vars[k]) : m));
 }
 
+/** The language shown now, for `tr` (set by `useT` as the app renders). */
+let current = "en";
+
+function lookup(locale: string, text: string): string {
+  return fetched.get(locale)?.[text] ?? BUILTIN[locale]?.[text] ?? text;
+}
+
+/**
+ * Translates interface text outside a hook: `tr("Save")`, in the language shown now. The app is
+ * drawn again when the language changes (see `useLocaleKey`), so every `tr` follows.
+ */
+export function tr(text: string, vars?: Record<string, string | number>): string {
+  return fill(lookup(current, text), vars);
+}
+
+/**
+ * A key for the app's root that changes with the language and when its strings arrive, so the whole
+ * interface is drawn again in the new language, `tr` included.
+ */
+export function useLocaleKey(): string {
+  const locale = useLocale();
+  const v = useSyncExternalStore(subscribe, () => version);
+  current = locale;
+  useEffect(() => {
+    if (locale !== "en") void loadStrings(locale);
+    document.documentElement.lang = locale;
+  }, [locale]);
+  return `${locale}:${v}`;
+}
+
 /**
  * Translates interface text: `t("Your apps")`. A string with no translation stays in English, so
  * the interface is never blank; translations grow with each release and with locale files.
@@ -67,8 +97,5 @@ export function useT(): (text: string, vars?: Record<string, string | number>) =
     document.documentElement.lang = locale;
   }, [locale]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: `v` changes when locale files arrive.
-  return useCallback(
-    (text, vars) => fill(fetched.get(locale)?.[text] ?? BUILTIN[locale]?.[text] ?? text, vars),
-    [locale, v],
-  );
+  return useCallback((text, vars) => fill(lookup(locale, text), vars), [locale, v]);
 }

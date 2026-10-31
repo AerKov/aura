@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
 import { setState, useChatStore } from "@/features/chat/store";
-import { useT } from "@/features/localization/i18n";
+import { tr, useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -208,15 +208,15 @@ function DataMenu({ appId }: { appId: string }) {
         size="icon"
         variant="ghost"
         className="size-7"
-        aria-label="Data"
-        title="The app's data: where it is kept, export, delete"
+        aria-label={tr("Data")}
+        title={tr("The app's data: where it is kept, export, delete")}
         onClick={() => setOpen(!open)}
       >
         <Database />
       </Button>
       {open && info && (
         <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-72 rounded-xl border p-3 text-sm shadow-lg">
-          <p className="kicker mb-1">Kept in</p>
+          <p className="kicker mb-1">{tr("Kept in")}</p>
           <div className="mb-2 flex gap-1 text-xs">
             {(
               [
@@ -241,12 +241,12 @@ function DataMenu({ appId }: { appId: string }) {
           <p className="text-muted-foreground mb-2 text-xs">
             {info.store === "files"
               ? `JSON files in ~/.aura/projects/${appId}/data, easy to read and copy.`
-              : "A database of its own, apart from Aura's."}{" "}
-            Switching moves the data.
+              : tr("A database of its own, apart from Aura's.")}{" "}
+            {tr("Switching moves the data.")}
           </p>
           <ul className="mb-3 text-xs">
             {info.collections.length === 0 && (
-              <li className="text-muted-foreground">No data yet.</li>
+              <li className="text-muted-foreground">{tr("No data yet.")}</li>
             )}
             {info.collections.map((c) => (
               <li key={c.name} className="flex justify-between">
@@ -257,7 +257,7 @@ function DataMenu({ appId }: { appId: string }) {
           </ul>
           <div className="flex gap-1.5">
             <Button size="sm" variant="outline" onClick={() => void exportData()}>
-              Export
+              {tr("Export")}
             </Button>
             {confirm ? (
               <Button
@@ -270,11 +270,11 @@ function DataMenu({ appId }: { appId: string }) {
                     .catch(reportError);
                 }}
               >
-                Delete all its data?
+                {tr("Delete all its data?")}
               </Button>
             ) : (
               <Button size="sm" variant="ghost" onClick={() => setConfirm(true)}>
-                Delete data
+                {tr("Delete data")}
               </Button>
             )}
           </div>

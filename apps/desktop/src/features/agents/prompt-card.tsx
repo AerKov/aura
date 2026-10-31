@@ -4,6 +4,7 @@ import { Markdown } from "@/components/markdown";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { openChat, reportError } from "@/features/chat/actions";
+import { tr } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -91,11 +92,12 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
   return (
     <div className="bg-card min-w-0 rounded-2xl border p-5">
       <h3 className="kicker mb-1 flex items-center gap-1.5">
-        <FileText className="size-3.5" /> System prompt
+        <FileText className="size-3.5" /> {tr("System prompt")}
       </h3>
       <p className="text-muted-foreground mb-3 text-xs">
-        Everything the agent is told before a message, in order: its own prompt, then what Aura adds
-        when it runs. Only its own prompt is yours to edit.
+        {tr(
+          "Everything the agent is told before a message, in order: its own prompt, then what Aura adds when it runs. Only its own prompt is yours to edit.",
+        )}
       </p>
 
       {draft !== null ? (
@@ -105,10 +107,10 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               className="max-h-96 min-h-40 font-mono text-xs"
-              aria-label="Its prompt"
+              aria-label={tr("Its prompt")}
             />
           ) : review.trim() === "" ? (
-            <p className="text-muted-foreground text-sm">Nothing changed.</p>
+            <p className="text-muted-foreground text-sm">{tr("Nothing changed.")}</p>
           ) : (
             <div className="max-h-96 overflow-auto text-xs">
               <Markdown>{diffBlock(review)}</Markdown>
@@ -118,7 +120,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
           <div className="mt-2 flex gap-2">
             {review === null ? (
               <Button size="sm" className="rounded-pill" onClick={() => void startReview()}>
-                <Check /> Review changes
+                <Check /> {tr("Review changes")}
               </Button>
             ) : (
               <>
@@ -128,7 +130,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
                   disabled={busy || review.trim() === ""}
                   onClick={() => void save()}
                 >
-                  {busy ? <RefreshCw className="animate-spin" /> : <Check />} Save
+                  {busy ? <RefreshCw className="animate-spin" /> : <Check />} {tr("Save")}
                 </Button>
                 <Button
                   size="sm"
@@ -136,7 +138,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
                   className="rounded-pill"
                   onClick={() => setReview(null)}
                 >
-                  <Pencil /> Keep editing
+                  <Pencil /> {tr("Keep editing")}
                 </Button>
               </>
             )}
@@ -149,7 +151,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
                 setReview(null);
               }}
             >
-              <X /> Cancel
+              <X /> {tr("Cancel")}
             </Button>
           </div>
         </div>
@@ -170,7 +172,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
       {explained.history.length > 0 && (
         <div className="mt-4">
           <h4 className="text-muted-foreground mb-1 flex items-center gap-1.5 text-xs font-medium">
-            <History className="size-3.5" /> Versions of its prompt
+            <History className="size-3.5" /> {tr("Versions of its prompt")}
           </h4>
           <ul className="space-y-0.5 text-[13px]">
             {explained.history.map((v) => (
@@ -207,7 +209,7 @@ export function PromptCard({ handle, onSaved }: { handle: string; onSaved: () =>
                     setReview(null);
                   }}
                 >
-                  <History /> Bring this version back
+                  <History /> {tr("Bring this version back")}
                 </Button>
               )}
             </div>
@@ -243,12 +245,14 @@ function PartRow({
           />
           <span className="truncate">{part.title}</span>
           {part.source !== "profile" && (
-            <span className="text-muted-foreground shrink-0 text-[11px]">added by Aura</span>
+            <span className="text-muted-foreground shrink-0 text-[11px]">
+              {tr("added by Aura")}
+            </span>
           )}
         </button>
         {onEdit && (
           <Button size="sm" variant="ghost" className="h-7 rounded-pill" onClick={onEdit}>
-            <Pencil /> Edit
+            <Pencil /> {tr("Edit")}
           </Button>
         )}
       </div>
@@ -278,12 +282,14 @@ export function MemoryCard({ handle }: { handle: string }) {
   return (
     <div className="bg-card min-w-0 rounded-2xl border p-5">
       <h3 className="kicker mb-2 flex items-center gap-1.5">
-        <Brain className="size-3.5" /> Memory and recent runs
+        <Brain className="size-3.5" /> {tr("Memory and recent runs")}
       </h3>
       {notes && notes.length > 0 ? (
         <>
           <p className="text-muted-foreground mb-1 text-xs">
-            Its notes ({notes.length}). Each run gets the ones that match the message.
+            {tr("Its notes (")}
+            {notes.length}
+            {tr("). Each run gets the ones that match the message.")}
           </p>
           <ul className="mb-4 max-h-48 space-y-0.5 overflow-auto text-[13px]">
             {notes.map((n) => (
@@ -297,11 +303,11 @@ export function MemoryCard({ handle }: { handle: string }) {
           </ul>
         </>
       ) : (
-        <p className="text-muted-foreground mb-4 text-sm">No notes yet.</p>
+        <p className="text-muted-foreground mb-4 text-sm">{tr("No notes yet.")}</p>
       )}
 
       {runs === null ? null : runs.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No runs yet.</p>
+        <p className="text-muted-foreground text-sm">{tr("No runs yet.")}</p>
       ) : (
         <ul className="divide-y rounded-xl border text-[13px]">
           {runs.map((r) => (
@@ -328,7 +334,7 @@ export function MemoryCard({ handle }: { handle: string }) {
                   {r.chatTitle ?? r.chatId}
                 </button>
                 <span className="text-muted-foreground ml-auto shrink-0 text-[11px]">
-                  {r.tools} tools · {r.tokens.toLocaleString()} tokens
+                  {r.tools} {tr("tools ·")} {r.tokens.toLocaleString()} {tr("tokens")}
                 </span>
                 {r.memory.length > 0 && (
                   <button
@@ -337,7 +343,7 @@ export function MemoryCard({ handle }: { handle: string }) {
                     className="text-primary shrink-0 text-[11px] hover:underline"
                     onClick={() => setOpen(open === r.id ? null : r.id)}
                   >
-                    {r.memory.length} notes
+                    {r.memory.length} {tr("notes")}
                   </button>
                 )}
               </div>
