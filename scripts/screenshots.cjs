@@ -12,7 +12,12 @@ const URL = "http://localhost:1420/";
 const wait = (p, ms = 900) => p.waitForTimeout(ms);
 
 /** A fresh window that opens on `view` (the shell remembers it in localStorage). */
-async function fresh(b, scheme, view, { folded = false, size = { width: 1600, height: 900 } } = {}) {
+async function fresh(
+  b,
+  scheme,
+  view,
+  { folded = false, size = { width: 1600, height: 900 } } = {},
+) {
   const ctx = await b.newContext({ viewport: size, colorScheme: scheme, locale: "en-US" });
   // The app frames are sandboxed without storage: only the shell remembers the view.
   await ctx.addInitScript(
