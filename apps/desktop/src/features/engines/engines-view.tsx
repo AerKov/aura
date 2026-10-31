@@ -1,7 +1,7 @@
 import type { EngineId, EngineModel } from "@aura/shared";
 import { Cpu, KeyRound, RefreshCw } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useId, useState } from "react";
-import { PageHeader } from "@/components/page";
+import { type ReactNode, useCallback, useContext, useEffect, useId, useState } from "react";
+import { EmbeddedPage, PageHeader } from "@/components/page";
 import { SaveButton } from "@/components/save-button";
 import { Button } from "@/components/ui/button";
 import { loadProviderStatus, reportError } from "@/features/chat/actions";
@@ -45,6 +45,7 @@ export const inputClass =
  * own agent loop on the built-in local AI, Ollama or any OpenAI-compatible server.
  */
 export function EnginesView() {
+  const embedded = useContext(EmbeddedPage);
   const [data, setData] = useState<EnginesData | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -70,7 +71,13 @@ export function EnginesView() {
   };
 
   return (
-    <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
+    <section
+      className={cn(
+        "min-w-0 px-8 max-md:px-4",
+        // Inside Settings the tab scrolls as one page; on its own the page scrolls itself.
+        embedded ? "pt-6 pb-10" : "flex-1 overflow-y-auto py-10 max-md:py-6",
+      )}
+    >
       <div className="mx-auto max-w-4xl">
         <PageHeader title={tr("Helper programs")} icon={<Cpu className="text-primary size-7" />}>
           {tr(

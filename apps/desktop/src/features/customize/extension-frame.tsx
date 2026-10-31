@@ -249,7 +249,7 @@ export function ExtensionFrame({
           const id = String(p.id ?? "");
           const found = (await call(() => ext().docs.get())).find((f) => f.id === id);
           if (!found) return reply(req.id, null, "No such file");
-          saveBlob(await fetchFile(docPath(extension.id, id)), found.name);
+          await saveBlob(await fetchFile(docPath(extension.id, id)), found.name);
           return reply(req.id, true);
         }
         case "docs.view": {

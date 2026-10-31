@@ -13,6 +13,7 @@ describe("files (ADR 0036)", () => {
     expect(previewKind("application/pdf")).toBe("pdf");
     expect(previewKind("image/png")).toBe("image");
     expect(previewKind("text/csv")).toBe("text");
+    expect(previewKind("text/html")).toBe("html");
     expect(previewKind("application/json")).toBe("text");
     expect(previewKind("application/zip")).toBe("none");
   });

@@ -1,4 +1,5 @@
 import type { FileRef } from "@aura/shared";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import type { FileView } from "@/features/chat/store";
 import { setState } from "@/features/chat/store";
 import { api, authFetch, call } from "./api";
@@ -19,8 +20,17 @@ export async function fetchFile(path: string): Promise<Blob> {
   return (await authFetch(path)).blob();
 }
 
-/** Hands the user a file as a download: the browser or the desktop shell asks where to put it. */
-export function saveBlob(blob: Blob, name: string): void {
+/**
+ * Hands the user a file. In the desktop app the system's "Save as" window asks where to put it (a
+ * web view ignores downloads); in a browser it is a download. Resolves when it is saved or the
+ * user cancelled.
+ */
+export async function saveBlob(blob: Blob, name: string): Promise<void> {
+  if (isTauri()) {
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    await invoke("save_file", bytes, { headers: { "x-file-name": encodeURIComponent(name) } });
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

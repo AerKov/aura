@@ -1,5 +1,5 @@
 import type { ExtensionInfo } from "@aura/shared";
-import { MoreHorizontal, Trash2 } from "lucide-react";
+import { MoreHorizontal, Power, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { loadInitial, loadProjects } from "@/features/chat/actions";
@@ -9,7 +9,7 @@ import { api, call } from "@/lib/api";
 import { leaveApp } from "./view";
 
 /**
- * An app's menu (ADR 0033): uninstall it. An app built in Aura leaves a backup (Settings → History
+ * An app's menu (ADR 0033): turn it off or on, or uninstall it. An app built in Aura leaves a backup (Settings → History
  * brings it back); a plain extension is removed as a commit of the data folder.
  */
 export function AppMenu({ extension }: { extension: ExtensionInfo }) {
@@ -30,6 +30,23 @@ export function AppMenu({ extension }: { extension: ExtensionInfo }) {
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
   }, [open]);
+
+  /** Off: the app does not run and keeps its data; on again: as it was. */
+  const toggle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await call(() =>
+        api.extensions({ extensionId: extension.id }).enabled.post({ enabled: !extension.enabled }),
+      );
+      await loadCustomize();
+      setOpen(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const uninstall = async () => {
     setBusy(true);
@@ -89,13 +106,24 @@ export function AppMenu({ extension }: { extension: ExtensionInfo }) {
               </div>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={() => setConfirm(true)}
-              className="hover:bg-accent text-destructive flex w-full items-center gap-2 rounded-lg px-2 py-1.5"
-            >
-              <Trash2 className="size-4" /> {t("Uninstall…")}
-            </button>
+            <>
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void toggle()}
+                className="hover:bg-accent flex w-full items-center gap-2 rounded-lg px-2 py-1.5"
+              >
+                <Power className="size-4" /> {extension.enabled ? t("Turn off") : t("Turn on")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirm(true)}
+                className="hover:bg-accent text-destructive flex w-full items-center gap-2 rounded-lg px-2 py-1.5"
+              >
+                <Trash2 className="size-4" /> {t("Uninstall…")}
+              </button>
+              {error && <p className="text-destructive px-2 pt-1 text-xs">{error}</p>}
+            </>
           )}
         </div>
       )}

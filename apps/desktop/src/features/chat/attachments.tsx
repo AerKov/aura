@@ -31,7 +31,7 @@ function Attachment({ chatId, file }: { chatId: string; file: FileRef }) {
   };
   const save = async () => {
     try {
-      saveBlob(await fetchFile(chatFilePath(chatId, file.id)), file.name);
+      await saveBlob(await fetchFile(chatFilePath(chatId, file.id)), file.name);
     } catch (error) {
       reportError(error);
     }

@@ -1,12 +1,13 @@
 import { ArchiveRestore, History, RefreshCw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { PageHeader } from "@/components/page";
+import { useCallback, useContext, useEffect, useState } from "react";
+import { EmbeddedPage, PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { loadInitial, loadProjects, reportError } from "@/features/chat/actions";
 import { loadCustomize } from "@/features/customize/state";
 import { tr, useT } from "@/features/localization/i18n";
 import { openApp } from "@/features/shell/view";
 import { api, call } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 type Backup = Awaited<ReturnType<typeof loadBackups>>[number];
 const loadBackups = () => call(() => api["app-backups"].get());
@@ -23,6 +24,7 @@ async function reloadAll(): Promise<void> {
 
 /** History (ADR 0042): bring back uninstalled apps. An app's own versions live beside the app. */
 export function BackupsView() {
+  const embedded = useContext(EmbeddedPage);
   const t = useT();
   const [backups, setBackups] = useState<Backup[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
@@ -64,7 +66,13 @@ export function BackupsView() {
     });
 
   return (
-    <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
+    <section
+      className={cn(
+        "min-w-0 px-8 max-md:px-4",
+        // Inside Settings the tab scrolls as one page; on its own the page scrolls itself.
+        embedded ? "pt-6 pb-10" : "flex-1 overflow-y-auto py-10 max-md:py-6",
+      )}
+    >
       <div className="mx-auto max-w-3xl">
         <PageHeader title={tr("History")} icon={<History className="text-primary size-7" />}>
           {t(

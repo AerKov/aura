@@ -16,4 +16,6 @@ tauri-build = { version = "2.7.4", features = [] }
 [dependencies]
 tauri = { version = "2.12.5", features = [] }
 tauri-plugin-shell = "2.5.0"
+# The system's "Save as" window: a web view ignores downloads (ADR 0036).
+tauri-plugin-dialog = "=2.8.4"
 serde = { version = "1.0.229", features = ["derive"] }

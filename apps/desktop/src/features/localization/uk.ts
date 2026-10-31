@@ -598,4 +598,7 @@ export const UK: Record<string, string> = {
     "Локальні моделі: безкоштовно й приватно, але потрібен потужний комп'ютер. Aura може сама встановити llama.cpp і модель; Ollama, LM Studio та будь-який OpenAI-сумісний сервер теж підходять.",
   "Anthropic's coding agent, under your own Claude login. Aura drives it and decides what it may touch; your login stays with it.":
     "Агент для програмування від Anthropic, під вашим власним входом у Claude. Aura керує ним і вирішує, чого він може торкатися; ваш вхід лишається в ньому.",
+  "Turn off": "Вимкнути",
+  "Chat width": "Ширина чату",
+  "Drag to make the chat wider or narrower": "Перетягніть, щоб зробити чат ширшим чи вужчим",
 };

@@ -93,6 +93,14 @@ t.files.put(
   "Invoice 2026-014.pdf",
   tinyPdf(["Invoice 2026-014", "Lumen Studio: website redesign", "Total: 4 200 EUR"]),
 );
+// Apps often make documents as HTML: the viewer draws them as pages, without their scripts.
+t.files.put(
+  { kind: "app", id: "invoices" },
+  "Invoice 2026-015.html",
+  new TextEncoder().encode(
+    '<html><head><style>body{font-family:sans-serif;padding:32px}table{width:100%;border-collapse:collapse}td,th{border-bottom:1px solid #ccc;padding:6px;text-align:left}</style></head><body><h1>Invoice 2026-015</h1><p>Northwind · landing page</p><table><tr><th>Item</th><th>Sum</th></tr><tr><td>Landing page</td><td>1 500 EUR</td></tr></table><p><b>Total: 1 500 EUR</b></p><script>document.body.innerHTML="scripts ran"</script></body></html>',
+  ),
+);
 
 // The chat with the Helper.
 await say(

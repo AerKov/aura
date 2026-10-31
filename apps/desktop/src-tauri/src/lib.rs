@@ -3,6 +3,7 @@ use std::sync::Mutex;
 use tauri::{Manager, RunEvent, State};
 use tauri_plugin_shell::process::CommandChild;
 
+mod save;
 mod sidecar;
 
 use sidecar::{ServerStatus, SharedStatus};
@@ -21,9 +22,10 @@ fn server_status(status: State<'_, SharedStatus>) -> ServerStatus {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(Sidecar::default())
         .manage(SharedStatus::default())
-        .invoke_handler(tauri::generate_handler![server_status])
+        .invoke_handler(tauri::generate_handler![server_status, save::save_file])
         .setup(|app| {
             // In debug builds the server runs separately (`bun run dev`), with hot reload.
             if !cfg!(debug_assertions) {

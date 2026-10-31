@@ -7,11 +7,11 @@ import { type FileView, setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
 import { saveBlob } from "@/lib/files";
 import { openPdf, pageRatio, pagesForPrint, renderPage } from "./pdf";
-import { printImages, printText } from "./print";
+import { inertHtml, printHtml, printImages, printText } from "./print";
 
 /**
- * The window that shows a file over the screen (ADR 0036): a PDF drawn page by page, an image or
- * text, with Print and Save. Chats and apps both open it; other types are only saved.
+ * The window that shows a file over the screen (ADR 0036): a PDF drawn page by page, an image, a
+ * page made by an app (HTML, without its scripts) or text, with Print and Save. Chats and apps both open it; other types are only saved.
  */
 export function FileViewer() {
   const view = useChatStore((s) => s.viewer);
@@ -40,7 +40,7 @@ function ViewerWindow({ view, onClose }: { view: FileView; onClose: () => void }
       .then(async (b) => {
         if (!alive) return;
         setBlob(b);
-        if (kind === "text") setText(await b.text());
+        if (kind === "text" || kind === "html") setText(await b.text());
         if (kind === "pdf") setDoc(await openPdf(b));
       })
       .catch((e: unknown) => alive && setError(e instanceof Error ? e.message : String(e)));
@@ -62,6 +62,7 @@ function ViewerWindow({ view, onClose }: { view: FileView; onClose: () => void }
     try {
       if (kind === "pdf" && doc) await printImages(await pagesForPrint(doc));
       else if (kind === "image" && imageUrl) await printImages([imageUrl]);
+      else if (kind === "html") await printHtml(text);
       else if (kind === "text") await printText(text);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -136,7 +137,9 @@ function ViewerWindow({ view, onClose }: { view: FileView; onClose: () => void }
             size="sm"
             variant="outline"
             disabled={!blob}
-            onClick={() => blob && saveBlob(blob, view.name)}
+            onClick={() =>
+              blob && void saveBlob(blob, view.name).catch((e: unknown) => setError(String(e)))
+            }
           >
             <Download /> <span className="max-sm:sr-only">{t("Save")}</span>
           </Button>
@@ -162,6 +165,14 @@ function ViewerWindow({ view, onClose }: { view: FileView; onClose: () => void }
               src={imageUrl}
               alt={view.name}
               className="mx-auto max-w-full rounded-xl border bg-paper"
+            />
+          ) : kind === "html" ? (
+            <iframe
+              title={view.name}
+              // No allow-scripts and no network (inertHtml): the page is only drawn.
+              sandbox=""
+              srcDoc={inertHtml(text)}
+              className="bg-paper mx-auto block h-full min-h-[70vh] w-full max-w-4xl rounded-xl border"
             />
           ) : kind === "text" ? (
             <pre className="bg-background mx-auto max-w-4xl overflow-auto rounded-xl border p-4 font-mono text-[13px] whitespace-pre-wrap">

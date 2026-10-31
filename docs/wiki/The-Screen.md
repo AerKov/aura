@@ -28,10 +28,12 @@ The app runs on a card. Its header has its name and description, and on the righ
 - **History of changes** (the clock): every version; **Bring back** restores one.
 - **Its data** (the database): where it keeps data, export, delete.
 - **Its secrets** (the key), if it talks to a service.
-- **⋯**: uninstall (a backup is kept in Settings → History).
+- **⋯**: turn the app off (it keeps its data; turn it on again from the same menu) or uninstall
+  it (a backup is kept in Settings → History).
 - **Hide the chat / Show the chat**.
 
-**Its chat** is beside it: tell @builder what to change, or ask it to use the app for you
+**Its chat** is beside it; drag the line between them to make it wider or narrower (double-click
+it for the usual width). In the chat: tell @builder what to change, or ask it to use the app for you
 (_"add Petrenko, a lead from the fair"_). A plain message goes to @builder; mention another helper
 with `@` if you added one.
 

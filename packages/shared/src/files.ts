@@ -46,11 +46,15 @@ export function mimeOf(name: string): string {
   return TYPES[ext] ?? "application/octet-stream";
 }
 
-/** What the viewer can show: a PDF, an image, text; everything else is only downloaded. */
-export type PreviewKind = "pdf" | "image" | "text" | "none";
+/**
+ * What the viewer can show: a PDF, an image, a page (HTML, drawn without its scripts), text;
+ * everything else is only downloaded.
+ */
+export type PreviewKind = "pdf" | "image" | "html" | "text" | "none";
 
 export function previewKind(type: string): PreviewKind {
   if (type === "application/pdf") return "pdf";
+  if (type === "text/html") return "html";
   if (type.startsWith("image/")) return "image";
   if (type.startsWith("text/") || type === "application/json") return "text";
   return "none";

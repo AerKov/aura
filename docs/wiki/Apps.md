@@ -53,8 +53,9 @@ Restoring an older version of the app does not touch its data.
 ![A PDF in the viewer, with Print and Save](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/screen-viewer.png)
 
 An app with the `docs` permission keeps **files of its own** (PDFs, images, exports): it asks you to
-add them (a window with a button and a drop area), shows them, and saves them to your computer. A PDF
-opens in the viewer with **Print** and **Save**. They live in `~/.aura/files/apps/<app>/`, outside the
+add them (a window with a button and a drop area), shows them, and saves them to your computer. A PDF,
+an image, text or a page the app made as HTML (drawn without its scripts) opens in the viewer with
+**Print** and **Save**; **Save** asks where to put the file. They live in `~/.aura/files/apps/<app>/`, outside the
 app's git history, go into the app's backup when you uninstall it, and come back with it. Ask in the
 app's chat: _"let me add the invoices as PDFs and show them in a window I can print"_.
 
