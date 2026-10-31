@@ -588,4 +588,6 @@ export const UK: Record<string, string> = {
   "This app is turned off.": "Цей застосунок вимкнено.",
   "Turn on": "Увімкнути",
   "Creating…": "Створюю…",
+  "Fold the menu": "Згорнути меню",
+  "Unfold the menu": "Розгорнути меню",
 };

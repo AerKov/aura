@@ -184,7 +184,15 @@ export class ProjectService {
       projectId: slug,
       members: [
         { participant: { kind: "user", id: OWNER_ID }, role: "owner" },
-        { participant: { kind: "agent", id: ORCHESTRATOR_HANDLE }, role: "member" },
+        // An app's chat is the user's and @builder's (ADR 0042): a plain message goes to it.
+        ...(input.kind === "app"
+          ? []
+          : [
+              {
+                participant: { kind: "agent" as const, id: ORCHESTRATOR_HANDLE },
+                role: "member" as const,
+              },
+            ]),
         ...agents.map((id) => ({
           participant: { kind: "agent" as const, id },
           role: "member" as const,

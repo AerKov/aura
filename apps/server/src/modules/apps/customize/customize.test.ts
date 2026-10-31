@@ -55,7 +55,7 @@ describe("customization", () => {
     expect(answer?.text).toContain("- sidebar: the sidebar");
     expect(answer?.text).toContain("--sidebar-bg (background");
     expect(answer?.text).toContain("Active theme: default");
-    expect(answer?.text).toContain("--radius: 16px");
+    expect(answer?.text).toContain("--radius: 14px");
   });
 
   test("extensions: manifest rules, install by approval, sandbox frame, permissions, auto-disable", async () => {

@@ -1,5 +1,6 @@
-import { Sparkles, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { AuraLogo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { loadInitial, loadProjects } from "@/features/chat/actions";
@@ -72,12 +73,10 @@ export function NewAppDialog() {
         data-part="menu"
         className="bg-menu text-menu-foreground animate-in fade-in zoom-in-95 slide-in-from-bottom-4 relative w-[min(480px,100%)] overflow-hidden rounded-[calc(var(--radius)*1.5)] border shadow-lg duration-500 ease-[var(--spring)]"
       >
-        <div className="aurora-band h-1.5" aria-hidden />
+        <div className="aura-band h-1.5" aria-hidden />
         <div className="flex flex-col gap-4 p-6">
           <div className="flex items-start gap-3">
-            <span className="aura-fill flex size-10 shrink-0 items-center justify-center rounded-2xl text-white shadow-md">
-              <Sparkles className="size-5" />
-            </span>
+            <AuraLogo alive className="size-11 shadow-md" />
             <div className="mr-auto">
               <h2 className="text-xl">{t("New app")}</h2>
               <p className="text-muted-foreground text-sm">

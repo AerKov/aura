@@ -13,7 +13,8 @@ Aura has one screen: a **sidebar** on the left and **one thing** beside it.
 - **Settings**: **AI** (where the AI comes from and which one the Helper and @builder use) and
   **History** (uninstalled apps to bring back).
 
-On a narrow window the sidebar folds to icons. Aura opens where you left it.
+**Fold the menu** at the bottom folds the sidebar to icons (it also folds by itself on a narrow
+window). Aura opens where you left it.
 
 ## An app
 

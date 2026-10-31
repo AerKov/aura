@@ -44,12 +44,12 @@ export function App() {
     return startRealtime();
   }, [load]);
 
-  // The shell (ADR 0042) over a slow aurora.
+  // The shell (ADR 0042) over the faint contours of an aura.
   return (
     <div key={localeKey} className="aura-backdrop relative flex h-dvh overflow-hidden">
       {startError ? (
         <main className="relative flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-          <AuraLogo className="size-12" />
+          <AuraLogo alive className="size-14" />
           <p className="text-muted-foreground max-w-sm text-sm">
             {tr("Cannot reach the Aura server at")} {SERVER_URL}: {startError.message}
           </p>

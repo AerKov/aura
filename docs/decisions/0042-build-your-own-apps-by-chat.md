@@ -42,21 +42,23 @@ Aura drops:
 - The tiling window manager, the bar and the bar app, the Start menu, Home, shortcuts and
   replaceable built-in apps.
 
-**The screen** is one glass sidebar (the Helper, the apps, **New app**, Settings) and beside it one
+**The screen** is one sidebar (the Helper, the apps, **New app**, Settings) and beside it one
 thing: the Helper's chat, an app with its chat beside it (it can be folded away), or Settings. The
-screen opens where the user left it (kept in the browser's storage, a per-viewer convenience).
+sidebar folds to icons. The screen opens where the user left it (kept in the browser's storage, a
+per-viewer convenience).
 
-**The default look** is modern and soft: Geist, 16px corners, gentle shadows, a slowly drifting
-aurora of three colours behind glass panels, gradient bubbles and buttons, an orb on empty chats,
-and spring animations. All of it is theme variables (`--aurora-1..3`, `--radius`, `--ease`,
-`--sidebar-*`, `--app-*`, `--bubble-own`…), so the Helper can change it; `prefers-reduced-motion`
-stops the motion.
+**The default look comes from Aura's mark** (docs/assets/logo.svg): five layers of an aura from a
+deep blue edge to a light core, on an ink tile. The sidebar is that ink tile; buttons and the
+user's bubbles use the layers' blues; the backdrop is the aura drawn large and faint, as contour
+lines that breathe slowly; the mark itself, alive (its layers drift and breathe), greets an empty
+chat and a new app. Geist, 14px corners, solid cards with soft shadows, spring animations. All of
+it is theme variables (`--ink`, `--layer-1..5`, `--radius`, `--ease`, `--sidebar-*`, `--app-*`,
+`--bubble-own`…), so the Helper can change it; `prefers-reduced-motion` stops the motion.
 
 ## Consequences
 
-- Old data keeps working: messages lose their topic and show in one stream; the old alerts chat is
-  deleted on start; apps that asked for `ui.bar` or `replaces` show a problem until @builder fixes
-  their manifest. Removed tables (topic, job, memory, summaries) are left alone or dropped.
+- Nobody uses Aura yet, so there are no migrations: data from earlier versions is not converted
+  (the old secret files, panel extensions, alerts chat and topics are simply not read).
 - Two engines' worth of code, the phone and the automations are gone: roughly 15,000 lines less,
   and every remaining part serves building and using apps.
 - New ideas go to an app of the user's first; the core grows only when apps cannot do it.

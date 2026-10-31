@@ -84,7 +84,7 @@ export function AppScreen({ id }: { id: string }) {
         </div>
       </section>
       {chatId && !hidden && (
-        <aside className="glass animate-in fade-in slide-in-from-right-6 flex w-[min(400px,40%)] min-w-[300px] shrink-0 overflow-hidden rounded-[calc(var(--radius)*1.25)] duration-500 ease-[var(--ease)] max-md:hidden">
+        <aside className="bg-card border-app-border animate-in fade-in slide-in-from-right-6 flex w-[min(400px,40%)] min-w-[300px] shrink-0 overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-md duration-500 ease-[var(--ease)] max-md:hidden">
           <ChatView key={chatId} chatId={chatId} inApp />
         </aside>
       )}

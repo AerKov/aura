@@ -105,113 +105,115 @@
 }
 
 /*
- * The aurora (ADR 0042): three soft colours drift behind everything, slowly. The sidebar and the
- * panels are glass over it.
+ * The backdrop (ADR 0042): the mark's aura drawn large and faint, as contour lines spreading from a
+ * corner, that breathe slowly. Panels sit on it as solid cards.
  */
 .aura-backdrop {
   background: var(--background);
   isolation: isolate;
 }
-.aura-backdrop::before,
-.aura-backdrop::after {
+.aura-backdrop::before {
   content: "";
   position: absolute;
   z-index: -1;
   pointer-events: none;
+  width: 150vmax;
+  height: 150vmax;
+  right: -75vmax;
+  bottom: -75vmax;
   border-radius: 9999px;
-  filter: blur(80px);
-  opacity: 0.55;
-}
-.aura-backdrop::before {
-  width: 55vmax;
-  height: 55vmax;
-  left: -18vmax;
-  top: -22vmax;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--aurora-1) 55%, transparent),
-    transparent 65%
-  );
-  animation: aurora-a 26s ease-in-out infinite alternate;
-}
-.aura-backdrop::after {
-  width: 50vmax;
-  height: 50vmax;
-  right: -20vmax;
-  bottom: -24vmax;
   background:
-    radial-gradient(
-      circle at 30% 30%,
-      color-mix(in srgb, var(--aurora-2) 45%, transparent),
-      transparent 60%
+    repeating-radial-gradient(
+      circle,
+      transparent 0 46px,
+      color-mix(in srgb, var(--layer-3) 13%, transparent) 46px 47px
     ),
     radial-gradient(
-      circle at 70% 70%,
-      color-mix(in srgb, var(--aurora-3) 40%, transparent),
-      transparent 60%
+      circle,
+      color-mix(in srgb, var(--layer-4) 22%, transparent),
+      color-mix(in srgb, var(--layer-2) 8%, transparent) 30%,
+      transparent 58%
     );
-  animation: aurora-b 32s ease-in-out infinite alternate;
+  mask-image: radial-gradient(circle, black 18%, transparent 55%);
+  animation: aura-breathe 14s ease-in-out infinite;
 }
-.dark .aura-backdrop::before,
-.dark .aura-backdrop::after {
-  opacity: 0.38;
+.dark .aura-backdrop::before {
+  opacity: 0.8;
 }
-@keyframes aurora-a {
-  to {
-    transform: translate(14vmax, 10vmax) scale(1.15) rotate(25deg);
-  }
-}
-@keyframes aurora-b {
-  to {
-    transform: translate(-12vmax, -9vmax) scale(1.1) rotate(-20deg);
+@keyframes aura-breathe {
+  50% {
+    transform: scale(1.06);
   }
 }
 
-/* Frosted glass over the aurora: the sidebar and the app's chat. */
-.glass {
-  background: var(--sidebar-bg);
-  backdrop-filter: blur(22px) saturate(1.6);
-  -webkit-backdrop-filter: blur(22px) saturate(1.6);
-  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
-  box-shadow: var(--shadow-md);
+/* The mark, alive: its layers breathe and drift a little, each in its own time. */
+.aura-alive path {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: layer-drift 6s ease-in-out infinite;
 }
-.glass-strong {
-  background: color-mix(in srgb, var(--card) 86%, transparent);
-  backdrop-filter: blur(24px) saturate(1.4);
-  -webkit-backdrop-filter: blur(24px) saturate(1.4);
-  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
-  box-shadow: var(--shadow-md);
+.aura-alive path:nth-of-type(2) {
+  animation-delay: -1.2s;
+  animation-duration: 6.6s;
+}
+.aura-alive path:nth-of-type(3) {
+  animation-delay: -2.4s;
+  animation-duration: 5.4s;
+}
+.aura-alive path:nth-of-type(4) {
+  animation-delay: -3.6s;
+  animation-duration: 4.8s;
+}
+.aura-alive path:nth-of-type(5) {
+  animation-delay: -4.8s;
+  animation-duration: 4.2s;
+}
+@keyframes layer-drift {
+  33% {
+    transform: scale(1.045) rotate(4deg);
+  }
+  66% {
+    transform: scale(0.97) rotate(-3deg);
+  }
+}
+/* On hover the mark wakes up. */
+.aura-wake:hover path {
+  animation: layer-drift 2.4s ease-in-out infinite;
 }
 
-/* The aurora as a fill: badges, the main button, the band on dialogs. */
-.aura-fill,
-.aurora-fill {
-  background: linear-gradient(135deg, var(--aurora-1), var(--aurora-3));
+/* The mark's layers as a fill: badges, the main button, the band on dialogs. */
+.aura-fill {
+  background: radial-gradient(
+    circle at 50% 45%,
+    var(--layer-4),
+    var(--layer-3) 35%,
+    var(--layer-2) 70%,
+    var(--layer-1)
+  );
 }
-.aurora-band {
+.aura-band {
   background: linear-gradient(
     90deg,
-    var(--aurora-1),
-    var(--aurora-2),
-    var(--aurora-3),
-    var(--aurora-1)
+    var(--layer-1),
+    var(--layer-2),
+    var(--layer-3),
+    var(--layer-4),
+    var(--layer-3),
+    var(--layer-2),
+    var(--layer-1)
   );
-  background-size: 300% 100%;
-  animation: aurora-flow 6s linear infinite;
+  background-size: 200% 100%;
+  animation: band-flow 5s linear infinite;
 }
-@keyframes aurora-flow {
+@keyframes band-flow {
   to {
-    background-position: 300% 0;
+    background-position: 200% 0;
   }
 }
 .aura-button {
-  background: linear-gradient(
-    135deg,
-    var(--aurora-1),
-    color-mix(in oklch, var(--aurora-1), var(--aurora-3) 55%)
-  );
+  background: linear-gradient(135deg, var(--layer-2), var(--layer-3));
   color: #fff;
-  box-shadow: 0 6px 20px -6px var(--glow);
+  box-shadow: 0 6px 20px -8px var(--glow);
   transition:
     transform 0.25s var(--spring),
     box-shadow 0.25s var(--ease),
@@ -219,132 +221,59 @@
 }
 .aura-button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 10px 28px -6px var(--glow);
-  filter: brightness(1.06);
+  box-shadow: 0 10px 28px -8px var(--glow);
+  filter: brightness(1.08);
 }
 .aura-button:active:not(:disabled) {
   transform: translateY(0) scale(0.98);
 }
 
-/* An app's icon tile in the sidebar and on its card. */
+/* An app's icon tile: a small ink square like the mark's, with a blue glyph. */
 .app-icon {
-  background: linear-gradient(
-    145deg,
-    color-mix(in srgb, var(--aurora-1) 16%, var(--card)),
-    color-mix(in srgb, var(--aurora-2) 12%, var(--card))
-  );
-  color: var(--primary);
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--primary) 14%, transparent),
-    var(--shadow-sm);
+  background: var(--ink);
+  color: var(--layer-4);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06);
 }
 
-/* What is open in the sidebar glows a little at its left edge. */
-.nav-glow {
-  position: absolute;
-  left: 0;
-  top: 22%;
-  bottom: 22%;
-  width: 3px;
-  border-radius: 9999px;
-  background: linear-gradient(180deg, var(--aurora-1), var(--aurora-3));
-  box-shadow: 0 0 12px var(--glow);
-  animation: nav-glow-in 0.45s var(--spring);
-}
-@keyframes nav-glow-in {
-  from {
-    transform: scaleY(0);
-    opacity: 0;
-  }
-}
-
-/* The Helper is working. */
+/* A helper is working: rings spread from a dot, like the mark's layers. */
 .aura-ping {
-  background: var(--aurora-2);
-  box-shadow: 0 0 0 0 color-mix(in srgb, var(--aurora-2) 60%, transparent);
-  animation: ping 1.6s var(--ease) infinite;
+  background: var(--layer-4);
+  animation: ping 1.8s var(--ease) infinite;
 }
 @keyframes ping {
-  70% {
-    box-shadow: 0 0 0 7px transparent;
+  0% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--layer-3) 70%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--layer-2) 50%, transparent);
   }
   100% {
-    box-shadow: 0 0 0 0 transparent;
+    box-shadow:
+      0 0 0 6px transparent,
+      0 0 0 11px transparent;
   }
 }
 
-/* The Helper's orb on an empty chat: a breathing, turning aurora. */
-.aura-orb {
-  width: 88px;
-  height: 88px;
-  border-radius: 9999px;
-  background: conic-gradient(
-    from 0deg,
-    var(--aurora-1),
-    var(--aurora-2),
-    var(--aurora-3),
-    var(--aurora-1)
-  );
-  filter: blur(0.5px) saturate(1.2);
-  box-shadow:
-    0 0 60px -6px var(--glow),
-    inset 0 0 24px rgb(255 255 255 / 0.45);
-  animation:
-    orb-turn 9s linear infinite,
-    orb-breathe 4.5s ease-in-out infinite;
-  position: relative;
-}
-.aura-orb::after {
-  content: "";
-  position: absolute;
-  inset: 16%;
-  border-radius: 9999px;
-  background: radial-gradient(
-    circle at 35% 30%,
-    rgb(255 255 255 / 0.95),
-    rgb(255 255 255 / 0.15) 60%,
-    transparent 70%
-  );
-}
-@keyframes orb-turn {
-  to {
-    rotate: 360deg;
-  }
-}
-@keyframes orb-breathe {
-  50% {
-    scale: 1.07;
-  }
-}
-
-.aura-orb-sm {
-  width: 26px;
-  height: 26px;
-  box-shadow: 0 0 18px -2px var(--glow);
-}
-
-/* A decision that waits for the user: an aurora rim. */
+/* A decision that waits for the user: a rim in the mark's blues. */
 .approval-pending {
   border-color: transparent;
   background:
     linear-gradient(var(--card), var(--card)) padding-box,
-    linear-gradient(135deg, var(--aurora-1), var(--aurora-2), var(--aurora-3)) border-box;
-  box-shadow: 0 14px 40px -16px var(--glow);
+    linear-gradient(135deg, var(--layer-1), var(--layer-3), var(--layer-4)) border-box;
+  box-shadow: 0 14px 40px -18px var(--glow);
 }
 
-/* An app showing the change that waits for a "yes": a soft moving rim. */
+/* An app showing the change that waits for a "yes": a slowly pulsing rim. */
 .draft-glow::after {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--aurora-1) 55%, transparent);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--layer-3) 60%, transparent);
   animation: draft-pulse 2.4s ease-in-out infinite;
 }
 @keyframes draft-pulse {
   50% {
-    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--aurora-3) 55%, transparent);
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--layer-4) 30%, transparent);
   }
 }
 
@@ -352,7 +281,7 @@
 .bubble-own {
   background: var(--bubble-own);
   color: var(--bubble-own-foreground);
-  box-shadow: 0 6px 18px -8px var(--glow);
+  box-shadow: 0 6px 18px -10px var(--glow);
 }
 
 /* Small monospaced uppercase labels: RUN, APPROVAL, author lines. */

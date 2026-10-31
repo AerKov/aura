@@ -1,8 +1,9 @@
 import type { Message } from "@aura/shared";
 import { Sparkles } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { AuraLogo } from "@/components/logo";
 import { useT } from "@/features/localization/i18n";
-import { loadMessages, reportError } from "./actions";
+import { loadMembers, loadMessages, reportError } from "./actions";
 import { Composer } from "./composer";
 import { MessageBubble } from "./message-bubble";
 import { isGrouped } from "./message-utils";
@@ -33,6 +34,8 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
 
   useEffect(() => {
     if (!getState().messages[chatId]) void loadMessages(chatId).catch(reportError);
+    // Who is in the chat decides who answers a plain message (ADR 0014, 0042).
+    if (!getState().members[chatId]) void loadMembers(chatId).catch(reportError);
   }, [chatId]);
 
   const scroller = useRef<HTMLDivElement>(null);
@@ -79,7 +82,7 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
         <div className="mx-auto max-w-[760px] pb-4">
           {messages.length === 0 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 mx-auto mt-[14vh] max-w-sm text-center duration-700">
-              <div className="aura-orb mx-auto mb-6" />
+              <AuraLogo alive className="mx-auto mb-6 size-24 shadow-lg" />
               <h2 className="mb-2 text-2xl">
                 {direct ? t("What shall we build?") : t("Say what this app should do")}
               </h2>

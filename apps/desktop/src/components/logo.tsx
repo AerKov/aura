@@ -4,9 +4,13 @@ import { cn } from "@/lib/utils";
  * Aura's mark (ADR 0010): an aura drawn as layers, from a deep blue edge to a light core, like
  * levels of abstraction around one idea. Source: docs/assets/logo.svg.
  */
-export function AuraGlyph({ className }: { className?: string }) {
+export function AuraGlyph({ className, alive = false }: { className?: string; alive?: boolean }) {
   return (
-    <svg viewBox="6 9 88 88" aria-hidden className={cn("size-full", className)}>
+    <svg
+      viewBox="6 9 88 88"
+      aria-hidden
+      className={cn("block size-full overflow-visible", alive && "aura-alive", className)}
+    >
       <path
         d="M83.50 54.00 L83.79 56.21 L83.92 58.47 L83.88 60.74 L83.66 63.02 L83.25 65.29 L82.65 67.52 L81.85 69.71 L80.87 71.82 L79.70 73.84 L78.35 75.75 L76.83 77.53 L75.17 79.17 L73.38 80.66 L71.48 81.99 L69.48 83.15 L67.40 84.14 L65.27 84.97 L63.11 85.64 L60.91 86.15 L58.71 86.51 L56.51 86.74 L54.32 86.83 L52.15 86.80 L50.00 86.66 L47.88 86.41 L45.78 86.06 L43.71 85.61 L41.68 85.06 L39.68 84.41 L37.71 83.67 L35.78 82.83 L33.90 81.88 L32.07 80.83 L30.30 79.68 L28.59 78.41 L26.96 77.04 L25.41 75.56 L23.96 73.98 L22.62 72.29 L21.39 70.52 L20.29 68.65 L19.32 66.71 L18.49 64.70 L17.80 62.63 L17.25 60.51 L16.86 58.36 L16.61 56.19 L16.50 54.00 L16.54 51.81 L16.72 49.62 L17.03 47.44 L17.49 45.29 L18.07 43.16 L18.78 41.07 L19.62 39.02 L20.58 37.02 L21.67 35.07 L22.88 33.19 L24.21 31.39 L25.66 29.66 L27.23 28.04 L28.92 26.52 L30.71 25.12 L32.60 23.86 L34.58 22.74 L36.65 21.77 L38.79 20.97 L40.98 20.34 L43.22 19.89 L45.48 19.63 L47.74 19.56 L50.00 19.66 L52.23 19.95 L54.42 20.41 L56.56 21.03 L58.63 21.80 L60.62 22.71 L62.53 23.74 L64.36 24.88 L66.10 26.12 L67.75 27.44 L69.31 28.83 L70.80 30.29 L72.20 31.80 L73.54 33.36 L74.81 34.96 L76.01 36.62 L77.16 38.32 L78.24 40.08 L79.25 41.88 L80.19 43.75 L81.06 45.68 L81.83 47.67 L82.51 49.72 L83.07 51.83 Z"
         fill="#0d3b7c"
@@ -31,16 +35,29 @@ export function AuraGlyph({ className }: { className?: string }) {
   );
 }
 
-/** The app icon in the UI: the layers on an ink tile. */
-export function AuraLogo({ className }: { className?: string }) {
+/**
+ * The app icon in the UI: the layers on an ink tile, as in docs/assets/icon.png. `alive`: the
+ * layers breathe (an empty chat, waking up); `wake`: they move on hover.
+ */
+export function AuraLogo({
+  className,
+  alive = false,
+  wake = false,
+}: {
+  className?: string;
+  alive?: boolean;
+  wake?: boolean;
+}) {
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-[26%] bg-[#121720] p-[6%] ring-1 ring-white/10",
+        "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-[26%] bg-[var(--ink)] ring-1 ring-white/10",
+        wake && "aura-wake",
         className,
       )}
     >
-      <AuraGlyph />
+      {/* Sized in the tile: a padding in % would follow the parent's width. */}
+      <AuraGlyph alive={alive} className="!size-[86%]" />
     </span>
   );
 }

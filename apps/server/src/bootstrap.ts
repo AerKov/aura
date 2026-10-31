@@ -1,9 +1,9 @@
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { rmSync } from "node:fs";
 import { join } from "node:path";
 import type { Surreal } from "surrealdb";
 import { SERVER_VERSION } from "./config";
 import { openAppDatabase } from "./db/client";
-import { commitAll, ensureRepo } from "./lib/git";
+import { ensureRepo } from "./lib/git";
 import type { EngineSelector } from "./modules/ai/engines/registry";
 import { AppActions } from "./modules/apps/apps/actions";
 import { AppDataService } from "./modules/apps/apps/data";
@@ -38,15 +38,6 @@ export const DATA_GITIGNORE = "state/\nprojects/\nbackups/\n";
 
 export async function prepareDataDir(dataDir: string): Promise<void> {
   await ensureRepo(dataDir, DATA_GITIGNORE);
-  // Data dirs made by older versions get the newer entries.
-  const file = join(dataDir, ".gitignore");
-  const current = existsSync(file) ? readFileSync(file, "utf8") : "";
-  const have = new Set(current.split("\n").map((l) => l.trim()));
-  const missing = DATA_GITIGNORE.split("\n").filter((l) => l && !have.has(l));
-  if (missing.length === 0) return;
-  const sep = current === "" || current.endsWith("\n") ? "" : "\n";
-  writeFileSync(file, `${current}${sep}${missing.join("\n")}\n`);
-  await commitAll(dataDir, "chore: keep backups out of git");
 }
 
 /** Wires the domain services shared by the server entry point and tests. */
@@ -177,11 +168,6 @@ export async function createServices(deps: {
     dataDir: deps.dataDir,
     hub: deps.hub,
   });
-  // Panel extensions become apps with a chat (ADR 0039), once.
-  if (appService.legacyExtensions().length > 0) {
-    const moved = await appService.adoptExtensions();
-    if (moved.length > 0) deps.hub.publish({ type: "customize.updated" });
-  }
   const customize = { appearance, extensions };
   const scratchDir = join(deps.dataDir, "state", "scratch");
   const runtime = new AgentRuntime({

@@ -1,8 +1,8 @@
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { errorMessage, log } from "./log";
 
-/** Names like `SERVICE_API_KEY`: what agents' and apps' secrets are called. */
+/** Names like `SERVICE_API_KEY`: what apps' secrets are called. */
 const SECRET_NAME = /^[A-Z_][A-Z0-9_]{0,63}$/;
 const VERSION = 2;
 
@@ -10,14 +10,12 @@ interface VaultData {
   version: typeof VERSION;
   /** API keys of engines, by engine id. */
   engines: Record<string, string>;
-  /** Values for `${secret:NAME}` that agents and tool servers use. */
-  agents: Record<string, string>;
   /** Each app's own secrets, by app id. */
   apps: Record<string, Record<string, string>>;
 }
 
 function empty(): VaultData {
-  return { version: VERSION, engines: {}, agents: {}, apps: {} };
+  return { version: VERSION, engines: {}, apps: {} };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -44,12 +42,9 @@ function readJson(file: string): unknown {
 
 /**
  * The one secret store (ADR 0039): `<dataDir>/state/secrets.json`, readable only by the user
- * (0600), outside git and outside restore points. Engines' keys, agents' secrets and apps' secrets
- * are kept apart in it, so an app never gets an agent's value or another app's. Values leave the
- * server only into the requests and processes that use them; the API returns names only.
- *
- * Before it there were three files (`secrets.json` with engine keys, `integration-secrets.json`,
- * `app-secrets.json`); they are read once, moved in, and removed.
+ * (0600), outside git. Engines' keys and each app's secrets are kept apart in it, so an app never
+ * gets another app's value. Values leave the server only into the requests that use them; the API
+ * returns names only.
  *
  * One vault per data directory, shared by every service that holds secrets, so a write by one is
  * never lost to another's stale copy.
@@ -82,43 +77,13 @@ export class SecretVault {
     if (this.data) return this.data;
     const raw = readJson(this.file);
     const data = empty();
-    let migrated = false;
-    if (isRecord(raw) && raw.version === VERSION) {
+    if (isRecord(raw)) {
       data.engines = strings(raw.engines);
-      data.agents = strings(raw.agents, SECRET_NAME);
       if (isRecord(raw.apps))
         for (const [app, own] of Object.entries(raw.apps))
           data.apps[app] = strings(own, SECRET_NAME);
-    } else if (isRecord(raw)) {
-      // The old secrets.json: engine keys at the top level.
-      data.engines = strings(raw);
-      migrated = true;
-    }
-    const legacyAgents = join(this.dir, "integration-secrets.json");
-    const legacyApps = join(this.dir, "app-secrets.json");
-    const agents = readJson(legacyAgents);
-    if (agents !== undefined) {
-      data.agents = { ...strings(agents, SECRET_NAME), ...data.agents };
-      migrated = true;
-    }
-    const apps = readJson(legacyApps);
-    if (apps !== undefined) {
-      if (isRecord(apps))
-        for (const [app, own] of Object.entries(apps))
-          data.apps[app] = { ...strings(own, SECRET_NAME), ...(data.apps[app] ?? {}) };
-      migrated = true;
     }
     this.data = data;
-    if (migrated) {
-      this.save(data);
-      rmSync(legacyAgents, { force: true });
-      rmSync(legacyApps, { force: true });
-      log.info("secrets moved into one store", {
-        engines: Object.keys(data.engines).length,
-        agents: Object.keys(data.agents).length,
-        apps: Object.keys(data.apps).length,
-      });
-    }
     return data;
   }
 
@@ -143,21 +108,6 @@ export class SecretVault {
     this.update((d) => {
       if (value) d.engines[engine] = value;
       else delete d.engines[engine];
-    });
-  }
-
-  agentSecret(name: string): string | null {
-    return this.load().agents[name] ?? null;
-  }
-
-  agentSecretNames(): string[] {
-    return Object.keys(this.load().agents).sort();
-  }
-
-  setAgentSecret(name: string, value: string | null): void {
-    this.update((d) => {
-      if (value === null) delete d.agents[name];
-      else d.agents[name] = value;
     });
   }
 
@@ -188,11 +138,6 @@ export class SecretVault {
     this.update((d) => {
       delete d.apps[app];
     });
-  }
-
-  /** Values of agents and apps, to redact them from what people and models see. */
-  agentValues(): string[] {
-    return Object.values(this.load().agents);
   }
 
   appValues(): string[] {

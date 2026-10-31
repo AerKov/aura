@@ -1,5 +1,5 @@
 /// <reference path="../../../providers/vendor-files.d.ts" />
-import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
+import { cpSync, existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { APP_ID_PATTERN, type Chat, MAX_APP_DESCRIPTION, slugify } from "@aura/shared";
 import { commitAll, git } from "../../../lib/git";
@@ -182,19 +182,6 @@ export class AppService {
   }
 
   /**
-   * Panel extensions still in `extensions/<id>` (ADR 0039): before it they were a kind of their
-   * own, without a chat. Each becomes an app.
-   */
-  legacyExtensions(): string[] {
-    const root = join(this.deps.dataDir, "extensions");
-    if (!existsSync(root)) return [];
-    return readdirSync(root, { withFileTypes: true })
-      .filter((e) => e.isDirectory() && !this.isApp(e.name))
-      .map((e) => e.name)
-      .sort();
-  }
-
-  /**
    * Makes a panel extension an app (ADR 0039): its files move into `projects/<id>` (a git repo,
    * like every app), it gets a chat with @builder, and keeps its id, so its data, its enabled state
    * and the permissions the user granted stay as they were.
@@ -230,20 +217,6 @@ export class AppService {
       `agents(@${BUILDER_HANDLE}): add`,
       ORCHESTRATOR_HANDLE,
     ).catch((error: unknown) => log.warn("builder commit failed", { error: errorMessage(error) }));
-  }
-
-  /** Every legacy extension becomes an app; one that cannot is logged and left as it is. */
-  async adoptExtensions(): Promise<string[]> {
-    const moved: string[] = [];
-    for (const id of this.legacyExtensions()) {
-      try {
-        await this.adoptExtension(id);
-        moved.push(id);
-      } catch (error) {
-        log.warn("extension not moved into an app", { id, error: errorMessage(error) });
-      }
-    }
-    return moved;
   }
 
   async afterRun(

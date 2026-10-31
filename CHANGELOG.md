@@ -12,8 +12,9 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
   skills, memory and summaries, whole-Aura restore points, the window tiles and the bar.
 - **One simple screen.** A sidebar with the Helper, your apps, **New app** and Settings; beside it
   the Helper's chat, an app with its chat, or Settings (AI and History). Aura opens where you left it.
-- **A new look.** Rounded corners, Geist, glass over a slowly drifting aurora, gradient bubbles and
-  buttons, a breathing orb on an empty chat and soft spring animations. Every bit is a theme
+- **A new look from Aura's mark.** An ink sidebar (it folds to icons), the mark's blues for buttons
+  and bubbles, a faint aura of contour lines that breathes behind everything, the mark itself
+  alive on an empty chat, rounded corners and soft spring animations. Every bit is a theme
   variable the Helper can change; reduced motion is respected.
 - **In an app's chat a plain message goes to @builder**; no need to mention it.
 

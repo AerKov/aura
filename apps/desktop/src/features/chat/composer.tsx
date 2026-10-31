@@ -355,14 +355,13 @@ export function Composer({
   );
 }
 
-/** Who will answer (ADR 0014), by name: the mentioned helpers, the one replied to, or the Helper. */
+/** Who will answer (ADR 0014, 0042), by name: the mentioned helpers, the one replied to, the Helper or the chat's only helper. */
 function answerersOf(
-  { handles, via }: ReturnType<typeof addresseesOf>,
+  { handles }: ReturnType<typeof addresseesOf>,
   names: Record<string, AgentInfo>,
   t: (text: string) => string,
 ): string {
   const name = (h: string) => agentName(h, names[h]?.name, t);
   if (handles.length === 0) return t("nobody: call a helper with @");
-  if (via === "routed") return name(ORCHESTRATOR);
   return handles.map(name).join(", ");
 }

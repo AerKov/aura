@@ -1,83 +1,87 @@
 /*
- * Aura's default look (ADR 0041, ADR 0042). Aura itself has no look: this file is copied to the
- * user data folder as themes/default/theme.css on the first start, and the Helper changes it there
- * like any other theme. Every colour, font, corner and motion is a variable; `.dark` holds the
- * dark-mode values.
+ * Aura's default look (ADR 0041, ADR 0042), drawn from its mark: layers of an aura from a deep blue
+ * edge to a light core, on an ink tile. Aura itself has no look: this file is copied to the user
+ * data folder as themes/default/theme.css on the first start, and the Helper changes it there like
+ * any other theme. Every colour, font, corner and motion is a variable; `.dark` holds the dark-mode
+ * values.
  */
 :root {
-  --radius: 16px;
+  --radius: 14px;
   /* Chips and small buttons; a square theme sets it to var(--radius) or 0. */
   --radius-pill: 9999px;
   --font-body: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-code: "Geist Mono Variable", ui-monospace, monospace;
-  --background: #f6f6fb;
-  --foreground: #16151f;
+  /* The mark: its ink tile and its five layers, from the edge to the core. */
+  --ink: #121720;
+  --layer-1: #0d3b7c;
+  --layer-2: #005fc8;
+  --layer-3: #188cf0;
+  --layer-4: #6abfff;
+  --layer-5: #e6f4ff;
+  --background: #f3f6fa;
+  --foreground: #121720;
   --card: #ffffff;
-  --card-foreground: #16151f;
+  --card-foreground: #121720;
   --popover: #ffffff;
-  --popover-foreground: #16151f;
-  --primary: #6c5ce7;
-  --primary-hover: #5a49d8;
+  --popover-foreground: #121720;
+  --primary: #005fc8;
+  --primary-hover: #0d4fa6;
   --primary-foreground: #ffffff;
-  --secondary: #ededf5;
-  --secondary-foreground: #26243a;
-  --muted: #efeff6;
-  --muted-foreground: #6b6a80;
-  --accent: #ece9ff;
-  --accent-foreground: #3d2fb3;
-  --destructive: oklch(0.58 0.2 25);
+  --secondary: #e8eef6;
+  --secondary-foreground: #1b2533;
+  --muted: #edf1f6;
+  --muted-foreground: #5d6878;
+  --accent: #e6f4ff;
+  --accent-foreground: #0d3b7c;
+  --destructive: oklch(0.56 0.19 25);
   --warning: oklch(0.72 0.15 70);
   --warning-text: oklch(0.52 0.12 65);
-  --success: oklch(0.64 0.15 155);
-  --border: color-mix(in srgb, #16151f 9%, transparent);
-  --input: color-mix(in srgb, #16151f 13%, transparent);
+  --success: oklch(0.62 0.14 155);
+  --border: color-mix(in srgb, #121720 10%, transparent);
+  --input: color-mix(in srgb, #121720 14%, transparent);
   --input-bg: #ffffff;
-  --ring: #8b7cf6;
-  --signal: #6c5ce7;
-  --signal-text: #5a49d8;
-  /* The aurora: the three colours of Aura's glow, gradients and the Helper's orb. */
-  --aurora-1: #7c6cff;
-  --aurora-2: #22d3ee;
-  --aurora-3: #f472b6;
-  --glow: color-mix(in srgb, var(--aurora-1) 22%, transparent);
-  --shadow-sm: 0 1px 2px rgb(22 21 31 / 0.06), 0 1px 1px rgb(22 21 31 / 0.04);
-  --shadow-md: 0 4px 14px -2px rgb(22 21 31 / 0.08), 0 2px 4px rgb(22 21 31 / 0.04);
-  --shadow-lg: 0 24px 60px -12px rgb(22 21 31 / 0.18), 0 8px 20px -8px rgb(22 21 31 / 0.08);
+  --ring: #188cf0;
+  --signal: #188cf0;
+  --signal-text: #005fc8;
+  --glow: color-mix(in srgb, var(--layer-3) 35%, transparent);
+  --shadow-sm: 0 1px 2px rgb(18 23 32 / 0.06), 0 1px 1px rgb(18 23 32 / 0.04);
+  --shadow-md: 0 4px 14px -2px rgb(18 23 32 / 0.08), 0 2px 4px rgb(18 23 32 / 0.04);
+  --shadow-lg: 0 24px 60px -12px rgb(18 23 32 / 0.22), 0 8px 20px -8px rgb(18 23 32 / 0.1);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dark {
-  --background: #0c0b14;
-  --foreground: #ecebf5;
-  --card: #15141f;
-  --card-foreground: #ecebf5;
-  --popover: #1a1926;
-  --popover-foreground: #ecebf5;
-  --primary: #9d8fff;
-  --primary-hover: #b7acff;
-  --primary-foreground: #120f2b;
-  --secondary: #201f2e;
-  --secondary-foreground: #ecebf5;
-  --muted: #1c1b29;
-  --muted-foreground: #9998b0;
-  --accent: #262046;
-  --accent-foreground: #d6d0ff;
+  --background: #0b0f16;
+  --foreground: #e6f4ff;
+  --card: #121720;
+  --card-foreground: #e6f4ff;
+  --popover: #161c27;
+  --popover-foreground: #e6f4ff;
+  --primary: #6abfff;
+  --primary-hover: #9fd5ff;
+  --primary-foreground: #0b1a30;
+  --secondary: #1a2230;
+  --secondary-foreground: #e6f4ff;
+  --muted: #161d29;
+  --muted-foreground: #93a3b8;
+  --accent: #0d3b7c;
+  --accent-foreground: #e6f4ff;
   --destructive: oklch(0.7 0.17 25);
   --warning: oklch(0.8 0.13 75);
   --warning-text: oklch(0.84 0.12 78);
   --success: oklch(0.76 0.14 155);
-  --border: color-mix(in srgb, #ecebf5 9%, transparent);
-  --input: color-mix(in srgb, #ecebf5 14%, transparent);
-  --input-bg: #15141f;
-  --ring: #9d8fff;
-  --signal: #9d8fff;
-  --signal-text: #b7acff;
-  --glow: color-mix(in srgb, var(--aurora-1) 30%, transparent);
-  --shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.04), 0 1px 2px rgb(0 0 0 / 0.4);
-  --shadow-md: 0 0 0 1px rgb(255 255 255 / 0.05), 0 8px 24px -4px rgb(0 0 0 / 0.5);
-  --shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.06), 0 30px 70px -12px rgb(0 0 0 / 0.7);
+  --border: color-mix(in srgb, #e6f4ff 9%, transparent);
+  --input: color-mix(in srgb, #e6f4ff 14%, transparent);
+  --input-bg: #121720;
+  --ring: #6abfff;
+  --signal: #6abfff;
+  --signal-text: #9fd5ff;
+  --glow: color-mix(in srgb, var(--layer-3) 45%, transparent);
+  --shadow-sm: 0 0 0 1px rgb(230 244 255 / 0.04), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 0 0 1px rgb(230 244 255 / 0.05), 0 8px 24px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 0 0 1px rgb(230 244 255 / 0.06), 0 30px 70px -12px rgb(0 0 0 / 0.7);
 }
 
 /*
@@ -85,18 +89,15 @@
  * the colours above; set one to change only that part, e.g. `--sidebar-bg: #1f3a2b;`.
  */
 :root {
-  --sidebar-bg: color-mix(in srgb, var(--card) 62%, transparent);
-  --sidebar-fg: var(--foreground);
-  --sidebar-active-bg: color-mix(in srgb, var(--primary) 12%, transparent);
-  --sidebar-active-fg: var(--primary);
+  /* The sidebar is the mark's ink tile, in light and dark mode alike. */
+  --sidebar-bg: var(--ink);
+  --sidebar-fg: #c9dcf0;
+  --sidebar-active-bg: color-mix(in srgb, var(--layer-2) 42%, transparent);
+  --sidebar-active-fg: #ffffff;
   --app-bg: var(--card);
   --app-border: var(--border);
   --chat-bg: transparent;
-  --bubble-own: linear-gradient(
-    135deg,
-    var(--aurora-1),
-    color-mix(in oklch, var(--aurora-1), var(--aurora-3) 45%)
-  );
+  --bubble-own: linear-gradient(135deg, var(--layer-2), var(--layer-3));
   --bubble-own-foreground: #ffffff;
   --menu-bg: var(--popover);
   --menu-fg: var(--popover-foreground);

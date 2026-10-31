@@ -51,5 +51,4 @@ history in a local database. Uninstalling Aura keeps this folder.
 - Windows has no command sandbox yet: helpers' commands run with your user's permissions there.
 - No automatic updates yet: download new versions from Releases.
 - No phone client in this version.
-- Data from this alpha should carry over; copy `~/.aura` before updating. Topics, skills, memory,
-  alerts and schedules from earlier versions are no longer shown.
+- Data from earlier alphas is not converted: start with a fresh `~/.aura`.

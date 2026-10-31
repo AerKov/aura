@@ -369,8 +369,9 @@ The default look as the user's theme file, named parts with their own variables 
 Aura narrows to its idea: the Helper's chat, the user's apps with @builder beside them, approvals
 and versions, the AI, the theme and the language. ACP engines, MCP, the phone, the catalog, alerts
 and schedules, groups, teams, tasks, topics, skills, memory, summaries, restore points, the tiling
-window manager and the bar are gone. A new default look: glass over a drifting aurora, rounded
-corners, gradients and spring animations.
+window manager and the bar are gone. A new default look drawn from the mark: an ink sidebar
+that folds, the mark's blues, a faint breathing aura behind the panels, the living mark on empty
+chats, rounded corners and spring animations.
 
 **Phase 40: First run** (next)
 A splash while Aura starts and three first-run steps: welcome and language, the AI, the first app.

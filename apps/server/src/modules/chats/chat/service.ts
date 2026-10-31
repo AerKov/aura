@@ -9,8 +9,6 @@ import {
 import { errorMessage, log } from "../../../lib/log";
 import { type ChatRepo, DIRECT_CHAT_ID, ORCHESTRATOR } from "./repo";
 
-const LEGACY_ALERTS_CHAT = "system";
-
 import { WELCOME } from "./welcome";
 
 export type ChatErrorCode = "not_found" | "invalid" | "forbidden";
@@ -70,9 +68,6 @@ export class ChatService {
           body: WELCOME,
         });
     }
-    // The Alerts chat of earlier versions is gone with alerts (ADR 0042).
-    if (await this.repo.findChat(LEGACY_ALERTS_CHAT))
-      await this.repo.removeChat(LEGACY_ALERTS_CHAT);
     return owner;
   }
 

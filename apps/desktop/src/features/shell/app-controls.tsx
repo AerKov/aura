@@ -46,9 +46,7 @@ export function AppControls({ ext }: { ext: ExtensionInfo }) {
             onClick={() => show(true)}
             className={cn(
               "rounded-full px-3 py-1 transition-all duration-300",
-              preview
-                ? "aurora-fill text-white shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+              preview ? "aura-button shadow-sm" : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t("After the change")}

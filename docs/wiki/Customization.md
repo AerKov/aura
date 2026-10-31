@@ -12,10 +12,11 @@ first start Aura puts its default look in `themes/default/theme.css`. Ask the He
 it proposes CSS, **Try it** on the card shows it, and you approve or reject. Small tweaks can be
 snippets (`snippets/<name>.css`).
 
-The default look is glass over a slowly drifting aurora, with rounded corners, gradients and soft
-motion. Everything in it is a variable:
+The default look comes from Aura's mark: layers of an aura from a deep blue edge to a light core,
+on an ink tile. Everything in it is a variable:
 
-- **The aurora:** `--aurora-1`, `--aurora-2`, `--aurora-3` (the glow, the orb, gradients).
+- **The mark:** `--ink` (its tile, also the sidebar) and `--layer-1` … `--layer-5` (its blues, from
+  the edge to the core: buttons, bubbles, rings, the faint aura behind everything).
 - **Shape and motion:** `--radius`, `--radius-pill`, `--shadow-sm/md/lg`, `--ease`, `--spring`.
 - **Parts:** the sidebar (`--sidebar-bg`, `--sidebar-fg`, `--sidebar-active-bg`), the card an app
   runs on (`--app-bg`, `--app-border`), a conversation (`--chat-bg`), your bubbles (`--bubble-own`,

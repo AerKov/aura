@@ -45,27 +45,4 @@ export class AppSecrets {
   drop(app: string): void {
     this.vault.dropApp(app);
   }
-
-  /**
-   * Before ADR 0030 apps used the shared secrets they were granted. Copies each granted value into
-   * the app's own store once, so nothing stops working; afterwards the stores are separate.
-   */
-  migrate(
-    grants: { app: string; secrets: string[] }[],
-    shared: { get(name: string): string | null },
-  ): number {
-    const copies: [string, string, string][] = [];
-    for (const { app, secrets } of grants) {
-      for (const name of secrets) {
-        if (this.get(app, name) !== null) continue;
-        const value = shared.get(name);
-        if (value !== null) copies.push([app, name, value]);
-      }
-    }
-    if (copies.length > 0) {
-      this.vault.setAppSecrets(copies);
-      log.info("copied granted secrets into apps' own stores", { copied: copies.length });
-    }
-    return copies.length;
-  }
 }

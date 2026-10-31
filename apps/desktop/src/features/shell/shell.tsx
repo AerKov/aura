@@ -13,7 +13,7 @@ import { openHelper, useApps } from "./view";
 
 /**
  * The shell (ADR 0042): the sidebar, and beside it one thing at a time: the Helper's chat, an app
- * with its chat, or Settings. Behind everything a slow aurora glows.
+ * with its chat, or Settings, over the faint contours of an aura.
  */
 export function Shell() {
   const view = useChatStore((s) => s.view);
@@ -32,7 +32,7 @@ export function Shell() {
         {view.kind === "helper" && <HelperScreen />}
         {view.kind === "app" && <AppScreen id={view.id} />}
         {view.kind === "settings" && (
-          <div className="glass-strong animate-in fade-in slide-in-from-bottom-2 flex min-h-0 min-w-0 flex-1 overflow-hidden rounded-[calc(var(--radius)*1.25)] duration-500">
+          <div className="bg-card animate-in fade-in slide-in-from-bottom-2 flex min-h-0 min-w-0 flex-1 overflow-hidden rounded-[calc(var(--radius)*1.25)] border shadow-md duration-500">
             <SettingsView tab={view.tab} />
           </div>
         )}
@@ -53,7 +53,7 @@ function HelperScreen() {
   if (!chatId)
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
-        <AuraLogo className="size-12 animate-pulse" />
+        <AuraLogo alive className="size-14" />
         <p className="text-muted-foreground text-sm">{t("Waking up…")}</p>
       </div>
     );

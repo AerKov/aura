@@ -47,10 +47,6 @@ DEFINE FIELD OVERWRITE created_at ON message TYPE datetime DEFAULT time::now();
 DEFINE FIELD OVERWRITE updated_at ON message TYPE datetime DEFAULT time::now();
 DEFINE INDEX OVERWRITE message_chat ON message FIELDS chat;
 
--- Chat topics are gone (ADR 0042).
-REMOVE INDEX IF EXISTS message_chat_topic ON message;
-REMOVE FIELD IF EXISTS topic ON message;
-REMOVE TABLE IF EXISTS topic;
 
 DEFINE TABLE OVERWRITE project SCHEMAFULL;
 DEFINE FIELD OVERWRITE name ON project TYPE string;
