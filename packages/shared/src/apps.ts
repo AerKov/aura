@@ -74,3 +74,15 @@ export function matchesSearch(
     t.toLowerCase().includes(q),
   );
 }
+
+/**
+ * Built-in apps an app of the user's can take the place of (ADR 0041), like a GNU utility a user
+ * replaces with their own: its manifest says `"replaces": "chats"` and it opens wherever Chats
+ * would. The built-in one comes back when the app is off, removed or in safe mode.
+ */
+export const REPLACEABLE_APPS = ["chats", "signals", "settings"] as const;
+export type ReplaceableApp = (typeof REPLACEABLE_APPS)[number];
+
+export function isReplaceableApp(value: unknown): value is ReplaceableApp {
+  return typeof value === "string" && (REPLACEABLE_APPS as readonly string[]).includes(value);
+}

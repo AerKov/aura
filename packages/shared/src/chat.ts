@@ -1,3 +1,4 @@
+import type { ReplaceableApp } from "./apps";
 /**
  * Chat domain types shared by server and client (docs/SPEC.md sections 2, 5 and 6).
  * Ids are the record keys without the table prefix.
@@ -432,6 +433,8 @@ export interface ExtensionInfo {
   secrets: string[];
   /** Set for an app built in Aura (ADR 0024): its chat, live version and unapproved changes. */
   app: { chatId: string; revision: string; draft: boolean } | null;
+  /** The built-in app it takes the place of (ADR 0041), e.g. "chats". */
+  replaces: ReplaceableApp | null;
   enabled: boolean;
   /** Why it cannot run, e.g. an invalid manifest or a newer minAppVersion. */
   problem: string | null;

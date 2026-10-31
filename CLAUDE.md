@@ -80,7 +80,9 @@ docs/
 1. **Local-first.** The server and SurrealDB run on the user's machine. Mobile is a thin client that
    connects to the user's desktop server; it cannot run the sidecar.
 2. **The core and its apps (ADR 0027, 0040).** Everything built in (chats, helpers, skills,
-   memory, automations, alerts) is always on; there are no switches and no advanced mode.
+   memory, automations, alerts) is always on; there are no switches and no advanced mode. Aura
+   has no look of its own (a theme file of the user's) and any built-in app can be replaced by an
+   app of the user's (ADR 0041).
    **Every app has a chat.** Only three
    chat kinds: direct (user + orchestrator), group (a project, an app, or one the user makes), system (alerts). Chats
    have topics, one level, like Telegram forum topics. No workspaces, channels or nested threads.

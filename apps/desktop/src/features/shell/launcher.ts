@@ -15,7 +15,7 @@ import { useMemo } from "react";
 import { setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
 import { extensionIcon } from "@/lib/extension-icons";
-import { BUILTIN_ICONS, useExtensionApps } from "./apps";
+import { BUILTIN_ICONS, replacementOf, useExtensionApps } from "./apps";
 
 /** One app in the launcher: one the user made or installed, or a built-in one (ADR 0034). */
 export interface Entry {
@@ -58,7 +58,8 @@ export function useLauncher(query = ""): { group: string; entries: Entry[] }[] {
         extension: ext,
         open: visible.has(`ext:${ext.id}`),
       })),
-      ...BUILTIN_APPS.map((b) => ({
+      // A built-in app the user replaced is not listed; their app is (ADR 0041).
+      ...BUILTIN_APPS.filter((b) => !replacementOf(b.key, extensions)).map((b) => ({
         key: b.key,
         app: b.app,
         name: t(b.name),

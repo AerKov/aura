@@ -7,13 +7,25 @@ Aura is customized by talking to the orchestrator, in three levels. Each change 
 
 > Make the chat background a little warmer and the accent green.
 
-The orchestrator proposes CSS. Press **Try it** on the card to preview, then approve or reject.
-Themes live in `themes/<name>/theme.css`, small tweaks in `snippets/<name>.css`. The **Look**
-screen (palette icon) switches themes and snippets on and off.
+Aura has no look of its own (ADR 0041): everything you see comes from a theme file of yours. On
+the first start Aura puts its default look in `themes/default/theme.css`. Ask the Helper for any
+change (_"make the bar green"_, _"round the corners"_, _"bigger text in chats"_): it proposes CSS,
+**Try it** on the card shows it, and you approve or reject. Small tweaks can be snippets
+(`snippets/<name>.css`).
 
-Themes change CSS variables such as `--background`, `--foreground`, `--primary` (the accent),
-`--signal`, `--sidebar`, `--rail`, `--chat-bg`, `--grid-dot`, `--bubble-own`, `--bubble-other` and
-`--radius`. Remote fonts and images are not allowed in theme CSS.
+Each part of the screen has its own colours: the bar (`--bar-bg`, `--bar-fg`, `--bar-active-bg`),
+My apps (`--menu-bg`), windows (`--tile-bg`, `--tile-border`), their title bars (`--tile-title-bg`),
+the chat list (`--chat-list-bg`), a conversation (`--chat-bg`), your bubbles (`--bubble-own`) and the
+message box. They start from the base colours (`--background`, `--foreground`, `--primary`,
+`--signal`…) and `--radius`. Remote fonts and images are not allowed in theme CSS.
+
+## Your own version of a built-in app
+
+Aura is like Linux and its apps like the GNU tools: any of them can be yours. Ask the Helper for
+your own Chats, Alerts or Settings (_"make me my own chat list with big avatars"_): it makes an app
+that takes their place (`"replaces": "chats"` in its manifest) and opens wherever the built-in one
+would. You change its code in its chat like any app. Turn it off or remove it, or start in safe
+mode, and the built-in one is back.
 
 ## Tools: MCP servers
 
@@ -66,13 +78,12 @@ history.
 
 ## Navigation
 
-The **Navigation** list in Look sets the order of the icons on the left and hides the
-ones you do not use (Chats and Look always stay). Items after Look sit at the bottom. You
-can also ask the orchestrator ("move the tracker app to the top, hide Memory"). Extensions pick
+Ask the Helper to order the bar's icons or hide the ones you do not use (_"move the tracker app to
+the top"_); Chats and Settings always stay. Extensions pick
 their icon from Aura's set.
 
 ## Safe mode
 
 If a customization breaks Aura, start it with `AURA_SAFE_MODE=1`, or simply restart it a few times:
 after 3 starts in a row that did not last a minute, Aura starts in safe mode by itself. Safe mode
-turns off MCP servers and extensions so you can fix things from Look.
+turns off MCP servers and apps so you can fix things by asking the Helper.

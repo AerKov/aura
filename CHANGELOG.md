@@ -5,6 +5,14 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Aura has no look of its own** (ADR 0041). The default look is a theme file of yours,
+  `themes/default/theme.css`; ask the Helper to change anything: "make the bar green" now works.
+  Every part (the bar, windows, title bars, the chat list, your bubbles, menus) has its own colour.
+- **The Look tab is gone.** Themes, windows, the bar and the language are changed by asking.
+- **Replace a built-in app.** Ask the Helper for your own Chats, Alerts or Settings: it opens in
+  their place, you change its code in its chat, and the built-in one comes back when you turn it off.
+- **Saving shows progress**: a spinner, then Saved or Not saved.
+
 ## [0.42.0] - 2026-10-30: One secret store, server by domain, extensions as apps
 
 - **Extensions are apps** (ADR 0039, stage 3). On start, Aura makes a restore point and moves every

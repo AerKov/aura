@@ -15,8 +15,8 @@ every app by **group**, each with a line on what it is for:
   _Home_…; an app without a group is under _Apps_). Ask in an app's chat to change its group or
   description.
 - **Essentials:** Chats and Alerts. **Settings:** one app with tabs: AI, Helpers (team, skills,
-  memory, tools and keys), Automations (reminders, alerts from your tools), Look (theme, windows,
-  bar, language) and History (restore points, uninstalled apps).
+  memory, tools and keys), Automations (reminders, alerts from your tools) and History (restore points,
+  uninstalled apps). How Aura looks, its windows, bar and language are changed by asking the Helper.
 - **Find an app or a setting:** type to filter by name, description or group; Enter opens the
   first match, Esc closes the menu.
 - **New app:** a name and what it should do, which a helper builds in its chat.
@@ -47,7 +47,7 @@ change it back with a click.
 
 ## Windows and keys
 
-**Look → Windows** sets how it looks: the **Airy** preset (gaps, round corners, a
+Ask the Helper how windows should look: the **Airy** preset (gaps, round corners, a
 coloured border on the focused tile, thin title bars) or **Compact** (no gaps, square, full title bars),
 then gaps, corners, borders and title bars one by one (**Thin** and **Hidden** show a tile's buttons
 when you point at it). **Bar** puts the bar on the left, right, top or bottom. The bar ends with the
@@ -70,7 +70,7 @@ the orchestrator: _"make the windows compact with the bar on top"_.
 
 ## Your own bar
 
-**Look → Windows → Bar** chooses the bar:
+Ask the Helper which bar you want:
 
 - **Built-in**: Aura's own bar.
 - **Your own (code)**: the bar becomes an app you can change completely: other widgets, another
@@ -81,9 +81,9 @@ the orchestrator: _"make the windows compact with the bar on top"_.
 - **Off**: no bar. Use Home (Mod+H) and the keyboard. Phones keep their tab bar.
 
 If your bar fails (an error, or it does not start), Aura shows the built-in bar instead and
-Look says why; fix it or restore a version, then **try again**.
+the Helper says why; fix it or restore a version, then try again.
 
-**Bar thickness** (Look → Windows) sets how thick the bar is, 24–96 px (the built-in
+The bar's thickness (ask the Helper) is 24–96 px (the built-in
 bar needs at least 44). Your own bar can use the same permissions as other apps: `storage` for its
 settings, `net` with the hosts it needs (a weather widget, for example); see the README in its
 folder. Whatever its CSS does, the bar stays inside its strip.

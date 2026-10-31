@@ -2,7 +2,15 @@
 import { cpSync, existsSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { APP_ID_PATTERN, BAR_APP_ID, type Chat, MAX_APP_DESCRIPTION, slugify } from "@aura/shared";
+import {
+  APP_ID_PATTERN,
+  BAR_APP_ID,
+  type Chat,
+  isReplaceableApp,
+  MAX_APP_DESCRIPTION,
+  type ReplaceableApp,
+  slugify,
+} from "@aura/shared";
 import { commitAll, git } from "../../../lib/git";
 import { errorMessage, log } from "../../../lib/log";
 import type { ProjectInfo, ProjectService } from "../../chats/projects/service";
@@ -56,7 +64,24 @@ export const BUILDER_DEFAULT: AgentProfile = {
 const MAX_DIFF = 12_000;
 
 /** A new app's first files: an empty panel that says how to build it. */
-function scaffold(id: string, name: string, description: string): Record<string, string> {
+/** What each replaceable built-in app is called, and what a replacement usually needs. */
+const REPLACED_NAMES: Record<ReplaceableApp, string> = {
+  chats: "Chats",
+  signals: "Alerts",
+  settings: "Settings",
+};
+const REPLACED_PERMISSIONS: Record<ReplaceableApp, string> = {
+  chats: "chat.read, chat.write, agents.ask",
+  signals: "alerts.read, chat.read",
+  settings: "storage; Aura's settings are changed by asking the Helper",
+};
+
+function scaffold(
+  id: string,
+  name: string,
+  description: string,
+  replaces?: ReplaceableApp,
+): Record<string, string> {
   // The launcher shows one line; @builder refines it as the app takes shape.
   const line = description.split("\n")[0]?.trim().slice(0, MAX_APP_DESCRIPTION) ?? "";
   const manifest = {
@@ -68,6 +93,7 @@ function scaffold(id: string, name: string, description: string): Record<string,
     author: "you",
     icon: "blocks",
     ...(line ? { description: line } : {}),
+    ...(replaces ? { replaces } : {}),
   };
   return {
     // An app's data (the "files" store) is not part of its code versions.
@@ -134,6 +160,7 @@ export class AppService {
         name: String(payload.name ?? ""),
         id: typeof payload.id === "string" ? payload.id : undefined,
         description: String(payload.description ?? ""),
+        replaces: isReplaceableApp(payload.replaces) ? payload.replaces : undefined,
       });
       return `Created the app ${project.name}. It opens next to its chat.`;
     });
@@ -181,6 +208,8 @@ export class AppService {
     files?: Record<string, string>;
     /** The first message of its chat, instead of the usual one. */
     brief?: string;
+    /** The built-in app it takes the place of (ADR 0041). */
+    replaces?: ReplaceableApp;
   }): Promise<{ project: ProjectInfo; chat: Chat }> {
     const name = input.name.trim();
     if (!name || name.length > 60) throw new AppError("name is required (max 60 chars)");
@@ -195,13 +224,15 @@ export class AppService {
       name,
       slug: id,
       kind: "app",
-      files: { ...scaffold(id, name, description), ...(input.files ?? {}) },
+      files: { ...scaffold(id, name, description, input.replaces), ...(input.files ?? {}) },
       agents: [BUILDER_HANDLE],
       brief: input.brief
         ? input.brief
-        : description
-          ? `@${BUILDER_HANDLE} Build this app: ${description}`
-          : `@${BUILDER_HANDLE} This is the chat of the app "${name}". Wait for the user to say what it should do.`,
+        : input.replaces
+          ? `@${BUILDER_HANDLE} Build this app. It takes the place of Aura's built-in ${REPLACED_NAMES[input.replaces]} (manifest "replaces": "${input.replaces}"), so it opens wherever that one would; ask for the permissions it needs (${REPLACED_PERMISSIONS[input.replaces]}). ${description}`
+          : description
+            ? `@${BUILDER_HANDLE} Build this app: ${description}`
+            : `@${BUILDER_HANDLE} This is the chat of the app "${name}". Wait for the user to say what it should do.`,
       kickoff: description.length > 0,
     });
     await this.load();

@@ -1,3 +1,4 @@
+import { REPLACEABLE_APPS } from "@aura/shared";
 import { z } from "zod";
 import { errorMessage } from "../../../lib/log";
 import type { AgentTool } from "../../../providers/types";
@@ -25,6 +26,12 @@ export function appTools(
         description: z
           .string()
           .describe("what the app should do, its data and views, for the builder"),
+        replaces: z
+          .enum(REPLACEABLE_APPS)
+          .optional()
+          .describe(
+            "set when the user wants their own version of a built-in app (chats, signals = Alerts, settings): the new app opens wherever that one would; the built-in one comes back if the app is turned off or removed. Aura's own code stays as it is (read-only): the user's version is this app, which they can change like any other",
+          ),
         why: z.string(),
       },
       async handler(input) {
@@ -41,6 +48,12 @@ export function appTools(
             changes: plainChanges(input),
             preview: [
               `It gets its own chat, where @${BUILDER_HANDLE} builds it; each change waits for your approval.`,
+              ...(input.replaces
+                ? [
+                    "",
+                    `It takes the place of the built-in **${String(input.replaces)}** app. Turn it off or remove it to have the built-in one back.`,
+                  ]
+                : []),
               "",
               "**What it should do**",
               "",
@@ -53,6 +66,7 @@ export function appTools(
               name,
               id: typeof input.id === "string" ? input.id : undefined,
               description: String(input.description ?? ""),
+              ...(typeof input.replaces === "string" ? { replaces: input.replaces } : {}),
             },
           });
           return { text: "Approval requested. The app is created when the user approves." };

@@ -481,6 +481,10 @@ One Settings app with tabs (AI, Helpers, Automations, Look, History); a helper's
 tool servers and secrets in one place; no free cloud services, no advanced mode, no switches.
 Next: the server by domain and one secret store, then the data migrations of ADR 0039.
 
+**Phase 38b: No look of its own** (done, ADR 0041)
+The default look as the user's theme file, named parts with their own variables and `data-part`,
+`describe_look` for the Helper, no Look tab; built-in apps replaceable by the user's apps.
+
 **Phase 39: Splash and onboarding** (ADR 0034)
 A splash while Aura starts and three first-run steps: welcome and language, AI connection, the
 first app.

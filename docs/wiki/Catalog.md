@@ -26,8 +26,8 @@ prompts, skills, themes, CSS snippets and panel extensions.
 2. Click **Install these files**. Aura writes them into your data folder as one git commit,
    `pack(<id>): install <version>`. You can revert it like any other change
    (see [Your data](Your-Data)).
-3. New agents appear right away. Add them to a project, or mention them. Themes appear under
-   Look. Panel extensions are enabled with the permissions you saw.
+3. New agents appear right away. Add them to a project, or mention them. Themes can be switched on
+   by asking the Helper. Panel extensions become apps, enabled with the permissions you saw.
 
 You can also ask the orchestrator in your direct chat, for example: _"set me up with a dev team"_.
 It finds the matching pack and asks for approval with the same preview.

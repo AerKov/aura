@@ -48,7 +48,28 @@ export const PAGES = Object.fromEntries(
 ) as Record<PageId, { label: string; icon: LucideIcon }>;
 
 /** Opens a launcher entry: Alerts open the messenger on the system chat. */
+/** Enabled apps with a panel, from a store snapshot (no safe mode). */
+function enabledApps(customize: ReturnType<typeof getState>["customize"]): ExtensionInfo[] {
+  return customize?.safeMode.on
+    ? []
+    : (customize?.extensions ?? []).filter((e) => e.enabled && e.permissions.includes("ui.panel"));
+}
+
+/**
+ * The user's app that takes the place of a built-in one (ADR 0041), like a GNU utility replaced by
+ * the user's own: it opens wherever the built-in would. Off, removed or in safe mode, the built-in
+ * one is back.
+ */
+export function replacementOf(key: string, apps: ExtensionInfo[]): ExtensionInfo | undefined {
+  return apps.find((e) => e.replaces === key);
+}
+
 export function openEntry(key: string, app: AppRef, where: "here" | "right" = "here"): void {
+  const replacement = replacementOf(key, enabledApps(getState().customize));
+  if (replacement) {
+    openAppRef(`ext:${replacement.id}`, where);
+    return;
+  }
   if (key === "signals") {
     const system = Object.values(getState().chats).find((c) => c.kind === "system");
     if (system) {
@@ -62,15 +83,7 @@ export function openEntry(key: string, app: AppRef, where: "here" | "right" = "h
 /** Enabled extensions with a panel: the apps users install or build. */
 export function useExtensionApps(): ExtensionInfo[] {
   const customize = useChatStore((s) => s.customize);
-  return useMemo(
-    () =>
-      customize?.safeMode.on
-        ? []
-        : (customize?.extensions ?? []).filter(
-            (e) => e.enabled && e.permissions.includes("ui.panel"),
-          ),
-    [customize],
-  );
+  return useMemo(() => enabledApps(customize), [customize]);
 }
 
 export function appInfo(

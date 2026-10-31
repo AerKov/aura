@@ -7,9 +7,12 @@ import {
   type ExtensionIcon,
   type ExtensionInfo,
   type ExtensionPermission,
+  isReplaceableApp,
   LOCALE_CODE,
   MAX_APP_DESCRIPTION,
   MAX_APP_GROUP,
+  REPLACEABLE_APPS,
+  type ReplaceableApp,
 } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 import { commitAll, git } from "../../../lib/git";
@@ -72,6 +75,8 @@ export interface Manifest {
   contract?: Contract;
   /** Library files in its folder, loaded before main.js in this order (ADR 0033). */
   libraries?: string[];
+  /** The built-in app it takes the place of (ADR 0041). */
+  replaces?: ReplaceableApp;
 }
 
 export function compareVersions(a: string, b: string): number {
@@ -120,6 +125,10 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
     throw new ExtensionError(
       `"${badLibrary}" is not a library path: lib/… ending in .js, .mjs or .css (add_library puts files there)`,
     );
+  if (m.replaces !== undefined && m.replaces !== null && !isReplaceableApp(m.replaces))
+    throw new ExtensionError(`replaces must be one of ${REPLACEABLE_APPS.join(", ")}`);
+  if (m.replaces && !permissions.includes("ui.panel"))
+    throw new ExtensionError("an app that replaces a built-in app needs ui.panel");
   const description = optionalText(m.description, "description", MAX_APP_DESCRIPTION);
   const group = optionalText(m.group, "group", MAX_APP_GROUP);
   const hosts = stringList(m.hosts, "hosts").map((h) => h.toLowerCase());
@@ -155,6 +164,7 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
     ...(secrets.length ? { secrets: [...new Set(secrets)] } : {}),
     ...(Object.keys(contract.collections).length || contract.uses.length ? { contract } : {}),
     ...(libraries.length ? { libraries: [...new Set(libraries)] } : {}),
+    ...(isReplaceableApp(m.replaces) ? { replaces: m.replaces } : {}),
   };
 }
 
@@ -355,6 +365,7 @@ export class ExtensionService {
         hosts: state.enabled ? state.hosts : (m.hosts ?? []),
         secrets: state.enabled ? state.secrets : (m.secrets ?? []),
         app: source ? await appState(source) : null,
+        replaces: m.replaces ?? null,
         problem,
       };
     } catch (error) {
@@ -371,6 +382,7 @@ export class ExtensionService {
         hosts: [],
         secrets: [],
         app: null,
+        replaces: null,
         enabled: false,
         problem: error instanceof Error ? error.message : String(error),
       };

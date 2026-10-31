@@ -16,7 +16,7 @@ import { getState, setState, useChatStore } from "@/features/chat/store";
 import { useT } from "@/features/localization/i18n";
 import { extensionIcon } from "@/lib/extension-icons";
 import { cn } from "@/lib/utils";
-import { BUILTIN_ICONS, openEntry, PAGES, railApp, useExtensionApps } from "./apps";
+import { BUILTIN_ICONS, openEntry, PAGES, railApp, replacementOf, useExtensionApps } from "./apps";
 import { BarFrame, barThickness } from "./bar-frame";
 import { openAppRef, phoneAppOf } from "./layout";
 import { arrangeRail } from "./rail-layout";
@@ -61,16 +61,23 @@ export function useRailItems(): RailItem[] {
     const shown = key !== "signals" && open.has(app);
     return { key, label: t(label), icon, active: shown, focused: shown && focusedApp === app };
   };
+  const appItem = (ext: (typeof extensions)[number]): RailItem => ({
+    key: `ext:${ext.id}`,
+    label: ext.name,
+    icon: extensionIcon(ext.icon),
+    active: open.has(`ext:${ext.id}`),
+    focused: focusedApp === `ext:${ext.id}`,
+  });
+  // An app that replaces a built-in one stands in its place on the bar (ADR 0041).
+  const placed = (key: string): RailItem => {
+    const replacement = replacementOf(key, extensions);
+    return replacement ? appItem(replacement) : builtin(key);
+  };
+  const builtinKeys = new Set<string>([...HEAD, ...TAIL]);
   return [
-    ...HEAD.map(builtin),
-    ...extensions.map((ext) => ({
-      key: `ext:${ext.id}`,
-      label: ext.name,
-      icon: extensionIcon(ext.icon),
-      active: open.has(`ext:${ext.id}`),
-      focused: focusedApp === `ext:${ext.id}`,
-    })),
-    ...TAIL.map(builtin),
+    ...HEAD.map(placed),
+    ...extensions.filter((e) => !e.replaces || !builtinKeys.has(e.replaces)).map(appItem),
+    ...TAIL.map(placed),
   ];
 }
 
