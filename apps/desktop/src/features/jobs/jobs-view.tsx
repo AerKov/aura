@@ -49,7 +49,7 @@ export function JobsView() {
                 <span
                   className={
                     job.status === "active"
-                      ? "text-xs text-emerald-600"
+                      ? "text-xs text-success"
                       : "text-muted-foreground text-xs"
                   }
                 >

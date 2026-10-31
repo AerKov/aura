@@ -152,6 +152,7 @@ export async function createServices(deps: {
     approvals,
     hub: deps.hub,
   });
+  await appearance.ensureDefaultTheme();
   const secrets = new SecretStore(deps.dataDir);
   const mcp = new McpService({
     dataDir: deps.dataDir,

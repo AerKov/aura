@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { loadInitial, loadProjects } from "@/features/chat/actions";
 import { useChatStore } from "@/features/chat/store";
-import { loadCustomize } from "@/features/customize/customize-view";
+import { loadCustomize } from "@/features/customize/state";
 import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 import { setAppChat } from "./app-controls";
@@ -70,7 +70,8 @@ export function NewAppSheet() {
       />
       <aside
         aria-label={t("New app")}
-        className="bg-popover text-popover-foreground flex h-full w-[min(420px,100%)] flex-col border-l shadow-md"
+        data-part="menu"
+        className="bg-menu text-menu-foreground flex h-full w-[min(420px,100%)] flex-col border-l shadow-md"
       >
         <div className="flex items-center gap-2 border-b px-4 py-3">
           <h2 className="mr-auto text-2xl">{t("New app")}</h2>

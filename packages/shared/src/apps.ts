@@ -42,7 +42,7 @@ export const BUILTIN_APPS: BuiltinApp[] = [
     key: "settings",
     app: "page:settings",
     name: "Settings",
-    description: "AI, helpers, automations, look, history",
+    description: "AI, helpers, automations, history",
     group: "Settings",
   },
 ];

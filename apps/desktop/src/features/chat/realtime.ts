@@ -1,6 +1,6 @@
 import { type ClientEvent, parseServerEvent } from "@aura/shared";
 import { loadAppearance } from "@/features/customize/appearance";
-import { loadCustomize } from "@/features/customize/customize-view";
+import { loadCustomize } from "@/features/customize/state";
 import { showNotification } from "@/features/devices/push";
 import { loadLayout, receiveLayout } from "@/features/shell/layout";
 import { NeedsPairingError, resetSession, wsUrl } from "@/lib/api";

@@ -1,5 +1,5 @@
 import { type PageId, type SettingsTab, settingsTabOf } from "@aura/shared";
-import { Bot, Cpu, History, Palette, Settings as SettingsIcon, Zap } from "lucide-react";
+import { Bot, Cpu, History, Settings as SettingsIcon, Zap } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { EmbeddedPage } from "@/components/page";
 import { AgentsView } from "@/features/agents/agents-view";
@@ -7,11 +7,9 @@ import { AgentToolServers } from "@/features/agents/tool-servers";
 import { BackupsView } from "@/features/backups/backups-view";
 import { setState, useChatStore } from "@/features/chat/store";
 import { WebhookInfo } from "@/features/chat/webhook-info";
-import { CustomizeView } from "@/features/customize/customize-view";
 import { EnginesView } from "@/features/engines/engines-view";
 import { JobsView } from "@/features/jobs/jobs-view";
 import { useT } from "@/features/localization/i18n";
-import { LocalizationView } from "@/features/localization/localization-view";
 import { MemoryView } from "@/features/memory/memory-view";
 import { SkillsView } from "@/features/skills/skills-view";
 import { cn } from "@/lib/utils";
@@ -20,7 +18,6 @@ const TABS: { id: SettingsTab; label: string; icon: typeof Cpu }[] = [
   { id: "ai", label: "AI", icon: Cpu },
   { id: "helpers", label: "Helpers", icon: Bot },
   { id: "automations", label: "Automations", icon: Zap },
-  { id: "look", label: "Look", icon: Palette },
   { id: "history", label: "History", icon: History },
 ];
 
@@ -108,12 +105,6 @@ export function SettingsView({ page }: { page: PageId }) {
                 </p>
                 <WebhookInfo />
               </Card>
-            </Column>
-          )}
-          {tab === "look" && (
-            <Column>
-              <CustomizeView />
-              <LocalizationView />
             </Column>
           )}
           {tab === "history" && <BackupsView />}

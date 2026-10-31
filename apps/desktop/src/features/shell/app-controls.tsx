@@ -339,7 +339,7 @@ export function AppSecretsMenu({ appId }: { appId: string }) {
               <li key={s.name} className="grid gap-1">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-xs">{s.name}</span>
-                  <span className={cn("text-xs", s.set ? "text-emerald-600" : "text-amber-600")}>
+                  <span className={cn("text-xs", s.set ? "text-success" : "text-warning-text")}>
                     {s.set ? t("set") : t("no value")}
                   </span>
                 </div>

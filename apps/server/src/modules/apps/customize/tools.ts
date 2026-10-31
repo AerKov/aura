@@ -3,6 +3,8 @@ import {
   type BarEdge,
   EXTENSION_ICONS,
   type ExtensionPermission,
+  LOOK_PARTS,
+  LOOK_TOKENS,
   type WindowStyle,
   WM_PRESETS,
 } from "@aura/shared";
@@ -82,6 +84,37 @@ export function customizeTools(
   });
   return [
     {
+      name: "describe_look",
+      description:
+        "How Aura looks and how to change it (ADR 0041): Aura has no look of its own, everything comes from the active theme, a CSS file of the user's. Lists each part of the screen (the bar, windows, the chat list, bubbles…) with its variables, the base colours and fonts, and the active theme's CSS. Read it before propose_css.",
+      inputSchema: {},
+      async handler() {
+        const a = await deps.appearance.get();
+        const css = a.theme ? deps.appearance.source("theme", a.theme) : null;
+        return ok(
+          [
+            `Active theme: ${a.theme ?? "none"} (themes: ${a.themes.join(", ") || "none"}); snippets on: ${a.snippets.join(", ") || "none"}.`,
+            'Change a part by setting its variables in the active theme (on :root for light and .dark for dark mode), with propose_css target theme and the same name, sending the whole file. Each part is also marked data-part="<name>" for a change no variable covers. The window style (gaps, corners, borders, titles), the bar\'s items and edge and the language are set_appearance and set_language, without approval.',
+            "If the user has a bar app of their own (bar_mode app), the bar is that app: change it in its chat (change_bar), not with a theme.",
+            "",
+            "Parts:",
+            ...LOOK_PARTS.map(
+              (p) =>
+                `- ${p.part}: ${p.label}. ${Object.entries(p.vars)
+                  .map(([v, what]) => `${v} (${what})`)
+                  .join(", ")}`,
+            ),
+            "",
+            `Base: ${Object.entries(LOOK_TOKENS)
+              .map(([v, what]) => `${v} (${what})`)
+              .join(", ")}.`,
+            "",
+            css ? `The active theme's CSS:\n\n${css}` : "No theme is active.",
+          ].join("\n"),
+        );
+      },
+    },
+    {
       name: "list_customizations",
       description: "Show themes, CSS snippets, MCP servers and UI extensions, and what is active.",
       inputSchema: {},
@@ -100,7 +133,7 @@ export function customizeTools(
             }`,
             `Extensions: ${ext.map((e) => `${e.id} (${e.enabled ? "on" : "off"}${e.problem ? `, ${e.problem}` : ""})`).join(", ") || "none"}`,
             "",
-            "Theme CSS overrides these variables on :root and .dark: --background, --foreground, --card, --card-foreground, --primary, --primary-foreground, --secondary, --muted, --muted-foreground, --accent, --border, --input, --ring, --radius, --sidebar, --rail, --rail-foreground, --chat-bg, --grid-dot, --bubble-own, --bubble-other, --signal (the one accent colour).",
+            "To change how Aura looks, see describe_look.",
           ].join("\n"),
         );
       },
@@ -108,7 +141,7 @@ export function customizeTools(
     {
       name: "propose_css",
       description:
-        "Propose a theme (themes/<name>/theme.css) or a CSS snippet (snippets/<name>.css). The user can try it on the approval card before approving. Prefer overriding CSS variables over styling elements.",
+        "Propose a theme (themes/<name>/theme.css) or a CSS snippet (snippets/<name>.css). The user can try it on the approval card before approving. Read describe_look first; to change the look, change the active theme (same name, the whole file) and prefer its variables over styling elements.",
       inputSchema: {
         target: z.enum(["theme", "snippet"]),
         name: z.string().describe("lowercase-with-dashes"),

@@ -147,7 +147,7 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
 
   return (
     <div className="relative flex min-w-0 flex-1">
-      <section className="chat-bg dot-grid flex min-w-0 flex-1 flex-col">
+      <section data-part="chat" className="chat-bg dot-grid flex min-w-0 flex-1 flex-col">
         {inApp ? (
           <header className="bg-card flex min-h-[52px] items-center gap-3 border-b px-3.5 py-2">
             <div className="min-w-0 flex-1 leading-tight">

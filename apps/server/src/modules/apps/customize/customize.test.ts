@@ -8,6 +8,7 @@ import { createTestApp } from "../../../testing";
 import { compareVersions, ExtensionError, validateManifest } from "./extensions";
 import { McpError, validateServer } from "./mcp";
 import { FORCED_REASON } from "./safe-mode";
+import { customizeTools } from "./tools";
 
 type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 const by = { requestedBy: "orchestrator", chatId: "direct", why: "test" };
@@ -43,7 +44,9 @@ describe("customization", () => {
     );
     expect(record.tryCss).toContain("--background: #000");
     expect(record.tryCss).not.toContain("x.test");
-    expect((await t.appearance.get()).themes).toEqual([]);
+    // Aura starts with its default look as the user's own theme (ADR 0041).
+    expect(await t.appearance.get()).toMatchObject({ theme: "default", themes: ["default"] });
+    expect(t.appearance.source("theme", "default")).toContain("--bar-bg");
 
     await t.approvals.decide(record.id, true, "owner");
     const after = await t.appearance.get();
@@ -54,6 +57,19 @@ describe("customization", () => {
     await t.appearance.set({ theme: null });
     expect((await t.appearance.get()).css).toHaveLength(0);
     await expect(t.appearance.set({ theme: "nope" })).rejects.toThrow(/unknown theme/);
+  });
+
+  test("describe_look tells the Helper what the bar is and shows the active theme (ADR 0041)", async () => {
+    t = await createTestApp();
+    const tools = customizeTools(
+      { appearance: t.appearance, mcp: t.mcp, extensions: t.extensions },
+      { handle: "orchestrator", chatId: "direct" },
+    );
+    const answer = await tools.find((x) => x.name === "describe_look")?.handler({});
+    expect(answer?.text).toContain("- bar: the bar");
+    expect(answer?.text).toContain("--bar-bg (background)");
+    expect(answer?.text).toContain("Active theme: default");
+    expect(answer?.text).toContain("--bar-bg: #1d2d3d");
   });
 
   test("MCP servers: validated, no literal secrets, granted per agent, off in safe mode", async () => {

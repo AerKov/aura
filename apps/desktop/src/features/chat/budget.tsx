@@ -169,10 +169,10 @@ export function BudgetButton({ project }: { project: Project }) {
               strokeDasharray={`${c * ratio} ${c}`}
               className={cn(
                 ratio >= 1
-                  ? "stroke-rose-500"
+                  ? "stroke-destructive"
                   : ratio >= 0.8
-                    ? "stroke-amber-500"
-                    : "stroke-emerald-500",
+                    ? "stroke-warning"
+                    : "stroke-success",
               )}
             />
           )}

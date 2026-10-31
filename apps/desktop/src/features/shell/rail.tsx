@@ -196,8 +196,9 @@ export function Rail() {
       )}
       <nav
         aria-label="Main"
+        data-part="bar"
         className={cn(
-          "bg-rail text-rail-foreground z-50 flex shrink-0 items-center gap-1",
+          "bg-bar text-bar-foreground z-50 flex shrink-0 items-center gap-1",
           edge.bar,
           "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:h-16 max-md:justify-around max-md:px-2 max-md:pb-[env(safe-area-inset-bottom)]",
           hideOnPhone && "max-md:hidden",
@@ -224,8 +225,8 @@ export function Rail() {
           className={cn(
             "grid size-[30px] shrink-0 place-items-center border font-mono text-[13px] font-semibold transition-colors duration-150",
             menuOpen || (phone && homeOpen)
-              ? "border-rail-foreground bg-rail-foreground text-rail"
-              : "border-rail-foreground/60 hover:bg-rail-foreground/15",
+              ? "border-bar-foreground bg-bar-foreground text-bar"
+              : "border-bar-foreground/60 hover:bg-bar-foreground/15",
             vertical ? "md:mb-2.5" : "md:mr-2.5",
           )}
         >
@@ -242,8 +243,8 @@ export function Rail() {
             className={cn(
               "group relative grid size-[38px] shrink-0 place-items-center transition-colors duration-150",
               item.focused
-                ? "bg-rail-foreground/[0.16] text-rail-foreground"
-                : "text-rail-foreground/80 hover:bg-rail-foreground/10 hover:text-rail-foreground",
+                ? "bg-bar-active text-bar-foreground"
+                : "text-bar-foreground/80 hover:bg-bar-foreground/10 hover:text-bar-foreground",
               DESKTOP_ONLY.has(item.key) && "max-md:hidden",
             )}
           >
@@ -257,7 +258,7 @@ export function Rail() {
             {item.active && (
               <span
                 className={cn(
-                  "bg-rail-foreground absolute hidden md:block",
+                  "bg-bar-foreground absolute hidden md:block",
                   edge.mark,
                   !item.focused && "opacity-35",
                 )}
@@ -384,7 +385,7 @@ function Status({ vertical }: { vertical: boolean }) {
         className={cn(
           "size-[7px] rounded-full",
           connection === "open"
-            ? "bg-rail-foreground"
+            ? "bg-bar-foreground"
             : connection === "connecting"
               ? "bg-warning"
               : "bg-destructive",
@@ -395,7 +396,7 @@ function Status({ vertical }: { vertical: boolean }) {
           type="button"
           onClick={openDirect}
           title={t("{n} waiting for your decision", { n: pendingApprovals })}
-          className="bg-warning grid min-w-5 place-items-center px-1 text-[11px] text-black"
+          className="bg-warning grid min-w-5 place-items-center px-1 text-[11px] text-background"
         >
           {pendingApprovals}
         </button>

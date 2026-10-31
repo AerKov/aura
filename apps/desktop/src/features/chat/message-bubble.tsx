@@ -103,7 +103,10 @@ export function MessageBubble({
         className={cn("group message-in flex flex-col items-end", showAuthor ? "mt-5" : "mt-1.5")}
       >
         {reply}
-        <div className="bg-bubble-own text-bubble-own-foreground relative max-w-[min(36rem,85%)] rounded-lg px-3 py-2 text-[14.5px] leading-[1.45]">
+        <div
+          data-part="bubble-own"
+          className="bg-bubble-own text-bubble-own-foreground relative max-w-[min(36rem,85%)] rounded-lg px-3 py-2 text-[14.5px] leading-[1.45]"
+        >
           {replyButton}
           {body && <Markdown>{highlightMentions(body)}</Markdown>}
           <Attachments chatId={message.chatId} files={message.attachments} />

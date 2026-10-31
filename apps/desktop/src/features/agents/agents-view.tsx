@@ -154,9 +154,7 @@ function AgentCard({ handle }: { handle: string }) {
             </div>
             <p className="text-muted-foreground text-sm">{status.role}</p>
             <p className="mt-2 flex items-center gap-1.5 text-[13px]">
-              <span
-                className={cn("size-2 rounded-full", ready ? "bg-emerald-500" : "bg-amber-500")}
-              />
+              <span className={cn("size-2 rounded-full", ready ? "bg-success" : "bg-warning")} />
               {status.engine.label}
               {status.model ? ` · ${status.model}` : ""}
               {!ready && " · not ready"}
@@ -172,10 +170,10 @@ function AgentCard({ handle }: { handle: string }) {
           />
         </div>
         {status.warnings.length > 0 && (
-          <ul className="mt-4 space-y-1 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-[13px]">
+          <ul className="mt-4 space-y-1 rounded-xl border border-warning/30 bg-warning/10 p-3 text-[13px]">
             {status.warnings.map((w) => (
               <li key={w} className="flex items-start gap-1.5">
-                <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-500" />
+                <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-warning" />
                 {w}
               </li>
             ))}
@@ -219,7 +217,7 @@ function AgentCard({ handle }: { handle: string }) {
               >
                 <div className="flex items-center gap-1.5 text-sm font-medium">
                   {tool.name}
-                  {missing && <TriangleAlert className="size-3.5 text-amber-500" />}
+                  {missing && <TriangleAlert className="size-3.5 text-warning" />}
                 </div>
                 <div className="text-muted-foreground text-xs">
                   {missing ? `not on ${status.engine.label}` : tool.text}
@@ -249,7 +247,7 @@ function AgentCard({ handle }: { handle: string }) {
                   }
                   className={cn(
                     "rounded-pill border px-2 py-0.5 font-mono text-[11px]",
-                    !e.set && "border-amber-500/50 text-amber-600 dark:text-amber-400",
+                    !e.set && "border-warning/50 text-warning-text",
                   )}
                 >
                   {e.name} <span className="text-muted-foreground">· {e.from}</span>

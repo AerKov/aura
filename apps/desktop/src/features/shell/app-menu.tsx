@@ -3,7 +3,7 @@ import { MoreHorizontal, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { loadInitial, loadProjects } from "@/features/chat/actions";
-import { loadCustomize } from "@/features/customize/customize-view";
+import { loadCustomize } from "@/features/customize/state";
 import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
 

@@ -25,7 +25,7 @@ export type PageId = (typeof PAGE_IDS)[number];
  * The tabs of the Settings app (ADR 0039). The pages that were apps of their own before it open
  * Settings at their tab, so saved screens and the orchestrator's old names keep working.
  */
-export const SETTINGS_TABS = ["ai", "helpers", "automations", "look", "history"] as const;
+export const SETTINGS_TABS = ["ai", "helpers", "automations", "history"] as const;
 export type SettingsTab = (typeof SETTINGS_TABS)[number];
 
 export function settingsTabOf(page: PageId): SettingsTab {
@@ -36,9 +36,6 @@ export function settingsTabOf(page: PageId): SettingsTab {
       return "helpers";
     case "jobs":
       return "automations";
-    case "customize":
-    case "localization":
-      return "look";
     case "catalog":
     case "backups":
       return "history";

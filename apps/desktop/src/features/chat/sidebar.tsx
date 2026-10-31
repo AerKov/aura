@@ -75,8 +75,9 @@ export function Sidebar() {
   return (
     <aside
       aria-label={t("Chats")}
+      data-part="chat-list"
       className={cn(
-        "bg-card flex w-[clamp(220px,32%,290px)] shrink-0 flex-col border-r @max-[640px]:w-full",
+        "bg-chat-list flex w-[clamp(220px,32%,290px)] shrink-0 flex-col border-r @max-[640px]:w-full",
         pane === "main" && "@max-[640px]:hidden",
       )}
     >

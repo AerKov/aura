@@ -154,7 +154,7 @@ function StatusLine({ engine }: { engine: Engine }) {
       <span
         className={cn(
           "mt-1.5 size-2 shrink-0 rounded-full",
-          status.ok ? "bg-emerald-500" : "bg-amber-500",
+          status.ok ? "bg-success" : "bg-warning",
         )}
       />
       <span className={status.ok ? "" : "text-muted-foreground"}>

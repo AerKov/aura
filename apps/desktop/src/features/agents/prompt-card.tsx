@@ -311,7 +311,7 @@ export function MemoryCard({ handle }: { handle: string }) {
                   className={cn(
                     "size-2 shrink-0 self-center rounded-full",
                     r.status === "done"
-                      ? "bg-emerald-500"
+                      ? "bg-success"
                       : r.status === "error"
                         ? "bg-destructive"
                         : "bg-muted-foreground",

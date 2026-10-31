@@ -7,6 +7,7 @@ export * from "./files";
 export * from "./health";
 export * from "./layout";
 export * from "./locale";
+export * from "./look";
 export * from "./memory";
 export * from "./wm";
 export * from "./ws";

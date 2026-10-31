@@ -19,8 +19,8 @@
   --input: oklch(0.32 0.035 265);
   --ring: oklch(0.78 0.13 210);
   --sidebar: oklch(0.18 0.032 265);
-  --rail: oklch(0.18 0.032 265);
-  --rail-foreground: oklch(0.72 0.03 250);
+  --bar-bg: oklch(0.18 0.032 265);
+  --bar-fg: oklch(0.72 0.03 250);
   --grid-dot: oklch(0.26 0.035 265);
   --bubble-own: oklch(0.3 0.06 240);
   --signal: oklch(0.78 0.13 210);

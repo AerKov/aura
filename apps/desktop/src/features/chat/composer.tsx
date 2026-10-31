@@ -204,7 +204,10 @@ export function Composer({
     );
 
   return (
-    <div className="px-4 pt-2 pb-4 max-md:px-2 max-md:pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <div
+      data-part="composer"
+      className="px-4 pt-2 pb-4 max-md:px-2 max-md:pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+    >
       <div className="relative mx-auto max-w-3xl">
         {error && <p className="text-destructive mb-2 px-2 text-sm">{error}</p>}
         {menuOpen && (

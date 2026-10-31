@@ -1,3 +1,4 @@
+/// <reference path="../../../providers/vendor-files.d.ts" />
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -13,11 +14,18 @@ import {
   type WindowStyle,
 } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
+// Aura's default look, shared with the desktop app (ADR 0041); embedded in the compiled sidecar.
+import DEFAULT_THEME_CSS from "../../../../../../packages/shared/src/look/default-theme.css" with {
+  type: "text",
+};
 import { unifiedDiff } from "../../../lib/diff";
 import { commitAll } from "../../../lib/git";
 import type { ApprovalRecord, ApprovalService } from "../../system/approvals/service";
 import type { EventHub } from "../../system/realtime/hub";
 import { ASSET_NAME_PATTERN, MAX_CSS, sanitizeCss } from "./css";
+
+/** The theme Aura starts with, a file of the user's like any other (ADR 0041). */
+export const DEFAULT_THEME = "default";
 
 export class AppearanceError extends Error {
   override name = "AppearanceError";
@@ -66,6 +74,27 @@ export class AppearanceService {
   private read(target: CssChange["target"], name: string): string | null {
     const file = this.fileOf(target, name);
     return existsSync(file) ? readFileSync(file, "utf8") : null;
+  }
+
+  /**
+   * On the first start (and after the user deleted it), the default look becomes the user's own
+   * file, `themes/default/theme.css`, and the active theme when none is chosen: the Helper changes
+   * it there like any other theme. Aura keeps no look of its own.
+   */
+  async ensureDefaultTheme(): Promise<void> {
+    const file = this.fileOf("theme", DEFAULT_THEME);
+    if (!existsSync(file)) {
+      mkdirSync(join(this.deps.dataDir, "themes", DEFAULT_THEME), { recursive: true });
+      writeFileSync(file, DEFAULT_THEME_CSS);
+      await commitAll(this.deps.dataDir, "chore: the default look as a theme of your own");
+    }
+    const current = await this.settings();
+    if (current.theme === null) await this.set({ theme: DEFAULT_THEME });
+  }
+
+  /** The CSS of a theme or snippet the user has, for the Helper to read before changing it. */
+  source(target: CssChange["target"], name: string): string | null {
+    return this.read(target, name);
   }
 
   themes(): string[] {

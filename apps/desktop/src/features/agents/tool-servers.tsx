@@ -183,9 +183,7 @@ function ServerCard({
           </code>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {server.agents.length === 0 ? (
-              <span className="text-xs text-amber-600 dark:text-amber-400">
-                No agent has it yet
-              </span>
+              <span className="text-xs text-warning-text">No agent has it yet</span>
             ) : (
               server.agents.map((a) => (
                 <span key={a} className="bg-muted rounded-pill px-2 py-0.5 font-mono text-[11px]">
@@ -199,7 +197,7 @@ function ServerCard({
                 title={e.set ? "Has a value" : "No value: set it under Secrets"}
                 className={cn(
                   "rounded-pill border px-2 py-0.5 font-mono text-[11px]",
-                  !e.set && "border-amber-500/50 text-amber-600 dark:text-amber-400",
+                  !e.set && "border-warning/50 text-warning-text",
                 )}
               >
                 {e.name}
@@ -241,12 +239,7 @@ function ProbeResult({
 }) {
   return (
     <div className="bg-background mt-3 rounded-xl border p-3 text-[13px]">
-      <p
-        className={cn(
-          "flex items-start gap-1.5",
-          probe.ok ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
-        )}
-      >
+      <p className={cn("flex items-start gap-1.5", probe.ok ? "text-success" : "text-destructive")}>
         {probe.ok ? (
           <CircleCheck className="mt-0.5 size-4 shrink-0" />
         ) : (
@@ -256,9 +249,7 @@ function ProbeResult({
           ? `Works (${probe.ms} ms): ${probe.tools.length} tool${probe.tools.length === 1 ? "" : "s"}.`
           : probe.error}
       </p>
-      {probe.ok && probe.error && (
-        <p className="mt-1 text-amber-600 dark:text-amber-400">{probe.error}</p>
-      )}
+      {probe.ok && probe.error && <p className="mt-1 text-warning-text">{probe.error}</p>}
       {probe.unpassed.length > 0 && (
         <Button
           size="sm"

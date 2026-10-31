@@ -106,7 +106,8 @@ export function StartMenu() {
     <div className="absolute inset-0 z-40 flex">
       <aside
         aria-label={t("My apps")}
-        className="bg-popover text-popover-foreground flex h-full w-[min(480px,100%)] flex-col border-r shadow-md"
+        data-part="menu"
+        className="bg-menu text-menu-foreground flex h-full w-[min(480px,100%)] flex-col border-r shadow-md"
       >
         <div className="flex flex-col gap-3 border-b px-4 pt-4 pb-3">
           <div className="flex items-center gap-3">

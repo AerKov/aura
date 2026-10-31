@@ -77,7 +77,7 @@ function ViewerWindow({ view, onClose }: { view: FileView; onClose: () => void }
         type="button"
         tabIndex={-1}
         aria-label={t("Close")}
-        className="absolute inset-0 cursor-default bg-black/50"
+        className="absolute inset-0 cursor-default bg-background/60"
         onClick={onClose}
       />
       <div
@@ -158,7 +158,7 @@ function ViewerWindow({ view, onClose }: { view: FileView; onClose: () => void }
           ) : kind === "pdf" && doc ? (
             <PdfPages doc={doc} scale={ZOOMS[zoom] ?? 1} />
           ) : kind === "image" && imageUrl ? (
-            <img src={imageUrl} alt={view.name} className="mx-auto max-w-full border bg-white" />
+            <img src={imageUrl} alt={view.name} className="mx-auto max-w-full border bg-paper" />
           ) : kind === "text" ? (
             <pre className="bg-background mx-auto max-w-4xl overflow-auto border p-4 font-mono text-[13px] whitespace-pre-wrap">
               {text}
@@ -247,7 +247,7 @@ function PdfPage({ doc, number, width }: { doc: PDFDocumentProxy; number: number
   return (
     <div
       ref={box}
-      className="shrink-0 border bg-white shadow-sm"
+      className="shrink-0 border bg-paper shadow-sm"
       style={{ width, minHeight: Math.round(width * ratio) }}
     />
   );

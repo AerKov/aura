@@ -15,8 +15,8 @@ import { reportError } from "@/features/chat/actions";
 import { ChatView } from "@/features/chat/chat-view";
 import { Sidebar } from "@/features/chat/sidebar";
 import { setState, useChatStore } from "@/features/chat/store";
-import { loadCustomize } from "@/features/customize/customize-view";
 import { ExtensionFrame } from "@/features/customize/extension-frame";
+import { loadCustomize } from "@/features/customize/state";
 import { FilePicker } from "@/features/files/picker";
 import { FileViewer } from "@/features/files/viewer";
 import { useT } from "@/features/localization/i18n";
@@ -121,23 +121,27 @@ function TileView({ tile, focused, many }: { tile: Tile; focused: boolean; many:
   return (
     <section
       data-tile-id={tile.id}
+      data-part="tile"
       aria-label={label}
       className={cn(
-        "group/tile bg-background @container relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-solid",
-        focused && many ? "border-ring" : "border-border",
+        "group/tile bg-tile @container relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-solid",
+        focused && many ? "border-ring" : "border-tile-border",
       )}
       style={{ borderWidth: "var(--wm-border)", borderRadius: "var(--wm-radius)" }}
       onMouseDownCapture={() => focusTile(tile.id)}
       onFocusCapture={() => focusTile(tile.id)}
     >
       <header
+        data-part="tile-title"
         className={cn(
-          "flex shrink-0 items-center gap-0.5 border-b pr-1 pl-3",
-          titles === "minimal" && "bg-card h-[38px]",
+          "text-tile-title-foreground flex shrink-0 items-center gap-0.5 border-b pr-1 pl-3",
+          titles === "minimal" && "bg-tile-title h-[38px]",
           titles === "full" &&
-            (focused && many ? "bg-primary text-primary-foreground h-[30px]" : "bg-muted h-[30px]"),
+            (focused && many
+              ? "bg-primary text-primary-foreground h-[30px]"
+              : "bg-tile-title h-[30px]"),
           titles === "none" &&
-            "bg-card/95 absolute inset-x-0 top-0 z-20 h-[38px] opacity-0 backdrop-blur transition-opacity group-hover/tile:opacity-100 focus-within:opacity-100",
+            "bg-tile-title/95 absolute inset-x-0 top-0 z-20 h-[38px] opacity-0 backdrop-blur transition-opacity group-hover/tile:opacity-100 focus-within:opacity-100",
         )}
       >
         <div

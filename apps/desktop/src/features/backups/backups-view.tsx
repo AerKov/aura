@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
 import { loadInitial, loadProjects, reportError } from "@/features/chat/actions";
-import { loadCustomize } from "@/features/customize/customize-view";
+import { loadCustomize } from "@/features/customize/state";
 import { useT } from "@/features/localization/i18n";
 import { openAppRef } from "@/features/shell/layout";
 import { api, call } from "@/lib/api";

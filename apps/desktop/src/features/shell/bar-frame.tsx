@@ -105,7 +105,7 @@ export function BarFrame({
 
   return (
     <div
-      className={cn("bg-rail relative z-20 flex shrink-0 max-md:hidden", BORDER[edge])}
+      className={cn("bg-bar relative z-20 flex shrink-0 max-md:hidden", BORDER[edge])}
       style={
         edge === "left" || edge === "right"
           ? { width: barThickness(edge, size) }

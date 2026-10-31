@@ -95,7 +95,7 @@ export function SkillsView() {
                   {new Date(v.date).toLocaleString()}
                 </span>
                 {index === 0 ? (
-                  <span className="text-xs font-medium text-emerald-600">current</span>
+                  <span className="text-xs font-medium text-success">current</span>
                 ) : (
                   <Button
                     size="sm"

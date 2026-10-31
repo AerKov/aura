@@ -45,7 +45,7 @@ export function FilePicker() {
         type="button"
         tabIndex={-1}
         aria-label={t("Cancel")}
-        className="absolute inset-0 cursor-default bg-black/50"
+        className="absolute inset-0 cursor-default bg-background/60"
         onClick={() => done([])}
       />
       <div
