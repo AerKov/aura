@@ -1,6 +1,6 @@
 # The screen
 
-![Aura with an app and its chat](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/shell-light.png)
+![Aura with an app and its chat](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/screen-app-light.png)
 
 Aura has one screen: a **sidebar** on the left and **one thing** beside it.
 
@@ -12,6 +12,8 @@ Aura has one screen: a **sidebar** on the left and **one thing** beside it.
 - **New app**: a name and what it should do; the app opens with @builder at work.
 - **Settings**: **AI** (where the AI comes from and which one the Helper and @builder use) and
   **History** (uninstalled apps to bring back).
+
+![The menu folded to icons, in dark mode](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/screen-folded.png)
 
 **Fold the menu** at the bottom folds the sidebar to icons (it also folds by itself on a narrow
 window). Aura opens where you left it.

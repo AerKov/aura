@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/assets/shell-light.png" alt="Aura: the apps on the left, an app in the middle, its chat on the right" width="900">
+  <img src="docs/assets/screen-app-light.png" alt="Aura: the apps on the left, an app in the middle, its chat on the right" width="900">
 </p>
 
 ## What is Aura?
@@ -40,12 +40,28 @@ your data and your chats stay on your computer.
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/assets/helper-dark.png" alt="The Helper's chat"></td>
-    <td width="50%"><img src="docs/assets/new-app.png" alt="New app: a name and what it should do"></td>
+    <td width="50%"><img src="docs/assets/screen-helper-dark.png" alt="The Helper's chat"></td>
+    <td width="50%"><img src="docs/assets/screen-new-app.png" alt="New app: a name and what it should do"></td>
   </tr>
   <tr>
     <td align="center"><sub><b>Your Helper.</b> Say what you need</sub></td>
     <td align="center"><sub><b>New app.</b> A name and a sentence are enough</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/screen-folded.png" alt="An app in dark mode, with the menu folded to icons"></td>
+    <td width="50%"><img src="docs/assets/screen-viewer.png" alt="A PDF kept by an app, in the viewer with Print and Save"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Dark mode, menu folded.</b> More room for the app</sub></td>
+    <td align="center"><sub><b>Files.</b> Apps keep, show, print and save them</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="docs/assets/screen-settings.png" alt="Settings: which AI the Helper and @builder use"></td>
+    <td width="50%"><img src="docs/assets/screen-helper-light.png" alt="The Helper's chat in light mode"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Settings.</b> Pick the AI; everything else is asked</sub></td>
+    <td align="center"><sub><b>Light or dark.</b> Following your system</sub></td>
   </tr>
 </table>
 

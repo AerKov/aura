@@ -1,5 +1,7 @@
 # The AI
 
+![Settings → AI](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/screen-settings.png)
+
 An **engine** is what runs a helper. Connect them in **Settings → AI**; at the top of that tab,
 choose which one **the Helper** uses and which one **builds your apps** (@builder).
 

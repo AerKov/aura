@@ -17,7 +17,7 @@ in the app's manifest.
 
 ## Change it
 
-![A change waiting for a decision](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/shell-light.png)
+![A change waiting for a decision](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/screen-app-light.png)
 
 Say what you want in the app's chat: _"add an email column"_, _"sort by status"_,
 _"make the Add button green"_. @builder edits the app's files, then you get a card that says in
@@ -50,7 +50,7 @@ Restoring an older version of the app does not touch its data.
 
 ## Its files
 
-![A PDF in the viewer, with Print and Save](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/viewer.png)
+![A PDF in the viewer, with Print and Save](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/screen-viewer.png)
 
 An app with the `docs` permission keeps **files of its own** (PDFs, images, exports): it asks you to
 add them (a window with a button and a drop area), shows them, and saves them to your computer. A PDF
