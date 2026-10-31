@@ -348,27 +348,6 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         }),
       },
     )
-    // An app's alert card in the Signals chat (WISH-7).
-    .post(
-      "/extensions/:extensionId/alerts",
-      async ({ params, body, status }) => {
-        try {
-          return await deps.extensionBridge.postAlert(params.extensionId, body);
-        } catch (error) {
-          const e = bridgeError(error);
-          return status(e.code, { error: e.error });
-        }
-      },
-      {
-        auth: true,
-        body: t.Object({
-          severity: t.Optional(t.UnionEnum(["info", "warning", "critical"])),
-          title: t.String({ minLength: 1, maxLength: 200 }),
-          summary: t.Optional(t.String({ maxLength: 2000 })),
-          fingerprint: t.Optional(t.String({ maxLength: 200 })),
-        }),
-      },
-    )
     .get(
       "/extensions/:extensionId/files",
       async ({ params, query, status }) => {

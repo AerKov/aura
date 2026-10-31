@@ -33,7 +33,7 @@ export const UK: Record<string, string> = {
   AI: "ШІ",
   Automations: "Автоматизації",
   Data: "Дані",
-  "AI, helpers, automations, history": "ШІ, помічники, автоматизації, історія",
+  "AI, helpers, history": "ШІ, помічники, історія",
   "Its AI": "Його ШІ",
   "Pick from the AI you connected.": "Оберіть серед підключених ШІ.",
   "Connect another": "Підключити ще",

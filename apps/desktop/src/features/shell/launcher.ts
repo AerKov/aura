@@ -68,7 +68,7 @@ export function useLauncher(query = ""): { group: string; entries: Entry[] }[] {
         icon: BUILTIN_ICONS[b.key] ?? LayoutGrid,
         builtin: b,
         extension: null,
-        open: visible.has(b.app) && b.key !== "signals",
+        open: visible.has(b.app),
       })),
     ];
     const shown = all.filter((e) => matchesSearch(e, query));

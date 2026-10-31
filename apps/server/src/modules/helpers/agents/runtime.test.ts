@@ -101,14 +101,4 @@ describe("AgentRuntime", () => {
     expect(reply?.status).toBe("error");
     expect(reply?.error).toContain("not logged in");
   });
-
-  test("a user's message in the alerts chat is answered by the orchestrator", async () => {
-    t = await createTestApp();
-    await t.chat.post({ chatId: "system", author: owner, body: "what does this alert mean?" });
-    await Bun.sleep(10);
-    await t.runtime.whenIdle();
-    const calls = (t.provider as FakeProvider).calls;
-    expect(calls).toHaveLength(1);
-    expect(calls[0]?.prompt).not.toContain("came to you to route");
-  });
 });

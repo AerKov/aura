@@ -24,10 +24,9 @@ export function agentsToTrigger(input: {
   replyTarget?: Participant | null;
 }): Wake[] {
   const { message, chat, agentMembers, orchestrator } = input;
-  // Task and alert cards wake the agents they mention (assignee, or the orchestrator for triage).
+  // Task cards wake the agents they mention (the assignee).
   const wakes =
-    message.kind === "text" ||
-    (message.kind === "card" && (message.card?.type === "task" || message.card?.type === "alert"));
+    message.kind === "text" || (message.kind === "card" && message.card?.type === "task");
   if (message.status !== "final" || !wakes) return [];
 
   const author = message.author;

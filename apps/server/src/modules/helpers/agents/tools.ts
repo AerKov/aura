@@ -3,9 +3,6 @@ import { z } from "zod";
 import { unifiedDiff } from "../../../lib/diff";
 import { commitAll } from "../../../lib/git";
 import type { AgentTool } from "../../../providers/types";
-import type { JobInput } from "../../automations/jobs/service";
-import { jobTools } from "../../automations/jobs/tools";
-import { chatTools } from "../../chats/chat/tools";
 import { fileTools } from "../../chats/files/tools";
 import { type ProjectInput, validBudget } from "../../chats/projects/service";
 import { taskTools } from "../../chats/tasks/tools";
@@ -136,10 +133,6 @@ export function registerExecutors(deps: ToolDeps): void {
       );
     return `Budget of @${next.handle}: ${budgetText({ usd, tokens })}.`;
   });
-  deps.approvals.register("schedule_job", async (payload) => {
-    const job = await deps.jobs.create(payload as unknown as JobInput);
-    return `Scheduled "${job.name}" (${job.schedule}); next run ${job.nextRunAt ?? "never"}.`;
-  });
   deps.approvals.register("create_project", async (payload) => {
     const newAgents = ((payload.newAgents as Record<string, unknown>[] | undefined) ?? []).map(
       profileFrom,
@@ -162,8 +155,7 @@ export function registerExecutors(deps: ToolDeps): void {
 /** App tools for an agent run, by role and chat (exposed to the model over MCP). */
 export function toolsFor(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
   const tools: AgentTool[] = [skillTool(deps, ctx), ...memoryTools(deps, ctx)];
-  if (ctx.handle === ORCHESTRATOR_HANDLE)
-    tools.push(...orchestratorTools(deps, ctx), ...chatTools(deps, ctx), ...jobTools(deps, ctx));
+  if (ctx.handle === ORCHESTRATOR_HANDLE) tools.push(...orchestratorTools(deps, ctx));
   if (ctx.chat.projectId) tools.push(...taskTools(deps, ctx), ...fileTools(deps, ctx));
   return tools;
 }

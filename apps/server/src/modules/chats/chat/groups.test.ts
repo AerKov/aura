@@ -66,11 +66,10 @@ describe("groups and deleting chats (ADR 0035)", () => {
     expect((await api.chats({ chatId: chat?.id ?? "" }).delete()).status).toBe(404);
   });
 
-  test("the chat with the Helper and the alerts cannot be deleted", async () => {
+  test("the chat with the Helper cannot be deleted", async () => {
     t = await createTestApp();
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
     expect((await api.chats({ chatId: "direct" }).delete()).status).toBe(400);
-    expect((await api.chats({ chatId: "system" }).delete()).status).toBe(400);
   });
 
   test("deleting a project's chat removes the project and keeps its files", async () => {

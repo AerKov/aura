@@ -33,7 +33,6 @@ export function formatListTime(iso: string | null): string {
  */
 export function chatTitle(chat: Chat, t: (text: string) => string): string {
   if (chat.kind === "direct" && chat.title === "Orchestrator") return t("Helper");
-  if (chat.kind === "system" && chat.title === "Alerts") return t("Alerts");
   return chat.title;
 }
 

@@ -6,7 +6,6 @@ import { errorMessage, log } from "./lib/log";
 import { isParentAlive, watchParent } from "./lib/parent-watch";
 import { EngineRegistry } from "./modules/ai/engines/registry";
 import { detectSafeMode, HEALTHY_AFTER_MS } from "./modules/apps/customize/safe-mode";
-import { loadWebhookToken } from "./modules/automations/alerts/service";
 import { FileAgentDirectory } from "./modules/helpers/agents/directory";
 import { LocalSessions } from "./modules/system/auth/sessions";
 import { EventHub } from "./modules/system/realtime/hub";
@@ -56,7 +55,6 @@ async function main(): Promise<void> {
   const interrupted = await services.runs.recoverInterrupted();
   if (interrupted > 0) log.warn("marked interrupted runs as stopped", { count: interrupted });
   const stopRuntime = services.runtime.start();
-  const stopScheduler = services.jobs.start();
 
   const sessions = new LocalSessions();
 
@@ -69,8 +67,6 @@ async function main(): Promise<void> {
     engines,
     dataDir: config.dataDir,
     agents,
-    webhookToken: loadWebhookToken(config.dataDir),
-    publicUrl: config.publicUrl,
     ...services,
   }).listen({ hostname: config.host, port: config.port });
 
@@ -83,7 +79,6 @@ async function main(): Promise<void> {
     shuttingDown = true;
     log.info("shutting down", { signal });
     stopRuntime();
-    stopScheduler();
     services.runtime.stopAll();
     services.summaries.stopAll();
     await Promise.race([

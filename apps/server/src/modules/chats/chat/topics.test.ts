@@ -110,7 +110,8 @@ describe("chat topics (ADR 0024)", () => {
 
     const moved = await api.messages({ messageId: reply.id }).topic.post({ topicId: null });
     expect(moved.data?.topicId).toBeNull();
-    const other = await t.chat.createTopic("system", "Elsewhere");
+    const group = (await api.chats.post({ title: "Other" })).data;
+    const other = await t.chat.createTopic(group?.id ?? "", "Elsewhere");
     expect(
       (await api.messages({ messageId: reply.id }).topic.post({ topicId: other.id })).status,
     ).toBe(400);

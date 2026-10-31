@@ -11,7 +11,7 @@ DEFINE FIELD OVERWRITE role ON user TYPE string ASSERT $value IN ["owner"];
 DEFINE FIELD OVERWRITE created_at ON user TYPE datetime DEFAULT time::now();
 
 DEFINE TABLE OVERWRITE chat SCHEMAFULL;
-DEFINE FIELD OVERWRITE kind ON chat TYPE string ASSERT $value IN ["direct", "group", "system"];
+DEFINE FIELD OVERWRITE kind ON chat TYPE string ASSERT $value IN ["direct", "group"];
 DEFINE FIELD OVERWRITE title ON chat TYPE string;
 DEFINE FIELD OVERWRITE project ON chat TYPE option<string>;
 DEFINE FIELD OVERWRITE created_at ON chat TYPE datetime DEFAULT time::now();

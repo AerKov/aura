@@ -7,7 +7,6 @@ import { tr, useT } from "@/features/localization/i18n";
 import { highlightMentions } from "@/lib/mentions";
 import { cn } from "@/lib/utils";
 import { openAgentSettings, reportError, stopRun } from "./actions";
-import { AlertCard } from "./alert-card";
 import { ApprovalCard } from "./approval-card";
 import { Attachments } from "./attachments";
 import { displayName, formatTime, previewOf } from "./message-utils";
@@ -191,7 +190,6 @@ export function MessageBubble({
           )}
           {message.card?.type === "approval" && <ApprovalCard card={message.card} name={name} />}
           {message.card?.type === "task" && <TaskCard card={message.card} />}
-          {message.card?.type === "alert" && <AlertCard card={message.card} />}
           {message.error && <p className="text-destructive mt-1 text-sm">{message.error}</p>}
           {message.card?.type !== "run" && (message.usage || (streaming && message.runId)) && (
             <div className="text-muted-foreground mt-1 flex items-center gap-3 text-[11px]">

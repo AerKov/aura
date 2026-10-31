@@ -39,7 +39,6 @@ export function ChatMark({
         working={working}
       />
     );
-  if (chat.kind === "system") return <Mark name="alerts" kind="alert" size={size} />;
   if (app) {
     const Icon = extensionIcon(ext?.icon ?? null);
     return (

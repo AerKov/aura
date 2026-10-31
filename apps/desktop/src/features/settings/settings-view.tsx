@@ -1,14 +1,12 @@
 import { type PageId, type SettingsTab, settingsTabOf } from "@aura/shared";
-import { Bot, Cpu, History, Settings as SettingsIcon, Zap } from "lucide-react";
-import { type ReactNode, useEffect, useState } from "react";
+import { Bot, Cpu, History, Settings as SettingsIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { EmbeddedPage } from "@/components/page";
 import { AgentsView } from "@/features/agents/agents-view";
 import { AgentToolServers } from "@/features/agents/tool-servers";
 import { BackupsView } from "@/features/backups/backups-view";
 import { setState, useChatStore } from "@/features/chat/store";
-import { WebhookInfo } from "@/features/chat/webhook-info";
 import { EnginesView } from "@/features/engines/engines-view";
-import { JobsView } from "@/features/jobs/jobs-view";
 import { useT } from "@/features/localization/i18n";
 import { MemoryView } from "@/features/memory/memory-view";
 import { SkillsView } from "@/features/skills/skills-view";
@@ -17,7 +15,6 @@ import { cn } from "@/lib/utils";
 const TABS: { id: SettingsTab; label: string; icon: typeof Cpu }[] = [
   { id: "ai", label: "AI", icon: Cpu },
   { id: "helpers", label: "Helpers", icon: Bot },
-  { id: "automations", label: "Automations", icon: Zap },
   { id: "history", label: "History", icon: History },
 ];
 
@@ -94,41 +91,10 @@ export function SettingsView({ page }: { page: PageId }) {
               )}
             </>
           )}
-          {tab === "automations" && (
-            <Column>
-              <JobsView />
-              <Card title={t("Alerts from your tools")}>
-                <p className="text-muted-foreground mb-3 text-sm">
-                  {t(
-                    "Monitoring tools post alerts to a web address; your Helper reads them first in the Alerts chat.",
-                  )}
-                </p>
-                <WebhookInfo />
-              </Card>
-            </Column>
-          )}
           {tab === "history" && <BackupsView />}
         </div>
       </EmbeddedPage.Provider>
     </section>
-  );
-}
-
-/** Several pages one under the other, scrolled together. */
-function Column({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto [&>section]:flex-none [&>section]:overflow-visible">
-      {children}
-    </div>
-  );
-}
-
-function Card({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="mx-auto mb-10 w-full max-w-4xl px-8 max-md:px-4">
-      <h2 className="kicker mb-1">{title}</h2>
-      {children}
-    </div>
   );
 }
 

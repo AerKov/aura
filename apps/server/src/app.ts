@@ -16,9 +16,6 @@ import type { ExtensionBridge } from "./modules/apps/customize/bridge";
 import type { ExtensionService } from "./modules/apps/customize/extensions";
 import type { McpService } from "./modules/apps/customize/mcp";
 import type { SafeMode } from "./modules/apps/customize/safe-mode";
-import { opsModule } from "./modules/automations/alerts";
-import type { AlertService } from "./modules/automations/alerts/service";
-import type { JobService } from "./modules/automations/jobs/service";
 import { chatModule } from "./modules/chats/chat";
 import { groupsModule } from "./modules/chats/chat/groups";
 import type { ChatRepo } from "./modules/chats/chat/repo";
@@ -77,10 +74,6 @@ export interface AppDeps extends HealthDeps {
   skills: SkillService;
   tasks: TaskService;
   repo: ChatRepo;
-  alerts: AlertService;
-  jobs: JobService;
-  webhookToken: string;
-  publicUrl: string;
   appearance: AppearanceService;
   extensions: ExtensionService;
   extensionBridge: ExtensionBridge;
@@ -137,7 +130,6 @@ export function createApp(deps: AppDeps) {
     )
     .use(projectsModule(deps))
     .use(controlModule(deps))
-    .use(opsModule(deps))
     .use(customizeModule(deps))
     .use(shellModule(deps))
     .use(appsModule(deps))

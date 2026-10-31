@@ -24,8 +24,6 @@ const MAX_FILE = 1_000_000;
 const FETCH_TIMEOUT_MS = 20_000;
 /** Agent requests per extension per minute: a buggy loop must not burn the budget. */
 export const ASK_LIMIT = 10;
-/** Alerts an app may post in an hour (WISH-7). */
-const ALERT_LIMIT = 30;
 const SECRET_REF = /\$\{secret:([A-Z_][A-Z0-9_]{0,63})\}/g;
 const METHODS = new Set(["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD"]);
 
@@ -66,7 +64,6 @@ export interface FileEntry {
  */
 export class ExtensionBridge {
   private readonly asks = new Map<string, number[]>();
-  private readonly alertsPosted = new Map<string, number[]>();
 
   constructor(
     private readonly deps: {
@@ -78,13 +75,6 @@ export class ExtensionBridge {
       projects: ProjectService;
       fetch?: typeof fetch;
       now?: () => number;
-      /** Posts an app's alert card through the usual pipeline (dedup, triage), WISH-7. */
-      alerts?: {
-        ingest(
-          source: string,
-          payload: unknown,
-        ): Promise<{ messageId: string; deduplicated: boolean; triaged: boolean }>;
-      };
       /** Apps built in Aura keep their data in their own store (ADR 0024). */
       apps?: { isApp: (id: string) => boolean; data: AppDataService; actions: AppActions };
     },
@@ -299,33 +289,6 @@ export class ExtensionBridge {
       chatId: input.chatId,
       author: { kind: "user", id: owner.id },
       body: `@${agent} ${text}`,
-    });
-  }
-
-  /**
-   * An app posts an alert card to the Signals chat (WISH-7), as the source `app:<id>`. It goes
-   * through the same pipeline as monitoring webhooks: repeats bump a counter, and warnings and
-   * critical alerts wake the orchestrator for triage within its hourly limit.
-   */
-  async postAlert(
-    id: string,
-    input: { severity?: string; title?: string; summary?: string; fingerprint?: string },
-  ): Promise<{ messageId: string; deduplicated: boolean; triaged: boolean }> {
-    await this.need(id, "alerts.write");
-    const alerts = this.deps.alerts;
-    if (!alerts) throw new ExtensionError("Alerts are not available");
-    const title = String(input.title ?? "").trim();
-    if (!title || title.length > 200) throw new ExtensionError("title is required (max 200 chars)");
-    const now = (this.deps.now ?? Date.now)();
-    const recent = (this.alertsPosted.get(id) ?? []).filter((t) => now - t < 3_600_000);
-    if (recent.length >= ALERT_LIMIT)
-      throw new ExtensionDenied(`At most ${ALERT_LIMIT} alerts an hour`);
-    this.alertsPosted.set(id, [...recent, now]);
-    return alerts.ingest(`app:${id}`, {
-      title,
-      message: String(input.summary ?? "").slice(0, 2000),
-      severity: input.severity ?? "warning",
-      ...(input.fingerprint ? { fingerprint: String(input.fingerprint).slice(0, 200) } : {}),
     });
   }
 

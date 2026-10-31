@@ -1,7 +1,6 @@
 import { type AppRef, BUILTIN_APPS, type ExtensionInfo, type PageId } from "@aura/shared";
 import type { LucideIcon } from "lucide-react";
 import {
-  Bell,
   Bot,
   Clock,
   Cpu,
@@ -16,7 +15,6 @@ import {
   WandSparkles,
 } from "lucide-react";
 import { useMemo } from "react";
-import { openChat } from "@/features/chat/actions";
 import { getState, useChatStore } from "@/features/chat/store";
 import { extensionIcon } from "@/lib/extension-icons";
 import { openAppRef } from "./layout";
@@ -24,7 +22,6 @@ import { openAppRef } from "./layout";
 /** Icons of the built-in apps, by catalogue key (ADR 0034). */
 export const BUILTIN_ICONS: Record<string, LucideIcon> = {
   chats: MessageSquare,
-  signals: Bell,
   schedule: Clock,
   agents: Bot,
   skills: WandSparkles,
@@ -68,13 +65,6 @@ export function openEntry(key: string, app: AppRef, where: "here" | "right" = "h
     openAppRef(`ext:${replacement.id}`, where);
     return;
   }
-  if (key === "signals") {
-    const system = Object.values(getState().chats).find((c) => c.kind === "system");
-    if (system) {
-      openChat(system.id);
-      return;
-    }
-  }
   openAppRef(app, where);
 }
 
@@ -98,7 +88,7 @@ export function appInfo(
 /** Rail keys ("home", "chats", "skills", "ext:<id>") as apps. */
 export function railApp(key: string): AppRef {
   if (key === "home") return "home";
-  if (key === "chats" || key === "signals") return "messenger";
+  if (key === "chats") return "messenger";
   if (key.startsWith("ext:")) return key as AppRef;
   return `page:${key}` as AppRef;
 }

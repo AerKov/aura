@@ -32,17 +32,10 @@ export const BUILTIN_APPS: BuiltinApp[] = [
     group: "Essentials",
   },
   {
-    key: "signals",
-    app: "messenger",
-    name: "Alerts",
-    description: "When something broke or needs attention",
-    group: "Essentials",
-  },
-  {
     key: "settings",
     app: "page:settings",
     name: "Settings",
-    description: "AI, helpers, automations, history",
+    description: "AI, helpers, history",
     group: "Settings",
   },
 ];
@@ -80,7 +73,7 @@ export function matchesSearch(
  * replaces with their own: its manifest says `"replaces": "chats"` and it opens wherever Chats
  * would. The built-in one comes back when the app is off, removed or in safe mode.
  */
-export const REPLACEABLE_APPS = ["chats", "signals", "settings"] as const;
+export const REPLACEABLE_APPS = ["chats", "settings"] as const;
 export type ReplaceableApp = (typeof REPLACEABLE_APPS)[number];
 
 export function isReplaceableApp(value: unknown): value is ReplaceableApp {

@@ -10,7 +10,10 @@ import {
   type Topic,
 } from "@aura/shared";
 import { errorMessage, log } from "../../../lib/log";
-import { type ChatRepo, DIRECT_CHAT_ID, ORCHESTRATOR, SYSTEM_CHAT_ID } from "./repo";
+import { type ChatRepo, DIRECT_CHAT_ID, ORCHESTRATOR } from "./repo";
+
+const LEGACY_ALERTS_CHAT = "system";
+
 import { WELCOME } from "./welcome";
 
 export type ChatErrorCode = "not_found" | "invalid" | "forbidden";
@@ -77,14 +80,9 @@ export class ChatService {
           body: WELCOME,
         });
     }
-    if (!(await this.repo.findChat(SYSTEM_CHAT_ID))) {
-      await this.repo.createChat({
-        id: SYSTEM_CHAT_ID,
-        kind: "system",
-        title: "Alerts",
-        members: [ownerMember, { participant: ORCHESTRATOR, role: "member" }],
-      });
-    }
+    // The Alerts chat of earlier versions is gone with alerts (ADR 0042).
+    if (await this.repo.findChat(LEGACY_ALERTS_CHAT))
+      await this.repo.removeChat(LEGACY_ALERTS_CHAT);
     return owner;
   }
 

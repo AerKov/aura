@@ -1,5 +1,15 @@
 import { formatBytes, type Message, type Participant, stagedPath } from "@aura/shared";
-import { describeCardForPrompt } from "../../automations/alerts/service";
+
+/** A card as an agent reads it in its context. */
+function describeCardForPrompt(message: Message): string | null {
+  const card = message.card;
+  if (!card) return null;
+  if (card.type === "task")
+    return `Task for @${card.assignee} (${card.status}): ${card.title}\n${message.body}`;
+  if (card.type === "approval")
+    return `Approval request "${card.title}" (${card.status})${card.result ? `: ${card.result}` : ""}`;
+  return null;
+}
 
 export const CONTEXT_WINDOW = 30;
 /**

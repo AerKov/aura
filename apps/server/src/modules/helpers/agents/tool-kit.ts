@@ -1,6 +1,5 @@
 import type { Chat } from "@aura/shared";
 import { errorMessage } from "../../../lib/log";
-import type { JobService } from "../../automations/jobs/service";
 import type { ChatRepo } from "../../chats/chat/repo";
 import type { ChatService } from "../../chats/chat/service";
 import type { FileStore } from "../../chats/files/store";
@@ -18,7 +17,6 @@ export interface ToolDeps {
   approvals: ApprovalService;
   skills: SkillService;
   tasks: TaskService;
-  jobs: JobService;
   repo: ChatRepo;
   chat: ChatService;
   memory: MemoryService;

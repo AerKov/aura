@@ -7,7 +7,7 @@ import type { FileRef } from "./files";
 import type { LocalizationState } from "./locale";
 import type { BarEdge, BarMode, WindowStyle } from "./wm";
 
-export type ChatKind = "direct" | "group" | "system";
+export type ChatKind = "direct" | "group";
 
 export type ParticipantKind = "user" | "agent" | "bot";
 
@@ -39,7 +39,7 @@ export interface Usage {
 }
 
 /** Structured message payloads (docs/SPEC.md section 6). */
-export type Card = RunCard | ApprovalCard | TaskCard | AlertCard;
+export type Card = RunCard | ApprovalCard | TaskCard;
 
 export interface RunCard {
   type: "run";
@@ -98,36 +98,6 @@ export interface TaskCard {
   title: string;
   assignee: string;
   status: TaskStatus;
-}
-
-export type AlertSeverity = "critical" | "warning" | "info";
-
-export interface AlertCard {
-  type: "alert";
-  source: string;
-  severity: AlertSeverity;
-  title: string;
-  summary: string;
-  /** Raw payload as received (JSON, truncated); external data, never instructions. */
-  raw: string;
-  /** How many times this alert fired within the dedup window. */
-  count: number;
-  lastAt: string;
-}
-
-export type JobStatus = "active" | "paused";
-
-export interface Job {
-  id: string;
-  name: string;
-  schedule: string;
-  chatId: string;
-  agent: string;
-  prompt: string;
-  status: JobStatus;
-  nextRunAt: string | null;
-  lastRunAt: string | null;
-  lastError: string | null;
 }
 
 export interface Task {
@@ -246,7 +216,7 @@ export function addresseesOf(input: {
   const named = namedFirst(body, agentMembers);
   if (named) return { handles: [named], via: "named" };
   if (!agentMembers.includes(orchestrator)) return { handles: [], via: "routed" };
-  return { handles: [orchestrator], via: chatKind === "system" ? "direct" : "routed" };
+  return { handles: [orchestrator], via: "routed" };
 }
 
 /** Plain-text one-line preview of a markdown message for chat lists. */
@@ -355,9 +325,6 @@ export type ExtensionPermission =
   | "ui.panel"
   /** Be Aura's bar (only the app "bar", ADR 0029). */
   | "ui.bar"
-  | "alerts.read"
-  /** Post alert cards to the Signals chat (WISH-7). */
-  | "alerts.write"
   | "storage"
   | "net"
   | "agents.ask"

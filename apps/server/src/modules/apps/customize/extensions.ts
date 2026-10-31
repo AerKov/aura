@@ -36,8 +36,6 @@ export const PERMISSIONS: Record<ExtensionPermission, string> = {
   "chat.write": "Post messages (as the extension)",
   "ui.panel": "Show a panel in the app",
   "ui.bar": "Be Aura's bar: list and open apps, see the screen and the status",
-  "alerts.read": "Read alerts",
-  "alerts.write": "Post alert cards to the Alerts chat (as itself; warnings wake the orchestrator)",
   storage: "Keep its own data",
   net: "Reach the listed hosts (through Aura)",
   "agents.ask": "Ask agents for you (as your message, within budgets)",
@@ -835,10 +833,6 @@ const BRIDGE = `(() => {
       list: () => call("chat.list"),
       messages: (chatId) => call("chat.messages", { chatId }),
       post: (chatId, body) => call("chat.post", { chatId, body }),
-    }),
-    alerts: Object.freeze({
-      recent: () => call("alerts.recent"),
-      post: (alert) => call("alerts.post", alert || {}),
     }),
     // Only for the bar app (ui.bar, ADR 0029).
     bar: Object.freeze({

@@ -28,9 +28,6 @@ export const authModule = ({ sessions, owner, corsOrigins, extraHosts = [] }: Au
   new Elysia({ name: "auth" })
     // Loopback-only Host header for every request (DNS-rebinding protection).
     .onRequest(({ request, status }) => {
-      const path = new URL(request.url).pathname;
-      // Webhooks authenticate with their own token and may arrive through a tunnel.
-      if (path.startsWith("/hooks/alerts/")) return;
       if (!isLoopbackHost(request.headers.get("host") ?? new URL(request.url).host, extraHosts))
         return status(403, "Forbidden host");
     })

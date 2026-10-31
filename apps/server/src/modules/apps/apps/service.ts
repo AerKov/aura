@@ -61,12 +61,10 @@ const MAX_DIFF = 12_000;
 /** What each replaceable built-in app is called, and what a replacement usually needs. */
 const REPLACED_NAMES: Record<ReplaceableApp, string> = {
   chats: "Chats",
-  signals: "Alerts",
   settings: "Settings",
 };
 const REPLACED_PERMISSIONS: Record<ReplaceableApp, string> = {
   chats: "chat.read, chat.write, agents.ask",
-  signals: "alerts.read, chat.read",
   settings: "storage; Aura's settings are changed by asking the Helper",
 };
 

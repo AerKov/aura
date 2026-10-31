@@ -48,8 +48,6 @@ const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
   "chat.list": "chat.read",
   "chat.messages": "chat.read",
   "chat.post": "chat.write",
-  "alerts.recent": "alerts.read",
-  "alerts.post": "alerts.write",
   // Checked per event below: "context" needs nothing, "message.created" needs chat.read.
   "events.subscribe": null,
   "ui.setTitle": "ui.panel",
@@ -190,30 +188,6 @@ export function ExtensionFrame({
           );
           return reply(req.id, publicMessage(message as Message));
         }
-        case "alerts.recent": {
-          const messages = await call(() =>
-            api.chats({ chatId: "system" }).messages.get({ query: { limit: 100 } }),
-          );
-          return reply(
-            req.id,
-            messages.flatMap((m) =>
-              m.card?.type === "alert" ? [{ ...m.card, raw: undefined, messageId: m.id }] : [],
-            ),
-          );
-        }
-        case "alerts.post":
-          return reply(
-            req.id,
-            await call(() =>
-              ext().alerts.post({
-                title: String(p.title ?? ""),
-                summary: typeof p.summary === "string" ? p.summary : undefined,
-                severity:
-                  p.severity === "info" || p.severity === "critical" ? p.severity : "warning",
-                fingerprint: typeof p.fingerprint === "string" ? p.fingerprint : undefined,
-              }),
-            ),
-          );
         case "context.get":
           return reply(req.id, contextRef.current);
         case "storage.get": {

@@ -17,7 +17,6 @@ import { isoOf, keyOf, optionalIso, optionalKey, retryOnConflict } from "../../.
 
 export const OWNER_ID = "owner";
 export const DIRECT_CHAT_ID = "direct";
-export const SYSTEM_CHAT_ID = "system";
 export const ORCHESTRATOR: Participant = { kind: "agent", id: "orchestrator" };
 
 export class NotFoundError extends Error {

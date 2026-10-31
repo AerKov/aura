@@ -133,7 +133,7 @@ describe("customization", () => {
       name: "Alerts",
       version: "0.1.0",
       minAppVersion: "0.6.0",
-      permissions: ["alerts.read", "ui.panel"],
+      permissions: ["chat.read", "ui.panel"],
       author: "orchestrator",
     };
     await expect(
@@ -154,7 +154,7 @@ describe("customization", () => {
       },
       by,
     );
-    expect(record.preview).toContain("`alerts.read`");
+    expect(record.preview).toContain("`chat.read`");
     expect(
       (await t.app.handle(new Request("http://localhost/extensions/alerts-panel/frame"))).status,
     ).toBe(404);

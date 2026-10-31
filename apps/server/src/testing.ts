@@ -20,7 +20,6 @@ import { FakeProvider } from "./providers/fake";
 import type { LLMProvider } from "./providers/types";
 
 export const TEST_ORIGIN = "http://localhost:1420";
-export const TEST_WEBHOOK_TOKEN = "test-webhook-token";
 
 /** Full app on an in-memory database and a temporary data dir, for integration tests. */
 export async function createTestApp(
@@ -31,8 +30,6 @@ export async function createTestApp(
     /** Agents as files in the data dir (a git repo), as in the app, instead of in memory. */
     fileAgents?: boolean;
     maxChainDepth?: number;
-    /** How long alerts are gathered before one triage run (10 ms by default in tests). */
-    triageDelayMs?: number;
     safeMode?: SafeMode;
     /** Network for the OpenAI-compatible engines. */
     fetch?: typeof fetch;
@@ -79,7 +76,6 @@ export async function createTestApp(
     agents,
     dataDir,
     maxChainDepth: opts.maxChainDepth,
-    triageDelayMs: opts.triageDelayMs ?? 10,
     safeMode: opts.safeMode,
     welcome: opts.welcome ?? false,
     appDbUrl: () => "mem://",
@@ -91,8 +87,6 @@ export async function createTestApp(
     startedAt: Date.now(),
     corsOrigins: [TEST_ORIGIN],
     extraHosts: ["e.ly"],
-    webhookToken: TEST_WEBHOOK_TOKEN,
-    publicUrl: "http://127.0.0.1:4517",
     sessions,
     hub,
     engines,

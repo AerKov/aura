@@ -38,7 +38,7 @@ export interface RailItem {
 const DESKTOP_ONLY = new Set<string>([]);
 
 /** The bar's built-in items around the user's apps (ADR 0039). */
-const HEAD = ["chats", "signals"];
+const HEAD = ["chats"];
 const TAIL: PageId[] = ["settings"];
 
 /** Every rail item in its default order, before the user's layout is applied. */
@@ -52,13 +52,9 @@ export function useRailItems(): RailItem[] {
   const focusedApp = phone ? phoneApp : focusedAppOf(layout);
   const builtin = (key: string): RailItem => {
     const app = railApp(key);
-    const label =
-      key === "chats" ? "Chats" : key === "signals" ? "Alerts" : PAGES[key as PageId].label;
-    const icon =
-      key === "chats" || key === "signals"
-        ? (BUILTIN_ICONS[key] ?? LayoutGrid)
-        : PAGES[key as PageId].icon;
-    const shown = key !== "signals" && open.has(app);
+    const label = key === "chats" ? "Chats" : PAGES[key as PageId].label;
+    const icon = key === "chats" ? (BUILTIN_ICONS[key] ?? LayoutGrid) : PAGES[key as PageId].icon;
+    const shown = open.has(app);
     return { key, label: t(label), icon, active: shown, focused: shown && focusedApp === app };
   };
   const appItem = (ext: (typeof extensions)[number]): RailItem => ({

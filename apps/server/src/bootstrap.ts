@@ -20,8 +20,6 @@ import { ExtensionService } from "./modules/apps/customize/extensions";
 import { McpService } from "./modules/apps/customize/mcp";
 import type { SafeMode } from "./modules/apps/customize/safe-mode";
 import { customizeTools } from "./modules/apps/customize/tools";
-import { AlertService, TriageLimiter } from "./modules/automations/alerts/service";
-import { JobService } from "./modules/automations/jobs/service";
 import { ChatRepo } from "./modules/chats/chat/repo";
 import { ChatService } from "./modules/chats/chat/service";
 import { FileStore } from "./modules/chats/files/store";
@@ -90,7 +88,6 @@ export async function createServices(deps: {
   agents: AgentDirectory;
   dataDir: string;
   maxChainDepth?: number;
-  triageDelayMs?: number;
   safeMode?: SafeMode;
   /** Where an app's own datastore lives (tests use memory). */
   appDbUrl?: (app: string) => string;
@@ -120,14 +117,6 @@ export async function createServices(deps: {
     approvals,
   });
   const tasks = new TaskService({ db: deps.db, repo, chat });
-  const jobs = new JobService({ db: deps.db, repo, chat });
-  const alerts = new AlertService({
-    db: deps.db,
-    repo,
-    chat,
-    limiter: new TriageLimiter(),
-    triageDelayMs: deps.triageDelayMs,
-  });
   const memory = new MemoryService({ db: deps.db, embedder: deps.embedder ?? (() => null) });
   const files = new FileStore(deps.dataDir);
   const toolDeps = {
@@ -137,7 +126,6 @@ export async function createServices(deps: {
     approvals,
     skills,
     tasks,
-    jobs,
     repo,
     chat,
     memory,
@@ -234,9 +222,6 @@ export async function createServices(deps: {
     projects,
     fetch: deps.fetch,
     apps: { isApp: (id) => appService.isApp(id), data: appData, actions: appActions },
-    alerts: {
-      ingest: (source, payload) => alerts.ingest(source, payload),
-    },
   });
   const layout = new LayoutService({ db: deps.db, hub: deps.hub, extensions });
   const localization = new LocalizationService({
@@ -398,8 +383,6 @@ export async function createServices(deps: {
     approvals,
     skills,
     tasks,
-    jobs,
-    alerts,
     toolDeps,
     memory,
     summaries,

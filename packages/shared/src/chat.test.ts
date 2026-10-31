@@ -80,9 +80,6 @@ describe("addresseesOf", () => {
       handles: ["orchestrator"],
       via: "direct",
     });
-    expect(addresseesOf({ ...base, body: "what is this alert?", chatKind: "system" }).via).toBe(
-      "direct",
-    );
     expect(
       addresseesOf({ ...base, agentMembers: ["coder"], body: "x", chatKind: "group" }).handles,
     ).toEqual([]);

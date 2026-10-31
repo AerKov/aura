@@ -1,4 +1,4 @@
-import type { Appearance, RailLayout, WindowStyle } from "@aura/shared";
+import type { Appearance } from "@aura/shared";
 import { setState } from "@/features/chat/store";
 import { api, call } from "@/lib/api";
 

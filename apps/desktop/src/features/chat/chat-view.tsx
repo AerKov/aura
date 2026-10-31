@@ -32,7 +32,6 @@ import { getState, useChatStore } from "./store";
 import { loadSummary, SummaryPanel } from "./summary-panel";
 import { TeamButton } from "./team-button";
 import { TopicBar } from "./topic-bar";
-import { WebhookInfo } from "./webhook-info";
 
 const EMPTY: Message[] = [];
 
@@ -215,7 +214,6 @@ export function ChatView({ chatId, inApp = false }: { chatId: string; inApp?: bo
                 </div>
               )}
               {chat.kind === "group" && <TeamButton chatId={chatId} />}
-              {chat.kind === "system" && <WebhookInfo />}
               {project && <BudgetButton project={project} />}
               {summary && (
                 <Button
