@@ -82,6 +82,25 @@ your data and your chats stay on your computer.
 - **Safe by default.** Helpers stay in your data folder, run commands in a sandbox with no network,
   stop at their budget, and treat web pages and files as data, never as instructions.
 
+## How is it different?
+
+Plenty of tools build apps from a chat. Most are for developers shipping a web product (Lovable,
+Bolt, Replit, v0, and locally Dyad or bolt.diy), or make a small page in a cloud service (Claude
+artifacts, Google Opal). Aura is for someone who wants **their own tools, on their own computer,
+without ever seeing code**.
+
+|                                    | Aura | Dyad, bolt.diy | Lovable, Bolt, Replit, v0 | Claude artifacts, Opal |
+| ---------------------------------- | :--: | :------------: | :-----------------------: | :--------------------: |
+| Runs on your computer              |  ✓   |       ✓        |             –             |           –            |
+| Local model built in               |  ✓   |   via Ollama   |             –             |           –            |
+| No code to look at                 |  ✓   |       –        |          partly           |           ✓            |
+| Apps live together, ready to use   |  ✓   |       –        |             –             |         partly         |
+| Each app keeps its own data        |  ✓   | Supabase, Neon |        their cloud        |  20 MB / their cloud   |
+| A chat beside each app uses it too |  ✓   |       –        |             –             |           –            |
+| Publish to the web                 |  –   |       ✓        |             ✓             |       ✓ (a link)       |
+
+The details, with sources: [docs/COMPETITORS.md](docs/COMPETITORS.md).
+
 ## Get started
 
 1. **Install.** Download a build from [Releases](https://github.com/AerKov/aura/releases) (read the
