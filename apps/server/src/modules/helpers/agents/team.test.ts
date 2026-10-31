@@ -1,14 +1,10 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { existsSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import type { Message } from "@aura/shared";
-import { git } from "../../../lib/git";
 import { FakeProvider, type Script } from "../../../providers/fake";
 import { createTestApp } from "../../../testing";
 import { ORCHESTRATOR_DEFAULT } from "./defaults";
 import { MemoryAgentDirectory } from "./directory";
 import type { AgentProfile } from "./profiles";
-import { toolsFor } from "./tools";
 
 type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 
@@ -59,84 +55,6 @@ describe("projects and agent teams", () => {
   afterEach(async () => {
     await t?.close();
     t = undefined;
-  });
-
-  test("create_project makes a workspace and chat, and the brief wakes the first agent", async () => {
-    const provider = new FakeProvider(
-      byAgent({
-        coder: (cwd) => {
-          if (cwd) writeFileSync(join(cwd, "wc.ts"), "console.log(1)");
-          return "Wrote wc.ts. @reviewer please check.";
-        },
-        reviewer: () => "Looks good. @orchestrator done.",
-        orchestrator: () => "Summary: the CLI is ready.",
-      }),
-    );
-    const agents = new MemoryAgentDirectory([
-      ORCHESTRATOR_DEFAULT,
-      worker("coder"),
-      worker("reviewer", { builtinTools: ["Read"] }),
-    ]);
-    t = await createTestApp({ provider, agents });
-
-    const direct = await t.repo.getChat("direct");
-    const tools = toolsFor(t.toolDeps, { handle: "orchestrator", chat: direct, depth: 1 });
-    const create = tools.find((tool) => tool.name === "create_project");
-    const result = await create?.handler({
-      name: "Word Counter",
-      brief: "Build a word counter CLI. @coder starts, then hands off to @reviewer.",
-      agents: ["coder", "reviewer"],
-      start_with: "coder",
-      budget_usd: 1,
-      why: "A CLI",
-    });
-    expect(result?.isError).toBeFalsy();
-
-    // Nothing happens until the user approves the plan.
-    const [pending] = await t.approvals.listPending();
-    expect(pending?.kind).toBe("create_project");
-    expect(pending?.preview).toContain("**@coder**: coder role");
-    expect(await t.projects.get("word-counter")).toBeNull();
-    await t.approvals.decide(pending?.id ?? "", true, "owner");
-    await settle(t);
-
-    const project = await t.projects.get("word-counter");
-    expect(project?.status).toBe("active");
-    expect(existsSync(join(project?.workspace ?? "", "BRIEF.md"))).toBe(true);
-    const members = await t.repo.members(project?.chatId ?? "");
-    expect(members.map((m) => m.participant.id)).toEqual([
-      "owner",
-      "orchestrator",
-      "coder",
-      "reviewer",
-    ]);
-
-    const messages = await messagesOf(t, project?.chatId ?? "");
-    const authors = messages.filter((m) => m.kind === "text").map((m) => m.author.id);
-    expect(authors).toEqual(["orchestrator", "coder", "reviewer", "orchestrator"]);
-    expect(
-      messages.map((m) => m.chainDepth).filter((_, i) => messages[i]?.kind === "text"),
-    ).toEqual([1, 2, 3, 4]);
-
-    // The coder ran in the workspace with its tools and team rules; its change was committed.
-    const coderCall = provider.calls.find((c) => c.prompt.includes("You are @coder"));
-    expect(coderCall?.cwd).toBe(project?.workspace);
-    expect(coderCall?.confineToCwd).toBe(true);
-    expect(coderCall?.builtinTools).toEqual(["Read", "Write"]);
-    expect(coderCall?.systemPrompt).toContain("## Team rules");
-    const coderReply = messages.find((m) => m.author.id === "coder");
-    expect(coderReply?.card?.type === "run" ? coderReply.card.commit : null).toMatch(
-      /^[0-9a-f]{7,}$/,
-    );
-    expect(await git(project?.workspace ?? "", ["log", "-1", "--format=%an"])).toBe("coder");
-
-    // The orchestrator reviews read-only and has its management tools.
-    const orchestratorCall = provider.calls.find((c) => c.prompt.includes("You are @orchestrator"));
-    expect(orchestratorCall?.builtinTools).toEqual(["Read", "Glob", "Grep"]);
-    expect(orchestratorCall?.tools.map((x) => x.name)).toContain("create_project");
-
-    // Spend is tracked per project.
-    expect((await t.projects.get("word-counter"))?.spentUsd).toBeCloseTo(0.003);
   });
 
   test("agent ping-pong stops at the chain depth limit", async () => {
@@ -218,98 +136,6 @@ describe("projects and agent teams", () => {
     await settle(t);
     expect(provider.calls).toHaveLength(1);
     expect((await messagesOf(t, chat.id)).at(-1)?.body).toContain("@coder is out of budget");
-  });
-
-  test("project and agent creation validate their input before asking", async () => {
-    t = await createTestApp();
-    const direct = await t.repo.getChat("direct");
-    const tools = toolsFor(t.toolDeps, { handle: "orchestrator", chat: direct, depth: 1 });
-    const createAgent = tools.find((x) => x.name === "create_agent");
-    const createProject = tools.find((x) => x.name === "create_project");
-
-    const bad = await createAgent?.handler({
-      handle: "../x",
-      name: "X",
-      role: "r",
-      system_prompt: "p",
-      tools: [],
-    });
-    expect(bad?.isError).toBe(true);
-    expect(await t.approvals.listPending()).toHaveLength(0);
-
-    const good = await createAgent?.handler({
-      handle: "qa",
-      name: "QA",
-      role: "Tests",
-      system_prompt: "Test",
-      tools: ["Read"],
-      why: "QA",
-    });
-    expect(good?.isError).toBeFalsy();
-    expect(await t.agents.get("qa")).toBeNull();
-    const [pending] = await t.approvals.listPending();
-    expect((await t.approvals.decide(pending?.id ?? "", true, "owner")).result).toBe(
-      "Created @qa.",
-    );
-    expect(await t.agents.get("qa")).not.toBeNull();
-
-    const cases = [
-      { name: "P", brief: "@qa go", agents: ["ghost"], budget_usd: 1 },
-      { name: "P", brief: "no mention", agents: ["qa"], budget_usd: 1 },
-      { name: "P", brief: "@qa go", agents: ["qa"], budget_usd: -1 },
-      { name: "P", slug: "../etc", brief: "@qa go", agents: ["qa"], budget_usd: 1 },
-      {
-        name: "P",
-        brief: "@qa go",
-        agents: ["qa"],
-        new_agents: [{ handle: "qa", name: "Q", role: "r", system_prompt: "p", tools: [] }],
-        budget_usd: 1,
-      },
-    ];
-    for (const input of cases) expect((await createProject?.handler(input))?.isError).toBe(true);
-    expect(await t.approvals.listPending()).toHaveLength(0);
-  });
-
-  test("a plan with new agents creates them and the project on approval", async () => {
-    t = await createTestApp();
-    const direct = await t.repo.getChat("direct");
-    const createProject = toolsFor(t.toolDeps, {
-      handle: "orchestrator",
-      chat: direct,
-      depth: 1,
-    }).find((x) => x.name === "create_project");
-    await createProject?.handler({
-      name: "Notes",
-      brief: "@writer drafts, then @editor reviews.",
-      agents: ["writer", "editor"],
-      new_agents: [
-        {
-          handle: "writer",
-          name: "Writer",
-          role: "Writes",
-          system_prompt: "Write",
-          tools: ["Read", "Write"],
-        },
-        { handle: "editor", name: "Editor", role: "Edits", system_prompt: "Edit", tools: ["Read"] },
-      ],
-      start_with: "writer",
-      budget_usd: 2,
-      why: "Notes",
-    });
-    const [pending] = await t.approvals.listPending();
-    expect(pending?.preview).toContain("**@writer** (new)");
-    const rejected = await t.approvals.decide(pending?.id ?? "", false, "owner");
-    expect(rejected.status).toBe("rejected");
-    expect(await t.agents.get("writer")).toBeNull();
-    expect(await t.projects.list()).toHaveLength(0);
-  });
-});
-
-describe("team discipline", () => {
-  let t: TestApp | undefined;
-  afterEach(async () => {
-    await t?.close();
-    t = undefined;
   });
 
   test("agents in one project run one at a time, and [no reply] leaves no message", async () => {

@@ -10,14 +10,9 @@ afterAll(() => t.close());
 
 test("approvals over HTTP: list pending, decide once, 409 after", async () => {
   const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
-  await t.skills.propose(
-    {
-      name: "style",
-      content: "---\ndescription: Style\n---\nBe brief.",
-      reason: "consistency",
-      attachTo: [],
-    },
-    { requestedBy: "orchestrator", chatId: "direct" },
+  await t.appearance.propose(
+    { target: "snippet", name: "brief", css: ":root { --radius: 4px; }", activate: false },
+    { requestedBy: "orchestrator", chatId: "direct", why: "test" },
   );
   const { data: pending } = await api.approvals.get();
   expect(pending).toHaveLength(1);
@@ -30,11 +25,6 @@ test("approvals over HTTP: list pending, decide once, 409 after", async () => {
   expect((await api.approvals({ approvalId: "nope" }).decide.post({ approve: true })).status).toBe(
     404,
   );
-
-  const { data: skills } = await api.skills.get();
-  expect(skills?.map((s) => s.name)).toEqual(["style"]);
-  const bad = await api.skills({ name: "style" }).rollback.post({ ref: "0000000" });
-  expect(bad.status).toBe(400);
 });
 
 test("approvals need a session", async () => {

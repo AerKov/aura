@@ -320,7 +320,7 @@ export class AppService {
    */
   async afterRun(
     project: ProjectInfo,
-    run: { handle: string; chatId: string; topicId: string | null; summary: string },
+    run: { handle: string; chatId: string; summary: string },
   ): Promise<void> {
     const app = this.source(project.id);
     if (!app) return;
@@ -352,7 +352,6 @@ export class AppService {
       kind: "app_change",
       requestedBy: run.handle,
       chatId: run.chatId,
-      topicId: run.topicId,
       title: `Change ${project.name}`,
       why,
       changes,

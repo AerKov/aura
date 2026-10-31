@@ -1,37 +1,29 @@
-import { type PageId, type SettingsTab, settingsTabOf } from "@aura/shared";
-import { Bot, Cpu, History, Settings as SettingsIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import type { EngineId, PageId, SettingsTab } from "@aura/shared";
+import { settingsTabOf } from "@aura/shared";
+import { Cpu, History, Settings as SettingsIcon } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { EmbeddedPage } from "@/components/page";
-import { AgentsView } from "@/features/agents/agents-view";
-import { AgentToolServers } from "@/features/agents/tool-servers";
+import { AgentAi } from "@/features/agents/agent-ai";
 import { BackupsView } from "@/features/backups/backups-view";
 import { setState, useChatStore } from "@/features/chat/store";
 import { EnginesView } from "@/features/engines/engines-view";
 import { useT } from "@/features/localization/i18n";
-import { MemoryView } from "@/features/memory/memory-view";
-import { SkillsView } from "@/features/skills/skills-view";
+import { api, call } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const TABS: { id: SettingsTab; label: string; icon: typeof Cpu }[] = [
   { id: "ai", label: "AI", icon: Cpu },
-  { id: "helpers", label: "Helpers", icon: Bot },
   { id: "history", label: "History", icon: History },
 ];
 
-type HelpersPart = "team" | "skills" | "memory" | "tools";
-
 /**
- * Settings (ADR 0039): one app with tabs instead of seven. Each tab shows the pages that used to be
- * apps of their own; `page` is the page that was opened, for saved screens and old names.
+ * Settings (ADR 0042): where the AI comes from and which model the Helper and @builder use, and
+ * the history of removed apps. Everything else is asked of the Helper.
  */
 export function SettingsView({ page }: { page: PageId }) {
   const t = useT();
   const requested = useChatStore((s) => s.settingsTab);
   const [tab, setTab] = useState<SettingsTab>(requested ?? settingsTabOf(page));
-  const [part, setPart] = useState<HelpersPart>(
-    page === "skills" ? "skills" : page === "memory" ? "memory" : "team",
-  );
-  // "Open Settings at Helpers" from elsewhere, also when Settings is already open.
   useEffect(() => {
     if (!requested) return;
     setTab(requested);
@@ -53,7 +45,7 @@ export function SettingsView({ page }: { page: PageId }) {
               aria-selected={tab === id}
               onClick={() => setTab(id)}
               className={cn(
-                "flex items-center gap-1.5 border-b-2 px-3 py-2 text-[13.5px]",
+                "flex items-center gap-1.5 border-b-2 px-3 py-2 text-[13.5px] transition-colors",
                 tab === id
                   ? "border-primary text-foreground"
                   : "text-muted-foreground hover:text-foreground border-transparent",
@@ -65,30 +57,14 @@ export function SettingsView({ page }: { page: PageId }) {
         </div>
       </header>
       <EmbeddedPage.Provider value={true}>
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col" role="tabpanel">
-          {tab === "ai" && <EnginesView />}
-          {tab === "helpers" && (
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto" role="tabpanel">
+          {tab === "ai" && (
             <>
-              <Segments
-                value={part}
-                onChange={setPart}
-                items={[
-                  ["team", t("Team")],
-                  ["skills", t("Skill library")],
-                  ["memory", t("What they remember")],
-                  ["tools", t("Tools and keys")],
-                ]}
-              />
-              {part === "team" && <AgentsView />}
-              {part === "skills" && <SkillsView />}
-              {part === "memory" && <MemoryView />}
-              {part === "tools" && (
-                <section className="min-w-0 flex-1 overflow-y-auto px-8 pb-10 max-md:px-4">
-                  <div className="mx-auto max-w-3xl">
-                    <AgentToolServers />
-                  </div>
-                </section>
-              )}
+              <div className="mx-auto grid w-full max-w-4xl gap-3 px-8 pt-8 max-md:px-4">
+                <HelperAi handle="orchestrator" title={t("The Helper's AI")} />
+                <HelperAi handle="builder" title={t("The AI that builds your apps (@builder)")} />
+              </div>
+              <EnginesView />
             </>
           )}
           {tab === "history" && <BackupsView />}
@@ -98,31 +74,27 @@ export function SettingsView({ page }: { page: PageId }) {
   );
 }
 
-function Segments<T extends string>({
-  value,
-  onChange,
-  items,
-}: {
-  value: T;
-  onChange: (v: T) => void;
-  items: [T, string][];
-}) {
+/** Which AI one of the two helpers uses; @builder appears with the first app. */
+function HelperAi({ handle, title }: { handle: string; title: string }) {
+  const [current, setCurrent] = useState<{ engine: EngineId | null; model: string | null } | null>(
+    null,
+  );
+  const load = useCallback(() => {
+    call(() => api.agents({ handle }).engine.get())
+      .then((a) => setCurrent({ engine: a.engine, model: a.model }))
+      .catch(() => setCurrent(null));
+  }, [handle]);
+  useEffect(load, [load]);
+  if (!current) return null;
   return (
-    <div className="flex shrink-0 gap-1 px-6 pt-4 max-md:px-3">
-      {items.map(([id, label]) => (
-        <button
-          key={id}
-          type="button"
-          aria-pressed={value === id}
-          onClick={() => onChange(id)}
-          className={cn(
-            "border px-3 py-1 text-[13px]",
-            value === id ? "border-primary bg-primary/10" : "hover:bg-accent",
-          )}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
+    <AgentAi
+      handle={handle}
+      title={title}
+      engine={current.engine}
+      model={current.model}
+      onSaved={() => {
+        load();
+      }}
+    />
   );
 }

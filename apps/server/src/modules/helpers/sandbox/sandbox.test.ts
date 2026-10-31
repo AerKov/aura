@@ -2,8 +2,6 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
-import { treaty } from "@elysiajs/eden";
-import { git } from "../../../lib/git";
 import { claudeSandbox } from "../../../providers/claude-agent-sdk";
 import { FakeProvider } from "../../../providers/fake";
 import { nativeTools } from "../../../providers/native-tools";
@@ -81,7 +79,7 @@ describe("command sandbox", () => {
     });
   });
 
-  test("runs with Bash get the policy and are told about it; settings over the API", async () => {
+  test("runs with Bash get the policy and are told about it", async () => {
     const provider = new FakeProvider();
     const orchestrator = { ...ORCHESTRATOR_DEFAULT, builtinTools: ["Bash" as const] };
     t = await createTestApp({
@@ -89,7 +87,6 @@ describe("command sandbox", () => {
       agents: new MemoryAgentDirectory([orchestrator]),
       sandboxSupport: () => ({ ok: true }),
     });
-    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
     const say = async (body: string) => {
       await t?.chat.post({ chatId: "direct", author: { kind: "user", id: "owner" }, body });
       await Bun.sleep(10);
@@ -100,15 +97,6 @@ describe("command sandbox", () => {
     const on = await say("build it");
     expect(on?.sandbox?.allowedDomains).toEqual([]);
     expect(on?.systemPrompt).toContain("there is no network");
-
-    expect((await api.sandbox.put({ mode: "sometimes" as "off" })).status).toBe(422);
-    const updated = await api.sandbox.put({ mode: "off" });
-    expect(updated.data).toMatchObject({ mode: "off", active: false, available: true });
-    expect(JSON.parse(readFileSync(join(t.dataDir, "sandbox.json"), "utf8")).mode).toBe("off");
-    expect(await git(t.dataDir, ["log", "--oneline", "-1"])).toContain("chore(sandbox): off mode");
-    const off = await say("again");
-    expect(off?.sandbox).toBeUndefined();
-    expect(off?.systemPrompt).not.toContain("## Shell sandbox");
   });
 
   const real = sandboxSupport().ok;

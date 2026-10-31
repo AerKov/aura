@@ -11,14 +11,14 @@ import {
 } from "@aura/shared";
 import { commitAll, git } from "../../../lib/git";
 import { errorMessage, log } from "../../../lib/log";
-import type { AgentEvent, AgentTool, McpServerSpec, SandboxPolicy } from "../../../providers/types";
+import type { AgentEvent, AgentTool, SandboxPolicy } from "../../../providers/types";
 import type { EngineSelector } from "../../ai/engines/registry";
 import type { ChatRepo } from "../../chats/chat/repo";
 import type { ChatService } from "../../chats/chat/service";
 import type { FileStore } from "../../chats/files/store";
 import type { ProjectInfo } from "../../chats/projects/service";
 import type { EventHub } from "../../system/realtime/hub";
-import { buildPrompt, CONTEXT_WINDOW, SUMMARY_BATCH } from "./context";
+import { buildPrompt, CONTEXT_WINDOW } from "./context";
 import { wakeNote } from "./defaults";
 import type { AgentDirectory } from "./directory";
 import {
@@ -30,7 +30,7 @@ import {
   spendLevel,
 } from "./guards";
 import { type AgentProfile, ORCHESTRATOR_HANDLE } from "./profiles";
-import { type InjectedNote, joinPrompt, type PromptPart, systemPromptParts } from "./prompt";
+import { joinPrompt, type PromptPart, systemPromptParts } from "./prompt";
 import type { RunRepo } from "./runs";
 import { agentsToTrigger, type WakeReason } from "./triggers";
 
@@ -54,40 +54,21 @@ export interface RuntimeDeps {
     handle: string;
     chat: Chat;
     depth: number;
-    /** The topic the run answers in; its cards and posts go there too. */
-    topicId: string | null;
     /** The run answers the user's own message (not an agent, an alert or a schedule). */
     byUser: boolean;
   }) => AgentTool[] | Promise<AgentTool[]>;
-  /** External MCP servers an agent may use (tier 2 customization). */
-  mcpServers?: (handle: string) => Record<string, McpServerSpec>;
   /** Extra system prompt parts for an agent (its skills, the Aura guide). */
   promptExtras?: (profile: AgentProfile) => PromptPart[];
   /** The OS sandbox for shell commands (no network), or null to run them without it (ADR 0015). */
   sandboxPolicy?: (profile: AgentProfile) => SandboxPolicy | null;
-  /** Notes the agent saved earlier that match this message (agent memory, ADR 0013). */
-  memoryPrompt?: (input: {
-    handle: string;
-    projectId: string | null;
-    query: string;
-  }) => Promise<{ text: string; notes: InjectedNote[] }>;
-  /** The chat's rolling summary of older messages, if any (ADR 0017). */
-  chatSummary?: (
-    chatId: string,
-    topicId: string | null,
-  ) => Promise<{ text: string; upTo: string } | null>;
-  /** The agent's own variables for its commands, resolved, and the ones with no value (ADR 0020). */
-  agentEnv?: (profile: AgentProfile) => { values: Record<string, string>; missing: string[] };
   /** The language the user chose for Aura (its English name), or null to follow their messages. */
   language?: () => Promise<string | null>;
   /** Hides secret values in text shown in chat. */
   redact?: (text: string) => string;
-  /** Called after each run, e.g. to fold old messages into the summary. */
-  afterRun?: (chat: Chat, topicId: string | null) => void;
   /** After a run in an app's chat: offer the agent's changes for approval (ADR 0024). */
   appRun?: (
     project: ProjectInfo,
-    run: { handle: string; chatId: string; topicId: string | null; summary: string },
+    run: { handle: string; chatId: string; summary: string },
   ) => Promise<void>;
   ownerName: string;
   /** Working directory for runs outside a project. */
@@ -115,6 +96,8 @@ interface Pending {
 type ToolCall = { id: string; name: string; summary: string; isError: boolean };
 
 const CARD_FLUSH_MS = 300;
+/** Agents get no variables of their own any more (ADR 0042). */
+const NO_ENV = { values: {}, missing: [] };
 
 /**
  * Runs agents in response to chat messages: guards, context, streaming into the chat, persisting
@@ -144,8 +127,8 @@ export class AgentRuntime {
   }
 
   /**
-   * The system prompt an agent runs with now, part by part (ADR 0032). Memory notes depend on the
-   * message, so `memory` stands in for them; team rules are shown as in a project chat.
+   * The system prompt an agent runs with now, part by part (ADR 0032); team rules are shown as in
+   * a project chat.
    */
   async explainPrompt(handle: string): Promise<PromptPart[] | null> {
     const profile = await this.deps.agents.get(handle);
@@ -157,12 +140,8 @@ export class AgentRuntime {
       team: [handle, "…"],
       extras: this.deps.promptExtras?.(profile) ?? [],
       sandbox: sandbox !== null && granted.includes("Bash"),
-      env: granted.includes("Bash")
-        ? (this.deps.agentEnv?.(profile) ?? { values: {}, missing: [] })
-        : { values: {}, missing: [] },
-      memory: this.deps.memoryPrompt
-        ? "\n\n## What you remember\n(Notes from its memory that match the message, chosen for each run.)"
-        : "",
+      env: NO_ENV,
+      memory: "",
       ownerName: this.deps.ownerName,
       language: (await this.deps.language?.()) ?? this.userLanguage,
     });
@@ -255,11 +234,7 @@ export class AgentRuntime {
       const profile = await this.deps.agents.get(handle);
       if (!profile) {
         const known = (await this.deps.agents.list()).map((a) => `@${a.handle}`).join(", ");
-        await this.postSystem(
-          chat.id,
-          `There is no agent @${handle}. Agents: ${known}.`,
-          message.topicId,
-        );
+        await this.postSystem(chat.id, `There is no agent @${handle}. Agents: ${known}.`);
         continue;
       }
       const chats = await this.deps.repo.chatsOfAgent(handle);
@@ -277,7 +252,6 @@ export class AgentRuntime {
       await this.postSystem(
         chat.id,
         `@${handle} is not in this chat, so it did not get your message. ${where}`,
-        message.topicId,
       );
     }
   }
@@ -319,8 +293,7 @@ export class AgentRuntime {
     const lane = chat.projectId ? `project:${chat.projectId}` : `${handle}@${chat.id}`;
     if (this.active.has(lane)) {
       const queue = (this.queues.get(lane) ?? []).filter(
-        (p) =>
-          !(p.handle === handle && p.chat.id === chat.id && p.trigger.topicId === trigger.topicId),
+        (p) => !(p.handle === handle && p.chat.id === chat.id),
       );
       queue.push({ handle, chat, trigger, team, reason });
       this.queues.set(lane, queue);
@@ -338,7 +311,6 @@ export class AgentRuntime {
       })
       .finally(() => {
         this.active.delete(lane);
-        this.deps.afterRun?.(chat, trigger.topicId);
         const next = this.queues.get(lane)?.shift();
         if (next) {
           this.trigger(next.handle, next.chat, next.trigger, next.team, next.reason);
@@ -348,10 +320,9 @@ export class AgentRuntime {
       });
   }
 
-  private async postSystem(chatId: string, body: string, topicId: string | null): Promise<void> {
+  private async postSystem(chatId: string, body: string): Promise<void> {
     await this.deps.repo.createMessage({
       chatId,
-      topicId,
       author: { kind: "bot", id: "system" },
       kind: "system",
       body,
@@ -373,7 +344,6 @@ export class AgentRuntime {
       await this.postSystem(
         chat.id,
         `@${handle} has no valid profile (agents/${handle}/agent.md).`,
-        trigger.topicId,
       );
       return;
     }
@@ -388,7 +358,6 @@ export class AgentRuntime {
       await this.postSystem(
         chat.id,
         `⛔ @${handle} was not started: agents replied to each other ${maxDepth} times in a row. Reply to continue.`,
-        trigger.topicId,
       );
       return;
     }
@@ -415,7 +384,6 @@ export class AgentRuntime {
       await this.postSystem(
         chat.id,
         `💸 @${handle} is out of budget (${budgetText({ usd: profile.budgetUsd, tokens: profile.budgetTokens ?? null })}). Raise or remove its limit on the Agents page.`,
-        trigger.topicId,
       );
       return;
     }
@@ -423,7 +391,6 @@ export class AgentRuntime {
       await this.postSystem(
         chat.id,
         `💸 The project budget (${budgetText({ usd: project.budgetUsd, tokens: project.budgetTokens })}) is used up. @${handle} was not started. Raise or remove it from the budget button in the chat header.`,
-        trigger.topicId,
       );
       return;
     }
@@ -449,7 +416,6 @@ export class AgentRuntime {
       body: "",
       status: "streaming",
       replyTo: chat.kind === "direct" ? null : trigger.id,
-      topicId: trigger.topicId,
       chainDepth: depth,
       runId,
     });
@@ -458,44 +424,20 @@ export class AgentRuntime {
     const cwd = project?.workspace ?? this.deps.scratchDir;
     mkdirSync(cwd, { recursive: true });
     const headBefore = project ? await headOf(project.workspace) : null;
-    // A topic is its own conversation: agents see only its messages and summary (ADR 0024).
-    const history = await repo.listMessages(chat.id, {
-      limit: CONTEXT_WINDOW + SUMMARY_BATCH + 5,
-      topic: trigger.topicId,
-    });
-    const topic = trigger.topicId ? await repo.getTopic(trigger.topicId) : null;
-    const summary = await this.deps.chatSummary?.(chat.id, trigger.topicId).catch((e: unknown) => {
-      log.warn("chat summary unavailable", { chat: chat.id, error: errorMessage(e) });
-      return null;
-    });
+    const history = await repo.listMessages(chat.id, { limit: CONTEXT_WINDOW + 5 });
     this.stageAttachments(chat, [...history, trigger], cwd, project !== null);
     const prompt =
       buildPrompt({
         agentHandle: handle,
-        chatTitle: topic ? `${chat.title} › ${topic.title}` : chat.title,
+        chatTitle: chat.title,
         history,
         trigger,
         ownerName: this.deps.ownerName,
-        summary,
       }) + wakeNote(reason, handle, team, this.deps.ownerName);
 
     const granted = toolsFor(profile, project !== null);
-    const ownEnv = granted.includes("Bash")
-      ? (this.deps.agentEnv?.(profile) ?? { values: {}, missing: [] })
-      : { values: {}, missing: [] };
     const builtinTools = granted;
     const sandbox = this.deps.sandboxPolicy?.(profile) ?? null;
-    const memory = (await this.deps.memoryPrompt?.({
-      handle,
-      projectId: chat.projectId,
-      query: trigger.body,
-    })) ?? { text: "", notes: [] };
-    if (memory.notes.length > 0)
-      await runs.recordMemory(runId, memory.notes).catch((e: unknown) => {
-        log.warn("could not record injected notes", { runId, error: errorMessage(e) });
-      });
-
-    const mcpServers = this.deps.mcpServers?.(handle) ?? {};
 
     const hide = (t: string) => this.deps.redact?.(t) ?? t;
     let text = "";
@@ -532,8 +474,8 @@ export class AgentRuntime {
             team: project !== null ? team : null,
             extras: this.deps.promptExtras?.(profile) ?? [],
             sandbox: sandbox !== null && builtinTools.includes("Bash"),
-            env: ownEnv,
-            memory: memory.text,
+            env: NO_ENV,
+            memory: "",
             ownerName: this.deps.ownerName,
             language: (await this.deps.language?.()) ?? this.userLanguage,
           }),
@@ -549,14 +491,11 @@ export class AgentRuntime {
             handle,
             chat,
             depth,
-            topicId: trigger.topicId,
             byUser: trigger.author.kind === "user",
           })),
         ],
-        mcpServers,
         maxTurns: this.deps.maxTurns ?? 50,
         maxBudgetUsd,
-        env: ownEnv.values,
       },
       abort.signal,
     )) {
@@ -612,7 +551,6 @@ export class AgentRuntime {
         .appRun?.(project, {
           handle,
           chatId: chat.id,
-          topicId: trigger.topicId,
           summary: body || "Changes to the app",
         })
         .catch((e: unknown) =>
@@ -671,11 +609,10 @@ export class AgentRuntime {
       await this.postSystem(
         chat.id,
         `⚠️ 80% of the project budget is used (${formatTokens(project.spentTokens + tokens)} tokens; budget: ${budgetText({ usd: project.budgetUsd, tokens: project.budgetTokens })}).`,
-        trigger.topicId,
       );
     }
     if (crossedSpendWarning(agentSpend, cost, tokens)) {
-      await this.postSystem(chat.id, `⚠️ @${handle} used 80% of its budget.`, trigger.topicId);
+      await this.postSystem(chat.id, `⚠️ @${handle} used 80% of its budget.`);
     }
 
     // Mentions in a completed reply may wake other agents, one level deeper in the chain.

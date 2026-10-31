@@ -13,7 +13,7 @@ import { type AppSnapshots, describeSnapshot } from "./snapshots";
 /** The orchestrator turns an idea into an app (with the user's approval). */
 export function appTools(
   approvals: ApprovalService,
-  ctx: { handle: string; chatId: string; topicId?: string | null },
+  ctx: { handle: string; chatId: string },
 ): AgentTool[] {
   return [
     {
@@ -42,7 +42,6 @@ export function appTools(
             kind: "app_create",
             requestedBy: ctx.handle,
             chatId: ctx.chatId,
-            topicId: ctx.topicId ?? null,
             title: `Create the app "${name}"`,
             why: String(input.why ?? ""),
             changes: plainChanges(input),

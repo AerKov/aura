@@ -3,10 +3,9 @@ import { loadAppearance } from "@/features/customize/appearance";
 import { loadCustomize } from "@/features/customize/state";
 import { loadLayout, receiveLayout } from "@/features/shell/layout";
 import { resetSession, wsUrl } from "@/lib/api";
-import { loadTasks, refreshProjectsSoon, reportError, resync, upsertTopic } from "./actions";
+import { refreshProjectsSoon, reportError, resync } from "./actions";
 import {
   appendDelta,
-  getState,
   removeChat,
   removeMessage,
   setState,
@@ -55,10 +54,6 @@ export function startRealtime(): () => void {
         case "message.updated":
           upsertMessage(event.message);
           if (event.message.usage) refreshProjectsSoon();
-          if (event.message.card?.type === "task") {
-            const projectId = getState().chats[event.message.chatId]?.projectId;
-            if (projectId) void loadTasks(projectId).catch(reportError);
-          }
           break;
         case "message.deleted":
           removeMessage(event.chatId, event.messageId);
@@ -80,9 +75,6 @@ export function startRealtime(): () => void {
           // A pack may have added agents; a disabled extension leaves the layout.
           refreshProjectsSoon();
           void loadLayout().catch(reportError);
-          break;
-        case "topic.updated":
-          upsertTopic(event.topic);
           break;
         case "app.data":
           window.dispatchEvent(new CustomEvent("aura:app-data", { detail: event }));

@@ -464,7 +464,7 @@ export class ExtensionService {
 
   async propose(
     input: { manifest: unknown; mainJs: string; stylesCss?: string; project?: string },
-    by: { requestedBy: string; chatId: string; topicId?: string | null; why: string },
+    by: { requestedBy: string; chatId: string; why: string },
   ): Promise<ApprovalRecord> {
     const manifest = validateManifest(input.manifest);
     if (!input.mainJs.trim() || input.mainJs.length > MAX_CODE)
@@ -486,7 +486,6 @@ export class ExtensionService {
       kind: "extension_install",
       requestedBy: by.requestedBy,
       chatId: by.chatId,
-      topicId: by.topicId,
       title: `Install extension "${manifest.name}" ${manifest.version}`,
       why: by.why,
       preview: [

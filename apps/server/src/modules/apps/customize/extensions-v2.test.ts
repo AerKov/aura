@@ -11,7 +11,6 @@ import { MemoryAgentDirectory } from "../../helpers/agents/directory";
 import type { AgentProfile } from "../../helpers/agents/profiles";
 import { ASK_LIMIT } from "./bridge";
 import { validateManifest } from "./extensions";
-import { customizeTools } from "./tools";
 
 setDefaultTimeout(20_000);
 
@@ -118,9 +117,6 @@ describe("extension API v2 (ADR 0021)", () => {
         });
       }) as typeof fetch,
     });
-    // Agents' secrets are not apps' (ADR 0030): the same name stored for agents is never used.
-    t.secrets.set("SERVICE_TOKEN", "agents-only-value");
-    t.secrets.set("OTHER_TOKEN", "other-0123456789");
     await install(t, ["ui.panel", "net"], {
       hosts: ["api.example.com"],
       secrets: ["SERVICE_TOKEN"],
@@ -228,53 +224,6 @@ describe("extension API v2 (ADR 0021)", () => {
     symlinkSync(t.dataDir, join(project.workspace, "escape"));
     const viaLink = await ext.files.get({ query: { project: project.id, path: "escape" } });
     expect(viaLink.status).toBe(403);
-  });
-
-  test("an extension proposed for a project becomes its app on approval", async () => {
-    t = await createTestApp({ agents: new MemoryAgentDirectory([ORCHESTRATOR_DEFAULT, worker]) });
-    const { project } = await t.projects.create({
-      name: "Tracker",
-      brief: "@worker hi",
-      agents: ["worker"],
-      budgetUsd: 5,
-    });
-    expect(project.app).toBeNull();
-    const tools = customizeTools(
-      { appearance: t.appearance, mcp: t.mcp, extensions: t.extensions },
-      { handle: "orchestrator", chatId: "direct" },
-    );
-    const propose = tools.find((x) => x.name === "propose_extension");
-    const answer = await propose?.handler({
-      id: "tracker-app",
-      name: "Tracker",
-      version: "1.0.0",
-      permissions: ["ui.panel", "agents.ask", "net"],
-      icon: "ticket",
-      hosts: ["tracker.example.com"],
-      secrets: ["TRACKER_TOKEN"],
-      project: project.id,
-      main_js: "export default function activate(ctx) {}",
-      why: "a form to file tickets",
-    });
-    expect(answer?.text).toContain("Approval requested");
-    const [pending] = await t.approvals.listPending();
-    expect(pending?.preview).toContain("tracker.example.com");
-    expect(pending?.preview).toContain("TRACKER_TOKEN");
-    expect(pending?.preview).toContain("app of project");
-    if (!pending) throw new Error("no approval");
-    await t.approvals.decide(pending.id, true, "owner");
-    expect((await t.projects.get(project.id))?.app).toBe("tracker-app");
-    const info = await t.extensions.info("tracker-app");
-    expect(info).toMatchObject({ enabled: true, icon: "ticket", hosts: ["tracker.example.com"] });
-
-    // The user can unpin it, and only a panel extension can be pinned.
-    const api = apiOf(t);
-    expect(
-      (await api.projects({ projectId: project.id }).app.put({ extensionId: null })).data,
-    ).toMatchObject({ app: null });
-    expect(
-      (await api.projects({ projectId: project.id }).app.put({ extensionId: "nope" })).status,
-    ).toBe(400);
   });
 
   test("the rail layout is saved with the appearance; Chats and Settings cannot be hidden", async () => {

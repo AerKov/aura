@@ -39,7 +39,6 @@ export function fileTools(deps: ToolDeps, ctx: ToolContext): AgentTool[] {
             author: { kind: "agent", id: ctx.handle },
             body: String(input.note ?? "").slice(0, 500),
             attachments: [ref],
-            topicId: ctx.topicId ?? undefined,
             chainDepth: ctx.depth,
           });
           return ok(`Shared ${ref.name} with the user.`);

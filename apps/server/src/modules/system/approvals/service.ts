@@ -78,8 +78,6 @@ export class ApprovalService {
     kind: ApprovalKind;
     requestedBy: string;
     chatId: string;
-    /** The topic the request came from; its card goes there (ADR 0024). */
-    topicId?: string | null;
     title: string;
     why: string;
     preview: string;
@@ -113,7 +111,6 @@ export class ApprovalService {
     const record = await this.mustGet(id);
     const message = await this.repo.createMessage({
       chatId: input.chatId,
-      topicId: input.topicId ?? null,
       author: { kind: "agent", id: input.requestedBy },
       kind: "card",
       body: "",

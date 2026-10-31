@@ -15,11 +15,6 @@ export interface AgentTool {
   handler: (input: Record<string, unknown>) => Promise<{ text: string; isError?: boolean }>;
 }
 
-/** An external MCP server for a run (tier 2 customization). */
-export type McpServerSpec =
-  | { type: "stdio"; command: string; args: string[]; env: Record<string, string> }
-  | { type: "http"; url: string; headers?: Record<string, string> };
-
 /**
  * OS sandbox for an agent's shell commands (ADR 0015). Present when the sandbox is on for the run.
  */
@@ -46,8 +41,6 @@ export interface AgentRunInput {
   confineToCwd?: boolean;
   /** App tools exposed to the agent. */
   tools: AgentTool[];
-  /** External MCP servers whose tools the agent may use. */
-  mcpServers?: Record<string, McpServerSpec>;
   maxTurns?: number;
   /** Hard stop for this run, in USD. */
   maxBudgetUsd?: number;

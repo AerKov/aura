@@ -1,4 +1,4 @@
-import { ArchiveRestore, History, Plus, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
+import { ArchiveRestore, History, RefreshCw, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { PageHeader } from "@/components/page";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,7 @@ import { tr, useT } from "@/features/localization/i18n";
 import { openAppRef } from "@/features/shell/layout";
 import { api, call } from "@/lib/api";
 
-type Point = Awaited<ReturnType<typeof loadPoints>>[number];
 type Backup = Awaited<ReturnType<typeof loadBackups>>[number];
-const loadPoints = () => call(() => api["restore-points"].get());
 const loadBackups = () => call(() => api["app-backups"].get());
 
 const size = (bytes: number) =>
@@ -23,24 +21,16 @@ async function reloadAll(): Promise<void> {
   await Promise.all([loadProjects(), loadInitial()]);
 }
 
-/**
- * Restore points (ADR 0033): take the whole Aura back or forward (configuration, apps with their
- * code and data, settings; not chats, memory or secrets), and bring back uninstalled apps.
- */
+/** History (ADR 0042): bring back uninstalled apps. An app's own versions live beside the app. */
 export function BackupsView() {
   const t = useT();
-  const [points, setPoints] = useState<Point[] | null>(null);
   const [backups, setBackups] = useState<Backup[]>([]);
-  const [label, setLabel] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
-  const [confirm, setConfirm] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    const [p, b] = await Promise.all([loadPoints(), loadBackups()]);
-    setPoints(p);
-    setBackups(b);
+    setBackups(await loadBackups());
   }, []);
   useEffect(() => {
     load().catch(reportError);
@@ -57,30 +47,9 @@ export function BackupsView() {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
       setBusy(null);
-      setConfirm(null);
     }
   };
 
-  const create = () =>
-    run("create", async () => {
-      const point = await call(() => api["restore-points"].post({ label: label.trim() }));
-      setLabel("");
-      return t("Saved “{label}”.", { label: point.label });
-    });
-  const restore = (p: Point) =>
-    run(p.id, async () => {
-      const result = await call(() => api["restore-points"]({ id: p.id }).restore.post());
-      await reloadAll();
-      return t("Aura is at “{label}” now. What it was before is saved as “{saved}”.", {
-        label: result.restored.label,
-        saved: result.saved.label,
-      });
-    });
-  const removePoint = (p: Point) =>
-    run(`del:${p.id}`, async () => {
-      await call(() => api["restore-points"]({ id: p.id }).delete());
-      return null;
-    });
   const bringBack = (b: Backup) =>
     run(b.name, async () => {
       const { id } = await call(() => api["app-backups"]({ name: b.name }).restore.post());
@@ -97,94 +66,14 @@ export function BackupsView() {
   return (
     <section className="min-w-0 flex-1 overflow-y-auto px-8 py-10 max-md:px-4 max-md:py-6">
       <div className="mx-auto max-w-3xl">
-        <PageHeader title={tr("Backups")} icon={<History className="text-primary size-7" />}>
+        <PageHeader title={tr("History")} icon={<History className="text-primary size-7" />}>
           {t(
-            "A restore point keeps the whole Aura as it was: agents, skills, themes, tool servers, settings, and every app with its code, versions and data. Chats, memory and secrets stay as they are. Going to a point saves the present first, so you can come back forward.",
+            "Every change to an app is a version you can go back to, from the app itself. Apps you uninstall wait here.",
           )}
         </PageHeader>
 
-        <div className="bg-card mb-6 flex flex-wrap gap-2 rounded-2xl border p-4">
-          <input
-            aria-label={t("Name of the restore point")}
-            placeholder={t("Name, e.g. Before the new dashboard")}
-            value={label}
-            maxLength={100}
-            onChange={(e) => setLabel(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && void create()}
-            className="bg-background min-w-0 flex-1 rounded-lg border px-3 py-1.5 text-sm"
-          />
-          <Button
-            size="sm"
-            className="rounded-pill"
-            disabled={busy !== null}
-            onClick={() => void create()}
-          >
-            {busy === "create" ? <RefreshCw className="animate-spin" /> : <Plus />}{" "}
-            {t("Save the present")}
-          </Button>
-        </div>
         {notice && <p className="mb-4 text-sm">{notice}</p>}
         {error && <p className="text-destructive mb-4 text-sm">{error}</p>}
-
-        {points === null ? null : points.length === 0 ? (
-          <p className="text-muted-foreground mb-8 text-sm">
-            {t("No restore points yet. The orchestrator also saves one before bigger changes.")}
-          </p>
-        ) : (
-          <ul className="bg-card mb-8 divide-y rounded-2xl border">
-            {points.map((p) => (
-              <li key={p.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-medium">
-                    {p.label}
-                    {p.auto && (
-                      <span className="text-muted-foreground ml-2 text-[11px] font-normal">
-                        {t("automatic")}
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-muted-foreground text-xs">
-                    {when(p.createdAt)} · {t("apps: {list}", { list: p.apps.join(", ") || "—" })} ·{" "}
-                    {size(p.size)}
-                  </div>
-                </div>
-                {confirm === p.id ? (
-                  <span className="flex items-center gap-1.5 text-xs">
-                    {t("Go there? The present is saved first.")}
-                    <Button size="sm" disabled={busy !== null} onClick={() => void restore(p)}>
-                      {busy === p.id ? <RefreshCw className="animate-spin" /> : <RotateCcw />}{" "}
-                      {t("Go")}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => setConfirm(null)}>
-                      {t("Cancel")}
-                    </Button>
-                  </span>
-                ) : (
-                  <>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-pill"
-                      disabled={busy !== null}
-                      onClick={() => setConfirm(p.id)}
-                    >
-                      <RotateCcw /> {t("Go to this point")}
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      aria-label={t("Delete “{label}”", { label: p.label })}
-                      disabled={busy !== null}
-                      onClick={() => void removePoint(p)}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
 
         <h2 className="kicker mb-1 flex items-center gap-1.5">
           <ArchiveRestore className="size-3.5" /> {t("Uninstalled apps")}

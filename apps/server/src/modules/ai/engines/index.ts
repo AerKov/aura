@@ -75,6 +75,15 @@ export const enginesModule = ({ sessions, engines, agents, dataDir }: EnginesDep
         body: t.Object({ key: t.Nullable(t.String({ minLength: 8, maxLength: 300 })) }),
       },
     )
+    .get(
+      "/agents/:handle/engine",
+      async ({ params, status }) => {
+        const profile = await agents.get(params.handle);
+        if (!profile) return status(404, { error: `@${params.handle} does not exist` });
+        return { handle: profile.handle, engine: profile.engine, model: profile.model };
+      },
+      { auth: true },
+    )
     .put(
       "/agents/:handle/engine",
       async ({ params, body, status }) => {

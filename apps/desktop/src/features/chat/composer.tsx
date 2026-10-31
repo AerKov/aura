@@ -37,18 +37,12 @@ let pendingKey = 0;
  */
 export function Composer({
   chatId,
-  topicId = null,
-  closed = false,
   chatKind,
   replyTo,
   onCancelReply,
   placeholder,
 }: {
   chatId: string;
-  /** The topic messages go to (null: General). */
-  topicId?: string | null;
-  /** A closed topic is read-only. */
-  closed?: boolean;
   chatKind: ChatKind;
   replyTo: Message | null;
   onCancelReply: () => void;
@@ -151,7 +145,6 @@ export function Composer({
         chatId,
         body,
         replyTo?.id ?? null,
-        topicId,
         ready.map((f) => f.id),
       );
       setText("");
@@ -195,13 +188,6 @@ export function Composer({
   };
 
   const updateCaret = () => setCaret(ref.current?.selectionStart ?? 0);
-
-  if (closed)
-    return (
-      <p className="text-muted-foreground border-t px-6 py-4 text-center text-sm">
-        {t("This topic is closed. Reopen it from its ⋯ menu above to write here.")}
-      </p>
-    );
 
   return (
     <div

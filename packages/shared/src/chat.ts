@@ -39,7 +39,7 @@ export interface Usage {
 }
 
 /** Structured message payloads (docs/SPEC.md section 6). */
-export type Card = RunCard | ApprovalCard | TaskCard;
+export type Card = RunCard | ApprovalCard;
 
 export interface RunCard {
   type: "run";
@@ -90,48 +90,9 @@ export interface ApprovalCard {
   tryCss?: string | null;
 }
 
-export type TaskStatus = "todo" | "doing" | "done" | "blocked";
-
-export interface TaskCard {
-  type: "task";
-  taskId: string;
-  title: string;
-  assignee: string;
-  status: TaskStatus;
-}
-
-export interface Task {
-  id: string;
-  projectId: string;
-  title: string;
-  description: string;
-  assignee: string;
-  status: TaskStatus;
-  createdBy: string;
-  note: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface SkillVersion {
-  ref: string;
-  subject: string;
-  date: string;
-}
-
-export interface Skill {
-  name: string;
-  description: string;
-  agents: string[];
-  activeRef: string | null;
-  versions: SkillVersion[];
-}
-
 export interface Message {
   id: string;
   chatId: string;
-  /** The topic it belongs to; null is the chat's "General" (ADR 0024). */
-  topicId: string | null;
   author: Participant;
   kind: MessageKind;
   /** Markdown. */
@@ -150,19 +111,6 @@ export interface Message {
   createdAt: string;
   updatedAt: string;
 }
-
-/** A thread of a chat, like a Telegram forum topic. "General" is implicit (topicId null). */
-export interface Topic {
-  id: string;
-  chatId: string;
-  title: string;
-  /** Closed topics are read-only until reopened. */
-  closed: boolean;
-  createdAt: string;
-}
-
-export const GENERAL_TOPIC_TITLE = "General";
-export const MAX_TOPIC_TITLE = 60;
 
 export const HANDLE_PATTERN = /^[a-z][a-z0-9_-]{1,31}$/;
 
@@ -407,13 +355,6 @@ export interface ExtensionInfo {
   problem: string | null;
 }
 
-export interface McpServerInfo {
-  name: string;
-  /** Command line (stdio) or URL (http). */
-  target: string;
-  agents: string[];
-}
-
 export interface CustomizeState {
   safeMode: { on: boolean; reason: string | null };
   appVersion: string;
@@ -421,5 +362,4 @@ export interface CustomizeState {
   /** The chosen language and the ones available (ADR 0033). */
   localization: LocalizationState;
   extensions: ExtensionInfo[];
-  mcpServers: McpServerInfo[];
 }

@@ -2,7 +2,7 @@
  * WebSocket protocol between the server and clients (docs/SPEC.md section 6).
  * The client connects to `WS_PATH?token=<session token>`.
  */
-import type { Chat, Message, Topic } from "./chat";
+import type { Chat, Message } from "./chat";
 import type { Layout } from "./layout";
 
 export const WS_PATH = "/ws";
@@ -18,8 +18,6 @@ export type ServerEvent =
   | { type: "chat.updated"; chat: Chat }
   /** A chat was deleted with its app (ADR 0033). */
   | { type: "chat.removed"; chatId: string }
-  /** A topic was created, renamed, closed or reopened. */
-  | { type: "topic.updated"; topic: Topic }
   /** An app's data changed ("*": everything); its frames refresh (ADR 0024). */
   | { type: "app.data"; app: string; collection: string }
   /** An agent asks how an app looks right now; a client showing it answers (WISH-2). */
@@ -42,7 +40,6 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "message.delta",
   "message.deleted",
   "chat.updated",
-  "topic.updated",
   "app.data",
   "app.snapshot",
   "customize.updated",

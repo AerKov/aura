@@ -9,8 +9,6 @@ import {
   type Participant,
   type Project,
   type SettingsTab,
-  type Task,
-  type Topic,
 } from "@aura/shared";
 import { useSyncExternalStore } from "react";
 import type { FileRequest } from "@/features/files/picker";
@@ -48,11 +46,6 @@ export interface ChatState {
   projects: Record<string, Project>;
   members: Record<string, Participant[]>;
   agents: Record<string, AgentInfo>;
-  tasks: Record<string, Task[]>;
-  /** Topics per chat (ADR 0024); General is implicit. */
-  topics: Record<string, Topic[]>;
-  /** The open topic per chat; absent or null: General. */
-  activeTopic: Record<string, string | null>;
   /** The shell: which apps are open as tiles (ADR 0024). */
   layout: Layout;
   /** On a phone: the one app on screen (not saved; the tiles stay as the desktop left them). */
@@ -92,9 +85,6 @@ let state: ChatState = {
   projects: {},
   members: {},
   agents: {},
-  tasks: {},
-  topics: {},
-  activeTopic: {},
   layout: defaultLayout(),
   phoneApp: null,
   previewDraft: {},

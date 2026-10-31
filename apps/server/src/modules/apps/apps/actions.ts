@@ -86,10 +86,7 @@ export class AppActions {
   }
 
   /** The app's actions as tools for agents in its chat; deleting asks the user first. */
-  async tools(
-    app: string,
-    ctx: { handle: string; chatId: string; topicId?: string | null },
-  ): Promise<AgentTool[]> {
+  async tools(app: string, ctx: { handle: string; chatId: string }): Promise<AgentTool[]> {
     const contract = await this.deps.contract(app).catch(() => null);
     if (!contract) return [];
     return Object.entries(contract.actions).map(([name, a]): AgentTool => {
@@ -108,7 +105,6 @@ export class AppActions {
                 kind: "app_data_delete",
                 requestedBy: ctx.handle,
                 chatId: ctx.chatId,
-                topicId: ctx.topicId ?? null,
                 title: `Delete a ${a.collection} record from ${app}`,
                 why: typeof input.why === "string" ? input.why : "",
                 preview: `\`\`\`json\n${JSON.stringify(await this.deps.data.get(app, a.collection, id(input)), null, 2)}\n\`\`\``,

@@ -21,12 +21,12 @@ describe("the launcher's catalogue (ADR 0033)", () => {
     expect(matchesSearch({ ...crm, description: null, group: null }, "deal")).toBe(false);
   });
 
-  test("the catalogue lists Chats, Alerts and Settings; the old pages are Settings' tabs", () => {
+  test("the catalogue lists Chats and Settings; the old pages are Settings' tabs", () => {
     const pages = BUILTIN_APPS.filter((a) => a.app.startsWith("page:")).map((a) => a.app.slice(5));
     expect(pages).toEqual(["settings"]);
     // Every page id still opens somewhere (ADR 0039).
     for (const page of PAGE_IDS) expect(SETTINGS_TABS).toContain(settingsTabOf(page));
-    expect(settingsTabOf("agents")).toBe("helpers");
+    expect(settingsTabOf("backups")).toBe("history");
     expect(settingsTabOf("engines")).toBe("ai");
     expect(new Set(BUILTIN_APPS.map((a) => a.key)).size).toBe(BUILTIN_APPS.length);
     for (const app of BUILTIN_APPS) expect(app.description.length).toBeGreaterThan(10);

@@ -12,14 +12,12 @@ import type { AppSnapshots } from "../apps/snapshots";
 import { AppearanceError, type AppearanceService } from "./appearance";
 import { type ExtensionBridge, ExtensionDenied } from "./bridge";
 import { ExtensionError, type ExtensionService, FRAME_CSP } from "./extensions";
-import type { McpService } from "./mcp";
 import { leaveSafeMode, type SafeMode } from "./safe-mode";
 
 export interface CustomizeRouteDeps {
   sessions: LocalSessions;
   appearance: AppearanceService;
   extensions: ExtensionService;
-  mcp: McpService;
   safeMode: SafeMode;
   localization: LocalizationService;
   appSecrets: AppSecrets;
@@ -112,7 +110,6 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         appVersion: deps.appVersion,
         localization: await deps.localization.get(),
         extensions: await deps.extensions.list(),
-        mcpServers: deps.mcp.list(),
       }),
       { auth: true },
     )

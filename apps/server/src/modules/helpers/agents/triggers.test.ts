@@ -16,7 +16,6 @@ const chat = (kind: Chat["kind"]): Chat => ({
 const msg = (extra: Partial<Message>): Message => ({
   id: "m",
   chatId: "c",
-  topicId: null,
   author: { kind: "user", id: "owner" },
   kind: "text",
   body: "",

@@ -3,7 +3,7 @@ import { useT } from "@/features/localization/i18n";
 import { cn } from "@/lib/utils";
 import { openChat } from "./actions";
 import { ChatMark } from "./chat-mark";
-import { NewGroupButton } from "./new-group";
+
 import { agentName, chatTitle, formatListTime } from "./participants";
 import { useChatStore } from "./store";
 
@@ -81,7 +81,6 @@ export function Sidebar() {
         pane === "main" && "@max-[640px]:hidden",
       )}
     >
-      <NewGroupButton />
       <nav className="flex-1 overflow-y-auto pb-3">
         {SECTIONS.map(({ key, label }) => {
           const group = sorted.filter((c) => sectionOf(c) === key);

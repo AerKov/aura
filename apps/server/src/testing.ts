@@ -67,10 +67,6 @@ export async function createTestApp(
     db: db.surreal,
     hub,
     engines,
-    embedder: () => engines.embedder(),
-    engineStatus: (id) => engines.provider(id).isAvailable(),
-    summaries: () => engines.store.get().summaries,
-    reloadEngines: () => engines.store.reload(),
     fetch: opts.fetch,
     sandbox,
     agents,
@@ -109,9 +105,7 @@ export async function createTestApp(
     async close() {
       stopRuntime();
       services.runtime.stopAll();
-      services.summaries.stopAll();
       await services.runtime.whenIdle();
-      await services.summaries.whenIdle();
       if (app.server) await app.stop();
       await stopLive();
       await services.appData.closeAll();

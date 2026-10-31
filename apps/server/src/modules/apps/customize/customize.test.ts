@@ -2,27 +2,14 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { treaty } from "@elysiajs/eden";
-import { decideToolUse } from "../../../providers/confine";
 import { FakeProvider } from "../../../providers/fake";
 import { createTestApp } from "../../../testing";
 import { compareVersions, ExtensionError, validateManifest } from "./extensions";
-import { McpError, validateServer } from "./mcp";
 import { FORCED_REASON } from "./safe-mode";
 import { customizeTools } from "./tools";
 
 type TestApp = Awaited<ReturnType<typeof createTestApp>>;
 const by = { requestedBy: "orchestrator", chatId: "direct", why: "test" };
-const coder = {
-  handle: "coder",
-  name: "C",
-  role: "r",
-  engine: null,
-  model: null,
-  systemPrompt: "p",
-  builtinTools: [],
-  budgetUsd: null,
-  skills: [],
-};
 
 describe("customization", () => {
   let t: TestApp | undefined;
@@ -62,7 +49,7 @@ describe("customization", () => {
   test("describe_look tells the Helper what the bar is and shows the active theme (ADR 0041)", async () => {
     t = await createTestApp();
     const tools = customizeTools(
-      { appearance: t.appearance, mcp: t.mcp, extensions: t.extensions },
+      { appearance: t.appearance, extensions: t.extensions },
       { handle: "orchestrator", chatId: "direct" },
     );
     const answer = await tools.find((x) => x.name === "describe_look")?.handler({});
@@ -70,46 +57,6 @@ describe("customization", () => {
     expect(answer?.text).toContain("--bar-bg (background)");
     expect(answer?.text).toContain("Active theme: default");
     expect(answer?.text).toContain("--bar-bg: #1d2d3d");
-  });
-
-  test("MCP servers: validated, no literal secrets, granted per agent, off in safe mode", async () => {
-    expect(() =>
-      validateServer("gh", { command: "npx", env: { TOKEN: "ghp_secret" }, agents: [] }),
-    ).toThrow(McpError);
-    expect(() => validateServer("Bad Name", { command: "x", agents: [] })).toThrow(McpError);
-    expect(() => validateServer("web", { url: "file:///etc", agents: [] })).toThrow(McpError);
-
-    t = await createTestApp();
-    await t.agents.create(coder);
-    const record = await t.mcp.propose(
-      {
-        name: "github",
-        config: {
-          command: "npx",
-          args: ["-y", "gh-mcp"],
-          // biome-ignore lint/suspicious/noTemplateCurlyInString: an env reference, not a template
-          env: { GITHUB_TOKEN: "${env:GITHUB_TOKEN}" },
-          agents: ["coder"],
-        },
-      },
-      by,
-    );
-    expect(record.preview).toContain("npx -y gh-mcp");
-    await t.approvals.decide(record.id, true, "owner");
-    expect(t.mcp.list()).toEqual([{ name: "github", target: "npx -y gh-mcp", agents: ["coder"] }]);
-    expect(t.mcp.forAgent("coder").github).toMatchObject({ type: "stdio", command: "npx" });
-    expect(t.mcp.forAgent("orchestrator")).toEqual({});
-
-    // Tools of a granted server pass the sandbox check; others do not.
-    const base = {
-      args: {},
-      granted: [],
-      appTools: [],
-      cwd: "/w",
-      allowedPrefixes: ["mcp__github__"],
-    };
-    expect(decideToolUse({ ...base, tool: "mcp__github__create_issue" }).allow).toBe(true);
-    expect(decideToolUse({ ...base, tool: "mcp__other__x" }).allow).toBe(false);
   });
 
   test("extensions: manifest rules, install by approval, sandbox frame, permissions, auto-disable", async () => {
@@ -199,21 +146,11 @@ describe("customization", () => {
     expect((await t.extensions.info("alerts-panel")).enabled).toBe(false);
   });
 
-  test("safe mode keeps extensions and MCP servers off", async () => {
+  test("safe mode keeps apps off until the user leaves it", async () => {
     t = await createTestApp({ safeMode: { on: true, reason: "test" } });
-    await t.agents.create(coder);
-    const record = await t.mcp.propose(
-      { name: "web", config: { url: "https://mcp.example.com", agents: ["coder"] } },
-      by,
-    );
-    await t.approvals.decide(record.id, true, "owner");
-    expect(t.mcp.forAgent("coder")).toEqual({});
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
     expect((await api.customize.get()).data?.safeMode).toEqual({ on: true, reason: "test" });
-
-    // The user leaves it: MCP servers come back without a restart.
     expect((await api.customize["safe-mode"].off.post()).data?.safeMode.on).toBe(false);
-    expect(Object.keys(t.mcp.forAgent("coder"))).toEqual(["web"]);
   });
 
   test("the window layout: bar edge and tile style, from the page and the orchestrator", async () => {

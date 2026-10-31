@@ -63,7 +63,6 @@ describe("the bar as an app (ADR 0029)", () => {
     await t.apps.afterRun(project, {
       handle: "builder",
       chatId,
-      topicId: null,
       summary: "Pink bar",
     });
     const [card] = await t.approvals.listPending();

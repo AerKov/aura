@@ -1,8 +1,6 @@
 import {
   BAR_EDGES,
   type BarEdge,
-  EXTENSION_ICONS,
-  type ExtensionPermission,
   LOOK_PARTS,
   LOOK_TOKENS,
   type WindowStyle,
@@ -12,20 +10,15 @@ import { z } from "zod";
 import { errorMessage } from "../../../lib/log";
 import type { AgentTool } from "../../../providers/types";
 import type { AppearanceService } from "./appearance";
-import { type ExtensionService, PERMISSIONS } from "./extensions";
-import type { McpService } from "./mcp";
+import type { ExtensionService } from "./extensions";
 
 export interface CustomizeDeps {
   appearance: AppearanceService;
-  mcp: McpService;
   extensions: ExtensionService;
 }
 
 const ok = (text: string) => ({ text });
 const fail = (error: unknown) => ({ text: `Error: ${errorMessage(error)}`, isError: true });
-
-/** Permissions older apps (before 0.18) understand. */
-const V1_PERMISSIONS = { "chat.read": 1, "chat.write": 1, "ui.panel": 1, "alerts.read": 1 };
 
 /** How to write an extension: the tool description is all the orchestrator sees of the API. */
 export const EXTENSION_GUIDE = [
@@ -74,12 +67,11 @@ function windowInput(input: Record<string, unknown>): Partial<WindowStyle> | und
 
 export function customizeTools(
   deps: CustomizeDeps,
-  ctx: { handle: string; chatId: string; topicId?: string | null },
+  ctx: { handle: string; chatId: string },
 ): AgentTool[] {
   const by = (why: unknown) => ({
     requestedBy: ctx.handle,
     chatId: ctx.chatId,
-    topicId: ctx.topicId ?? null,
     why: String(why ?? ""),
   });
   return [
@@ -125,12 +117,6 @@ export function customizeTools(
           [
             `Theme: ${a.theme ?? "default"} (available: ${a.themes.join(", ") || "none"})`,
             `Snippets on: ${a.snippets.join(", ") || "none"} (available: ${a.availableSnippets.join(", ") || "none"})`,
-            `MCP servers: ${
-              deps.mcp
-                .list()
-                .map((s) => `${s.name} → ${s.agents.join(", ")}`)
-                .join("; ") || "none"
-            }`,
             `Extensions: ${ext.map((e) => `${e.id} (${e.enabled ? "on" : "off"}${e.problem ? `, ${e.problem}` : ""})`).join(", ") || "none"}`,
             "",
             "To change how Aura looks, see describe_look.",
@@ -233,87 +219,6 @@ export function customizeTools(
           return ok(
             `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.mode} on the ${a.rail.edge}${a.rail.size ? `, ${a.rail.size}px` : ""}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}.`,
           );
-        } catch (error) {
-          return fail(error);
-        }
-      },
-    },
-    {
-      name: "propose_mcp_server",
-      description:
-        "Propose an MCP server for specific agents (saved in mcp/servers.json). A command runs on the user's computer, so explain why. Secrets go in env as references (a dollar sign, then {env:NAME}), never literal values.",
-      inputSchema: {
-        name: z.string(),
-        command: z.string().optional(),
-        args: z.array(z.string()).optional(),
-        env: z.record(z.string(), z.string()).optional(),
-        url: z.string().optional().describe("for remote (http) servers instead of a command"),
-        agents: z.array(z.string()).describe("handles allowed to use it"),
-        why: z.string(),
-      },
-      async handler(input) {
-        try {
-          const { name, why, ...config } = input;
-          await deps.mcp.propose({ name: String(name ?? ""), config }, by(why));
-          return ok("Approval requested for the MCP server.");
-        } catch (error) {
-          return fail(error);
-        }
-      },
-    },
-    {
-      name: "propose_extension",
-      description: EXTENSION_GUIDE,
-      inputSchema: {
-        id: z.string().describe("lowercase-with-dashes"),
-        name: z.string(),
-        version: z.string().describe("x.y.z"),
-        permissions: z.array(z.enum(Object.keys(PERMISSIONS) as [ExtensionPermission])),
-        icon: z.enum(EXTENSION_ICONS).optional(),
-        hosts: z
-          .array(z.string())
-          .optional()
-          .describe("hosts the extension may reach with net (api.example.com, *.example.com)"),
-        secrets: z
-          .array(z.string())
-          .optional()
-          .describe("stored secret names Aura may put into those requests"),
-        project: z
-          .string()
-          .optional()
-          .describe("project slug: the extension becomes that project's app"),
-        main_js: z.string(),
-        styles_css: z.string().optional(),
-        why: z.string(),
-      },
-      async handler(input) {
-        try {
-          await deps.extensions.propose(
-            {
-              manifest: {
-                id: input.id,
-                name: input.name,
-                version: input.version,
-                minAppVersion:
-                  Array.isArray(input.permissions) &&
-                  input.permissions.some((p) => !(p in V1_PERMISSIONS))
-                    ? "0.18.0"
-                    : "0.6.0",
-                permissions: input.permissions,
-                author: ctx.handle,
-                ...(input.icon ? { icon: input.icon } : {}),
-                ...(Array.isArray(input.hosts) && input.hosts.length ? { hosts: input.hosts } : {}),
-                ...(Array.isArray(input.secrets) && input.secrets.length
-                  ? { secrets: input.secrets }
-                  : {}),
-              },
-              project: typeof input.project === "string" ? input.project : undefined,
-              mainJs: String(input.main_js ?? ""),
-              stylesCss: typeof input.styles_css === "string" ? input.styles_css : "",
-            },
-            by(input.why),
-          );
-          return ok("Approval requested for the extension.");
         } catch (error) {
           return fail(error);
         }

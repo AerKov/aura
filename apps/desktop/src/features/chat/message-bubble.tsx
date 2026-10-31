@@ -1,6 +1,6 @@
 import type { Message } from "@aura/shared";
 import { formatTokens } from "@aura/shared";
-import { ArrowRightLeft, CornerDownRight, Reply, Square } from "lucide-react";
+import { CornerDownRight, Reply, Square } from "lucide-react";
 import { Mark } from "@/components/mark";
 import { Markdown } from "@/components/markdown";
 import { tr, useT } from "@/features/localization/i18n";
@@ -13,7 +13,6 @@ import { displayName, formatTime, previewOf } from "./message-utils";
 import { agentName as agentNameOf } from "./participants";
 import { RunCard } from "./run-card";
 import { useChatStore } from "./store";
-import { TaskCard } from "./task-card";
 
 /**
  * One message in Aura's conversation layout: agents write full-width prose next to their mark; the
@@ -25,15 +24,12 @@ export function MessageBubble({
   showAuthor,
   onReply,
   onJumpTo,
-  onMove,
 }: {
   message: Message;
   replyTarget: Message | undefined;
   showAuthor: boolean;
   onReply: (message: Message) => void;
   onJumpTo: (messageId: string) => void;
-  /** Offered when the chat has topics: put the message in another topic. */
-  onMove?: (message: Message) => void;
 }) {
   const me = useChatStore((s) => s.me);
   const t = useT();
@@ -73,17 +69,6 @@ export function MessageBubble({
   const action = "text-muted-foreground hover:text-foreground bg-card border p-1";
   const replyButton = (
     <div className="absolute -top-3 right-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100">
-      {onMove && (
-        <button
-          type="button"
-          aria-label={t("Move to another topic")}
-          title={t("Move to another topic")}
-          onClick={() => onMove(message)}
-          className={action}
-        >
-          <ArrowRightLeft className="size-3.5" />
-        </button>
-      )}
       <button
         type="button"
         aria-label={t("Reply")}
@@ -189,7 +174,6 @@ export function MessageBubble({
             />
           )}
           {message.card?.type === "approval" && <ApprovalCard card={message.card} name={name} />}
-          {message.card?.type === "task" && <TaskCard card={message.card} />}
           {message.error && <p className="text-destructive mt-1 text-sm">{message.error}</p>}
           {message.card?.type !== "run" && (message.usage || (streaming && message.runId)) && (
             <div className="text-muted-foreground mt-1 flex items-center gap-3 text-[11px]">

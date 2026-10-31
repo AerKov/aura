@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { errorMessage, log } from "../lib/log";
 import { decideToolUse } from "./confine";
-import { connectMcpTools, mcpPrefix } from "./mcp-client";
 import { type NativeTool, nativeTools } from "./native-tools";
 import type {
   AgentEvent,
@@ -93,21 +92,6 @@ export class OpenAICompatProvider implements LLMProvider {
   }
 
   async *run(input: AgentRunInput, signal: AbortSignal): AsyncIterable<AgentEvent> {
-    const servers = input.mcpServers ?? {};
-    const mcp =
-      Object.keys(servers).length > 0 ? await connectMcpTools(servers, input.runId) : null;
-    try {
-      yield* this.loop(input, signal, mcp?.tools ?? []);
-    } finally {
-      await mcp?.close();
-    }
-  }
-
-  private async *loop(
-    input: AgentRunInput,
-    signal: AbortSignal,
-    mcpTools: NativeTool[],
-  ): AsyncGenerator<AgentEvent> {
     const model = input.model ?? this.opts.defaultModel();
     if (!model) {
       yield {
@@ -145,7 +129,6 @@ export class OpenAICompatProvider implements LLMProvider {
         run: (args) => tool.handler(args),
       });
     }
-    for (const tool of mcpTools) tools.set(tool.name, tool);
     const toolSpecs = [...tools.values()].map((tool) => ({
       type: "function" as const,
       function: {
@@ -336,7 +319,7 @@ export class OpenAICompatProvider implements LLMProvider {
       args,
       granted: input.builtinTools,
       appTools: appToolNames,
-      allowedPrefixes: Object.keys(input.mcpServers ?? {}).map(mcpPrefix),
+      allowedPrefixes: [],
       cwd: input.confineToCwd ? cwd : undefined,
     });
     if (!decision.allow) {

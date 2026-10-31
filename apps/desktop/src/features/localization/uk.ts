@@ -562,4 +562,15 @@ export const UK: Record<string, string> = {
   "Any OpenAI-compatible server: LM Studio, llama.cpp, vLLM, or a cloud API.":
     "Будь-який OpenAI-сумісний сервер: LM Studio, llama.cpp, vLLM або хмарний API.",
   Image: "Зображення",
+  "Every change to an app is a version you can go back to, from the app itself. Apps you uninstall wait here.":
+    "Кожна зміна застосунку — це версія, до якої можна повернутися з самого застосунку. Видалені застосунки чекають тут.",
+  "Change this app": "Змінити цей застосунок",
+  "What shall we build?": "Що збудуємо?",
+  "Say what this app should do": "Скажіть, що має робити цей застосунок",
+  "Describe an app in your own words: a tracker, a board, a small CRM. Your Helper makes it, and you change it by chatting.":
+    "Опишіть застосунок своїми словами: трекер, дошку, маленьку CRM. Помічник його створить, а змінюватимете ви його в чаті.",
+  "@builder changes the app; you see every change and approve it.":
+    "@builder змінює застосунок; ви бачите кожну зміну й погоджуєте її.",
+  "The Helper's AI": "ШІ Помічника",
+  "The AI that builds your apps (@builder)": "ШІ, що будує ваші застосунки (@builder)",
 };

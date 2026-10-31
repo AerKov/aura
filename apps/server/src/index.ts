@@ -44,10 +44,6 @@ async function main(): Promise<void> {
     db: db.surreal,
     hub,
     engines,
-    embedder: () => engines.embedder(),
-    engineStatus: (id) => engines.provider(id).isAvailable(),
-    summaries: () => engines.store.get().summaries,
-    reloadEngines: () => engines.store.reload(),
     agents,
     dataDir: config.dataDir,
     safeMode: safe.mode,
@@ -80,11 +76,7 @@ async function main(): Promise<void> {
     log.info("shutting down", { signal });
     stopRuntime();
     services.runtime.stopAll();
-    services.summaries.stopAll();
-    await Promise.race([
-      Promise.all([services.runtime.whenIdle(), services.summaries.whenIdle()]),
-      Bun.sleep(5_000),
-    ]);
+    await Promise.race([services.runtime.whenIdle(), Bun.sleep(5_000)]);
     await app.stop();
     await stopLive().catch(() => {});
     await services.appData.closeAll();

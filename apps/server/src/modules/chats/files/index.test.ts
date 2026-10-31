@@ -95,7 +95,11 @@ describe("files in chats and apps (ADR 0036)", () => {
       400,
     );
     // A file of another chat is not found here.
-    const group = (await api.chats.post({ title: "Other" })).data;
+    const group = await t.repo.createChat({
+      kind: "group",
+      title: "Other",
+      members: [{ participant: { kind: "user", id: "owner" }, role: "owner" }],
+    });
     const other = await api
       .chats({ chatId: group?.id ?? "" })
       .files.post({ file: new File(["x"], "o.txt") });

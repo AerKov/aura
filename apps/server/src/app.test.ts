@@ -93,7 +93,11 @@ describe("app", () => {
       const blank = await api.chats({ chatId: "direct" }).messages.post({ body: "   " });
       expect(blank.status).toBe(400);
       const { data } = await api.chats({ chatId: "direct" }).messages.get({ query: {} });
-      const group = (await api.chats.post({ title: "Other" })).data;
+      const group = await t.repo.createChat({
+        kind: "group",
+        title: "Other",
+        members: [{ participant: { kind: "user", id: "owner" }, role: "owner" }],
+      });
       const other = await api.chats({ chatId: group?.id ?? "" }).messages.post({
         body: "x",
         replyTo: data?.[0]?.id,

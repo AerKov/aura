@@ -19,7 +19,10 @@ export function AgentAi({
   engine: current,
   model: currentModel,
   onSaved,
+  title,
 }: {
+  /** What this AI is for, e.g. "The Helper's AI". */
+  title?: string;
   handle: string;
   engine: EngineId | null;
   model: string | null;
@@ -55,7 +58,7 @@ export function AgentAi({
 
   return (
     <div className="bg-card border p-5">
-      <h3 className="kicker mb-1">{t("Its AI")}</h3>
+      <h3 className="kicker mb-1">{title ?? t("Its AI")}</h3>
       <p className="text-muted-foreground mb-3 text-xs">
         {t("Pick from the AI you connected.")}{" "}
         <button
