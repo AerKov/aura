@@ -1,9 +1,0 @@
-{
-  "id": "writing-team",
-  "name": "Writing team",
-  "version": "1.0.0",
-  "description": "A writer who drafts articles, docs and posts in the project folder, and an editor who tightens them. For texts, not code.",
-  "author": "Aura",
-  "tags": ["writing", "team"],
-  "files": ["agents/writer/agent.md", "agents/editor/agent.md", "skills/plain-language/SKILL.md"]
-}

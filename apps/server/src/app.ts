@@ -10,8 +10,6 @@ import type { AppLifecycle } from "./modules/apps/apps/lifecycle";
 import type { AppSecrets } from "./modules/apps/apps/secrets";
 import type { AppService } from "./modules/apps/apps/service";
 import type { AppSnapshots } from "./modules/apps/apps/snapshots";
-import { catalogModule } from "./modules/apps/catalog";
-import type { CatalogService } from "./modules/apps/catalog/service";
 import { customizeModule } from "./modules/apps/customize";
 import type { AppearanceService } from "./modules/apps/customize/appearance";
 import type { ExtensionBridge } from "./modules/apps/customize/bridge";
@@ -65,7 +63,6 @@ export interface AppDeps extends HealthDeps {
   extraHosts?: string[];
   engines: EngineRegistry;
   memory: MemoryService;
-  catalog: CatalogService;
   summaries: ChatSummaryService;
   agentSetup: AgentSetupService;
   appSecrets: AppSecrets;
@@ -130,7 +127,6 @@ export function createApp(deps: AppDeps) {
     .use(enginesModule(deps))
     .use(memoryModule(deps))
     .use(sandboxModule(deps))
-    .use(catalogModule(deps))
     .use(summariesModule(deps))
     .use(
       agentSetupModule({

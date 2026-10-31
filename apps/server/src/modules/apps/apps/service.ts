@@ -1,6 +1,5 @@
 /// <reference path="../../../providers/vendor-files.d.ts" />
-import { cpSync, existsSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import {
   APP_ID_PATTERN,
@@ -31,11 +30,6 @@ export class AppError extends Error {
 }
 
 export const BUILDER_HANDLE = "builder";
-
-/** The branch with the author's versions of an app installed from a pack. */
-const UPSTREAM = "upstream";
-/** The files a pack manages in an app. */
-const PACK_FILES = ["manifest.json", "main.js", "styles.css"];
 
 /** The agent that writes and changes apps in their chats; created with the first app. */
 export const BUILDER_DEFAULT: AgentProfile = {
@@ -236,8 +230,6 @@ export class AppService {
       kickoff: description.length > 0,
     });
     await this.load();
-    // The author's line of versions, which later updates are merged from (phase 27).
-    await git(project.workspace, ["branch", UPSTREAM]);
     // The user created it (or approved the pack): it runs with what its manifest asks for.
     await this.deps.extensions().regrant(id);
     return { project, chat };
@@ -279,7 +271,6 @@ export class AppService {
     cpSync(source, project.workspace, { recursive: true, force: true });
     await commitAll(project.workspace, "feat: move the extension in", ORCHESTRATOR_HANDLE);
     await this.load();
-    await git(project.workspace, ["branch", UPSTREAM]);
     rmSync(source, { recursive: true, force: true });
     await commitAll(this.deps.dataDir, `refactor: extension ${id} is now an app`);
     log.info("extension became an app", { id });
@@ -439,67 +430,6 @@ export class AppService {
     const commit = await commitAll(app.dir, `revert: back to ${hash}`, "owner");
     await this.deps.extensions().regrant(id);
     return commit ?? hash;
-  }
-
-  /**
-   * Installs an app from a pack, or updates one installed before (phase 27). An update is the
-   * author's new version on the `upstream` branch, merged into the user's: their changes stay,
-   * and where both changed the same lines the author's version wins (versions can restore).
-   */
-  async installFromPack(
-    id: string,
-    files: Record<string, string>,
-    pack: { id: string; version: string },
-  ): Promise<string> {
-    const manifest = JSON.parse(files["manifest.json"] ?? "{}") as { name?: unknown };
-    const name = typeof manifest.name === "string" ? manifest.name : id;
-    if (!this.isApp(id)) {
-      await this.create({ name, id, files });
-      return `app ${name}`;
-    }
-    const app = this.mustSource(id);
-    if ((await git(app.dir, ["status", "--porcelain"])).length > 0)
-      throw new AppError(
-        `${name} has a change waiting for approval; approve or discard it before updating`,
-      );
-    const tmp = join(tmpdir(), `aura-upstream-${id}-${Bun.randomUUIDv7()}`);
-    let hadUpstream = true;
-    await git(app.dir, ["rev-parse", "--verify", UPSTREAM]).catch(() => {
-      hadUpstream = false;
-    });
-    // An app made in Aura and later published: its first version is the base.
-    if (!hadUpstream) await git(app.dir, ["branch", UPSTREAM, "HEAD"]);
-    try {
-      await git(app.dir, ["worktree", "add", "-q", tmp, UPSTREAM]);
-      for (const name of PACK_FILES) {
-        const target = join(tmp, name);
-        if (name in files) writeFileSync(target, files[name] ?? "");
-        else if (existsSync(target)) rmSync(target);
-      }
-      await commitAll(tmp, `upstream: ${pack.id} ${pack.version}`, "author");
-    } finally {
-      await git(app.dir, ["worktree", "remove", "--force", tmp]).catch(() => {});
-    }
-    const before = await git(app.dir, ["rev-parse", "HEAD"]);
-    try {
-      await git(app.dir, [
-        "merge",
-        "--no-edit",
-        "-X",
-        "theirs",
-        "-m",
-        `update: ${pack.id} ${pack.version}`,
-        UPSTREAM,
-      ]);
-    } catch (error) {
-      await git(app.dir, ["merge", "--abort"]).catch(() => {});
-      throw new AppError(`Could not merge the update into ${name}: ${errorMessage(error)}`);
-    }
-    const changed = await git(app.dir, ["diff", "--name-only", before, "HEAD"]);
-    await this.deps.extensions().regrant(id);
-    return changed
-      ? `app ${name} updated (${changed.split("\n").join(", ")}; your own changes kept)`
-      : `app ${name} (already up to date)`;
   }
 
   /** User action: throws away changes waiting for approval. */

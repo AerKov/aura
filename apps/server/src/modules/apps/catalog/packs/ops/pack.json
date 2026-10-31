@@ -1,9 +1,0 @@
-{
-  "id": "ops",
-  "name": "Ops on call",
-  "version": "1.0.0",
-  "description": "An on-call agent the orchestrator can hand alerts to: it reads the project's code and configs, reproduces problems and proposes fixes. Pair it with the Alerts chat.",
-  "author": "Aura",
-  "tags": ["ops", "alerts"],
-  "files": ["agents/oncall/agent.md", "skills/incident-triage/SKILL.md"]
-}

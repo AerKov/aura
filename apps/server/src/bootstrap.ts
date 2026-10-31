@@ -14,8 +14,6 @@ import { AppSecrets } from "./modules/apps/apps/secrets";
 import { AppService } from "./modules/apps/apps/service";
 import { AppSnapshots } from "./modules/apps/apps/snapshots";
 import { appTools, barTools, libraryTool, snapshotTool } from "./modules/apps/apps/tools";
-import { CatalogService } from "./modules/apps/catalog/service";
-import { catalogTools } from "./modules/apps/catalog/tools";
 import { AppearanceService } from "./modules/apps/customize/appearance";
 import { ExtensionBridge } from "./modules/apps/customize/bridge";
 import { ExtensionService } from "./modules/apps/customize/extensions";
@@ -276,14 +274,6 @@ export async function createServices(deps: {
     if (moved.length > 0) deps.hub.publish({ type: "customize.updated" });
   }
   const customize = { appearance, mcp, extensions };
-  const catalog = new CatalogService({
-    dataDir: deps.dataDir,
-    approvals,
-    extensions,
-    apps: appService,
-    hub: deps.hub,
-    fetch: deps.fetch,
-  });
   const agentSetup = new AgentSetupService({
     dataDir: deps.dataDir,
     mcp,
@@ -361,11 +351,6 @@ export async function createServices(deps: {
               chatId: ctx.chat.id,
               topicId: ctx.topicId,
             }),
-            ...catalogTools(catalog, {
-              handle: ctx.handle,
-              chatId: ctx.chat.id,
-              topicId: ctx.topicId,
-            }),
           ]
         : []),
     ],
@@ -435,7 +420,6 @@ export async function createServices(deps: {
     restorePoints,
     localization,
     layout,
-    catalog,
     safeMode,
     appVersion: SERVER_VERSION,
   };

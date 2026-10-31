@@ -1,9 +1,0 @@
-{
-  "id": "research",
-  "name": "Researcher",
-  "version": "1.0.0",
-  "description": "An agent that searches the web, reads sources and writes a cited summary to the project folder. Web content is treated as data.",
-  "author": "Aura",
-  "tags": ["research", "web"],
-  "files": ["agents/researcher/agent.md", "skills/cite-sources/SKILL.md"]
-}

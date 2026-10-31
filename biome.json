@@ -7,13 +7,7 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": [
-      "**",
-      "!**/src-tauri",
-      "!**/*.gen.ts",
-      "!apps/server/src/modules/apps/catalog/packs/**/*.{md,css,json,txt}",
-      "!docs/design/round4"
-    ]
+    "includes": ["**", "!**/src-tauri", "!**/*.gen.ts", "!docs/design/round4"]
   },
   "formatter": {
     "enabled": true,

@@ -1,9 +1,0 @@
-/* Compact: smaller text and tighter spacing in chats. */
-.markdown {
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
-.message-in {
-  margin-top: 0.75rem;
-}
