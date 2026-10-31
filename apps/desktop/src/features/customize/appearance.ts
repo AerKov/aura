@@ -29,17 +29,6 @@ export async function loadAppearance(): Promise<void> {
   setState(() => ({ appearance }));
 }
 
-export async function setAppearance(input: {
-  theme?: string | null;
-  snippets?: string[];
-  rail?: Partial<RailLayout>;
-  wm?: Partial<WindowStyle>;
-}): Promise<void> {
-  const appearance = await call(() => api.appearance.put(input));
-  apply(appearance);
-  setState(() => ({ appearance }));
-}
-
 /** Temporarily applies proposed CSS (from an approval card) on top of everything. */
 export function tryCss(css: string | null): void {
   document.getElementById(TRY_ID)?.remove();

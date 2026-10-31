@@ -169,10 +169,6 @@ export async function loadTasks(projectId: string): Promise<void> {
   setState((s) => ({ tasks: { ...s.tasks, [projectId]: tasks } }));
 }
 
-export function showAgents(): void {
-  openSettings("helpers");
-}
-
 export function showEngines(): void {
   openSettings("ai");
 }

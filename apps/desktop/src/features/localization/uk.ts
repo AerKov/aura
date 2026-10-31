@@ -8,24 +8,10 @@ export const UK: Record<string, string> = {
   Alerts: "Сповіщення",
   "When something broke or needs attention": "Коли щось зламалося або потребує уваги",
   Reminders: "Нагадування",
-  "What to do regularly: every morning, every Friday…": "Що робити регулярно: щоранку, щопʼятниці…",
   Helpers: "Помічники",
-  "AI agents: who they are, what they can do and remember, what runs them":
-    "ШІ-агенти: хто вони, що вміють і памʼятають, через що працюють",
-  "Instructions your helpers use": "Інструкції, якими користуються помічники",
-  "What your helpers remember about you": "Що помічники запамʼятали про вас",
-  Look: "Вигляд",
-  "Theme, windows, side bar": "Тема, вікна, бічна панель",
-  Language: "Мова",
-  "Українська · English": "Українська · English",
   Phone: "Телефон",
-  "Open Aura from your phone": "Відкривайте Aura з телефона",
   Backups: "Резервні копії",
-  "Put everything back as it was": "Повернути все, як було раніше",
-  "Ready-made packs": "Готові набори",
-  "Apps and helpers you can add": "Застосунки й помічники, які можна додати",
   "Helper programs": "Програми помічників",
-  "Claude Code, Codex, Ollama…": "Claude Code, Codex, Ollama…",
   Essentials: "Основне",
   Settings: "Налаштування",
   History: "Історія",
@@ -47,7 +33,6 @@ export const UK: Record<string, string> = {
   AI: "ШІ",
   Automations: "Автоматизації",
   Data: "Дані",
-  Advanced: "Додатково",
   "AI, helpers, automations, history": "ШІ, помічники, автоматизації, історія",
   "Its AI": "Його ШІ",
   "Pick from the AI you connected.": "Оберіть серед підключених ШІ.",
@@ -64,9 +49,6 @@ export const UK: Record<string, string> = {
   "Alerts from your tools": "Сповіщення з ваших інструментів",
   "Monitoring tools post alerts to a web address; your Helper reads them first in the Alerts chat.":
     "Інструменти моніторингу надсилають сповіщення на вебадресу; ваш Помічник першим читає їх у чаті Сповіщень.",
-  "Built-in parts": "Вбудовані частини",
-  "Turned off, a part has no routes, tools or background work.":
-    "Вимкнена частина не має маршрутів, інструментів і фонової роботи.",
   "New window": "Нове вікно",
   "Find an app or a setting": "Знайти застосунок або налаштування",
   "Nothing found.": "Нічого не знайшли.",
@@ -86,9 +68,7 @@ export const UK: Record<string, string> = {
   "How it all works": "Як тут усе працює",
   "Got it": "Зрозуміло",
   "Make such an app?": "Створити такий застосунок?",
-  "Advanced mode": "Розширений режим",
   "Enter: open · Esc: close": "Enter — відкрити · Esc — закрити",
-  "Your own": "Свій варіант",
   "Describe it, and a helper builds it": "Опишіть його, і помічник збере",
   Name: "Назва",
   "e.g. Warehouse": "напр. Склад",
@@ -189,7 +169,6 @@ export const UK: Record<string, string> = {
   "Your own chat with your main AI helper": "Особистий чат із головним ШІ-помічником",
   "A project: helpers work on it together": "Проєкт: помічники працюють над ним разом",
   "An app's chat: change it by asking": "Чат застосунку: змінюйте його проханнями",
-  Projects: "Проєкти",
 
   "New topic": "Нова тема",
   "A new topic: its messages stay in it, and helpers there see only them":
@@ -206,22 +185,13 @@ export const UK: Record<string, string> = {
   Chats: "Розмови",
   Skills: "Навички",
   Memory: "Пам'ять",
-  Localization: "Локалізація",
-  "Restore points": "Точки відновлення",
   Apps: "Застосунки",
 
   // The launcher.
   "Your apps": "Ваші застосунки",
-  "Turn off {name}": "Вимкнути «{name}»",
-  "Turn on {name}": "Увімкнути «{name}»",
-  "Also turns off {list}.": "Також вимкне: {list}.",
-  "Turn off": "Вимкнути",
   Cancel: "Скасувати",
   "New app": "Новий застосунок",
   "What it should do": "Що він має робити",
-  "No templates left to add. Turn on Chats to build your own app with agents.":
-    "Шаблонів більше немає. Увімкніть Чати, щоб створити власний застосунок з агентами.",
-  "Browse the catalog": "Переглянути каталог",
 
   // An app's menu.
   "More for {name}": "Ще для «{name}»",
@@ -258,14 +228,6 @@ export const UK: Record<string, string> = {
   "{name} is back, with a new chat.": "«{name}» повернуто, з новим чатом.",
 
   // Localization.
-  Automatic: "Автоматично",
-  "The interface follows this computer; agents answer in the language you write in.":
-    "Інтерфейс — мовою цього комп'ютера; агенти відповідають мовою, якою пишете ви.",
-  "One language for Aura: its interface, the answers of its agents, and your apps (they get it as ctx.language and write their texts in it).":
-    "Одна мова для Aura: її інтерфейсу, відповідей агентів і ваших застосунків (вони отримують її як ctx.language і пишуть нею свої тексти).",
-  "Showing: {name}.": "Зараз: {name}.",
-  "Texts without a translation stay in English. To add a language or correct a translation, put locales/<code>.json in Aura's data folder: a name, its English name and the strings.":
-    "Тексти без перекладу лишаються англійською. Щоб додати мову чи виправити переклад, покладіть locales/<code>.json у теку даних Aura: назву, англійську назву і рядки.",
 
   // Groups, deleting chats and limits.
   Groups: "Групи",
@@ -299,8 +261,6 @@ export const UK: Record<string, string> = {
   "e.g. 5": "напр. 5",
   "For subscriptions (Claude Code, Gemini CLI, Codex, OpenCode) and local models.":
     "Для підписок (Claude Code, Gemini CLI, Codex, OpenCode) і локальних моделей.",
-  "Real money only on paid APIs (OpenRouter, an OpenAI-compatible API).":
-    "Справжні гроші лише на платних API (OpenRouter, OpenAI-сумісний API).",
   "Agents still stop after 8 replies to each other in a row.":
     "Агенти все одно зупиняються після 8 відповідей одне одному підряд.",
   "Click to change.": "Натисніть, щоб змінити.",
@@ -343,20 +303,8 @@ export const UK: Record<string, string> = {
   "Choose from this computer": "Оберіть на цьому комп'ютері",
 
   // Free AI services (ADR 0037).
-  "Free AI services": "Безкоштовні ШІ-сервіси",
-  "Make a free key:": "Створіть безкоштовний ключ:",
-  Copied: "Скопійовано",
-  "Copy link": "Копіювати посилання",
-  "Paste it here. It stays on this computer and goes only to {name}.":
-    "Вставте його сюди. Він лишається на цьому комп'ютері й іде лише до {name}.",
-  "{name} API key": "API-ключ {name}",
-  "paste the key": "вставте ключ",
   Connect: "Підключити",
   "Connect an AI to start": "Підключіть ШІ, щоб почати",
-  "Your helpers need an AI to think with. The easiest way is a free service:":
-    "Помічникам потрібен ШІ, яким вони думають. Найпростіше — безкоштовний сервіс:",
-  "I already use an agent app (Claude Code, Codex…) or local models":
-    "Я вже користуюся агентною програмою (Claude Code, Codex…) або локальними моделями",
   "Connect Claude Code": "Підключити Claude Code",
   "Install Claude Code:": "Встановіть Claude Code:",
   Run: "Запустіть",
@@ -364,27 +312,6 @@ export const UK: Record<string, string> = {
     "у терміналі й увійдіть зі своїм акаунтом Claude.",
   "Come back and check again. The app never sees your credentials.":
     "Поверніться й перевірте ще раз. Застосунок ніколи не бачить ваших облікових даних.",
-  "Open Helper programs": "Відкрити «Helper programs»",
-  "Gemini models from Google AI Studio. A free key, no card needed.":
-    "Моделі Gemini з Google AI Studio. Безкоштовний ключ, без картки.",
-  "On the free plan Google may use your prompts to improve its products, and daily limits apply.":
-    "На безкоштовному плані Google може використовувати ваші запити для покращення своїх продуктів, і діють добові ліміти.",
-  "Open models (gpt-oss, Llama) answering very fast. A free key.":
-    "Відкриті моделі (gpt-oss, Llama), що відповідають дуже швидко. Безкоштовний ключ.",
-  "The free plan has per-minute and daily limits; long agent runs may need to wait.":
-    "Безкоштовний план має хвилинні та добові ліміти; довгі запуски агентів можуть чекати.",
-  "Many models behind one key, with a free section (models ending in :free).":
-    "Багато моделей за одним ключем, є безкоштовний розділ (моделі з :free).",
-  "Free models have daily limits and may log prompts; pick one marked free.":
-    "Безкоштовні моделі мають добові ліміти й можуть зберігати запити; обирайте позначені free.",
-  "Open models on very fast hardware. A key is free to make; the free plan's terms change.":
-    "Відкриті моделі на дуже швидкому залізі. Ключ створити безкоштовно; умови безкоштовного плану змінюються.",
-  "Check the plan on the sign-up page: a card may be asked for. Daily limits apply.":
-    "Перегляньте план на сторінці реєстрації: може знадобитися картка. Діють добові ліміти.",
-  "Mistral's own models, with a free Experiment plan.":
-    "Власні моделі Mistral, є безкоштовний план Experiment.",
-  "The free plan may ask for a phone number and may use your prompts to train models.":
-    "Безкоштовний план може просити номер телефону й використовувати ваші запити для навчання моделей.",
   "Check again": "Перевірити ще раз",
 
   // Built-in local AI (ADR 0038).
@@ -412,7 +339,6 @@ export const UK: Record<string, string> = {
   "llama.cpp is not installed yet.": "llama.cpp ще не встановлено.",
   "This computer has {gb} GB of memory.": "На цьому комп'ютері {gb} ГБ пам'яті.",
   running: "працює",
-  Use: "Використати",
   "Downloading llama.cpp": "Завантаження llama.cpp",
   "Downloading the model": "Завантаження моделі",
   "Add another model": "Додати ще одну модель",
