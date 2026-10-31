@@ -1,7 +1,7 @@
 # Aura alpha
 
-Aura holds your own small apps next to a team of AI helpers who make and change them for you. It
-works end to end, but expect rough edges. Please
+Aura lets you build your own small apps by chatting with a helper, on your own computer. It works
+end to end, but expect rough edges. Please
 [report what breaks](https://github.com/AerKov/aura/issues/new/choose).
 
 ## Install
@@ -19,50 +19,37 @@ The builds are **not signed** yet:
 - macOS: right-click Aura → **Open** the first time.
 - Windows: on the SmartScreen warning choose **More info** → **Run anyway**.
 
-## You need one engine
+## You need an AI
 
-Agents need a model. The easiest way is the **built-in local AI**: Aura installs llama.cpp and a
-model that fits your computer when you ask, free and private. Other ways:
-
-- **Ollama** / **LM Studio** on your computer;
-- or an agent app you already use, under its own login, which Aura never reads or stores:
-  **Claude Code**, **Gemini CLI**, **Codex** or **OpenCode**.
+The easiest way is the **built-in local AI** (Settings → AI): Aura installs llama.cpp and a model
+that fits your computer when you ask, free and private. **Ollama**, **LM Studio** and **Claude
+Code** (under its own login, which Aura never reads) work too.
 
 Then follow [Getting started](https://github.com/AerKov/aura/wiki/Getting-Started).
 
 ## Your apps
 
-**My apps** (the **A** at the top of the bar) lists your apps by group, and the built-in ones
-(Chats, Alerts, Settings).
-Describe a tool you need and @builder makes it as an app with its own chat; every change waits for your approval. **Restore points** take the whole Aura
-back, or forward again, and **Language** switches Aura to Ukrainian. Details:
+Tell the **Helper** what you need, or press **New app** in the sidebar. Each app opens with its chat
+beside it, where @builder changes it; every change waits for your approval, and every version can
+be brought back. Uninstalled apps wait in Settings → History. Details:
 [The screen](https://github.com/AerKov/aura/wiki/The-Screen), [Apps](https://github.com/AerKov/aura/wiki/Apps).
-
-## Connecting your tools
-
-Trackers, databases and internal APIs connect on the **Helpers** page: an MCP server (a command or
-a URL), its keys stored as secrets, and a **Test** button that says what is wrong. Each agent's card
-shows its full prompt, what it can do and what stops it. Or just ask the orchestrator: it knows how
-Aura works and can check the setup for you. Details:
-[Agents](https://github.com/AerKov/aura/wiki/Agents).
 
 ## Optional
 
 - **Command sandbox:** macOS works out of the box. On Linux install `bubblewrap` and `socat`.
-  Agents' commands have no network; they use the web through their engine's web tools.
-- **Phone:** start with `AURA_REMOTE=1` and pair from the Phone app.
+  Helpers' commands have no network.
 
 ## Your data
 
-Everything stays on your computer, in `~/.aura`: agents, skills and settings as files in a git
-repository, chats and history in a local database. Uninstalling the app keeps this folder.
+Everything stays on your computer, in `~/.aura`: helpers, themes and apps as files in git, chats and
+history in a local database. Uninstalling Aura keeps this folder.
 
 ## Known limits
 
 - One user per installation (no accounts or sharing yet).
-- Packs from links are not signed. Read the preview before installing one.
 - Intel Macs: no build yet; run from source.
-- Windows has no command sandbox yet: agents' commands run with your user's permissions there.
+- Windows has no command sandbox yet: helpers' commands run with your user's permissions there.
 - No automatic updates yet: download new versions from Releases.
-- Gemini CLI, Codex and OpenCode use their own sandboxes; Aura still decides what they may do.
-- Data from this alpha should carry over; save a restore point (or copy `~/.aura`) before updating.
+- No phone client in this version.
+- Data from this alpha should carry over; copy `~/.aura` before updating. Topics, skills, memory,
+  alerts and schedules from earlier versions are no longer shown.

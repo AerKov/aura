@@ -2,36 +2,31 @@
 
 ```
 ┌──────────────────────────── your computer ─────────────────────────────┐
-│  Tauri app: React shell (launcher, tiles, bar), sandboxed app frames   │
+│  Tauri app: React shell (sidebar, chats, cards), sandboxed app frames  │
 │          │ HTTP (Eden Treaty) + WebSocket                              │
 │  Bun server (sidecar): Elysia                                          │
-│   ├─ chat + realtime          ├─ approvals, skills, tasks              │
-│   ├─ orchestrator + agents    ├─ alerts (webhooks), scheduler          │
-│   ├─ guards (budgets, chains) ├─ customization, devices, push          │
-│   ├─ apps (code, data, actions, backups) ├─ restore points, language   │
-│   └─ engines ─┬ Claude Agent SDK ── Claude Code                        │
-│               ├ ACP ── Gemini CLI / Codex / OpenCode                   │
-│               └ Aura loop ── llama.cpp / Ollama / OpenAI-compatible    │
-│  SurrealDB (embedded)        ~/.aura (git: agents, skills, themes…)    │
+│   ├─ chat + realtime          ├─ approvals                             │
+│   ├─ the Helper and @builder  ├─ apps (code, data, actions, secrets,   │
+│   ├─ guards (budgets, chains) │   versions, backups)                   │
+│   ├─ themes, language         │                                        │
+│   └─ engines ─┬ Aura loop ── llama.cpp / Ollama / OpenAI-compatible    │
+│               └ Claude Agent SDK ── Claude Code                        │
+│  SurrealDB (embedded)        ~/.aura (git: agents, themes, apps…)      │
 └────────────────────────────────────────────────────────────────────────┘
-      ▲ phones connect over your network (paired, thin client)
 ```
 
 - **Monorepo** (Bun workspaces): `apps/server`, `apps/desktop`, `packages/shared` (the message
-  protocol and shared types, the single source of truth).
-- **The server by domain** (ADR 0039): `modules/ai`, `helpers`, `chats`, `apps`, `automations` and
-  `system`, each holding the modules of that part of the product.
-- **A core with apps** (ADR 0027, 0033, 0040): everything built in (database, shell, app
-  runtime, approvals, restore points, localization, chats, skills, memory, schedules, alerts) is
-  always on, and every app, built in or the user's, has a chat. The
-  user's apps are git repositories with their own data store; uninstalling keeps a backup.
-- **Config in files, state in the database.** Agents, skills, themes, extensions and MCP servers are
-  files in a git repository; chats, runs, tasks and approvals live in an embedded SurrealDB with live
-  queries feeding the WebSocket.
+  protocol, shared types and the default theme: the single source of truth).
+- **The server by domain:** `modules/ai`, `helpers`, `chats`, `apps` and `system`.
+- **A small core for the user's apps** (ADR 0042): the Helper's chat, apps with their chats and
+  @builder, approvals and versions, the AI, the theme and the language. Each app is a git
+  repository with its own data store; uninstalling keeps a backup.
+- **Config in files, state in the database.** Agents, themes and app code are files in git; chats,
+  runs and approvals live in an embedded SurrealDB with live queries feeding the WebSocket.
 - **One way to models:** the `LLMProvider` interface ("engines"). Feature code never calls a model
   SDK directly.
-- **Agents act through tools**, all checked by the app: the agent's grants, the workspace, approvals
-  for side effects.
+- **Helpers act through tools**, all checked by the app: the helper's grants, the app's folder,
+  approvals for side effects.
 
 ## Decisions
 
@@ -75,6 +70,13 @@ The reasons behind the design are recorded as ADRs in
 | [0033](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0033-aura-as-a-shell.md)                           | Aura as a shell: a launcher, uninstall with a backup, restore points, libraries, Localization                                      |
 | [0034](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0034-industry-look-and-plain-mode.md)              | The Industry look, a plain interface by default, the "My apps" menu                                                                |
 | [0035](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0035-groups-deleting-chats-and-no-bundled-apps.md) | Groups of your own, deleting chats, secrets in the app, no bundled apps                                                            |
+| [0036](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0036-files-in-chats-and-apps.md)                   | Files in chats and apps                                                                                                            |
+| [0037](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0037-free-services-first.md)                       | Free services first (withdrawn by 0040)                                                                                            |
+| [0038](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0038-built-in-llama-cpp.md)                        | The built-in llama.cpp                                                                                                             |
+| [0039](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0039-a-simpler-product-model.md)                   | A simpler product model                                                                                                            |
+| [0040](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0040-fewer-settings.md)                            | Fewer settings, one mode                                                                                                           |
+| [0041](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0041-no-look-of-its-own.md)                        | Aura has no look of its own                                                                                                        |
+| [0042](https://github.com/AerKov/aura/blob/HEAD/docs/decisions/0042-build-your-own-apps-by-chat.md)               | Aura is for building your own apps by chat                                                                                         |
 
 The full product and architecture spec, including the roadmap, is
 [docs/SPEC.md](https://github.com/AerKov/aura/blob/HEAD/docs/SPEC.md).

@@ -2,14 +2,8 @@
 
 ## 1. Install
 
-**From a release.** Download the installer for your system from
-[Releases](https://github.com/AerKov/aura/releases). Builds are not signed yet:
-
-- macOS: right-click Aura → **Open** the first time.
-- Windows: on the SmartScreen warning choose **More info** → **Run anyway**.
-
-**From source.** See [Development](Development). In short: install [Bun](https://bun.sh) and the
-[Tauri prerequisites](https://v2.tauri.app/start/prerequisites/), then
+Download a build from [Releases](https://github.com/AerKov/aura/releases), or run from source with
+[Bun](https://bun.sh) 1.4+ and the [Tauri prerequisites](https://v2.tauri.app/start/prerequisites/):
 
 ```sh
 git clone https://github.com/AerKov/aura && cd aura
@@ -19,43 +13,28 @@ bun run dev
 
 ## 2. Connect an AI
 
-Helpers need something to think with. Aura's first screen asks for it, in the Helper's chat. The
-easiest way is the **built-in local AI**: press **Set up the local AI**, pick the recommended model,
-read what will be downloaded and press **Yes, download**. Aura installs llama.cpp and the model and
-starts using it.
+Open **Settings → AI**. The easiest start is the **Built-in local AI**: pick a model that fits your
+computer and press **Yes, download**. Aura installs llama.cpp and the model and runs it only on
+this computer. Ollama, LM Studio and Claude Code work too; see [The AI](Engines).
 
-Already use Claude Code, Codex, Gemini CLI or OpenCode, or Ollama? Open **Settings → AI** and
-connect it there. Details: [Engines](Engines).
+At the top of the tab, choose which AI **the Helper** uses and which one **builds your apps**
+(@builder). A strong model for @builder makes better apps.
 
-## 3. Talk to your Helper
+## 3. Make your first app
 
-Aura opens on **Chats**, with a welcome from your **Helper** (the orchestrator), the first chat in
-the list. Tell it what you want, in any language:
+Click **Helper** in the sidebar and say what you need, in any language:
 
-> I run a small design studio. Keep track of my clients and deals, please.
+> Make me an app to track clients and deals.
 
-The Helper asks what it needs, then makes an **app** (or, for bigger work, proposes a **project**
-with a team, for example a coder and a reviewer). The new app appears in **My apps**; open it, and
-use its **Chat** button to change it by asking. Every change comes as a card that says what will
-change: nothing happens until you press **Yes, do it**.
+The Helper proposes the app on a card; press **Yes, do it**. Or press **New app** in the sidebar
+and give it a name and a sentence. The app opens with its chat beside it, and @builder starts
+building. When it is done you get a card with what changed: look at the app with **After the
+change**, then decide.
 
-![A decision card in an app's chat](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/app-chat.png)
+## 4. Change it
 
-## 4. Watch the team work
+Keep talking in the app's chat: _"add an email column"_, _"make the Add button green"_,
+_"export to CSV"_. Each change is a card; each approved change is a version you can go back to.
 
-A project has its own chat and its own folder (a git repository). Helpers mention each other to
-hand work over, every run shows a short card of what it did and what it cost, and the files are
-committed after each run. The ring in the chat header shows the tokens used; click it to set a
-limit.
-
-You can step in at any time: write in the project chat and the Helper passes it to the right agent,
-reply to a message to answer it, or type `@` to pick a helper yourself. Press **Stop** on a running
-reply to end it. **New group** at the top of the chat list makes a chat of your own with the
-helpers you choose.
-
-## Next
-
-- [Chats and agents](Chats-and-Agents) for how conversations and agents behave
-- [The screen](The-Screen): My apps, apps side by side, Settings, history, language
-- [Customization](Customization) to change the look or add tools by asking the orchestrator
-- [Phone](Phone) to keep an eye on things from your phone
+Want to look around first? `bun scripts/demo.ts` and `bun run --cwd apps/desktop dev:vite` start a
+demo with sample apps.

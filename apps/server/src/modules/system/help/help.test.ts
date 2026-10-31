@@ -22,15 +22,15 @@ describe("the orchestrator knows Aura", () => {
   });
 
   test("the user guide is embedded and searchable", async () => {
-    expect(HELP_PAGES.map((p) => p.id)).toContain("agents");
+    expect(HELP_PAGES.map((p) => p.id)).toContain("apps");
     for (const page of HELP_PAGES) expect(page.text.length).toBeGreaterThan(200);
     const [docs] = helpTools();
-    expect(await run(docs, {})).toContain("- agents: Each agent's card, tool servers");
-    const agents = await run(docs, { topic: "agents" });
-    expect(agents).toContain("## Secrets");
+    expect(await run(docs, {})).toContain("- apps: Make an app, change it with approval");
+    const apps = await run(docs, { topic: "apps" });
+    expect(apps).toContain("## Its secrets");
     // Wiki links become topic hints.
-    expect(agents).toContain('(topic "approvals-and-safety")');
-    expect(await run(docs, { search: "claude mcp list" })).toContain("[agents]");
+    expect(apps).toContain('(topic "the-screen")');
+    expect(await run(docs, { search: "OLLAMA_CONTEXT_LENGTH" })).toContain("[engines]");
     expect(await run(docs, { topic: "nope" })).toContain("No topic");
   });
 

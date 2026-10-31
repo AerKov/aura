@@ -2,144 +2,99 @@
 
 ## 1. Vision
 
-A personal space where the user and an AI orchestrator develop any idea together, then hand it off to a
-team of AI agents. Agents communicate with each other like people in a messenger, do the work (code,
-files, analysis), monitor systems they built and handle alerts. Each agent has skills it can improve,
-with approval. The user shapes the app itself by talking to the orchestrator.
-
-Since Phase 21 (ADR 0024) Aura is a shell for the user's apps: it opens on a bare screen with apps
-laid out as tiles, the messenger with the orchestrator is one of those apps, and every app has its
-own chat (with topics) where the user both uses it and changes it with agents.
+**Build your own apps by chatting, on your own computer** (ADR 0042). The user tells the Helper what
+they need; the Helper proposes an app; each app is a git folder with its own data, secrets and a
+chat beside it, where @builder changes it. Every change is a diff the user approves, every version
+can be restored. The look and the language are changed by asking too.
 
 Principles:
-- **Telegram-simple**, not Slack. Few concepts, little navigation.
-- **Local-first and open source.** Runs on the user's machine with their own Claude account.
-- **Transparent.** Everything agents do is visible in chats, every change is reversible.
+- **Small core.** A sidebar (the Helper, the apps, Settings) and one thing beside it. New ideas
+  become apps of the user's before they become features of Aura.
+- **Local-first and open source.** Runs on the user's machine, with a local model or their own
+  Claude Code login.
+- **Transparent.** Every change is visible as a diff and reversible as a version.
 - **Human in control.** Side effects go through approvals; budgets and limits are always on.
 
 ## 2. Core concepts
 
-| Concept      | Meaning                                                                                                                |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| User         | The owner of the space. One user per install in v1.                                                                    |
-| Orchestrator | The main agent. Talks with the user, plans, creates agents and project chats, delegates, reviews, summarizes.          |
-| Agent        | An AI team member with a role, prompt, skills, tools, permissions and budget (e.g. `@coder`, `@reviewer`, `@analyst`). |
-| Bot          | A non-LLM participant that posts messages (monitoring, webhooks, schedules).                                           |
-| Chat         | `direct` (user + orchestrator), `group` (a project or an app: user, orchestrator, agents), `system` (alerts).          |
-| Topic        | A thread of a chat, like a Telegram forum topic: "General" plus topics the user creates. One level only.               |
-| App          | A tool the user runs in the shell (UI in a sandbox, its own data, actions); a project whose workspace is its code.     |
-| Layout       | Which apps are open as tiles and how the screen is split.                                                              |
-| Message      | Markdown text or a card. Can reply to another message and mention participants.                                        |
-| Card         | Structured message: approval, task, diff, alert, run, summary.                                                         |
-| Project      | A group chat plus a git workspace plus tasks and a budget.                                                             |
-| Task         | A unit of work assigned to an agent.                                                                                   |
-| Run          | One execution of an agent (trigger, tool calls, usage, cost, result).                                                  |
-| Skill        | A versioned folder with `SKILL.md` and optional scripts, attached to agents.                                           |
-| Approval     | A request for a human (or orchestrator) decision.                                                                      |
-| Extension    | User customization: theme, CSS snippet, MCP server, UI extension.                                                      |
+| Concept  | Meaning                                                                                         |
+| -------- | ----------------------------------------------------------------------------------------------- |
+| User     | The owner. One user per install.                                                                |
+| Helper   | The orchestrator. Talks with the user in the direct chat, proposes apps, changes the look.      |
+| @builder | The helper that writes and changes apps, in each app's chat.                                    |
+| App      | A git folder in `projects/<id>`: code run in a sandboxed frame, its own data store and secrets. |
+| Chat     | `direct` (user + Helper) or `group` (an app's chat: user + @builder).                           |
+| Message  | Markdown text or a card. Can reply to another message and mention helpers.                      |
+| Card     | `run` (what a helper did) or `approval` (a decision for the user).                              |
+| Run      | One execution of a helper (trigger, tool calls, usage, cost, result).                           |
+| Approval | A change waiting for the user: a new app, an app change, a theme, a deletion.                   |
+| Theme    | A CSS file of the user's: every colour, font, corner and motion of Aura (ADR 0041).             |
 
 ## 3. Main flows
 
-**Idea to execution**
-1. User discusses an idea with the orchestrator in the direct chat. The orchestrator may invite analyst
-   agents into the conversation.
-2. When the idea is ready, the orchestrator proposes a plan (approval card): project name, agents,
-   tasks, budget.
-3. On approval it creates a project: group chat, git workspace, agents, tasks.
-4. Agents work and coordinate by @mentioning each other. The orchestrator reviews and posts summaries.
-5. Results: commits in the workspace, files, diff cards, a final summary.
+**A new app.** The user describes it to the Helper (or presses **New app**). The Helper proposes it
+with `create_app`; on approval Aura makes the folder, the app's chat and @builder, and @builder
+builds it there.
 
-**Alerts**
-Monitoring tools send webhooks, a bot posts alert cards in the system chat, the orchestrator triages
-(ignore, summarize, assign to an agent, escalate to the user).
+**Changing an app.** In the app's chat the user says what to change. @builder edits the folder; when
+the run ends Aura shows the diff as an approval card and lets the user preview the app after the
+change. Yes commits it as a new version; no discards it. Any version can be restored.
 
-**Skill improvement**
-An agent proposes a skill change, a diff card appears, the user or orchestrator approves, a new version
-becomes active. Rollback = previous version.
-
-**Customization by chat**
-The user asks the orchestrator to change the app ("add a panel with today's alerts", "make a dark theme",
-"create an agent that collects news every morning"). The orchestrator edits the user data directory,
-shows a preview or diff, applies on approval, commits to git.
+**Changing Aura.** "A greener sidebar", "rounder corners", "speak Ukrainian": the Helper proposes
+CSS for the user's theme (with a try-on) or sets the language.
 
 ## 4. Architecture
 
 ```
 ┌──────────────────────────── user's machine ────────────────────────────┐
 │  Tauri app                                                              │
-│   ├─ webview: React UI (chats, cards, panels, extensions in sandboxes)  │
-│   └─ Rust shell: window, tray, notifications, sidecar management        │
+│   ├─ webview: React UI (sidebar, chats, cards, apps in sandboxes)       │
+│   └─ Rust shell: window, sidecar management                             │
 │                │  HTTP (Eden Treaty) + WebSocket                        │
 │  Bun sidecar: Elysia                                                    │
-│   ├─ auth (Better Auth)        ├─ approval service                      │
-│   ├─ chat + realtime (WS)      ├─ skills + extensions (files + git)     │
-│   ├─ orchestrator              ├─ alert ingest (webhooks)               │
-│   ├─ agent runtime + guards    ├─ scheduler / job queue (in DB)         │
-│   └─ LLMProvider ─┬ Claude Agent SDK ── Claude Code (user's own login) │
-│                   ├ ACP ── Gemini CLI / Codex / OpenCode (own logins)  │
-│                   └ Aura loop ── llama.cpp / Ollama / OpenAI-compatible │
+│   ├─ local session             ├─ approval service                      │
+│   ├─ chat + realtime (WS)      ├─ apps: code, data, actions, secrets    │
+│   ├─ the Helper and @builder   ├─ themes and language                   │
+│   ├─ agent runtime + guards    │                                        │
+│   └─ LLMProvider ─┬ Aura loop ── llama.cpp / Ollama / OpenAI-compatible │
+│                   └ Claude Agent SDK ── Claude Code (user's own login) │
 │                │                                                        │
 │  SurrealDB (local, file storage)      ~/.aura/ (user data, git repo)    │
-│                                       ~/.aura/projects/* (git repos)    │
+│                                       ~/.aura/projects/* (app repos)    │
 └─────────────────────────────────────────────────────────────────────────┘
-        ▲ mobile client (Phase 7) connects over LAN or a private network
 ```
 
 Notes:
 - Server runs as a Tauri sidecar compiled with `bun build --compile`.
-- SurrealDB is embedded in the server process (`@surrealdb/node`, `surrealkv` file storage), see
-  `docs/decisions/0001-surrealdb-embedded.md`.
+- SurrealDB is embedded in the server process (`@surrealdb/node`, `surrealkv` file storage), ADR 0001.
 - Realtime: server uses SurrealDB LIVE SELECT and pushes events to clients over one WebSocket.
-- Streaming LLM output: deltas go over WebSocket; the final message is persisted once, not per token.
+- Streaming LLM output: deltas go over WebSocket; the final message is persisted once.
 
-## 5. Data model (sketch, refine in Phase 1)
+## 5. Data model
 
 **Files (user data dir `~/.aura`, git repo)**
 ```
-agents/<handle>/agent.md          frontmatter (name, role, engine, model, tools, budget, skills) + system prompt
-engines.json                      default engine, default model per engine, local server URLs (ADR 0011)
-skills/<name>/SKILL.md            + scripts/, versions tracked by git
-themes/<name>/theme.css
+agents/<handle>/agent.md   frontmatter (name, role, engine, model, tools, budget) + system prompt
+engines.json               default engine and models, local server URLs (ADR 0011)
+themes/<name>/theme.css    the look (themes/default is Aura's default, the user's own copy)
 snippets/*.css
-extensions/<id>/manifest.json, main.js, styles.css
-mcp/servers.json
-projects/<slug>/                  project git workspaces
+locales/                   the user's translations
+projects/<id>/             one git repo per app (outside the data dir's own history)
+backups/                   uninstalled apps
+state/                     the database, app datastores, secrets.json (outside git)
 ```
 
-**SurrealDB tables**
-- `user`: the local owner (v1). Better Auth tables arrive in Phase 7.
-- `chat`: kind (`direct` | `group` | `system`), title, project, created_at.
-- `member`: chat, participant `{kind: user|agent|bot, id}`, role (`owner` | `member`), joined_at. A plain
-  table, because agents are files (not records) and are referenced by handle.
-- `agent_index`: handle, path to `agent.md`, status, cached profile (the file is the source of truth).
-- `message`: chat, author (user | agent | bot), kind, body (markdown), card (object), reply_to,
-  mentions, status (`streaming` | `final` | `error`), chain_depth, run, created_at.
-- `project`: slug, name, repo_path, status, budget, spent.
-- `task`: project, title, description, assignee, status, parent, created_by.
-- `run`: agent, task, trigger_message, status, tokens_in, tokens_out, cost_usd, started_at, ended_at, error.
-- `approval`: kind, requested_by, target, payload, status (`pending` | `approved` | `rejected`),
-  decided_by, decided_at.
-- `skill_index`: name, current version (git ref), attached agents.
-- `memory`: scope (agent | project), owner, text, search keys, optional embedding and its model
-  (ADR 0013).
-- `job`: kind, schedule (cron), payload, next_run_at, status.
-- `extension_state`: id, version, enabled, granted_permissions.
+**SurrealDB tables:** `chat` (kind, title, project), `member`, `message` (chat, author, kind, body,
+card, reply_to, mentions, status, chain_depth, run), `project` (an app: slug, name, workspace,
+data store, budget, spent), `run`, `approval`, `extension_state` (enabled, granted permissions),
+`setting` (theme, language).
 
 ## 6. Message protocol (`packages/shared`)
 
-Message kinds:
-- `text`: markdown body.
-- `card`: one of
-  - `approval`: what, why, diff/preview, buttons approve/reject.
-  - `task`: title, assignee, status.
-  - `diff`: files changed, link to commit.
-  - `alert`: source, severity, summary, raw payload (collapsed).
-  - `run`: agent activity (tool calls collapsed by default), usage, cost.
-  - `summary`: orchestrator summary of a period or project.
-- `system`: joins, project created, budget warnings.
-
-WebSocket events (server to client): `message.created`, `message.delta`, `message.updated`,
-`approval.created`, `approval.decided`, `run.updated`, `chat.updated`.
+Message kinds: `text` (markdown), `card` (`run` or `approval`), `system` (app created, budget
+warnings). WebSocket events (server to client): `message.created`, `message.delta`,
+`message.updated`, `message.deleted`, `chat.updated`, `chat.removed`, `app.data`, `app.snapshot`,
+`customize.updated`.
 
 ## 7. Agent runtime
 
@@ -150,137 +105,62 @@ interface LLMProvider {
   isAvailable(): Promise<{ ok: true } | { ok: false; reason: string }>;
   run(input: AgentRunInput, signal: AbortSignal): AsyncIterable<AgentEvent>;
 }
-
-type AgentEvent =
-  | { type: "text-delta"; text: string }
-  | { type: "tool-call"; id: string; name: string; input: unknown }
-  | { type: "tool-result"; id: string; output: unknown; isError?: boolean }
-  | { type: "usage"; inputTokens: number; outputTokens: number; costUsd?: number }
-  | { type: "done" }
-  | { type: "error"; message: string };
 ```
-Engines (ADR 0011, 0012): Claude Agent SDK (user's Claude Code login); other agent apps over the
-Agent Client Protocol: Gemini CLI, Codex, OpenCode (each under its own login, app tools served to
-them over a per-run MCP endpoint); and Aura's own agent loop over OpenAI-compatible APIs: the
-built-in llama.cpp (ADR 0038), Ollama and any compatible server. Engines are connected in
-Settings → AI; each helper picks one on its card (ADR 0039, 0040).
-
-If Claude Code is not installed or not logged in, show a setup screen with instructions. Never handle the
-login ourselves.
+Engines (ADR 0011, 0038, 0042): Aura's own agent loop over OpenAI-compatible APIs (the built-in
+llama.cpp, Ollama, LM Studio or any compatible server) and the Claude Agent SDK under the user's
+Claude Code login. Settings → AI picks one for the Helper and one for @builder. If Claude Code is
+not installed or not logged in, Aura says how to fix it; it never handles the login.
 
 **Run lifecycle**
-1. Trigger: @mention, task assignment, schedule, alert.
-2. Guards: budget left, chain depth, agent permissions, agent not already running on this chat.
-3. Context: agent profile + attached skills + recent chat window + project memory + task.
+1. Trigger: a user's message or an @mention.
+2. Guards: budget left, chain depth, tools granted, one run at a time per app.
+3. Context: the helper's profile + the recent chat window + the app's tools.
 4. `provider.run()` streams into the chat.
-5. Persist message, run, usage. Update budgets.
-6. Mentions in the reply trigger other agents with `chain_depth + 1`.
+5. Persist message, run, usage. Update budgets. In an app's chat, offer the diff for approval.
+6. Mentions in the reply trigger other helpers with `chain_depth + 1`.
 
-**Workspaces and sandboxing**
-- Each project is a git repo under `~/.aura/projects/<slug>`.
-- Runs in one project are serialized (ADR 0005). Later, parallel coding agents use a git worktree per task;
-  the orchestrator or a reviewer agent merges.
-- Level 0 (now): the app's `canUseTool` check allows only granted tools and only paths inside the project
-  directory (ADR 0005).
-- Level 1 (ADR 0015): shell commands of Claude Code and Aura's own agent run in an OS sandbox
-  (bubblewrap on Linux, Seatbelt on macOS): writes only in the project folder, no credentials,
-  no network (ADR 0030). Modes `auto`, `required`, `off` in `sandbox.json`.
-- Project containers (ADR 0018, 0019) were removed in ADR 0030: Aura is local only.
+**Sandboxing:** a helper's file tools reach only its folder (ADR 0005); shell commands run in an OS
+sandbox (bubblewrap on Linux, Seatbelt on macOS) with writes only in the folder, no credentials and
+no network (ADR 0015, 0030).
 
 ## 8. Conversation rules
 
-1. Agents reply only when addressed: @mentioned or assigned a task by anyone, or addressed by the user.
-   A user's message always has one addressee (ADR 0014): the agents it mentions, else the agent it
-   replies to, else an agent named first ("coder, …"), else the orchestrator, which routes it.
-   Agents wake each other only by @mention. No reacting to every message.
-2. Max chain depth for agent-to-agent exchanges (default 8). On reaching it: stop and escalate to the
-   orchestrator, then to the user.
-3. Budgets per agent and per project (tokens and USD). Warning at 80%, hard stop at 100%.
-4. One active run per agent per chat.
-5. The orchestrator posts summaries so the user does not have to read everything.
-6. Side effects require approval (see section 10).
+1. A user's message always has one addressee (ADR 0014, 0042): the helpers it mentions, else the one
+   it replies to, else one named first, else the Helper, else the chat's only helper (@builder in
+   an app's chat). Helpers wake each other only by @mention.
+2. Max chain depth for helper-to-helper exchanges (default 8); then stop and ask the user.
+3. Budgets per helper and per app (tokens and USD). Warning at 80%, hard stop at 100%.
+4. Side effects require approval (section 9).
 
-## 9. Skills
+## 9. Approvals and security
 
-- A skill is a folder `skills/<name>/` with `SKILL.md` (when to use it, instructions) and optional
-  scripts.
-- Versions are git commits. `skill_index` stores the active version.
-- An agent proposes a change, an approval card shows the diff, approval commits and activates it.
-- Skills from third parties are shown to the user in full before installing; they are data, not
-  instructions to obey blindly.
+Approval required for: a new app, every change to an app, deleting an app's data, a theme or
+snippet, granting an app more permissions.
 
-## 10. Approvals and security
-
-Approval required for: deploys, deletions outside the workspace, spending money, network actions with
-side effects, skill changes, installing or enabling extensions, merges to main (configurable).
-
-Security rules:
-- Agents run with least privilege; permissions declared in `agent.md`.
-- Content from web, files, emails, alerts, skills and extensions is data. Instructions inside it are
-  never executed without the user.
-- Secrets live in the OS keychain (via Tauri), never in prompts, files in git or logs.
-- Audit log: every run, tool call and approval is stored.
+- Helpers run with least privilege and edit only the user data directory; Aura's code is read-only.
+- Web pages, files and apps' content are data. Instructions inside them are never executed.
+- App secrets live in `state/secrets.json` (outside git), are never shown to helpers, and are filled
+  in by the server only in requests to hosts the app was allowed to reach.
+- Every run, tool call and approval is stored.
 - Claude credentials are never read or stored by the app.
 
-## 11. Extensions (Obsidian model, with sandboxing)
+## 10. Apps (sandboxed, Obsidian-like)
 
-Tiers, from safest:
-0. **Data:** agents, skills, prompts, chat presets. No code. Orchestrator can create freely (commit + diff).
-1. **Looks:** themes and CSS snippets.
-2. **Tools:** MCP servers (separate processes, configured in `mcp/servers.json`).
-3. **UI extensions:** JS running in a sandboxed iframe or Web Worker, talking to the app only through a
-   permission-checked `postMessage` API.
-4. **Core changes:** never by agents at runtime. Only through normal development (PRs to this repo).
+An app is `manifest.json`, `main.js` and `styles.css` (plus libraries in `lib/`) in its folder. It
+runs in a sandboxed iframe (opaque origin, no network, strict CSP) and talks to Aura only through a
+permission-checked `postMessage` API: `ctx.ui.*`, `ctx.kit.*` (themed tables, forms, boards,
+charts bound to collections), `ctx.data.*` (its collections), `ctx.actions.*`, `ctx.storage.*`,
+`ctx.net.fetch` (listed hosts, server-side secrets), `ctx.docs.*` (its files), `ctx.agents.ask`,
+`ctx.chat.*`, `ctx.apps.call`. Permissions are shown before they are granted. **Safe mode** starts
+with apps off (flag, or automatic after repeated crashes at startup).
 
-Manifest:
-```json
-{
-  "id": "news-digest",
-  "name": "News Digest",
-  "version": "0.1.0",
-  "minAppVersion": "0.3.0",
-  "permissions": ["chat.read", "chat.write", "ui.panel", "network:rss.example.com"],
-  "mobile": true,
-  "author": "orchestrator"
-}
-```
+## 11. Open questions (verify before relying on them)
 
-Implemented API (Phase 6, extended in Phase 18, ADR 0021): `ctx.ui.registerPanel`, `ctx.ui.form`,
-`ctx.ui.button`, `ctx.context()`, `ctx.chat.*`, `ctx.alerts.recent()`, `ctx.events.on`,
-`ctx.storage.*`, `ctx.net.fetch` (manifest `hosts`, server-side `secrets`), `ctx.agents.ask`,
-`ctx.files.*`; an `icon` from a fixed list. Extensions open in the side panel next to a chat; a
-project can pin one as its app.
+- Anthropic terms for third-party apps using a user's own subscription via the Agent SDK. Re-check
+  the help center before release.
+- A phone client again, once the desktop is simple and stable.
 
-Original draft:
-```ts
-export default function activate(ctx: ExtensionContext) {
-  ctx.commands.register({ id: "refresh", title: "Refresh news", run: () => {} });
-  ctx.ui.registerPanel({ id: "news", title: "News", render: (el) => {} });
-  ctx.chat.registerCard("news-item", (el, data) => {});
-  ctx.events.on("message.created", (msg) => {});
-}
-```
-
-Rules:
-- Community/third-party extensions are disabled until the user enables them (restricted mode).
-- Install shows requested permissions; the user confirms.
-- **Safe mode:** start without tier 2 and 3 extensions (flag, or automatic after repeated crashes at
-  startup). The user can leave automatic safe mode from the app without a restart.
-- Extension API is versioned; `minAppVersion` is checked on load.
-
-## 12. Open questions (verify before relying on them)
-
-- Better Auth adapter for SurrealDB: official or community? If missing, write one (ADR).
-- ~~SurrealDB: sidecar binary vs embedded under Bun.~~ Embedded, see ADR 0001.
-- ~~Claude Agent SDK under Bun and inside a `bun build --compile` sidecar.~~ Works; the sidecar uses the
-  user's installed `claude` (ADR 0004).
-- Anthropic terms for third-party apps using a user's own subscription via the Agent SDK; programmatic
-  usage draws from a separate monthly Agent SDK credit. Re-check the help center before release.
-- Tauri 2 mobile maturity; App Store rules on loading extension code on iOS.
-- Alerts from external services need the local server to be reachable (tunnel or relay).
-- Mobile push notifications for a local-first app need a relay.
-
-## 13. Roadmap
+## 12. Roadmap
 
 Each phase ends with a working app. "Done when" is the acceptance test.
 
@@ -476,7 +356,7 @@ engine choice, with a one-step "paste a key" start; local models next; agent app
 Install llama.cpp from the official release and download a local model (curated list or any
 Hugging Face GGUF) after an approval card; the server runs on demand on 127.0.0.1.
 
-**Phase 38: Settings and helpers** (in progress, ADR 0039, 0040)
+**Phase 38: Settings and helpers** (done, ADR 0039, 0040)
 One Settings app with tabs (AI, Helpers, Automations, Look, History); a helper's card holds its AI;
 tool servers and secrets in one place; no free cloud services, no advanced mode, no switches.
 Next: the server by domain and one secret store, then the data migrations of ADR 0039.
@@ -485,9 +365,15 @@ Next: the server by domain and one secret store, then the data migrations of ADR
 The default look as the user's theme file, named parts with their own variables and `data-part`,
 `describe_look` for the Helper, no Look tab; built-in apps replaceable by the user's apps.
 
-**Phase 39: Splash and onboarding** (ADR 0034)
-A splash while Aura starts and three first-run steps: welcome and language, AI connection, the
-first app.
+**Phase 39: Build your own apps by chat** (done, ADR 0042)
+Aura narrows to its idea: the Helper's chat, the user's apps with @builder beside them, approvals
+and versions, the AI, the theme and the language. ACP engines, MCP, the phone, the catalog, alerts
+and schedules, groups, teams, tasks, topics, skills, memory, summaries, restore points, the tiling
+window manager and the bar are gone. A new default look: glass over a drifting aurora, rounded
+corners, gradients and spring animations.
+
+**Phase 40: First run** (next)
+A splash while Aura starts and three first-run steps: welcome and language, the AI, the first app.
 
 **Later**
-Pack signatures and a reviewed community index, multi-user.
+A phone client for the simplified desktop; a reviewed index of community apps; multi-user.

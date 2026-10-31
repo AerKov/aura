@@ -1,22 +1,13 @@
 /// <reference path="../../../providers/vendor-files.d.ts" />
 // The user guide (docs/wiki), embedded in the server so agents can read how Aura works.
 
-import Agents from "../../../../../../docs/wiki/Agents.md" with { type: "text" };
-import AlertsandSchedules from "../../../../../../docs/wiki/Alerts-and-Schedules.md" with {
-  type: "text",
-};
 import ApprovalsandSafety from "../../../../../../docs/wiki/Approvals-and-Safety.md" with {
   type: "text",
 };
 import Apps from "../../../../../../docs/wiki/Apps.md" with { type: "text" };
-import Catalog from "../../../../../../docs/wiki/Catalog.md" with { type: "text" };
-import ChatsandAgents from "../../../../../../docs/wiki/Chats-and-Agents.md" with { type: "text" };
 import Customization from "../../../../../../docs/wiki/Customization.md" with { type: "text" };
 import Engines from "../../../../../../docs/wiki/Engines.md" with { type: "text" };
 import GettingStarted from "../../../../../../docs/wiki/Getting-Started.md" with { type: "text" };
-import Memory from "../../../../../../docs/wiki/Memory.md" with { type: "text" };
-import Phone from "../../../../../../docs/wiki/Phone.md" with { type: "text" };
-import Skills from "../../../../../../docs/wiki/Skills.md" with { type: "text" };
 import TheScreen from "../../../../../../docs/wiki/The-Screen.md" with { type: "text" };
 import Troubleshooting from "../../../../../../docs/wiki/Troubleshooting.md" with { type: "text" };
 import YourData from "../../../../../../docs/wiki/Your-Data.md" with { type: "text" };
@@ -40,79 +31,51 @@ export const HELP_PAGES: HelpPage[] = [
   {
     id: "getting-started",
     title: "Getting Started",
-    summary: "Install, pick an engine, first project",
+    summary: "Install, connect an AI, make the first app",
     text: GettingStarted,
   },
   {
     id: "the-screen",
     title: "The screen",
-    summary:
-      "Home launcher, apps as tiles: opening, splitting, resizing, turning off; restore points, language; the phone",
+    summary: "The sidebar, the Helper's chat, an app with its chat, Settings (AI and History)",
     text: TheScreen,
   },
   {
     id: "apps",
     title: "Apps",
     summary:
-      "Apps with their own chat: make, change with approval, versions, uninstall and bring back, libraries",
+      "Make an app, change it with approval, versions, data, files, secrets, actions, uninstall and bring back, libraries",
     text: Apps,
   },
   {
     id: "engines",
-    title: "Engines",
+    title: "The AI",
     summary:
-      "What runs agents: the built-in local AI, Claude Code, Gemini CLI, Codex, OpenCode, Ollama; logins and models",
+      "The built-in local AI, Ollama, LM Studio, Claude Code; which AI the Helper and @builder use",
     text: Engines,
-  },
-  {
-    id: "chats-and-agents",
-    title: "Chats and Agents",
-    summary: "Chats, agents, who answers when, projects, run cards, budgets",
-    text: ChatsandAgents,
-  },
-  {
-    id: "agents",
-    title: "Agents",
-    summary: "Each agent's card, tool servers (MCP), agents' secrets",
-    text: Agents,
   },
   {
     id: "approvals-and-safety",
     title: "Approvals and Safety",
-    summary: "What needs approval, the command sandbox",
+    summary: "What asks the user first, what helpers may do, the sandbox",
     text: ApprovalsandSafety,
-  },
-  { id: "skills", title: "Skills", summary: "Reusable know-how attached to agents", text: Skills },
-  { id: "memory", title: "Memory", summary: "Agents' notes and long-chat summaries", text: Memory },
-  {
-    id: "catalog",
-    title: "Catalog",
-    summary: "Ready-made packs of agents, skills, themes, panels",
-    text: Catalog,
-  },
-  {
-    id: "alerts-and-schedules",
-    title: "Alerts and Schedules",
-    summary: "Monitoring webhooks and recurring jobs",
-    text: AlertsandSchedules,
   },
   {
     id: "customization",
-    title: "Customization",
-    summary: "Themes, CSS, MCP servers and panel extensions",
+    title: "The look and the language",
+    summary: "The theme file and its variables, the language, safe mode",
     text: Customization,
   },
-  { id: "phone", title: "Phone", summary: "Using Aura from a phone", text: Phone },
   {
     id: "your-data",
-    title: "Your Data",
-    summary: "Where everything lives, backups, git history",
+    title: "Your data",
+    summary: "Where everything is kept, backups, what leaves the computer",
     text: YourData,
   },
   {
     id: "troubleshooting",
     title: "Troubleshooting",
-    summary: "Common problems and fixes",
+    summary: "A helper does not answer, Claude Code, local models, budgets, safe mode",
     text: Troubleshooting,
   },
 ].map((p) => ({ ...p, text: plain(p.text) }));

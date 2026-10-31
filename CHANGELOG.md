@@ -5,6 +5,18 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Aura is for building your own apps by chat** (ADR 0042). Tell the Helper what you need; each app
+  opens with its chat beside it, where @builder changes it with your approval. Everything that did
+  not serve that is gone: other agent apps (Gemini CLI, Codex, OpenCode), MCP tool servers, the
+  phone, the catalog of packs, alerts, webhooks and schedules, groups, teams, tasks and topics,
+  skills, memory and summaries, whole-Aura restore points, the window tiles and the bar.
+- **One simple screen.** A sidebar with the Helper, your apps, **New app** and Settings; beside it
+  the Helper's chat, an app with its chat, or Settings (AI and History). Aura opens where you left it.
+- **A new look.** Rounded corners, Geist, glass over a slowly drifting aurora, gradient bubbles and
+  buttons, a breathing orb on an empty chat and soft spring animations. Every bit is a theme
+  variable the Helper can change; reduced motion is respected.
+- **In an app's chat a plain message goes to @builder**; no need to mention it.
+
 - **Security.** Helpers' WebFetch and pack downloads check every redirect before following it and
   refuse names that resolve to this computer or the local network. Images in messages load only when
   they are part of the message; a remote one is a link. The phone web client no longer serves files

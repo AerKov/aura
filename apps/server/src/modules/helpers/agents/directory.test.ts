@@ -14,7 +14,7 @@ test("seeds the orchestrator, creates agents as committed files", async () => {
   const dir = new FileAgentDirectory(dataDir);
   await dir.seed();
   await dir.seed();
-  expect((await dir.get("orchestrator"))?.name).toBe("Orchestrator");
+  expect((await dir.get("orchestrator"))?.name).toBe("Helper");
 
   await dir.create({
     handle: "coder",

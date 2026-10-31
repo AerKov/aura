@@ -6,22 +6,18 @@ own chat**. Every change is shown to you first, and every version can be brought
 
 ## Make an app
 
-Every app has a name, a one-line **description** and a **group**, shown in My apps. @builder keeps them
-in the app's manifest; say in its chat if you want them changed.
+- **New app** in the sidebar: give it a name and, if you like, say what it should do.
+- Or ask the Helper: _"make me an app to track clients and deals"_. It proposes the app on a card;
+  approve it.
 
-- **My apps** → **New app**: start from a template pack you installed, or empty:
-  give it a name and, if you like, say what it should do (an empty app needs Chats on).
-- Or ask the orchestrator: _"make me an app to track clients and deals"_. It proposes the app on a
-  card; approve it.
-
-Aura creates the app's chat (under **Apps** in the chat list) with **@builder**, the agent that
-writes apps, and opens the app. An empty app opens with its chat panel (**Chat** in the app's bar)
-so you can talk to @builder right there. If you described it, @builder starts right away;
-otherwise it waits for you in the chat.
+Aura creates the app's folder and its chat with **@builder**, the helper that writes apps, and
+opens the app with the chat beside it. If you described it, @builder starts right away; otherwise
+it waits for you. Every app has a name, a one-line **description** and an icon; @builder keeps them
+in the app's manifest.
 
 ## Change it
 
-![A change waiting for a decision](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/app-chat.png)
+![A change waiting for a decision](https://raw.githubusercontent.com/AerKov/aura/HEAD/docs/assets/shell-light.png)
 
 Say what you want in the app's chat: _"add an email column"_, _"sort by status"_,
 _"make the Add button green"_. @builder edits the app's files, then you get a card that says in
@@ -29,25 +25,22 @@ plain words what will change (the diff is under **Technical details**):
 
 - **Yes, do it**: the change goes live and the app reloads.
 - **No, thanks**: the change is thrown away.
-- Before deciding, **After the change** on the app's tile shows the change running; **Now** goes
+- Before deciding, **After the change** in the app's header shows the change running; **Now** goes
   back. The bin next to it discards the change too.
 
 If a change asks for more than the app has now (another permission, a host, a secret), the card
 warns you. Until you approve, the app keeps what it had.
 
-Use [topics](Chats-and-Agents#topics) to keep changes apart from everyday use, for example a
-_Customization_ topic.
-
 ## Versions
 
-The clock button on the app's tile (**History of changes**) lists its versions. **Bring back** brings an older one back as a
+The clock button in the app's header (**History of changes**) lists its versions. **Bring back** brings an older one back as a
 new version, so that can be undone too. The app's folder is `~/.aura/projects/<app>` (a git
 repository).
 
 ## Its data
 
-An app keeps its data in **its own store**, never in Aura's database. The database button on the
-app's tile shows where and how much:
+An app keeps its data in **its own store**, never in Aura's database. The database button in the
+app's header shows where and how much:
 
 - **Its own database** (the default): a database of its own in `~/.aura/state/apps/<app>`.
 - **Files in its folder**: JSON files in `~/.aura/projects/<app>/data`, easy to read and copy.
@@ -68,15 +61,14 @@ app's chat: _"let me add the invoices as PDFs and show them in a window I can pr
 ## Its secrets
 
 An app that talks to a service (a weather API, your tracker) gets its key from **its own
-secrets**: the key button next to the **Chat** button on its tile lists the names its manifest uses; type a value and save. @builder names the secrets and tells you to enter them there; it never asks for a value in the chat.
+secrets**: the key button in its header lists the names its manifest uses; type a value and save. @builder names the secrets and tells you to enter them there; it never asks for a value in the chat.
 Only that app can use it, and only in its requests to the hosts you approved for it: the app's code
-never sees the value, other apps and agents cannot read it, and Aura never shows it again. Agents'
-secrets are separate (see [Agents](Agents)).
+never sees the value, other apps and helpers cannot read it, and Aura never shows it again.
 
 ## Use it from the chat
 
 An app can offer **actions**: _find clients_, _add a client_, _mark a deal won_. In the app's chat,
-agents use them for you: _"add Petrenko, a lead from the fair"_, _"how many deals did we win?"_.
+@builder uses them for you: _"add Petrenko, a lead from the fair"_, _"how many deals did we win?"_.
 Deleting a record always asks you first, on a card.
 
 ## Apps that work together
@@ -85,23 +77,13 @@ An app can offer some of its actions to other apps (for example, a CRM offers _f
 app that wants to use them says so in its manifest, and the card you approve lists exactly which
 actions of which app it will call. It can call nothing else, and only what the first app still offers.
 
-## Apps from others
-
-Apps come in [Catalog](Catalog) packs, built in or from a link (community apps). Installing one
-creates the app with its own chat, like one you made. You can change it in its chat as usual.
-
-When the author ships a new version, install the pack again (**Update**): your own changes stay, and
-where you and the author changed the same lines, the author's version is used. The preview says so
-before you install, and **Versions** on the app's tile brings yours back if needed. If the app has a
-change waiting for your approval, decide on that first.
-
 ## Uninstall and bring back
 
-The **⋯** menu on your app in a New window has **Uninstall**. Aura keeps a backup first, in
+The **⋯** menu in the app's header has **Uninstall**. Aura keeps a backup first, in
 `~/.aura/backups/apps`: its code with all its versions, its data, what you allowed it, and its chat
 as text. Then the app, its chat and its data are gone. Its secrets are deleted, never backed up.
 
-**Backups** → **Uninstalled apps** → **Bring back** puts the app back as it was, with a new
+**Settings → History** → **Bring back** puts the app back as it was, with a new
 chat (the old one is in the backup as `chat.md`).
 
 ## Libraries
@@ -113,17 +95,15 @@ frame, which has no network; nothing loads from the internet while the app runs.
 
 ## Its language
 
-An app gets the language you chose in **Language** as `ctx.language` and writes its own texts in
+An app gets the language you chose for Aura as `ctx.language` and writes its own texts in
 it; it reloads when you change the language.
 
 ## What an app can do
 
-Apps run in a sandbox and use the [extension permissions](Customization): their own data, the
-hosts you allowed (with keys kept by Aura), asking agents for you, reading project files, forms
-and buttons, posting alert cards to the Alerts chat (`alerts.write`, see
-[Alerts](Alerts-and-Schedules)). A new app starts with a panel and its own data only.
+Apps run in a sandboxed frame with only the permissions you approved: their own data and files, the
+hosts you allowed (with keys kept by Aura), asking a helper for you, other apps' actions, forms and
+buttons. A new app starts with a panel and its own data only.
 
 **@builder can look at the app.** After a change it can ask to see the app as you see it: an outline
 of the page (headings, buttons, fields, tables) and its recent errors. This works while the app is
-open on your screen; to let it see a change before you approve it, click **After the change** on the app's
-tile.
+open on your screen; to let it see a change before you approve it, click **After the change**.
