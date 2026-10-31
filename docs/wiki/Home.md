@@ -2,6 +2,8 @@
 
 **Build your own apps by chatting, on your computer.**
 
+> **Status:** alpha (version 0.43). It works end to end, but expect rough edges.
+
 Tell your **Helper** what you need: _"keep track of my clients and deals"_. The Helper makes an app;
 it opens with **its own chat beside it**, where **@builder** changes it whenever you ask. Every
 change is shown to you first, and every version can be brought back. Your apps, your data and your

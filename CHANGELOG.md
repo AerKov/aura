@@ -5,6 +5,8 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-10-31: Build your own apps by chat
+
 - **Aura is for building your own apps by chat** (ADR 0042). Tell the Helper what you need; each app
   opens with its chat beside it, where @builder changes it with your approval. Everything that did
   not serve that is gone: other agent apps (Gemini CLI, Codex, OpenCode), MCP tool servers, the
