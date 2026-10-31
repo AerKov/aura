@@ -27,9 +27,8 @@ export type ServerEvent =
   /** Theme, snippets or extensions changed; clients reload them. */
   | { type: "customize.updated" }
   /** The shell's layout changed (the orchestrator or another window); clients show it. */
-  | { type: "layout.updated"; layout: Layout }
-  /** Something that deserves the user's attention (shown when the app is in the background). */
-  | { type: "notification"; title: string; body: string; chatId: string; tag: string };
+  | { type: "layout.updated"; layout: Layout };
+/** Something that deserves the user's attention (shown when the app is in the background). */
 
 export type ClientEvent = { type: "ping"; nonce: string };
 
@@ -48,7 +47,6 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "app.snapshot",
   "customize.updated",
   "layout.updated",
-  "notification",
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -3,8 +3,6 @@ import { timingSafeEqual } from "node:crypto";
 export interface SessionUser {
   id: string;
   name: string;
-  /** Set when the request comes from a paired device (ADR 0009). */
-  deviceId?: string;
 }
 
 /**
@@ -13,17 +11,8 @@ export interface SessionUser {
  */
 export class LocalSessions {
   private readonly tokens = new Map<string, SessionUser>();
-  private deviceVerifier: ((token: string) => Promise<SessionUser | null>) | null = null;
-
-  /** Lets paired-device tokens authenticate too (set once devices are available). */
-  useDevices(verifier: (token: string) => Promise<SessionUser | null>): void {
-    this.deviceVerifier = verifier;
-  }
-
-  /** Local session first, then a paired device token. */
   async authenticate(token: string | null | undefined): Promise<SessionUser | null> {
-    if (!token) return null;
-    return this.verify(token) ?? (await this.deviceVerifier?.(token)) ?? null;
+    return this.verify(token);
   }
 
   issue(user: SessionUser): string {

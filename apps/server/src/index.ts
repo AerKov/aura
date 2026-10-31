@@ -1,4 +1,3 @@
-import { networkInterfaces } from "node:os";
 import { createApp } from "./app";
 import { createServices, prepareDataDir } from "./bootstrap";
 import { loadConfig, SERVER_VERSION } from "./config";
@@ -8,10 +7,8 @@ import { isParentAlive, watchParent } from "./lib/parent-watch";
 import { EngineRegistry } from "./modules/ai/engines/registry";
 import { detectSafeMode, HEALTHY_AFTER_MS } from "./modules/apps/customize/safe-mode";
 import { loadWebhookToken } from "./modules/automations/alerts/service";
-import { DIRECT_CHAT_ID } from "./modules/chats/chat/repo";
 import { FileAgentDirectory } from "./modules/helpers/agents/directory";
 import { LocalSessions } from "./modules/system/auth/sessions";
-import { NotificationService, WebPushSender } from "./modules/system/devices/notifications";
 import { EventHub } from "./modules/system/realtime/hub";
 import { startLiveBridge } from "./modules/system/realtime/live";
 import { ClaudeAgentSdkProvider } from "./providers/claude-agent-sdk";
@@ -62,35 +59,12 @@ async function main(): Promise<void> {
   const stopScheduler = services.jobs.start();
 
   const sessions = new LocalSessions();
-  sessions.useDevices((token) => services.devices.verify(token));
-  let push: WebPushSender | null = null;
-  try {
-    push = new WebPushSender(config.dataDir);
-  } catch (error) {
-    log.warn("web push disabled", { error: errorMessage(error) });
-  }
-  const stopNotifications = new NotificationService({
-    hub,
-    devices: services.devices,
-    sender: push,
-    chatKind: (chatId) => (chatId === DIRECT_CHAT_ID ? "direct" : undefined),
-  }).start();
-  const lanUrls = config.remote
-    ? Object.values(networkInterfaces())
-        .flat()
-        .filter((i) => i && i.family === "IPv4" && !i.internal)
-        .map((i) => `http://${i?.address}:${config.port}/app/`)
-    : [];
 
   const app = createApp({
     dbHealth: db.health,
     startedAt: Date.now(),
     corsOrigins: config.corsOrigins,
     sessions,
-    pushPublicKey: push?.publicKey ?? null,
-    webDir: config.webDir,
-    lanUrls,
-    remote: config.remote,
     hub,
     engines,
     dataDir: config.dataDir,
@@ -110,7 +84,6 @@ async function main(): Promise<void> {
     log.info("shutting down", { signal });
     stopRuntime();
     stopScheduler();
-    stopNotifications();
     services.runtime.stopAll();
     services.summaries.stopAll();
     await Promise.race([

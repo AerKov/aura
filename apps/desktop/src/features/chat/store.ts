@@ -76,7 +76,6 @@ export interface ChatState {
   filePicker: FileRequest | null;
   /** On narrow screens the messenger shows one pane: the chat list or a chat. */
   pane: "list" | "main";
-  needsPairing: boolean;
   appearance: Appearance | null;
   customize: CustomizeState | null;
 }
@@ -110,7 +109,6 @@ let state: ChatState = {
   appearance: null,
   customize: null,
   pane: "list",
-  needsPairing: false,
 };
 
 const listeners = new Set<() => void>();

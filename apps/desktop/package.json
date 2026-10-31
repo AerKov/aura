@@ -9,8 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:build": "tauri build --config src-tauri/tauri.sidecar.conf.json",
-    "typecheck": "tsc -b",
-    "build:web": "AURA_WEB_BASE=/app/ vite build --outDir dist-web"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "@aura/shared": "workspace:*",

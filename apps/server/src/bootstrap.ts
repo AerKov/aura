@@ -44,7 +44,6 @@ import { SkillService } from "./modules/helpers/skills/service";
 import { ApprovalService } from "./modules/system/approvals/service";
 import { RestorePointService } from "./modules/system/backups/restore-points";
 import { restorePointTools } from "./modules/system/backups/tools";
-import { DeviceService } from "./modules/system/devices/service";
 import { AURA_GUIDE, helpTools } from "./modules/system/help/tools";
 import { LocalizationService } from "./modules/system/localization/service";
 import { localizationTools } from "./modules/system/localization/tools";
@@ -285,7 +284,6 @@ export async function createServices(deps: {
     hub: deps.hub,
     fetch: deps.fetch,
   });
-  const devices = new DeviceService({ db: deps.db, owner });
   const agentSetup = new AgentSetupService({
     dataDir: deps.dataDir,
     mcp,
@@ -440,6 +438,5 @@ export async function createServices(deps: {
     catalog,
     safeMode,
     appVersion: SERVER_VERSION,
-    devices,
   };
 }

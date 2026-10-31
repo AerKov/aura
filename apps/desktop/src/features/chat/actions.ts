@@ -1,7 +1,7 @@
 import type { Topic } from "@aura/shared";
 import { openSettings } from "@/features/settings/open";
 import { openAppRef } from "@/features/shell/layout";
-import { api, call, NeedsPairingError } from "@/lib/api";
+import { api, call } from "@/lib/api";
 import { getState, mergeMessages, setState, upsertChat, upsertMessage } from "./store";
 
 /** Loads who the user is and, while Chats is on (ADR 0027), the chat list. */
@@ -138,10 +138,6 @@ export function showList(): void {
 }
 
 export function reportError(error: unknown): void {
-  if (error instanceof NeedsPairingError) {
-    setState(() => ({ needsPairing: true }));
-    return;
-  }
   console.error("aura:", error instanceof Error ? error.message : error);
 }
 

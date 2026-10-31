@@ -13,7 +13,6 @@ import {
   Package,
   Settings,
   SlidersHorizontal,
-  Smartphone,
   WandSparkles,
 } from "lucide-react";
 import { useMemo } from "react";
@@ -32,7 +31,6 @@ export const BUILTIN_ICONS: Record<string, LucideIcon> = {
   memory: NotebookPen,
   customize: SlidersHorizontal,
   localization: Languages,
-  devices: Smartphone,
   backups: History,
   catalog: Package,
   engines: Cpu,

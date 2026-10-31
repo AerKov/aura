@@ -4,38 +4,10 @@ import { treaty } from "@elysiajs/eden";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { isNoResponse, type ServerStatus, untilServerAnswers } from "./server-wait";
 
-const DEVICE_KEY = "aura.device";
+/** Base URL of the aura server on this computer (an env override for development). */
+export const SERVER_URL: string = import.meta.env.VITE_AURA_SERVER_URL ?? "http://127.0.0.1:4517";
 
-/**
- * Remote clients (ADR 0009): the web client served by the server at /app (phones, other browsers)
- * and Tauri mobile. They authenticate with a paired device token instead of a local session.
- */
-export const IS_REMOTE: boolean =
-  window.location.pathname.startsWith("/app") ||
-  ["android", "ios"].includes(String(import.meta.env.TAURI_ENV_PLATFORM ?? ""));
-
-interface StoredDevice {
-  server: string;
-  token: string;
-}
-
-function storedDevice(): StoredDevice | null {
-  try {
-    const raw = localStorage.getItem(DEVICE_KEY);
-    return raw ? (JSON.parse(raw) as StoredDevice) : null;
-  } catch {
-    return null;
-  }
-}
-
-/** Base URL of the aura server: env override, the serving origin for /app, a paired server, or local. */
-export const SERVER_URL: string =
-  import.meta.env.VITE_AURA_SERVER_URL ??
-  (window.location.pathname.startsWith("/app")
-    ? window.location.origin
-    : (storedDevice()?.server ?? "http://127.0.0.1:4517"));
-
-let token: string | null = IS_REMOTE ? (storedDevice()?.token ?? null) : null;
+let token: string | null = null;
 let pending: Promise<string> | null = null;
 
 /** Typed API client. Types come from the server through Eden Treaty; never hand-write them. */
@@ -55,17 +27,12 @@ export class ApiError extends Error {
   }
 }
 
-/** Thrown when a remote client has no (or a revoked) device token: show the pairing screen. */
-export class NeedsPairingError extends Error {
-  override name = "NeedsPairingError";
-}
-
 /** How long the window waits for the local server to answer at startup. */
 const SERVER_WAIT_MS = 30_000;
 
 /** The desktop shell's view of the server it started; null outside the desktop shell. */
 export async function serverStatus(): Promise<ServerStatus | null> {
-  if (IS_REMOTE || !isTauri()) return null;
+  if (!isTauri()) return null;
   try {
     return await invoke<ServerStatus>("server_status");
   } catch (error) {
@@ -74,10 +41,9 @@ export async function serverStatus(): Promise<ServerStatus | null> {
   }
 }
 
-/** Gets (or reuses) the session token. See docs/decisions/0003-local-session.md and 0009. */
+/** Gets (or reuses) the session token. See docs/decisions/0003-local-session.md. */
 export function ensureSession(): Promise<string> {
   if (token) return Promise.resolve(token);
-  if (IS_REMOTE) return Promise.reject(new NeedsPairingError("This device is not paired"));
   pending ??= (async () => {
     try {
       const data = await untilServerAnswers(
@@ -101,16 +67,6 @@ export function ensureSession(): Promise<string> {
   return pending;
 }
 
-/** Stores the device token after pairing (remote clients only). */
-export function savePairing(server: string, deviceToken: string): void {
-  localStorage.setItem(DEVICE_KEY, JSON.stringify({ server, token: deviceToken }));
-}
-
-export function forgetPairing(): void {
-  localStorage.removeItem(DEVICE_KEY);
-  token = null;
-}
-
 type EdenResult<T> =
   | { data: T; error: null }
   | { data: null; error: { status: number; value: unknown } };
@@ -123,11 +79,6 @@ export async function call<T>(fn: () => Promise<EdenResult<T>>): Promise<T> {
   await ensureSession();
   let result = await fn();
   if (result.error?.status === 401) {
-    if (IS_REMOTE) {
-      // The device was revoked.
-      forgetPairing();
-      throw new NeedsPairingError("This device is no longer paired");
-    }
     token = null;
     await ensureSession();
     result = await fn();
@@ -146,7 +97,7 @@ export async function authFetch(path: string, init: RequestInit = {}): Promise<R
     });
   };
   let res = await send();
-  if (res.status === 401 && !IS_REMOTE) {
+  if (res.status === 401) {
     token = null;
     res = await send();
   }
@@ -167,5 +118,5 @@ export async function wsUrl(): Promise<string> {
 
 /** Drops the cached token so the next call requests a fresh session. */
 export function resetSession(): void {
-  if (!IS_REMOTE) token = null;
+  token = null;
 }

@@ -1,9 +1,8 @@
 import { type ClientEvent, parseServerEvent } from "@aura/shared";
 import { loadAppearance } from "@/features/customize/appearance";
 import { loadCustomize } from "@/features/customize/state";
-import { showNotification } from "@/features/devices/push";
 import { loadLayout, receiveLayout } from "@/features/shell/layout";
-import { NeedsPairingError, resetSession, wsUrl } from "@/lib/api";
+import { resetSession, wsUrl } from "@/lib/api";
 import { loadTasks, refreshProjectsSoon, reportError, resync, upsertTopic } from "./actions";
 import {
   appendDelta,
@@ -35,7 +34,6 @@ export function startRealtime(): () => void {
       ws = new WebSocket(url);
     } catch (error) {
       reportError(error);
-      if (error instanceof NeedsPairingError) return;
       scheduleReconnect();
       return;
     }
@@ -94,9 +92,6 @@ export function startRealtime(): () => void {
           break;
         case "layout.updated":
           receiveLayout(event.layout);
-          break;
-        case "notification":
-          showNotification(event);
           break;
         case "pong":
           break;

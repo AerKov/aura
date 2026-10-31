@@ -15,7 +15,6 @@ export const PAGE_IDS = [
   "jobs",
   "engines",
   "customize",
-  "devices",
   "localization",
   "backups",
 ] as const;

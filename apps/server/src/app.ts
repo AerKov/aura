@@ -48,8 +48,6 @@ import { authModule } from "./modules/system/auth";
 import type { LocalSessions, SessionUser } from "./modules/system/auth/sessions";
 import { restorePointsModule } from "./modules/system/backups";
 import type { RestorePointService } from "./modules/system/backups/restore-points";
-import { devicesModule } from "./modules/system/devices";
-import type { DeviceService } from "./modules/system/devices/service";
 import { type HealthDeps, healthModule } from "./modules/system/health";
 import { localizationModule } from "./modules/system/localization";
 import type { LocalizationService } from "./modules/system/localization/service";
@@ -99,11 +97,6 @@ export interface AppDeps extends HealthDeps {
   mcp: McpService;
   safeMode: SafeMode;
   appVersion: string;
-  devices: DeviceService;
-  pushPublicKey: string | null;
-  webDir: string | null;
-  lanUrls: string[];
-  remote?: boolean;
 }
 
 export function createApp(deps: AppDeps) {
@@ -154,7 +147,6 @@ export function createApp(deps: AppDeps) {
     .use(appsModule(deps))
     .use(restorePointsModule({ sessions: deps.sessions, points: deps.restorePoints }))
     .use(localizationModule(deps))
-    .use(devicesModule(deps))
     .use(realtimeModule(deps));
 }
 

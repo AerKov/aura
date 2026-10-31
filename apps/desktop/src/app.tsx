@@ -11,7 +11,6 @@ import { startRealtime } from "@/features/chat/realtime";
 import { useChatStore } from "@/features/chat/store";
 import { loadAppearance } from "@/features/customize/appearance";
 import { loadCustomize } from "@/features/customize/state";
-import { PairingScreen } from "@/features/devices/pairing-screen";
 import { tr, useLocaleKey } from "@/features/localization/i18n";
 import { loadLayout } from "@/features/shell/layout";
 import { Rail } from "@/features/shell/rail";
@@ -27,7 +26,6 @@ interface StartError {
 
 export function App() {
   const activeChatId = useChatStore((s) => s.activeChatId);
-  const needsPairing = useChatStore((s) => s.needsPairing);
   const edge = useChatStore((s) => s.appearance?.rail.edge ?? "left");
   const [startError, setStartError] = useState<StartError | null>(null);
   // A new language draws everything again, so every text follows (ADR 0033).
@@ -59,8 +57,6 @@ export function App() {
   useEffect(() => {
     if (activeChatId) void loadMessages(activeChatId).catch(reportError);
   }, [activeChatId]);
-
-  if (needsPairing) return <PairingScreen />;
 
   // The shell (ADR 0024): the rail, and the user's apps as tiles.
   return (

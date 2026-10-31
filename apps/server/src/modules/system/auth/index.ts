@@ -8,11 +8,6 @@ export interface AuthDeps {
   corsOrigins: string[];
   /** Extra Host names to accept besides loopback (tests use Eden's in-process host). */
   extraHosts?: string[];
-  /**
-   * Remote mode (ADR 0009): the server listens on the network for paired devices. Every route except
-   * public ones then authenticates with a token, so the Host check only guards the local session.
-   */
-  remote?: boolean;
 }
 
 const LOOPBACK_IPS = new Set(["127.0.0.1", "::1", "::ffff:127.0.0.1"]);
@@ -29,20 +24,13 @@ export const authGuard = (sessions: LocalSessions) =>
     },
   });
 
-export const authModule = ({
-  sessions,
-  owner,
-  corsOrigins,
-  extraHosts = [],
-  remote = false,
-}: AuthDeps) =>
+export const authModule = ({ sessions, owner, corsOrigins, extraHosts = [] }: AuthDeps) =>
   new Elysia({ name: "auth" })
     // Loopback-only Host header for every request (DNS-rebinding protection).
     .onRequest(({ request, status }) => {
       const path = new URL(request.url).pathname;
       // Webhooks authenticate with their own token and may arrive through a tunnel.
       if (path.startsWith("/hooks/alerts/")) return;
-      if (remote && path !== "/session/local") return;
       if (!isLoopbackHost(request.headers.get("host") ?? new URL(request.url).host, extraHosts))
         return status(403, "Forbidden host");
     })
