@@ -59,11 +59,14 @@ it does.
 ## Where others are ahead
 
 - **Shipping to the web.** Lovable, Bolt, Replit and v0 publish an app to the internet for others
-  to use; Aura's apps are personal and stay on one computer.
+  to use; Aura's apps stay on one computer for now (publishing is planned, see the roadmap).
 - **Size and polish.** Dyad and bolt.diy have tens of thousands of GitHub stars and active
   communities; the cloud builders have large teams and the strongest models by default.
 - **Phones.** Dyad can wrap an app for iOS and Android; Aura has no phone client yet.
 - **Sharing.** Claude artifacts and Opal are shared with a link; Aura apps are not shared yet.
+
+Planned next (see the roadmap in [SPEC.md](SPEC.md)): sharing an app as a `.aura` file, turning an
+app into a desktop program of its own that opens without Aura, and publishing an app to the web.
 
 ## Sources
 

@@ -97,9 +97,29 @@ without ever seeing code**.
 | Apps live together, ready to use   |  ✓   |       –        |             –             |         partly         |
 | Each app keeps its own data        |  ✓   | Supabase, Neon |        their cloud        |  20 MB / their cloud   |
 | A chat beside each app uses it too |  ✓   |       –        |             –             |           –            |
-| Publish to the web                 |  –   |       ✓        |             ✓             |       ✓ (a link)       |
+| Publish to the web                 | soon |       ✓        |             ✓             |       ✓ (a link)       |
+| Run an app without the builder     | soon |  as a project  |       as a web app        |           –            |
 
 The details, with sources: [docs/COMPETITORS.md](docs/COMPETITORS.md).
+
+## What's coming
+
+Promises for the next versions, in this order:
+
+1. **Share an app as a `.aura` file.** **Export** in an app's menu saves its code and versions
+   (never its secrets; its data only if you ask). **Install an app** from a file shows a card with
+   what the app wants (permissions, hosts, the names of its secrets) before anything happens; once
+   installed it gets its own chat with @builder, like the apps you make.
+2. **Your app as a desktop program of its own.** **Make a program** turns an app into a separate
+   program with its own name and icon that opens without Aura, on macOS, Windows and Linux. It
+   needs nothing installed: Aura packs the app with a small ready-made runner (built with Tauri),
+   in seconds. The program keeps the app's data, files and secrets; changing it stays in Aura,
+   which makes a new version.
+3. **Publish an app to the web.** Put an app online for other people to use, from its menu: a
+   static build for apps that keep data in the browser, or a small server for apps that share data.
+   You choose where it goes; your own copy keeps living in Aura.
+
+Details and progress: the roadmap in [docs/SPEC.md](docs/SPEC.md#12-roadmap).
 
 ## Get started
 

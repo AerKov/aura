@@ -373,7 +373,26 @@ window manager and the bar are gone. A new default look drawn from the mark: an 
 that folds, the mark's blues, a faint breathing aura behind the panels, the living mark on empty
 chats, rounded corners and spring animations.
 
-**Phase 40: First run** (next)
+**Phase 40: Share apps as `.aura` files** (next)
+**Export** in an app's menu saves a `.aura` file: its code and versions as a git bundle and its
+manifest; never its secrets, its data only on request. **Install an app** takes a file (or a drop)
+and shows an approval card with what it asks for (permissions, hosts, secret names) and warnings.
+An installed app is an app like any other, with its chat and @builder. The archive is data: names,
+sizes and paths are checked, and the app runs in the same sandbox.
+
+**Phase 41: An app as a desktop program**
+A ready-made **Aura App Runner** (Tauri, built in CI for macOS, Windows and Linux) runs one app
+outside Aura: the same frame and `ctx` (kit, data, storage, docs, net with the app's own secrets),
+without helpers. **Make a program** packs an app with the runner (a named `.app` with its icon on
+macOS, an `.exe` with its folder on Windows, an AppImage on Linux) in seconds, with no Rust or Tauri
+on the user's computer. The app runtime moves out of the server into a module both share.
+
+**Phase 42: Publish an app to the web**
+From an app's menu: a static build for apps whose data stays in the visitor's browser, or a small
+server (the runtime of phase 41) for apps that share data, deployed where the user chooses. The
+user's own copy keeps living in Aura; publishing is an approval like any side effect.
+
+**Phase 43: First run**
 A splash while Aura starts and three first-run steps: welcome and language, the AI, the first app.
 
 **Later**
