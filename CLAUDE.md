@@ -43,6 +43,7 @@ apps/
   desktop/          Tauri 2 + React + Vite + shadcn/ui
     src/            UI (features/, components/ui/ for shadcn, lib/)
     src-tauri/      Rust shell, sidecar config, plugins
+  site/             the landing page (Vite + React, GitHub Pages), English and Ukrainian
   server/           Bun + Elysia: HTTP API, WebSocket, the Helper, agent runtime
     src/
       modules/      by domain: ai (engines, localai), helpers (agents, sandbox), chats (chat,
@@ -68,6 +69,7 @@ docs/
 - Server env: `AURA_PORT` (4517), `AURA_HOST`, `AURA_DATA_DIR` (`~/.aura`), `AURA_DB_URL`,
   `AURA_DEFAULT_MODEL`, `AURA_CLAUDE_EXECUTABLE`, `AURA_SAFE_MODE=1`.
 - `bun scripts/demo.ts` + `bun run --cwd apps/desktop dev:vite`: a demo with sample content.
+- `bun run --cwd apps/site dev`: the landing page; `.github/workflows/pages.yml` publishes it.
 
 ## Architecture rules (do not break these)
 

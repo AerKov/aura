@@ -1,0 +1,246 @@
+@import "tailwindcss";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+/* The site wears Aura's own default look: the mark's ink and its five blues. */
+@import "../../../packages/shared/src/look/default-theme.css";
+
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-mono: var(--font-code);
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--layer-3) 30%, transparent);
+  }
+}
+
+/* The mark's ink, for the bar, the hero and the end. */
+.ink {
+  background: color-mix(in srgb, var(--ink) 96%, transparent);
+  color: #fff;
+}
+
+/* The mark drawn large and faint behind the dark sections, breathing slowly. */
+.aura-rings {
+  isolation: isolate;
+}
+.aura-rings::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: auto -40vmax -60vmax auto;
+  width: 120vmax;
+  height: 120vmax;
+  border-radius: 9999px;
+  background:
+    repeating-radial-gradient(circle, transparent 0 44px, rgb(106 191 255 / 0.1) 44px 45px),
+    radial-gradient(circle, rgb(24 140 240 / 0.35), rgb(0 95 200 / 0.12) 35%, transparent 60%);
+  mask-image: radial-gradient(circle, black 20%, transparent 58%);
+  will-change: transform;
+  animation: breathe 14s ease-in-out infinite;
+}
+@keyframes breathe {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.mark {
+  display: inline-block;
+  line-height: 0;
+}
+.mark svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.mark.alive svg path {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: drift 6s ease-in-out infinite;
+}
+.mark.alive svg path:nth-of-type(2) {
+  animation-delay: -1.2s;
+  animation-duration: 6.6s;
+}
+.mark.alive svg path:nth-of-type(3) {
+  animation-delay: -2.4s;
+  animation-duration: 5.4s;
+}
+.mark.alive svg path:nth-of-type(4) {
+  animation-delay: -3.6s;
+  animation-duration: 4.8s;
+}
+.mark.alive svg path:nth-of-type(5) {
+  animation-delay: -4.8s;
+  animation-duration: 4.2s;
+}
+@keyframes drift {
+  33% {
+    transform: scale(1.045) rotate(4deg);
+  }
+  66% {
+    transform: scale(0.97) rotate(-3deg);
+  }
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition:
+    transform 0.25s var(--spring),
+    box-shadow 0.25s var(--ease),
+    background 0.2s var(--ease);
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn-lg {
+  padding: 0.8rem 1.4rem;
+  font-size: 1rem;
+}
+.btn-sm {
+  padding: 0.35rem 0.8rem;
+  font-size: 0.8rem;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--layer-2), var(--layer-3));
+  color: #fff;
+  box-shadow: 0 8px 26px -10px var(--layer-3);
+}
+.btn-primary:hover {
+  box-shadow: 0 12px 32px -10px var(--layer-3);
+}
+.btn-ghost-dark {
+  background: rgb(255 255 255 / 0.07);
+  color: #fff;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.12);
+}
+.btn-ghost-dark:hover {
+  background: rgb(255 255 255 / 0.12);
+}
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 1.3);
+  background: var(--card);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+.step,
+.soon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--layer-2), var(--layer-3));
+}
+.soon {
+  background: var(--ink);
+  color: var(--layer-4);
+}
+.icon-tile {
+  display: inline-grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.8rem;
+  background: var(--ink);
+  color: var(--layer-4);
+}
+.icon-tile-dark {
+  background: rgb(255 255 255 / 0.08);
+}
+
+/* The little conversation in the hero. */
+.chat-demo {
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  background: rgb(255 255 255 / 0.04);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.08),
+    0 40px 80px -30px rgb(0 0 0 / 0.6);
+}
+.bubble-mine {
+  align-self: flex-end;
+  max-width: 85%;
+  border-radius: 1.2rem 1.2rem 0.35rem 1.2rem;
+  padding: 0.6rem 1rem;
+  background: linear-gradient(135deg, var(--layer-2), var(--layer-3));
+  color: #fff;
+  font-size: 15px;
+}
+.pop {
+  animation: pop 0.45s var(--spring);
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+}
+.typing {
+  width: 2.6rem;
+  height: 0.6rem;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle, var(--layer-4) 3px, transparent 3.5px) 0 50% / 0.85rem 100% repeat-x;
+  opacity: 0.6;
+  animation: typing 1s steps(3) infinite;
+}
+@keyframes typing {
+  to {
+    background-position: 0.85rem 50%;
+  }
+}
+.rise {
+  animation: rise 0.8s var(--ease) both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion wins over every animation */
+    animation: none !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion wins over every animation */
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}

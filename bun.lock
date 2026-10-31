@@ -12,7 +12,7 @@
     },
     "apps/desktop": {
       "name": "@aura/desktop",
-      "version": "0.42.0",
+      "version": "0.43.1",
       "dependencies": {
         "@aura/shared": "workspace:*",
         "@elysiajs/eden": "1.4.9",
@@ -45,7 +45,7 @@
     },
     "apps/server": {
       "name": "@aura/server",
-      "version": "0.42.0",
+      "version": "0.43.1",
       "dependencies": {
         "@anthropic-ai/claude-agent-sdk": "0.3.311",
         "@anthropic-ai/sandbox-runtime": "0.0.81",
@@ -60,6 +60,26 @@
       },
       "devDependencies": {
         "@elysiajs/eden": "1.4.9",
+      },
+    },
+    "apps/site": {
+      "name": "@aura/site",
+      "version": "0.43.1",
+      "dependencies": {
+        "@fontsource-variable/geist": "5.3.0",
+        "@fontsource-variable/geist-mono": "5.3.0",
+        "lucide-react": "1.61.0",
+        "react": "19.3.1",
+        "react-dom": "19.3.1",
+      },
+      "devDependencies": {
+        "@tailwindcss/vite": "4.3.3",
+        "@types/node": "26.6.5",
+        "@types/react": "19.3.0",
+        "@types/react-dom": "19.3.0",
+        "@vitejs/plugin-react": "6.1.2",
+        "tailwindcss": "4.3.3",
+        "vite": "8.3.5",
       },
     },
     "packages/shared": {
@@ -95,6 +115,8 @@
     "@aura/server": ["@aura/server@workspace:apps/server"],
 
     "@aura/shared": ["@aura/shared@workspace:packages/shared"],
+
+    "@aura/site": ["@aura/site@workspace:apps/site"],
 
     "@babel/runtime": ["@babel/runtime@7.29.10", "", {}, "sha512-NpugTzbKgGrNe45Ui32cN8vCFFMxVtP/9rtfwv0nP5FRDAjvYBxJcLVpYA9mr1jxP6cnIT7x9LUzuDTbWYYNRA=="],
 

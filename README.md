@@ -15,6 +15,7 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
   <img src="https://img.shields.io/badge/status-alpha-orange" alt="Status: alpha">
   <a href="https://github.com/AerKov/aura/wiki"><img src="https://img.shields.io/badge/docs-wiki-0077dc" alt="Docs"></a>
+  <a href="https://aerkov.github.io/aura/"><img src="https://img.shields.io/badge/site-aerkov.github.io%2Faura-005fc8" alt="Site"></a>
 </p>
 
 <p align="center">
@@ -181,6 +182,7 @@ bun scripts/demo.ts    # a demo with sample content on :4517 (then dev:vite in a
 ```
 apps/server      Bun + Elysia: API, WebSocket, the Helper and @builder, embedded SurrealDB
 apps/desktop     Tauri 2 + React/Vite/Tailwind UI
+apps/site        the landing page (GitHub Pages), in English and Ukrainian
 packages/shared  message protocol, shared types and the default theme
 scripts/         dev launcher, sidecar build, demo and screenshots
 docs/            spec, architecture decisions, wiki sources, screenshots

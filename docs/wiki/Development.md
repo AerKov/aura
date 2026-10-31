@@ -14,6 +14,7 @@ bun run dev:server                   # server only: http://127.0.0.1:4517
 bun run --cwd apps/desktop dev:vite  # UI in a browser at http://localhost:1420 (needs the server)
 bun scripts/demo.ts                  # a server with sample apps instead of your data
 node scripts/screenshots.cjs docs/assets  # retake the screenshots from the demo
+bun run --cwd apps/site dev          # the landing page at http://localhost:1430/aura/
 ```
 
 ## Check
