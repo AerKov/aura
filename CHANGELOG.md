@@ -5,6 +5,18 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.43.1] - 2026-10-31: Fixes
+
+- **No more blinking** between screens and when a dialog opens; a chat's history no longer replays
+  its entry animation each visit.
+- **The language is back in Settings**: Auto, English or Українська, at the top right.
+- **Save works in the desktop app**: it asks where to put the file. **HTML pages** an app makes (an
+  invoice) open as pages, without their scripts, and print.
+- **A change that breaks an app's settings file** goes back to @builder to fix instead of failing
+  after your "yes".
+- **Wider app chat**: drag the line between the app and its chat. **Turn an app off** and on from
+  its menu. Settings scrolls as one page; the secrets menu is tidier.
+
 ## [0.43.0] - 2026-10-31: Build your own apps by chat
 
 - **Aura is for building your own apps by chat** (ADR 0042). Tell the Helper what you need; each app
