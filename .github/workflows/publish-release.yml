@@ -1,0 +1,29 @@
+name: Publish release
+
+# Publishes a draft made by the Release workflow: the draft becomes a public pre-release (an
+# alpha), so its installers can be downloaded, also from the site.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "The draft's tag, e.g. v0.43.1-alpha.1"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Publish the draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-z]+\.[0-9]+)?$ ]]; then
+            echo "::error::\"$TAG\" is not a release tag"; exit 1
+          fi
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json url,isDraft,isPrerelease
