@@ -3,7 +3,6 @@
  * The client connects to `WS_PATH?token=<session token>`.
  */
 import type { Chat, Message } from "./chat";
-import type { Layout } from "./layout";
 
 export const WS_PATH = "/ws";
 
@@ -23,10 +22,7 @@ export type ServerEvent =
   /** An agent asks how an app looks right now; a client showing it answers (WISH-2). */
   | { type: "app.snapshot"; app: string; requestId: string }
   /** Theme, snippets or extensions changed; clients reload them. */
-  | { type: "customize.updated" }
-  /** The shell's layout changed (the orchestrator or another window); clients show it. */
-  | { type: "layout.updated"; layout: Layout };
-/** Something that deserves the user's attention (shown when the app is in the background). */
+  | { type: "customize.updated" };
 
 export type ClientEvent = { type: "ping"; nonce: string };
 
@@ -43,7 +39,6 @@ const SERVER_EVENT_TYPES: ReadonlySet<string> = new Set<ServerEventType>([
   "app.data",
   "app.snapshot",
   "customize.updated",
-  "layout.updated",
 ]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -2,17 +2,13 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import {
-  BAR_APP_ID,
   EXTENSION_ICONS,
   type ExtensionIcon,
   type ExtensionInfo,
   type ExtensionPermission,
-  isReplaceableApp,
   LOCALE_CODE,
   MAX_APP_DESCRIPTION,
   MAX_APP_GROUP,
-  REPLACEABLE_APPS,
-  type ReplaceableApp,
 } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 import { commitAll, git } from "../../../lib/git";
@@ -35,7 +31,6 @@ export const PERMISSIONS: Record<ExtensionPermission, string> = {
   "chat.read": "Read chats and messages",
   "chat.write": "Post messages (as the extension)",
   "ui.panel": "Show a panel in the app",
-  "ui.bar": "Be Aura's bar: list and open apps, see the screen and the status",
   storage: "Keep its own data",
   net: "Reach the listed hosts (through Aura)",
   "agents.ask": "Ask agents for you (as your message, within budgets)",
@@ -73,8 +68,6 @@ export interface Manifest {
   contract?: Contract;
   /** Library files in its folder, loaded before main.js in this order (ADR 0033). */
   libraries?: string[];
-  /** The built-in app it takes the place of (ADR 0041). */
-  replaces?: ReplaceableApp;
 }
 
 export function compareVersions(a: string, b: string): number {
@@ -112,9 +105,6 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
   if (typeof m.author !== "string" || !m.author.trim())
     throw new ExtensionError("author is required");
   const permissions = [...new Set(m.permissions as ExtensionPermission[])];
-  // Only the bar app may be the bar (ADR 0029).
-  if (permissions.includes("ui.bar") && m.id !== BAR_APP_ID)
-    throw new ExtensionError(`only the app "${BAR_APP_ID}" may ask for ui.bar`);
   if (m.icon !== undefined && !(EXTENSION_ICONS as readonly unknown[]).includes(m.icon))
     throw new ExtensionError(`icon must be one of ${EXTENSION_ICONS.join(", ")}`);
   const libraries = stringList(m.libraries, "libraries");
@@ -123,10 +113,6 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
     throw new ExtensionError(
       `"${badLibrary}" is not a library path: lib/… ending in .js, .mjs or .css (add_library puts files there)`,
     );
-  if (m.replaces !== undefined && m.replaces !== null && !isReplaceableApp(m.replaces))
-    throw new ExtensionError(`replaces must be one of ${REPLACEABLE_APPS.join(", ")}`);
-  if (m.replaces && !permissions.includes("ui.panel"))
-    throw new ExtensionError("an app that replaces a built-in app needs ui.panel");
   const description = optionalText(m.description, "description", MAX_APP_DESCRIPTION);
   const group = optionalText(m.group, "group", MAX_APP_GROUP);
   const hosts = stringList(m.hosts, "hosts").map((h) => h.toLowerCase());
@@ -162,7 +148,6 @@ export function validateManifest(value: unknown, expectedId?: string): Manifest 
     ...(secrets.length ? { secrets: [...new Set(secrets)] } : {}),
     ...(Object.keys(contract.collections).length || contract.uses.length ? { contract } : {}),
     ...(libraries.length ? { libraries: [...new Set(libraries)] } : {}),
-    ...(isReplaceableApp(m.replaces) ? { replaces: m.replaces } : {}),
   };
 }
 
@@ -363,7 +348,6 @@ export class ExtensionService {
         hosts: state.enabled ? state.hosts : (m.hosts ?? []),
         secrets: state.enabled ? state.secrets : (m.secrets ?? []),
         app: source ? await appState(source) : null,
-        replaces: m.replaces ?? null,
         problem,
       };
     } catch (error) {
@@ -380,7 +364,6 @@ export class ExtensionService {
         hosts: [],
         secrets: [],
         app: null,
-        replaces: null,
         enabled: false,
         problem: error instanceof Error ? error.message : String(error),
       };
@@ -832,16 +815,6 @@ const BRIDGE = `(() => {
       list: () => call("chat.list"),
       messages: (chatId) => call("chat.messages", { chatId }),
       post: (chatId, body) => call("chat.post", { chatId, body }),
-    }),
-    // Only for the bar app (ui.bar, ADR 0029).
-    bar: Object.freeze({
-      state: () => call("bar.state"),
-      open: (key, where) => call("bar.open", { key, where: where || "here" }),
-      menu: (items) => call("bar.menu", { items: items || [] }),
-      on: (fn) => {
-        if (!listeners.has("bar.state")) listeners.set("bar.state", []);
-        listeners.get("bar.state").push(fn);
-      },
     }),
     events: Object.freeze({
       on: (name, fn) => {

@@ -1,18 +1,7 @@
 /// <reference path="../../../providers/vendor-files.d.ts" />
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import {
-  type Appearance,
-  BAR_EDGES,
-  BAR_MODES,
-  BAR_SIZE,
-  type BarEdge,
-  type BarMode,
-  normalizeWindowStyle,
-  RAIL_PINNED,
-  type RailLayout,
-  type WindowStyle,
-} from "@aura/shared";
+import type { Appearance } from "@aura/shared";
 import { RecordId, type Surreal } from "surrealdb";
 // Aura's default look, shared with the desktop app (ADR 0041); embedded in the compiled sidecar.
 import DEFAULT_THEME_CSS from "../../../../../../packages/shared/src/look/default-theme.css" with {
@@ -39,16 +28,6 @@ export interface CssChange {
 }
 
 const SETTING = new RecordId("setting", "appearance");
-
-const RAIL_KEY = /^(ext:)?[a-z][a-z0-9-]{0,47}$/;
-
-/** Rail item keys: page names ("skills") and extensions ("ext:<id>"); unknown ones are kept. */
-function railKeys(keys: string[]): string[] {
-  const bad = keys.find((k) => !RAIL_KEY.test(k));
-  if (bad) throw new AppearanceError(`"${bad}" is not a rail item`);
-  if (keys.length > 64) throw new AppearanceError("too many rail items");
-  return [...new Set(keys)];
-}
 
 /** Tier 1 customization: themes (`themes/<name>/theme.css`) and snippets (`snippets/<name>.css`). */
 export class AppearanceService {
@@ -120,45 +99,19 @@ export class AppearanceService {
       .sort();
   }
 
-  private async settings(): Promise<{
-    theme: string | null;
-    snippets: string[];
-    rail: RailLayout;
-    wm: WindowStyle;
-  }> {
+  private async settings(): Promise<{ theme: string | null; snippets: string[] }> {
     const [rows] = await this.deps.db
-      .query<
-        [
-          {
-            theme?: string | null;
-            snippets?: string[];
-            rail?: Partial<RailLayout>;
-            wm?: unknown;
-          }[],
-        ]
-      >("SELECT * FROM setting WHERE id = $id", { id: SETTING })
+      .query<[{ theme?: string | null; snippets?: string[] }[]]>(
+        "SELECT * FROM setting WHERE id = $id",
+        { id: SETTING },
+      )
       .collect();
     const row = rows?.[0];
-    return {
-      theme: row?.theme ?? null,
-      snippets: row?.snippets ?? [],
-      rail: {
-        order: row?.rail?.order ?? [],
-        hidden: row?.rail?.hidden ?? [],
-        edge: BAR_EDGES.includes(row?.rail?.edge as BarEdge)
-          ? (row?.rail?.edge as BarEdge)
-          : "left",
-        mode: BAR_MODES.includes(row?.rail?.mode as BarMode)
-          ? (row?.rail?.mode as BarMode)
-          : "builtin",
-        size: typeof row?.rail?.size === "number" ? row.rail.size : null,
-      },
-      wm: normalizeWindowStyle(row?.wm),
-    };
+    return { theme: row?.theme ?? null, snippets: row?.snippets ?? [] };
   }
 
   async get(): Promise<Appearance> {
-    const { theme, snippets, rail, wm } = await this.settings();
+    const { theme, snippets } = await this.settings();
     const themes = this.themes();
     const available = this.snippets();
     const css: { name: string; css: string }[] = [];
@@ -167,19 +120,11 @@ export class AppearanceService {
     for (const s of snippets.filter((n) => available.includes(n))) {
       css.push({ name: `snippet:${s}`, css: sanitizeCss(this.read("snippet", s) ?? "") });
     }
-    return { theme, snippets, themes, availableSnippets: available, css, rail, wm };
+    return { theme, snippets, themes, availableSnippets: available, css };
   }
 
-  /**
-   * Switches the theme and snippets among files that already exist, arranges the bar and sets how
-   * tiles look (ADR 0028). Harmless and reversible.
-   */
-  async set(input: {
-    theme?: string | null;
-    snippets?: string[];
-    rail?: Partial<RailLayout>;
-    wm?: Partial<WindowStyle>;
-  }): Promise<Appearance> {
+  /** Switches the theme and snippets among files that already exist. Harmless and reversible. */
+  async set(input: { theme?: string | null; snippets?: string[] }): Promise<Appearance> {
     const current = await this.settings();
     const theme = input.theme === undefined ? current.theme : input.theme;
     if (theme !== null && !this.themes().includes(theme))
@@ -187,28 +132,11 @@ export class AppearanceService {
     const snippets = input.snippets ?? current.snippets;
     const unknown = snippets.filter((s) => !this.snippets().includes(s));
     if (unknown.length > 0) throw new AppearanceError(`unknown snippets: ${unknown.join(", ")}`);
-    const rail = {
-      order: railKeys(input.rail?.order ?? current.rail.order),
-      // Chats and Settings stay, so the user can always get back.
-      hidden: railKeys(input.rail?.hidden ?? current.rail.hidden).filter(
-        (k) => !RAIL_PINNED.includes(k),
-      ),
-      edge: input.rail?.edge ?? current.rail.edge,
-      mode: input.rail?.mode ?? current.rail.mode,
-      size: input.rail?.size === undefined ? current.rail.size : input.rail.size,
-    };
-    if (rail.size !== null)
-      rail.size = Math.min(BAR_SIZE.max, Math.max(BAR_SIZE.min, Math.round(rail.size)));
-    if (!BAR_EDGES.includes(rail.edge)) throw new AppearanceError(`"${rail.edge}" is not an edge`);
-    if (!BAR_MODES.includes(rail.mode)) throw new AppearanceError(`"${rail.mode}" is not a bar`);
-    const wm = normalizeWindowStyle({ ...current.wm, ...input.wm }, current.wm);
     await this.deps.db
-      .query("UPSERT $id CONTENT { theme: $theme, snippets: $snippets, rail: $rail, wm: $wm }", {
+      .query("UPSERT $id CONTENT { theme: $theme, snippets: $snippets }", {
         id: SETTING,
         theme,
         snippets,
-        rail,
-        wm,
       })
       .collect();
     this.deps.hub.publish({ type: "customize.updated" });

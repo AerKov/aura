@@ -171,7 +171,7 @@ export function LocalAiCard({
       </p>
 
       {status.models.length > 0 && (
-        <ul className="divide-y border">
+        <ul className="divide-y overflow-hidden rounded-2xl border">
           {status.models.map((m) => (
             <li key={m.file} className="flex items-center gap-3 px-3 py-2 text-[13px]">
               <span className="min-w-0 flex-1 truncate font-mono text-[12px]">{m.file}</span>
@@ -318,7 +318,7 @@ export function LocalAiCard({
           <label className="block">
             <span className="kicker mb-1 block">{t("Or any GGUF model from Hugging Face")}</span>
             <input
-              className="bg-input-bg border-input focus:border-ring w-full border px-3 py-2 font-mono text-[13px] outline-none"
+              className="bg-input-bg border-input focus:border-ring w-full rounded-xl border px-3 py-2 font-mono text-[13px] outline-none"
               value={custom}
               placeholder="owner/name:Q4_K_M"
               onChange={(e) => setCustom(e.target.value)}
@@ -328,7 +328,7 @@ export function LocalAiCard({
             <label className="block">
               <span className="kicker mb-1 block">{t("llama.cpp release")}</span>
               <select
-                className="bg-input-bg border-input focus:border-ring w-full border px-3 py-2 font-mono text-[12.5px] outline-none"
+                className="bg-input-bg border-input focus:border-ring w-full rounded-xl border px-3 py-2 font-mono text-[12.5px] outline-none"
                 value={tag}
                 onChange={(e) => chooseRelease(e.target.value)}
               >
@@ -349,7 +349,7 @@ export function LocalAiCard({
                 {t("llama.cpp build ({tag})", { tag: builds.tag })}
               </span>
               <select
-                className="bg-input-bg border-input focus:border-ring w-full border px-3 py-2 font-mono text-[12.5px] outline-none"
+                className="bg-input-bg border-input focus:border-ring w-full rounded-xl border px-3 py-2 font-mono text-[12.5px] outline-none"
                 value={asset}
                 onChange={(e) => setAsset(e.target.value)}
               >
@@ -419,7 +419,7 @@ function PlanCard({
   const t = useT();
   const nothing = !plan.binary && !plan.model;
   return (
-    <div className="border-warning/65 grid gap-2.5 border p-3.5">
+    <div className="border-warning/65 grid gap-2.5 rounded-2xl border p-3.5">
       <span className="text-warning-text text-xs font-semibold">
         {t("Your decision is needed")}
       </span>

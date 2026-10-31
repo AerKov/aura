@@ -74,7 +74,7 @@ export function EnginesView() {
       <div className="mx-auto max-w-4xl">
         <PageHeader title={tr("Helper programs")} icon={<Cpu className="text-primary size-7" />}>
           {tr(
-            "Where your helpers' AI comes from: a model on this computer, or an agent app you already use (Claude Code, Codex…). Which helper uses which AI is set on its card under Helpers.",
+            "Where your helpers' AI comes from: a model on this computer, or an agent app you already use (Claude Code, Codex…). Which one the Helper and @builder use is chosen above.",
           )}
         </PageHeader>
 

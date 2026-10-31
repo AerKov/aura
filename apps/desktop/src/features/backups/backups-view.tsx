@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { loadInitial, loadProjects, reportError } from "@/features/chat/actions";
 import { loadCustomize } from "@/features/customize/state";
 import { tr, useT } from "@/features/localization/i18n";
-import { openAppRef } from "@/features/shell/layout";
+import { openApp } from "@/features/shell/view";
 import { api, call } from "@/lib/api";
 
 type Backup = Awaited<ReturnType<typeof loadBackups>>[number];
@@ -54,7 +54,7 @@ export function BackupsView() {
     run(b.name, async () => {
       const { id } = await call(() => api["app-backups"]({ name: b.name }).restore.post());
       await reloadAll();
-      openAppRef(`ext:${id}`);
+      openApp(id);
       return t("{name} is back, with a new chat.", { name: b.appName });
     });
   const removeBackup = (b: Backup) =>

@@ -1,23 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { AuraLogo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import {
-  loadInitial,
-  loadMessages,
-  loadProviderStatus,
-  reportError,
-} from "@/features/chat/actions";
+import { loadInitial, loadProviderStatus, reportError } from "@/features/chat/actions";
 import { startRealtime } from "@/features/chat/realtime";
-import { useChatStore } from "@/features/chat/store";
 import { loadAppearance } from "@/features/customize/appearance";
 import { loadCustomize } from "@/features/customize/state";
 import { tr, useLocaleKey } from "@/features/localization/i18n";
-import { loadLayout } from "@/features/shell/layout";
-import { Rail } from "@/features/shell/rail";
 import { Shell } from "@/features/shell/shell";
+import { restoreView } from "@/features/shell/view";
 import { SERVER_URL } from "@/lib/api";
 import { type ServerStatus, ServerUnreachableError } from "@/lib/server-wait";
-import { cn } from "@/lib/utils";
 
 interface StartError {
   message: string;
@@ -25,8 +17,6 @@ interface StartError {
 }
 
 export function App() {
-  const activeChatId = useChatStore((s) => s.activeChatId);
-  const edge = useChatStore((s) => s.appearance?.rail.edge ?? "left");
   const [startError, setStartError] = useState<StartError | null>(null);
   // A new language draws everything again, so every text follows (ADR 0033).
   const localeKey = useLocaleKey();
@@ -34,7 +24,7 @@ export function App() {
   const load = useCallback(() => {
     setStartError(null);
     loadAppearance().catch(reportError);
-    loadLayout().catch(reportError);
+    restoreView();
     loadCustomize()
       .then(() => {
         loadProviderStatus().catch(reportError);
@@ -54,28 +44,11 @@ export function App() {
     return startRealtime();
   }, [load]);
 
-  useEffect(() => {
-    if (activeChatId) void loadMessages(activeChatId).catch(reportError);
-  }, [activeChatId]);
-
-  // The shell (ADR 0024): the rail, and the user's apps as tiles.
+  // The shell (ADR 0042) over a slow aurora.
   return (
-    <div
-      key={localeKey}
-      className={cn(
-        "flex h-dvh overflow-hidden",
-        // The bar's edge (ADR 0028); phones keep it at the bottom.
-        {
-          left: "",
-          right: "md:flex-row-reverse",
-          top: "md:flex-col",
-          bottom: "md:flex-col-reverse",
-        }[edge],
-      )}
-    >
-      <Rail />
+    <div key={localeKey} className="aura-backdrop relative flex h-dvh overflow-hidden">
       {startError ? (
-        <main className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+        <main className="relative flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
           <AuraLogo className="size-12" />
           <p className="text-muted-foreground max-w-sm text-sm">
             {tr("Cannot reach the Aura server at")} {SERVER_URL}: {startError.message}
@@ -90,9 +63,7 @@ export function App() {
           </Button>
         </main>
       ) : (
-        <div className="flex min-h-0 min-w-0 flex-1 max-md:pb-16">
-          <Shell />
-        </div>
+        <Shell />
       )}
     </div>
   );

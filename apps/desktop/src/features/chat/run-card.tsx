@@ -63,7 +63,7 @@ export function RunCard({
   }
 
   return (
-    <div className="bg-card mt-2 w-[min(600px,100%)] border px-3 py-2">
+    <div className="bg-card mt-2 w-[min(600px,100%)] rounded-2xl border px-4 py-2.5 shadow-sm">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
         <span
           className={cn(

@@ -1,15 +1,7 @@
 /// <reference path="../../../providers/vendor-files.d.ts" />
 import { cpSync, existsSync, readdirSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import {
-  APP_ID_PATTERN,
-  BAR_APP_ID,
-  type Chat,
-  isReplaceableApp,
-  MAX_APP_DESCRIPTION,
-  type ReplaceableApp,
-  slugify,
-} from "@aura/shared";
+import { APP_ID_PATTERN, type Chat, MAX_APP_DESCRIPTION, slugify } from "@aura/shared";
 import { commitAll, git } from "../../../lib/git";
 import { errorMessage, log } from "../../../lib/log";
 import type { ProjectInfo, ProjectService } from "../../chats/projects/service";
@@ -21,9 +13,6 @@ import type { EventHub } from "../../system/realtime/hub";
 import type { AppSource, ExtensionService } from "../customize/extensions";
 import { describeManifest, validateManifest } from "../customize/extensions";
 import { EXTENSION_GUIDE } from "../customize/tools";
-import barMain from "./bar/main.js.txt" with { type: "text" };
-import barReadme from "./bar/README.md" with { type: "text" };
-import barStyles from "./bar/styles.css" with { type: "text" };
 
 export class AppError extends Error {
   override name = "AppError";
@@ -58,22 +47,7 @@ export const BUILDER_DEFAULT: AgentProfile = {
 const MAX_DIFF = 12_000;
 
 /** A new app's first files: an empty panel that says how to build it. */
-/** What each replaceable built-in app is called, and what a replacement usually needs. */
-const REPLACED_NAMES: Record<ReplaceableApp, string> = {
-  chats: "Chats",
-  settings: "Settings",
-};
-const REPLACED_PERMISSIONS: Record<ReplaceableApp, string> = {
-  chats: "chat.read, chat.write, agents.ask",
-  settings: "storage; Aura's settings are changed by asking the Helper",
-};
-
-function scaffold(
-  id: string,
-  name: string,
-  description: string,
-  replaces?: ReplaceableApp,
-): Record<string, string> {
+function scaffold(id: string, name: string, description: string): Record<string, string> {
   // The launcher shows one line; @builder refines it as the app takes shape.
   const line = description.split("\n")[0]?.trim().slice(0, MAX_APP_DESCRIPTION) ?? "";
   const manifest = {
@@ -85,7 +59,6 @@ function scaffold(
     author: "you",
     icon: "blocks",
     ...(line ? { description: line } : {}),
-    ...(replaces ? { replaces } : {}),
   };
   return {
     // An app's data (the "files" store) is not part of its code versions.
@@ -106,26 +79,6 @@ function scaffold(
 }
 `,
     "styles.css": ".hint { color: var(--muted-foreground); }\n",
-  };
-}
-
-/** The bar app's first files (ADR 0029): the same bar as the built-in one, now the user's code. */
-function barFiles(): Record<string, string> {
-  const manifest = {
-    id: BAR_APP_ID,
-    name: "Bar",
-    version: "0.1.0",
-    minAppVersion: "0.31.0",
-    permissions: ["ui.bar", "storage"],
-    author: "you",
-    description: "Aura's bar: your apps, the screen and the status, as your own code.",
-    group: "System",
-  };
-  return {
-    "manifest.json": `${JSON.stringify(manifest, null, 2)}\n`,
-    "main.js": barMain,
-    "styles.css": barStyles,
-    "README.md": barReadme,
   };
 }
 
@@ -152,7 +105,6 @@ export class AppService {
         name: String(payload.name ?? ""),
         id: typeof payload.id === "string" ? payload.id : undefined,
         description: String(payload.description ?? ""),
-        replaces: isReplaceableApp(payload.replaces) ? payload.replaces : undefined,
       });
       return `Created the app ${project.name}. It opens next to its chat.`;
     });
@@ -200,8 +152,6 @@ export class AppService {
     files?: Record<string, string>;
     /** The first message of its chat, instead of the usual one. */
     brief?: string;
-    /** The built-in app it takes the place of (ADR 0041). */
-    replaces?: ReplaceableApp;
   }): Promise<{ project: ProjectInfo; chat: Chat }> {
     const name = input.name.trim();
     if (!name || name.length > 60) throw new AppError("name is required (max 60 chars)");
@@ -216,15 +166,13 @@ export class AppService {
       name,
       slug: id,
       kind: "app",
-      files: { ...scaffold(id, name, description, input.replaces), ...(input.files ?? {}) },
+      files: { ...scaffold(id, name, description), ...(input.files ?? {}) },
       agents: [BUILDER_HANDLE],
       brief: input.brief
         ? input.brief
-        : input.replaces
-          ? `@${BUILDER_HANDLE} Build this app. It takes the place of Aura's built-in ${REPLACED_NAMES[input.replaces]} (manifest "replaces": "${input.replaces}"), so it opens wherever that one would; ask for the permissions it needs (${REPLACED_PERMISSIONS[input.replaces]}). ${description}`
-          : description
-            ? `@${BUILDER_HANDLE} Build this app: ${description}`
-            : `@${BUILDER_HANDLE} This is the chat of the app "${name}". Wait for the user to say what it should do.`,
+        : description
+          ? `@${BUILDER_HANDLE} Build this app: ${description}`
+          : `@${BUILDER_HANDLE} This is the chat of the app "${name}". Wait for the user to say what it should do.`,
       kickoff: description.length > 0,
     });
     await this.load();
@@ -274,6 +222,16 @@ export class AppService {
     log.info("extension became an app", { id });
   }
 
+  private async ensureBuilder(): Promise<void> {
+    if (await this.deps.agents.get(BUILDER_HANDLE)) return;
+    await this.deps.agents.create(BUILDER_DEFAULT);
+    await commitAll(
+      this.deps.dataDir,
+      `agents(@${BUILDER_HANDLE}): add`,
+      ORCHESTRATOR_HANDLE,
+    ).catch((error: unknown) => log.warn("builder commit failed", { error: errorMessage(error) }));
+  }
+
   /** Every legacy extension becomes an app; one that cannot is logged and left as it is. */
   async adoptExtensions(): Promise<string[]> {
     const moved: string[] = [];
@@ -288,36 +246,6 @@ export class AppService {
     return moved;
   }
 
-  /**
-   * The bar app (ADR 0029), created with the built-in bar's look the first time the user (or the
-   * orchestrator) wants a bar of their own. Returns its chat.
-   */
-  async ensureBar(): Promise<{ id: string; chatId: string; created: boolean }> {
-    const existing = this.source(BAR_APP_ID);
-    if (existing) return { id: existing.id, chatId: existing.chatId, created: false };
-    const { chat } = await this.create({
-      name: "Bar",
-      id: BAR_APP_ID,
-      files: barFiles(),
-      brief: `@${BUILDER_HANDLE} This is the chat of Aura's bar, the strip on the edge of the screen with the apps and the status. Its code is in this folder; README.md describes ctx.bar. Wait for the user to say how to change it.`,
-    });
-    return { id: BAR_APP_ID, chatId: chat.id, created: true };
-  }
-
-  private async ensureBuilder(): Promise<void> {
-    if (await this.deps.agents.get(BUILDER_HANDLE)) return;
-    await this.deps.agents.create(BUILDER_DEFAULT);
-    await commitAll(
-      this.deps.dataDir,
-      `agents(@${BUILDER_HANDLE}): add`,
-      ORCHESTRATOR_HANDLE,
-    ).catch((error: unknown) => log.warn("builder commit failed", { error: errorMessage(error) }));
-  }
-
-  /**
-   * After a run in an app's chat: if the agent changed files, the user gets the diff on an
-   * approval card. Nothing goes live until they approve.
-   */
   async afterRun(
     project: ProjectInfo,
     run: { handle: string; chatId: string; summary: string },

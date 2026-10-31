@@ -4,7 +4,7 @@ import { SaveButton } from "@/components/save-button";
 import { reportError } from "@/features/chat/actions";
 import { inputClass, ModelInput, useModels } from "@/features/engines/engines-view";
 import { useT } from "@/features/localization/i18n";
-import { openSettings } from "@/features/settings/open";
+import { openSettings } from "@/features/shell/view";
 import { api, call } from "@/lib/api";
 
 type Engines = Awaited<ReturnType<typeof loadEngines>>;
@@ -57,7 +57,7 @@ export function AgentAi({
   };
 
   return (
-    <div className="bg-card border p-5">
+    <div className="bg-card rounded-[20px] border p-5 shadow-sm">
       <h3 className="kicker mb-1">{title ?? t("Its AI")}</h3>
       <p className="text-muted-foreground mb-3 text-xs">
         {t("Pick from the AI you connected.")}{" "}

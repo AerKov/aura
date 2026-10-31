@@ -197,7 +197,7 @@ export const UK: Record<string, string> = {
   "More for {name}": "Ще для «{name}»",
   "Uninstall…": "Видалити…",
   Uninstall: "Видалити",
-  "Uninstall {name}? Its chat goes too. A copy of its code, versions and data is kept in Backups.":
+  "Uninstall {name}? Its chat goes too. A copy of its code, versions and data is kept in History.":
     "Видалити «{name}»? Його чат теж зникне. Копія коду, версій і даних збережеться в «Резервних копіях».",
   "Remove {name}? Its files go as a commit of the data folder.":
     "Видалити «{name}»? Його файли буде видалено комітом у теці даних.",
@@ -460,8 +460,8 @@ export const UK: Record<string, string> = {
   "In no chat yet. Ask the orchestrator to start a project with it.":
     "Ще в жодному чаті. Попросіть Помічника почати з ним групу з папкою.",
   GB: "ГБ",
-  "Where your helpers' AI comes from: a model on this computer, or an agent app you already use (Claude Code, Codex…). Which helper uses which AI is set on its card under Helpers.":
-    "Звідки береться ШІ ваших помічників: модель на цьому комп'ютері або агентний застосунок, яким ви вже користуєтеся (Claude Code, Codex…). Який ШІ використовує помічник, задається в його картці в Помічниках.",
+  "Where your helpers' AI comes from: a model on this computer, or an agent app you already use (Claude Code, Codex…). Which one the Helper and @builder use is chosen above.":
+    "Звідки береться ШІ ваших помічників: модель на цьому комп'ютері або агентний застосунок, яким ви вже користуєтеся (Claude Code, Codex…). Який із них використовують Помічник і @builder, обирається вище.",
   "Checking engines…": "Перевіряю рушії…",
   "model id": "назва моделі",
   "Server URL": "Адреса сервера",
@@ -573,4 +573,19 @@ export const UK: Record<string, string> = {
     "@builder змінює застосунок; ви бачите кожну зміну й погоджуєте її.",
   "The Helper's AI": "ШІ Помічника",
   "The AI that builds your apps (@builder)": "ШІ, що будує ваші застосунки (@builder)",
+  Aura: "Aura",
+  Search: "Пошук",
+  "Search apps": "Шукати застосунки",
+  "No apps yet. Ask the Helper, or make one here.":
+    "Застосунків ще немає. Попросіть Помічника або створіть тут.",
+  "Show the chat": "Показати чат",
+  "Hide the chat": "Сховати чат",
+  "Safe mode is on ({reason}), so apps are off.":
+    "Увімкнено безпечний режим ({reason}), тому застосунки вимкнені.",
+  "Leave safe mode": "Вийти з безпечного режиму",
+  "This app is not installed.": "Цей застосунок не встановлено.",
+  "This app cannot run: {problem}": "Цей застосунок не може працювати: {problem}",
+  "This app is turned off.": "Цей застосунок вимкнено.",
+  "Turn on": "Увімкнути",
+  "Creating…": "Створюю…",
 };

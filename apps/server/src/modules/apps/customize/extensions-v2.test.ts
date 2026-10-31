@@ -225,23 +225,4 @@ describe("extension API v2 (ADR 0021)", () => {
     const viaLink = await ext.files.get({ query: { project: project.id, path: "escape" } });
     expect(viaLink.status).toBe(403);
   });
-
-  test("the rail layout is saved with the appearance; Chats and Settings cannot be hidden", async () => {
-    t = await createTestApp();
-    const api = apiOf(t);
-    const res = await api.appearance.put({
-      rail: { order: ["ext:board", "chats"], hidden: ["memory", "chats", "settings"] },
-    });
-    expect(res.data?.rail).toEqual({
-      order: ["ext:board", "chats"],
-      hidden: ["memory"],
-      edge: "left",
-      mode: "builtin",
-      size: null,
-    });
-    // Theme changes keep the layout.
-    await api.appearance.put({ snippets: [] });
-    expect((await api.appearance.get()).data?.rail.hidden).toEqual(["memory"]);
-    expect((await api.appearance.put({ rail: { order: ["Bad Key"] } })).status).toBe(400);
-  });
 });

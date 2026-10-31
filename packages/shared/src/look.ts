@@ -2,7 +2,7 @@
  * The parts of Aura's screen a theme can change (ADR 0041). Aura has no look of its own: the
  * default theme (look/default-theme.css, copied to themes/default/theme.css) sets these variables,
  * and every part is marked `data-part="<name>"` for the rare change a variable cannot make. The
- * Helper reads this list to know what "the bar" or "my bubbles" is.
+ * Helper reads this list to know what "the sidebar" or "my bubbles" is.
  */
 export interface LookPart {
   part: string;
@@ -14,50 +14,38 @@ export interface LookPart {
 
 export const LOOK_PARTS: LookPart[] = [
   {
-    part: "bar",
-    label: "the bar (the strip with the app icons)",
+    part: "sidebar",
+    label: "the sidebar (the Helper, the apps, Settings)",
     vars: {
-      "--bar-bg": "background",
-      "--bar-fg": "icons and text",
-      "--bar-active-bg": "behind the app that is open",
+      "--sidebar-bg": "background (see-through: the glow shows under it)",
+      "--sidebar-fg": "text and icons",
+      "--sidebar-active-bg": "behind what is open",
+      "--sidebar-active-fg": "text of what is open",
     },
   },
   {
-    part: "menu",
-    label: "My apps and the New app sheet",
-    vars: { "--menu-bg": "background", "--menu-fg": "text" },
+    part: "app",
+    label: "the card an app runs in",
+    vars: { "--app-bg": "background", "--app-border": "border" },
   },
-  {
-    part: "tile",
-    label: "a window (tile) with an app",
-    vars: {
-      "--tile-bg": "background",
-      "--tile-border": "border",
-      "--wm-radius": "corners",
-      "--wm-gap": "space between windows",
-      "--wm-border": "border width",
-    },
-  },
-  {
-    part: "tile-title",
-    label: "a window's title bar",
-    vars: { "--tile-title-bg": "background", "--tile-title-fg": "text" },
-  },
-  { part: "chat-list", label: "the list of chats", vars: { "--chat-list-bg": "background" } },
-  {
-    part: "chat",
-    label: "a conversation",
-    vars: { "--chat-bg": "background", "--grid-dot": "the dot grid" },
-  },
+  { part: "chat", label: "a conversation", vars: { "--chat-bg": "background" } },
   {
     part: "bubble-own",
     label: "the user's own messages",
-    vars: { "--bubble-own": "background", "--bubble-own-foreground": "text" },
+    vars: {
+      "--bubble-own": "background (a colour or a gradient)",
+      "--bubble-own-foreground": "text",
+    },
   },
   {
     part: "composer",
     label: "the message box",
     vars: { "--input-bg": "background", "--input": "border" },
+  },
+  {
+    part: "menu",
+    label: "dialogs such as New app",
+    vars: { "--menu-bg": "background", "--menu-fg": "text" },
   },
 ];
 
@@ -79,6 +67,11 @@ export const LOOK_TOKENS: Record<string, string> = {
   "--warning": "needs attention",
   "--destructive": "errors, deleting",
   "--paper": "the page under a PDF or image",
+  "--aurora-1": "the glow's first colour (also the orb and gradients)",
+  "--aurora-2": "the glow's second colour",
+  "--aurora-3": "the glow's third colour",
+  "--shadow-md": "cards' shadow",
+  "--ease": "how things move",
   "--radius": "every corner (0 square, 9999px round)",
   "--radius-pill": "chips and small buttons",
   "--font-body": "text font",

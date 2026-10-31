@@ -1,14 +1,11 @@
-import {
-  type Appearance,
-  type AppRef,
-  type Chat,
-  type CustomizeState,
-  defaultLayout,
-  type Layout,
-  type Message,
-  type Participant,
-  type Project,
-  type SettingsTab,
+import type {
+  Appearance,
+  Chat,
+  CustomizeState,
+  Message,
+  Participant,
+  Project,
+  SettingsTab,
 } from "@aura/shared";
 import { useSyncExternalStore } from "react";
 import type { FileRequest } from "@/features/files/picker";
@@ -21,6 +18,12 @@ export interface AgentInfo {
   name: string;
   role: string;
 }
+
+/** What fills the screen beside the sidebar (ADR 0042). */
+export type View =
+  | { kind: "helper" }
+  | { kind: "app"; id: string }
+  | { kind: "settings"; tab: SettingsTab };
 
 /** What the viewer shows: a name, a type, and how to get the bytes. */
 export interface FileView {
@@ -38,7 +41,6 @@ export interface ChatState {
   streaming: Record<string, string>;
   connection: Connection;
   serverVersion: string | null;
-  activeChatId: string | null;
   /** Status of the default agent engine (ADR 0011). */
   provider:
     | (({ ok: true; detail?: string } | { ok: false; reason: string }) & { engine: string })
@@ -46,29 +48,18 @@ export interface ChatState {
   projects: Record<string, Project>;
   members: Record<string, Participant[]>;
   agents: Record<string, AgentInfo>;
-  /** The shell: which apps are open as tiles (ADR 0024). */
-  layout: Layout;
-  /** On a phone: the one app on screen (not saved; the tiles stay as the desktop left them). */
-  phoneApp: AppRef | null;
+  /** What is on screen: the Helper's chat, an app with its chat, or Settings. */
+  view: View;
   /** Apps showing their changes that wait for approval instead of the live version. */
   previewDraft: Record<string, boolean>;
-  /** Apps whose chat is open as a panel inside their tile (ADR 0027). */
-  appChat: Record<string, boolean>;
-  /** A Settings tab asked for from elsewhere (ADR 0039); taken by Settings when it shows. */
-  settingsTab: SettingsTab | null;
-  /** The helper whose settings the Helpers app shows (a click on its mark in a chat). */
-  agentFocus: string | null;
-  /** Why the bar app is not shown (it failed), so the built-in bar stands in (ADR 0029). */
-  barFailed: string | null;
-  /** The "My apps" menu next to the bar, and the "New app" sheet (ADR 0034). */
-  menuOpen: boolean;
+  /** Apps whose chat beside them is hidden (it shows by default). */
+  appChatHidden: Record<string, boolean>;
+  /** The "New app" dialog. */
   addOpen: boolean;
   /** The file shown in the viewer window (ADR 0036). */
   viewer: FileView | null;
   /** An app is asking the user for files (ADR 0036). */
   filePicker: FileRequest | null;
-  /** On narrow screens the messenger shows one pane: the chat list or a chat. */
-  pane: "list" | "main";
   appearance: Appearance | null;
   customize: CustomizeState | null;
 }
@@ -80,25 +71,18 @@ let state: ChatState = {
   streaming: {},
   connection: "connecting",
   serverVersion: null,
-  activeChatId: null,
   provider: null,
   projects: {},
   members: {},
   agents: {},
-  layout: defaultLayout(),
-  phoneApp: null,
+  view: { kind: "helper" },
   previewDraft: {},
-  appChat: {},
-  agentFocus: null,
-  settingsTab: null,
-  barFailed: null,
-  menuOpen: false,
+  appChatHidden: {},
   addOpen: false,
   viewer: null,
   filePicker: null,
   appearance: null,
   customize: null,
-  pane: "list",
 };
 
 const listeners = new Set<() => void>();
@@ -151,8 +135,6 @@ export function removeChat(chatId: string): void {
     return {
       chats,
       messages,
-      activeChatId: s.activeChatId === chatId ? null : s.activeChatId,
-      pane: s.activeChatId === chatId ? "list" : s.pane,
     };
   });
 }

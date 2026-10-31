@@ -47,8 +47,8 @@ export function ApprovalCard({ card, name }: { card: ApprovalCardData; name: str
   return (
     <div
       className={cn(
-        "bg-card mt-2 flex w-[min(620px,100%)] flex-col gap-2.5 border p-3.5",
-        pending ? "border-warning/65" : "opacity-85",
+        "bg-card animate-in fade-in zoom-in-[0.98] mt-2 flex w-[min(620px,100%)] flex-col gap-2.5 rounded-[20px] border p-4 shadow-md duration-500",
+        pending ? "approval-pending" : "opacity-85",
       )}
     >
       <span className="text-warning-text text-xs font-semibold">
@@ -61,7 +61,7 @@ export function ApprovalCard({ card, name }: { card: ApprovalCardData; name: str
         </div>
       )}
       {card.warning && (
-        <p className="bg-warning/12 text-warning-text flex items-start gap-1.5 px-3 py-2 text-[13.5px]">
+        <p className="bg-warning/12 text-warning-text flex items-start gap-1.5 rounded-xl px-3 py-2 text-[13.5px]">
           <TriangleAlert className="mt-0.5 size-4 shrink-0" />
           {t(card.warning)}
         </p>
@@ -80,17 +80,26 @@ export function ApprovalCard({ card, name }: { card: ApprovalCardData; name: str
         </div>
       )}
       {details && (
-        <div className="bg-background max-h-80 overflow-y-auto border px-3 py-2 text-sm">
+        <div className="bg-background max-h-80 overflow-y-auto rounded-xl border px-3 py-2 text-sm">
           <Markdown>{card.preview}</Markdown>
         </div>
       )}
       {error && <p className="text-destructive text-sm">{error}</p>}
       {pending ? (
         <div className="flex flex-wrap items-center gap-2">
-          <Button disabled={busy} onClick={() => void decide(true)}>
+          <Button
+            className="aura-button rounded-full border-0 px-4"
+            disabled={busy}
+            onClick={() => void decide(true)}
+          >
             {t("Yes, do it")}
           </Button>
-          <Button variant="outline" disabled={busy} onClick={() => void decide(false)}>
+          <Button
+            variant="outline"
+            className="rounded-full px-4"
+            disabled={busy}
+            onClick={() => void decide(false)}
+          >
             {t("No, thanks")}
           </Button>
           {card.tryCss && (

@@ -1,11 +1,4 @@
-import {
-  BAR_EDGES,
-  type BarEdge,
-  LOOK_PARTS,
-  LOOK_TOKENS,
-  type WindowStyle,
-  WM_PRESETS,
-} from "@aura/shared";
+import { LOOK_PARTS, LOOK_TOKENS } from "@aura/shared";
 import { z } from "zod";
 import { errorMessage } from "../../../lib/log";
 import type { AgentTool } from "../../../providers/types";
@@ -22,11 +15,10 @@ const fail = (error: unknown) => ({ text: `Error: ${errorMessage(error)}`, isErr
 
 /** How to write an extension: the tool description is all the orchestrator sees of the API. */
 export const EXTENSION_GUIDE = [
-  "Propose a UI extension: a small app that opens as a tile on the user's screen, next to the open chat. It runs in a sandboxed frame with no direct network.",
+  "An app opens on the user's screen with its chat beside it. It runs in a sandboxed frame with no direct network.",
   "main.js must `export default function activate(ctx)`; use plain DOM, keep it small, style with styles.css.",
   "ctx API (each part needs its permission): ctx.ui.registerPanel({ title, render(el) }) (ui.panel);",
   "ctx.ui.form(el, { title, fields: [{ name, label, type: text|textarea|number|date|checkbox|select|email|url, options, placeholder, required, value }], submitLabel, onSubmit: async (values) => … }) and ctx.ui.button(el, label, async () => …) build themed controls;",
-  "await ctx.context() → { chatId, projectId } of the chat open in Chats (it changes: listen with ctx.events.on('context', …));",
   "await ctx.chat.list(), await ctx.chat.messages(chatId) (chat.read), await ctx.chat.post(chatId, markdown) (chat.write; does not wake agents);",
   "await ctx.agents.ask(agent, text, { chatId }) (agents.ask): posts a message from the user `@agent text` in the current chat (or chatId), which wakes the agent under normal budgets; use it for buttons and forms that ask an agent to do something;",
   "await ctx.storage.get(key), ctx.storage.set(key, jsonValue), ctx.storage.delete(key), ctx.storage.keys() (storage): the extension's own data, never in chat messages;",
@@ -37,34 +29,15 @@ export const EXTENSION_GUIDE = [
   "Prefer the app kit (themed, live, built on collections) over hand-made DOM: ctx.kit.tabs(el, [{ label, render(tab) }]); ctx.kit.form(el, { collection, title, fields: [names], options: { field: [values] }, defaults, multiline: [names], id (to edit), onSaved }); ctx.kit.table(el, { collection, columns: [{ field, label }], sort, query, options }) with search, sorting, edit and delete; ctx.kit.board(el, { collection, groupBy, groups: [values], labels, title, subtitle }) with drag and drop between columns; ctx.kit.cards(el, { collection, title, body, tag, sort }); ctx.kit.chart(el, { collection, groupBy, value (a number field to sum), title }); ctx.kit.stat(el, { collection, label, query, sum }); ctx.kit.row(el) puts blocks side by side;",
   "await ctx.files.list(path), await ctx.files.read(path) (files.read): read-only files of the current project (or { project } as the last argument);",
   "Files (docs): the app's own files, kept outside git, at most 30 MB each: await ctx.docs.pick({ accept: 'application/pdf,.csv', multiple: true }) opens Aura's own window where the user adds files from their computer and returns [{ id, name, size, type }] (an empty list if they cancel); await ctx.docs.list(); await ctx.docs.put(name, data) stores text, bytes (Uint8Array/ArrayBuffer) or { base64 } the app made (an invoice PDF made with a library from add_library, a CSV export) and returns the record; await ctx.docs.read(id, { as: 'text' | 'base64' }) (up to 10 MB); await ctx.docs.remove(id); ctx.docs.view(id) shows a PDF, image or text in a window with Print and Save buttons (also ctx.docs.view({ name, type, data }) for content the app has but does not keep); ctx.docs.save(id) hands the file to the user's computer. Never use window.print, <a download>, an <iframe> or an <embed> for this: the frame cannot do those, ctx.docs can.",
-  "await ctx.alerts.recent() (alerts.read: alert cards {source, severity, title, summary, count, lastAt}); await ctx.alerts.post({ severity: 'info'|'warning'|'critical', title, summary, fingerprint? }) (alerts.write: an alert card in the Alerts chat from app:<id>; the same title or fingerprint within an hour bumps its count; warnings wake the orchestrator; at most 30 an hour); ctx.events.on('message.created', (message) => …) (chat.read).",
+  "ctx.events.on('message.created', (message) => …) (chat.read).",
   "Messages: {id, chatId, author: {kind, id}, body (markdown), card, createdAt}. Chats: {id, kind, title}.",
   "Theme CSS variables: var(--background), var(--foreground), var(--card), var(--muted), var(--muted-foreground), var(--border), var(--primary), var(--primary-foreground), var(--radius); forms and buttons already use them.",
   'Apps are not limited to the kit: for a chart, a calendar, a map renderer or markdown, add a library with add_library (an exact npm version; UMD .js builds define a global, .mjs ones load with await ctx.lib("lib/…"), .css is applied) and list its path in manifest.json "libraries"; the frame has no network, so never load scripts from a URL.',
   'ctx.language is the language the user chose for Aura ("en", "uk"…): write the app\'s own texts in it.',
-  'In manifest.json keep "description" (one line on what it is for, shown in the launcher) and "group" (its launcher group, e.g. "Work", "Home", "Money"; short) up to date.',
-  "Pass `project` to make it a project's app: it then opens by itself next to that project's chat. Pick an `icon`. Ask only for the permissions it uses.",
+  'In manifest.json keep "description" (one line on what it is for, shown in the app list) up to date and pick an "icon". Ask only for the permissions it uses.',
 ].join(" ");
 
-/** Orchestrator tools to change the app itself by chat (docs/SPEC.md section 3, "Customization"). */
-function isBarEdge(value: unknown): value is BarEdge {
-  return typeof value === "string" && (BAR_EDGES as readonly string[]).includes(value);
-}
-
-/** The tool's window-style fields as a change: a preset first, then single values over it. */
-function windowInput(input: Record<string, unknown>): Partial<WindowStyle> | undefined {
-  const preset =
-    input.preset === "airy" || input.preset === "compact" ? WM_PRESETS[input.preset] : undefined;
-  const change: Partial<WindowStyle> = { ...preset };
-  for (const key of ["gaps", "radius", "border"] as const)
-    if (typeof input[key] === "number") change[key] = input[key];
-  if (input.titles === "full" || input.titles === "minimal" || input.titles === "none")
-    change.titles = input.titles;
-  if (input.mod === "alt" || input.mod === "ctrl-alt" || input.mod === "meta")
-    change.mod = input.mod;
-  return Object.keys(change).length > 0 ? change : undefined;
-}
-
+/** The Helper's tools to change how Aura looks, by chat (ADR 0041). */
 export function customizeTools(
   deps: CustomizeDeps,
   ctx: { handle: string; chatId: string },
@@ -78,7 +51,7 @@ export function customizeTools(
     {
       name: "describe_look",
       description:
-        "How Aura looks and how to change it (ADR 0041): Aura has no look of its own, everything comes from the active theme, a CSS file of the user's. Lists each part of the screen (the bar, windows, the chat list, bubbles…) with its variables, the base colours and fonts, and the active theme's CSS. Read it before propose_css.",
+        "How Aura looks and how to change it (ADR 0041): Aura has no look of its own, everything comes from the active theme, a CSS file of the user's. Lists each part of the screen (the sidebar, the chat, bubbles…) with its variables, the base colours and fonts, and the active theme's CSS. Read it before propose_css.",
       inputSchema: {},
       async handler() {
         const a = await deps.appearance.get();
@@ -86,8 +59,7 @@ export function customizeTools(
         return ok(
           [
             `Active theme: ${a.theme ?? "none"} (themes: ${a.themes.join(", ") || "none"}); snippets on: ${a.snippets.join(", ") || "none"}.`,
-            'Change a part by setting its variables in the active theme (on :root for light and .dark for dark mode), with propose_css target theme and the same name, sending the whole file. Each part is also marked data-part="<name>" for a change no variable covers. The window style (gaps, corners, borders, titles), the bar\'s items and edge and the language are set_appearance and set_language, without approval.',
-            "If the user has a bar app of their own (bar_mode app), the bar is that app: change it in its chat (change_bar), not with a theme.",
+            'Change a part by setting its variables in the active theme (on :root for light and .dark for dark mode), with propose_css target theme and the same name, sending the whole file. Each part is also marked data-part="<name>" for a change no variable covers. The language is set_language, without approval.',
             "",
             "Parts:",
             ...LOOK_PARTS.map(
@@ -108,7 +80,7 @@ export function customizeTools(
     },
     {
       name: "list_customizations",
-      description: "Show themes, CSS snippets, MCP servers and UI extensions, and what is active.",
+      description: "Show themes, CSS snippets and apps, and what is active.",
       inputSchema: {},
       async handler() {
         const a = await deps.appearance.get();
@@ -147,78 +119,6 @@ export function customizeTools(
             by(input.why),
           );
           return ok("Approval requested; the user can try it on first.");
-        } catch (error) {
-          return fail(error);
-        }
-      },
-    },
-    {
-      name: "set_appearance",
-      description:
-        "Switch the theme or the enabled snippets among existing ones, arrange the bar (its items and the screen edge it sits on), or set how tiles look (no approval needed). theme null = default. Rail keys: chats, signals, settings, ext:<extension id>; chats and settings cannot be hidden. Window styles: preset airy (gaps 10, radius 10, border 2, minimal titles) or compact (no gaps, square, border 1, full titles), then gaps/radius 0-24 px, border 0-4 px, titles full|minimal|none, mod (the shortcuts' modifier) alt|ctrl-alt|meta.",
-      inputSchema: {
-        theme: z.string().nullable().optional(),
-        snippets: z.array(z.string()).optional(),
-        rail_order: z.array(z.string()).optional().describe("rail keys, top first"),
-        rail_hidden: z.array(z.string()).optional().describe("rail keys to hide"),
-        bar_edge: z.enum(["left", "right", "top", "bottom"]).optional(),
-        bar_size: z
-          .number()
-          .int()
-          .min(24)
-          .max(96)
-          .nullable()
-          .optional()
-          .describe("the bar's thickness in px; null for the default (56 on the sides, 48 on top)"),
-        bar_mode: z
-          .enum(["builtin", "app", "off"])
-          .optional()
-          .describe("Aura's built-in bar, the user's bar app (change it with change_bar), or none"),
-        preset: z.enum(["airy", "compact"]).optional().describe("applied before the values below"),
-        gaps: z.number().int().min(0).max(24).optional(),
-        radius: z.number().int().min(0).max(24).optional(),
-        border: z.number().int().min(0).max(4).optional(),
-        titles: z.enum(["full", "minimal", "none"]).optional(),
-        mod: z.enum(["alt", "ctrl-alt", "meta"]).optional(),
-      },
-      async handler(input) {
-        try {
-          const a = await deps.appearance.set({
-            theme: input.theme === undefined ? undefined : (input.theme as string | null),
-            snippets: Array.isArray(input.snippets) ? input.snippets.map(String) : undefined,
-            wm: windowInput(input),
-            rail:
-              Array.isArray(input.rail_order) ||
-              Array.isArray(input.rail_hidden) ||
-              typeof input.bar_edge === "string" ||
-              typeof input.bar_mode === "string" ||
-              input.bar_size !== undefined
-                ? {
-                    size:
-                      input.bar_size === null
-                        ? null
-                        : typeof input.bar_size === "number"
-                          ? input.bar_size
-                          : undefined,
-                    mode:
-                      input.bar_mode === "builtin" ||
-                      input.bar_mode === "app" ||
-                      input.bar_mode === "off"
-                        ? input.bar_mode
-                        : undefined,
-                    edge: isBarEdge(input.bar_edge) ? input.bar_edge : undefined,
-                    order: Array.isArray(input.rail_order)
-                      ? input.rail_order.map(String)
-                      : undefined,
-                    hidden: Array.isArray(input.rail_hidden)
-                      ? input.rail_hidden.map(String)
-                      : undefined,
-                  }
-                : undefined,
-          });
-          return ok(
-            `Theme: ${a.theme ?? "default"}; snippets: ${a.snippets.join(", ") || "none"}; rail order: ${a.rail.order.join(", ") || "default"}; hidden: ${a.rail.hidden.join(", ") || "none"}; bar: ${a.rail.mode} on the ${a.rail.edge}${a.rail.size ? `, ${a.rail.size}px` : ""}; tiles: gaps ${a.wm.gaps}, radius ${a.wm.radius}, border ${a.wm.border}, titles ${a.wm.titles}; mod: ${a.wm.mod}.`,
-          );
         } catch (error) {
           return fail(error);
         }

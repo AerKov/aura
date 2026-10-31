@@ -71,35 +71,6 @@ export const customizeModule = (deps: CustomizeRouteDeps) =>
         body: t.Object({
           theme: t.Optional(t.Nullable(t.String({ maxLength: 48 }))),
           snippets: t.Optional(t.Array(t.String({ maxLength: 48 }))),
-          rail: t.Optional(
-            t.Object({
-              order: t.Optional(t.Array(t.String({ maxLength: 52 }), { maxItems: 64 })),
-              hidden: t.Optional(t.Array(t.String({ maxLength: 52 }), { maxItems: 64 })),
-              edge: t.Optional(
-                t.Union([
-                  t.Literal("left"),
-                  t.Literal("right"),
-                  t.Literal("top"),
-                  t.Literal("bottom"),
-                ]),
-              ),
-              mode: t.Optional(t.Union([t.Literal("builtin"), t.Literal("app"), t.Literal("off")])),
-              size: t.Optional(t.Nullable(t.Integer({ minimum: 24, maximum: 96 }))),
-            }),
-          ),
-          wm: t.Optional(
-            t.Object({
-              gaps: t.Optional(t.Integer({ minimum: 0, maximum: 24 })),
-              radius: t.Optional(t.Integer({ minimum: 0, maximum: 24 })),
-              border: t.Optional(t.Integer({ minimum: 0, maximum: 4 })),
-              titles: t.Optional(
-                t.Union([t.Literal("full"), t.Literal("minimal"), t.Literal("none")]),
-              ),
-              mod: t.Optional(
-                t.Union([t.Literal("alt"), t.Literal("ctrl-alt"), t.Literal("meta")]),
-              ),
-            }),
-          ),
         }),
       },
     )

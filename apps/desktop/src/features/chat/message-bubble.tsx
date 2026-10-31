@@ -89,7 +89,7 @@ export function MessageBubble({
         {reply}
         <div
           data-part="bubble-own"
-          className="bg-bubble-own text-bubble-own-foreground relative max-w-[min(36rem,85%)] rounded-lg px-3 py-2 text-[14.5px] leading-[1.45]"
+          className="bubble-own relative max-w-[min(36rem,85%)] rounded-[20px] rounded-br-md px-4 py-2.5 text-[14.5px] leading-[1.45]"
         >
           {replyButton}
           {body && <Markdown>{highlightMentions(body)}</Markdown>}
@@ -125,7 +125,7 @@ export function MessageBubble({
               type="button"
               aria-label={t("Settings of {name}", { name })}
               title={t("Settings of {name}", { name })}
-              onClick={() => openAgentSettings(message.author.id)}
+              onClick={openAgentSettings}
             >
               <Mark name={message.author.id} label={name} kind={kind} size="sm" />
             </button>

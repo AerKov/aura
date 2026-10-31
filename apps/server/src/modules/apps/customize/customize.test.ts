@@ -2,7 +2,6 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { treaty } from "@elysiajs/eden";
-import { FakeProvider } from "../../../providers/fake";
 import { createTestApp } from "../../../testing";
 import { compareVersions, ExtensionError, validateManifest } from "./extensions";
 import { FORCED_REASON } from "./safe-mode";
@@ -33,7 +32,7 @@ describe("customization", () => {
     expect(record.tryCss).not.toContain("x.test");
     // Aura starts with its default look as the user's own theme (ADR 0041).
     expect(await t.appearance.get()).toMatchObject({ theme: "default", themes: ["default"] });
-    expect(t.appearance.source("theme", "default")).toContain("--bar-bg");
+    expect(t.appearance.source("theme", "default")).toContain("--sidebar-bg");
 
     await t.approvals.decide(record.id, true, "owner");
     const after = await t.appearance.get();
@@ -46,17 +45,17 @@ describe("customization", () => {
     await expect(t.appearance.set({ theme: "nope" })).rejects.toThrow(/unknown theme/);
   });
 
-  test("describe_look tells the Helper what the bar is and shows the active theme (ADR 0041)", async () => {
+  test("describe_look tells the Helper what the sidebar is and shows the active theme (ADR 0041)", async () => {
     t = await createTestApp();
     const tools = customizeTools(
       { appearance: t.appearance, extensions: t.extensions },
       { handle: "orchestrator", chatId: "direct" },
     );
     const answer = await tools.find((x) => x.name === "describe_look")?.handler({});
-    expect(answer?.text).toContain("- bar: the bar");
-    expect(answer?.text).toContain("--bar-bg (background)");
+    expect(answer?.text).toContain("- sidebar: the sidebar");
+    expect(answer?.text).toContain("--sidebar-bg (background");
     expect(answer?.text).toContain("Active theme: default");
-    expect(answer?.text).toContain("--bar-bg: #1d2d3d");
+    expect(answer?.text).toContain("--radius: 16px");
   });
 
   test("extensions: manifest rules, install by approval, sandbox frame, permissions, auto-disable", async () => {
@@ -151,35 +150,6 @@ describe("customization", () => {
     const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
     expect((await api.customize.get()).data?.safeMode).toEqual({ on: true, reason: "test" });
     expect((await api.customize["safe-mode"].off.post()).data?.safeMode.on).toBe(false);
-  });
-
-  test("the window layout: bar edge and tile style, from the page and the orchestrator", async () => {
-    const provider = new FakeProvider();
-    t = await createTestApp({ provider });
-    const api = treaty(t.app, { headers: { authorization: `Bearer ${t.token}` } });
-    const initial = (await api.appearance.get()).data;
-    expect(initial?.rail.edge).toBe("left");
-    expect(initial?.wm).toEqual({ gaps: 10, radius: 10, border: 2, titles: "minimal", mod: "alt" });
-
-    const set = await api.appearance.put({
-      rail: { edge: "top" },
-      wm: { gaps: 4, mod: "ctrl-alt" },
-    });
-    expect(set.data?.rail.edge).toBe("top");
-    expect(set.data?.wm).toMatchObject({ gaps: 4, radius: 10, mod: "ctrl-alt" });
-    expect((await api.appearance.put({ wm: { gaps: 99 } })).status).toBe(422);
-    expect((await api.appearance.put({ rail: { size: 32 } })).data?.rail.size).toBe(32);
-    expect((await api.appearance.put({ rail: { size: 200 } })).status).toBe(422);
-    expect((await api.appearance.put({ rail: { size: null } })).data?.rail.size).toBeNull();
-
-    await t.chat.post({ chatId: "direct", author: { kind: "user", id: "owner" }, body: "hi" });
-    await Bun.sleep(20);
-    await t.runtime.whenIdle();
-    const tool = provider.calls[0]?.tools.find((x) => x.name === "set_appearance");
-    const res = await tool?.handler({ preset: "compact", bar_edge: "bottom", titles: "none" });
-    expect(res?.text).toContain(
-      "bar: builtin on the bottom; tiles: gaps 0, radius 0, border 1, titles none; mod: ctrl-alt",
-    );
   });
 
   test("safe mode forced by the env flag cannot be left from the app", async () => {

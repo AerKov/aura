@@ -6,10 +6,11 @@ import { loadInitial, loadProjects } from "@/features/chat/actions";
 import { loadCustomize } from "@/features/customize/state";
 import { useT } from "@/features/localization/i18n";
 import { api, call } from "@/lib/api";
+import { leaveApp } from "./view";
 
 /**
- * An app's menu in the launcher (ADR 0033): uninstall it. An app built in Aura leaves a backup
- * (Backups brings it back); a plain extension is removed as a commit of the data folder.
+ * An app's menu (ADR 0033): uninstall it. An app built in Aura leaves a backup (Settings → History
+ * brings it back); a plain extension is removed as a commit of the data folder.
  */
 export function AppMenu({ extension }: { extension: ExtensionInfo }) {
   const t = useT();
@@ -36,6 +37,7 @@ export function AppMenu({ extension }: { extension: ExtensionInfo }) {
     try {
       if (extension.app) await call(() => api.apps({ appId: extension.id }).delete());
       else await call(() => api.extensions({ extensionId: extension.id }).delete());
+      leaveApp(extension.id);
       await loadCustomize();
       if (extension.app) await Promise.all([loadProjects(), loadInitial()]);
       setOpen(false);
@@ -64,7 +66,7 @@ export function AppMenu({ extension }: { extension: ExtensionInfo }) {
               <p className="mb-2 text-xs">
                 {extension.app
                   ? t(
-                      "Uninstall {name}? Its chat goes too. A copy of its code, versions and data is kept in Backups.",
+                      "Uninstall {name}? Its chat goes too. A copy of its code, versions and data is kept in History.",
                       { name: extension.name },
                     )
                   : t("Remove {name}? Its files go as a commit of the data folder.", {

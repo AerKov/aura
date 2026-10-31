@@ -52,7 +52,7 @@ export function FilePicker() {
         role="dialog"
         aria-modal="true"
         aria-label={t("Add files to {name}", { name: request.appName })}
-        className="bg-background relative grid w-[min(440px,96vw)] gap-3 border p-4 shadow-lg"
+        className="bg-background animate-in fade-in zoom-in-95 relative grid w-[min(440px,96vw)] gap-3 rounded-[24px] border p-5 shadow-lg"
       >
         <h2 className="text-lg">{t("Add files to {name}", { name: request.appName })}</h2>
         {/* biome-ignore lint/a11y/noStaticElementInteractions: dropping is a pointer-only shortcut; the button below does the same */}

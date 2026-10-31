@@ -28,7 +28,7 @@ export function SetupPanel() {
   };
 
   return (
-    <div className="bg-card mx-auto mb-3 max-w-xl border border-warning/65 p-4 text-sm">
+    <div className="bg-card mx-auto mb-3 max-w-xl rounded-2xl border border-warning/65 p-4 text-sm shadow-md">
       <div className="mb-1 flex items-center gap-2 font-medium">
         <Cpu className="size-4" /> {t("Connect an AI to start")}
       </div>

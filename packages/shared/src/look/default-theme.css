@@ -1,106 +1,103 @@
 /*
- * Aura's default look (ADR 0041). Aura itself has no look: this file is copied to the user data
- * folder as themes/default/theme.css on the first start, and the Helper changes it there like any
- * other theme. Every colour, font and radius is a variable; `.dark` holds the dark-mode values.
+ * Aura's default look (ADR 0041, ADR 0042). Aura itself has no look: this file is copied to the
+ * user data folder as themes/default/theme.css on the first start, and the Helper changes it there
+ * like any other theme. Every colour, font, corner and motion is a variable; `.dark` holds the
+ * dark-mode values.
  */
 :root {
-  --radius: 0px;
-  /* Pills (chips, small buttons) follow it; a soft theme sets 9999px. */
-  --radius-pill: var(--radius);
-  --font-body: "Barlow", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "Barlow Condensed", "Barlow", ui-sans-serif, system-ui, sans-serif;
+  --radius: 16px;
+  /* Chips and small buttons; a square theme sets it to var(--radius) or 0. */
+  --radius-pill: 9999px;
+  --font-body: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
   --font-code: "Geist Mono Variable", ui-monospace, monospace;
-  /* The tiles (ADR 0028), set from the appearance settings; themes may override them. */
-  --wm-gap: 10px;
-  --wm-radius: 10px;
-  --wm-border: 2px;
-  --background: #f2f2f3;
-  --foreground: #1d1f20;
-  --card: #f5f5f8;
-  --card-foreground: #1d1f20;
-  --popover: #f5f5f8;
-  --popover-foreground: #1d1f20;
-  --primary: #416180;
-  --primary-hover: #2c455d;
-  --primary-foreground: #f5f5f8;
-  --secondary: #e7e7ea;
-  --secondary-foreground: #2b2b2d;
-  --muted: #e9e9ea;
-  --muted-foreground: #5d5d60;
-  --accent: #d6ebff;
-  --accent-foreground: #2c455d;
-  --destructive: oklch(0.52 0.15 27);
-  --warning: oklch(0.6 0.13 70);
-  --warning-text: oklch(0.48 0.11 65);
-  --success: oklch(0.55 0.12 150);
-  --border: color-mix(in srgb, #1d1f20 16%, transparent);
-  --input: color-mix(in srgb, #1d1f20 22%, transparent);
-  --input-bg: #e9e9ea;
-  --ring: #5980a6;
-  --sidebar: #f5f5f8;
-  --bar-bg: #1d2d3d;
-  --bar-fg: #d6ebff;
-  --chat-bg: #f2f2f3;
-  --grid-dot: color-mix(in srgb, #1d1f20 13%, transparent);
-  --bubble-own: #d6ebff;
-  --bubble-own-foreground: #1d2d3d;
-  --bubble-other: #f5f5f8;
-  --signal: #5980a6;
-  --signal-text: #416180;
-  --shadow-md: 0 3px 10px color-mix(in srgb, #2b2b2d 16%, transparent);
-  --shadow-lg: 0 12px 32px color-mix(in srgb, #2b2b2d 22%, transparent);
-  --ease: cubic-bezier(0.2, 0, 0, 1);
+  --background: #f6f6fb;
+  --foreground: #16151f;
+  --card: #ffffff;
+  --card-foreground: #16151f;
+  --popover: #ffffff;
+  --popover-foreground: #16151f;
+  --primary: #6c5ce7;
+  --primary-hover: #5a49d8;
+  --primary-foreground: #ffffff;
+  --secondary: #ededf5;
+  --secondary-foreground: #26243a;
+  --muted: #efeff6;
+  --muted-foreground: #6b6a80;
+  --accent: #ece9ff;
+  --accent-foreground: #3d2fb3;
+  --destructive: oklch(0.58 0.2 25);
+  --warning: oklch(0.72 0.15 70);
+  --warning-text: oklch(0.52 0.12 65);
+  --success: oklch(0.64 0.15 155);
+  --border: color-mix(in srgb, #16151f 9%, transparent);
+  --input: color-mix(in srgb, #16151f 13%, transparent);
+  --input-bg: #ffffff;
+  --ring: #8b7cf6;
+  --signal: #6c5ce7;
+  --signal-text: #5a49d8;
+  /* The aurora: the three colours of Aura's glow, gradients and the Helper's orb. */
+  --aurora-1: #7c6cff;
+  --aurora-2: #22d3ee;
+  --aurora-3: #f472b6;
+  --glow: color-mix(in srgb, var(--aurora-1) 22%, transparent);
+  --shadow-sm: 0 1px 2px rgb(22 21 31 / 0.06), 0 1px 1px rgb(22 21 31 / 0.04);
+  --shadow-md: 0 4px 14px -2px rgb(22 21 31 / 0.08), 0 2px 4px rgb(22 21 31 / 0.04);
+  --shadow-lg: 0 24px 60px -12px rgb(22 21 31 / 0.18), 0 8px 20px -8px rgb(22 21 31 / 0.08);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .dark {
-  --background: #17191b;
-  --foreground: #e7e7ea;
-  --card: #1e2022;
-  --card-foreground: #e7e7ea;
-  --popover: #232527;
-  --popover-foreground: #e7e7ea;
-  --primary: #94bce3;
-  --primary-hover: #b5d9fd;
-  --primary-foreground: #1d2d3d;
-  --secondary: #2b2b2d;
-  --secondary-foreground: #e7e7ea;
-  --muted: #26282a;
-  --muted-foreground: #a6a6a9;
-  --accent: #2c455d;
-  --accent-foreground: #d6ebff;
-  --destructive: oklch(0.7 0.14 27);
-  --warning: oklch(0.78 0.12 75);
-  --warning-text: oklch(0.82 0.11 78);
-  --success: oklch(0.75 0.12 150);
-  --border: color-mix(in srgb, #e7e7ea 14%, transparent);
-  --input: color-mix(in srgb, #e7e7ea 20%, transparent);
-  --input-bg: #1e2022;
-  --ring: #94bce3;
-  --sidebar: #1e2022;
-  --bar-bg: #0f161d;
-  --bar-fg: #b5d9fd;
-  --chat-bg: #17191b;
-  --grid-dot: color-mix(in srgb, #e7e7ea 9%, transparent);
-  --bubble-own: #2c455d;
-  --bubble-own-foreground: #eef6ff;
-  --bubble-other: #1e2022;
-  --signal: #94bce3;
-  --signal-text: #b5d9fd;
-  --shadow-md: 0 0 0 1px color-mix(in srgb, #e7e7ea 8%, transparent), 0 8px 24px rgb(0 0 0 / 0.45);
-  --shadow-lg: 0 0 0 1px color-mix(in srgb, #e7e7ea 8%, transparent), 0 16px 40px rgb(0 0 0 / 0.55);
+  --background: #0c0b14;
+  --foreground: #ecebf5;
+  --card: #15141f;
+  --card-foreground: #ecebf5;
+  --popover: #1a1926;
+  --popover-foreground: #ecebf5;
+  --primary: #9d8fff;
+  --primary-hover: #b7acff;
+  --primary-foreground: #120f2b;
+  --secondary: #201f2e;
+  --secondary-foreground: #ecebf5;
+  --muted: #1c1b29;
+  --muted-foreground: #9998b0;
+  --accent: #262046;
+  --accent-foreground: #d6d0ff;
+  --destructive: oklch(0.7 0.17 25);
+  --warning: oklch(0.8 0.13 75);
+  --warning-text: oklch(0.84 0.12 78);
+  --success: oklch(0.76 0.14 155);
+  --border: color-mix(in srgb, #ecebf5 9%, transparent);
+  --input: color-mix(in srgb, #ecebf5 14%, transparent);
+  --input-bg: #15141f;
+  --ring: #9d8fff;
+  --signal: #9d8fff;
+  --signal-text: #b7acff;
+  --glow: color-mix(in srgb, var(--aurora-1) 30%, transparent);
+  --shadow-sm: 0 0 0 1px rgb(255 255 255 / 0.04), 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 0 0 1px rgb(255 255 255 / 0.05), 0 8px 24px -4px rgb(0 0 0 / 0.5);
+  --shadow-lg: 0 0 0 1px rgb(255 255 255 / 0.06), 0 30px 70px -12px rgb(0 0 0 / 0.7);
 }
 
 /*
  * Parts of the screen, each with its own variables (LOOK_PARTS in packages/shared). They start from
- * the colours above; set one to change only that part, e.g. `--bar-bg: #2d5b3a;`.
+ * the colours above; set one to change only that part, e.g. `--sidebar-bg: #1f3a2b;`.
  */
 :root {
-  --bar-active-bg: color-mix(in srgb, var(--bar-fg) 16%, transparent);
-  --tile-bg: var(--background);
-  --tile-border: var(--border);
-  --tile-title-bg: var(--card);
-  --tile-title-fg: var(--foreground);
-  --chat-list-bg: var(--card);
+  --sidebar-bg: color-mix(in srgb, var(--card) 62%, transparent);
+  --sidebar-fg: var(--foreground);
+  --sidebar-active-bg: color-mix(in srgb, var(--primary) 12%, transparent);
+  --sidebar-active-fg: var(--primary);
+  --app-bg: var(--card);
+  --app-border: var(--border);
+  --chat-bg: transparent;
+  --bubble-own: linear-gradient(
+    135deg,
+    var(--aurora-1),
+    color-mix(in oklch, var(--aurora-1), var(--aurora-3) 45%)
+  );
+  --bubble-own-foreground: #ffffff;
   --menu-bg: var(--popover);
   --menu-fg: var(--popover-foreground);
   /* The page under a PDF or an image in the viewer. */

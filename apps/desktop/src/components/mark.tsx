@@ -56,9 +56,9 @@ export function Mark({
 }) {
   const look =
     kind === "orchestrator"
-      ? "bg-primary text-primary-foreground"
+      ? "aura-fill text-white shadow-sm"
       : kind === "user"
-        ? "bg-secondary text-secondary-foreground border rounded-pill"
+        ? "bg-secondary text-secondary-foreground border"
         : kind === "alert"
           ? "border border-warning text-warning-text"
           : markStyle(name);
@@ -66,7 +66,7 @@ export function Mark({
     <span
       aria-hidden
       className={cn(
-        "relative inline-flex shrink-0 items-center justify-center font-heading font-semibold",
+        "relative inline-flex shrink-0 items-center justify-center rounded-full font-heading font-semibold",
         SIZES[size],
         look,
         className,

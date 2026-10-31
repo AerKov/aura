@@ -1,7 +1,6 @@
 import { type ClientEvent, parseServerEvent } from "@aura/shared";
 import { loadAppearance } from "@/features/customize/appearance";
 import { loadCustomize } from "@/features/customize/state";
-import { loadLayout, receiveLayout } from "@/features/shell/layout";
 import { resetSession, wsUrl } from "@/lib/api";
 import { refreshProjectsSoon, reportError, resync } from "./actions";
 import {
@@ -72,18 +71,14 @@ export function startRealtime(): () => void {
         case "customize.updated":
           void loadAppearance().catch(reportError);
           void loadCustomize().catch(reportError);
-          // A pack may have added agents; a disabled extension leaves the layout.
+          // A new app may have brought @builder.
           refreshProjectsSoon();
-          void loadLayout().catch(reportError);
           break;
         case "app.data":
           window.dispatchEvent(new CustomEvent("aura:app-data", { detail: event }));
           break;
         case "app.snapshot":
           window.dispatchEvent(new CustomEvent("aura:app-snapshot", { detail: event }));
-          break;
-        case "layout.updated":
-          receiveLayout(event.layout);
           break;
         case "pong":
           break;

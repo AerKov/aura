@@ -80,8 +80,13 @@ describe("addresseesOf", () => {
       handles: ["orchestrator"],
       via: "direct",
     });
+    // An app's chat has one helper (ADR 0042): a plain message is for it.
     expect(
-      addresseesOf({ ...base, agentMembers: ["coder"], body: "x", chatKind: "group" }).handles,
+      addresseesOf({ ...base, agentMembers: ["builder"], body: "x", chatKind: "group" }).handles,
+    ).toEqual(["builder"]);
+    expect(
+      addresseesOf({ ...base, agentMembers: ["coder", "reviewer"], body: "x", chatKind: "group" })
+        .handles,
     ).toEqual([]);
     expect(namedFirst("Coder, hi", ["coder"])).toBe("coder");
   });

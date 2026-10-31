@@ -35,8 +35,6 @@ import { localizationModule } from "./modules/system/localization";
 import type { LocalizationService } from "./modules/system/localization/service";
 import { realtimeModule } from "./modules/system/realtime";
 import type { EventHub } from "./modules/system/realtime/hub";
-import { shellModule } from "./modules/system/shell";
-import type { LayoutService } from "./modules/system/shell/service";
 
 export interface AppDeps extends HealthDeps {
   corsOrigins: string[];
@@ -59,7 +57,6 @@ export interface AppDeps extends HealthDeps {
   appearance: AppearanceService;
   extensions: ExtensionService;
   extensionBridge: ExtensionBridge;
-  layout: LayoutService;
   apps: AppService;
   lifecycle: AppLifecycle;
   localization: LocalizationService;
@@ -87,7 +84,6 @@ export function createApp(deps: AppDeps) {
     .use(projectsModule(deps))
     .use(controlModule(deps))
     .use(customizeModule(deps))
-    .use(shellModule(deps))
     .use(appsModule(deps))
     .use(localizationModule(deps))
     .use(realtimeModule(deps));

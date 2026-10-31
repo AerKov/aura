@@ -38,7 +38,7 @@ function Attachment({ chatId, file }: { chatId: string; file: FileRef }) {
   };
   const Icon = kind === "image" ? ImageIcon : kind === "none" ? FileIcon : FileText;
   return (
-    <div className="bg-card flex max-w-full items-stretch border">
+    <div className="bg-card flex max-w-full items-stretch overflow-hidden rounded-xl border shadow-sm">
       {kind === "image" && <Thumbnail chatId={chatId} file={file} onOpen={open} />}
       <button
         type="button"

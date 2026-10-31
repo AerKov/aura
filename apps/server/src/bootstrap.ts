@@ -11,7 +11,7 @@ import { AppLifecycle } from "./modules/apps/apps/lifecycle";
 import { AppSecrets } from "./modules/apps/apps/secrets";
 import { AppService } from "./modules/apps/apps/service";
 import { AppSnapshots } from "./modules/apps/apps/snapshots";
-import { appTools, barTools, libraryTool, snapshotTool } from "./modules/apps/apps/tools";
+import { appTools, libraryTool, snapshotTool } from "./modules/apps/apps/tools";
 import { AppearanceService } from "./modules/apps/customize/appearance";
 import { ExtensionBridge } from "./modules/apps/customize/bridge";
 import { ExtensionService } from "./modules/apps/customize/extensions";
@@ -32,14 +32,9 @@ import { AURA_GUIDE, helpTools } from "./modules/system/help/tools";
 import { LocalizationService } from "./modules/system/localization/service";
 import { localizationTools } from "./modules/system/localization/tools";
 import type { EventHub } from "./modules/system/realtime/hub";
-import { LayoutService } from "./modules/system/shell/service";
-import { shellTools } from "./modules/system/shell/tools";
 
-/**
- * The user data directory is a git repo; DB state, project repos, app backups and restore points
- * are kept out of it.
- */
-export const DATA_GITIGNORE = "state/\nprojects/\nbackups/\nrestore-points/\n";
+/** The user data directory is a git repo; DB state, app repos and app backups are kept out of it. */
+export const DATA_GITIGNORE = "state/\nprojects/\nbackups/\n";
 
 export async function prepareDataDir(dataDir: string): Promise<void> {
   await ensureRepo(dataDir, DATA_GITIGNORE);
@@ -51,7 +46,7 @@ export async function prepareDataDir(dataDir: string): Promise<void> {
   if (missing.length === 0) return;
   const sep = current === "" || current.endsWith("\n") ? "" : "\n";
   writeFileSync(file, `${current}${sep}${missing.join("\n")}\n`);
-  await commitAll(dataDir, "chore: keep backups and restore points out of git");
+  await commitAll(dataDir, "chore: keep backups out of git");
 }
 
 /** Wires the domain services shared by the server entry point and tests. */
@@ -177,7 +172,6 @@ export async function createServices(deps: {
     fetch: deps.fetch,
     apps: { isApp: (id) => appService.isApp(id), data: appData, actions: appActions },
   });
-  const layout = new LayoutService({ db: deps.db, hub: deps.hub, extensions });
   const localization = new LocalizationService({
     db: deps.db,
     dataDir: deps.dataDir,
@@ -215,19 +209,12 @@ export async function createServices(deps: {
       ...(ctx.handle === "orchestrator"
         ? [...helpTools(), ...localizationTools(localization)]
         : []),
-      // Every chat: a card lands where the user asked (alpha feedback: in a project chat the
-      // orchestrator had no such tools and claimed to have sent cards).
       ...(ctx.handle === "orchestrator"
         ? [
-            ...shellTools(layout),
             ...appTools(approvals, {
               handle: ctx.handle,
               chatId: ctx.chat.id,
             }),
-            ...barTools(
-              { apps: appService, appearance, chat },
-              { handle: ctx.handle, depth: ctx.depth },
-            ),
             ...customizeTools(customize, {
               handle: ctx.handle,
               chatId: ctx.chat.id,
@@ -275,7 +262,6 @@ export async function createServices(deps: {
     appActions,
     lifecycle,
     localization,
-    layout,
     safeMode,
     appVersion: SERVER_VERSION,
   };

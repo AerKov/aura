@@ -200,7 +200,7 @@ export function Composer({
           <div
             role="listbox"
             aria-label={t("Helpers")}
-            className="bg-popover absolute right-0 bottom-full left-0 z-20 mb-2 overflow-hidden border p-1 shadow-md"
+            className="bg-popover animate-in fade-in slide-in-from-bottom-2 absolute right-0 bottom-full left-0 z-20 mb-2 overflow-hidden rounded-2xl border p-1.5 shadow-lg duration-200"
           >
             {suggestions.map((agent, index) => (
               <button
@@ -213,7 +213,7 @@ export function Composer({
                 onMouseEnter={() => setMenuIndex(index)}
                 onClick={() => pick(agent)}
                 className={cn(
-                  "flex w-full items-center gap-3 px-3 py-2 text-left",
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left",
                   index === selected && "bg-accent text-accent-foreground",
                 )}
               >
@@ -237,7 +237,7 @@ export function Composer({
             addFiles([...e.dataTransfer.files]);
           }}
         >
-          <div className="bg-input-bg border-input focus-within:border-ring min-w-0 flex-1 border transition-colors">
+          <div className="bg-input-bg border-input focus-within:border-ring focus-within:ring-ring/15 min-w-0 flex-1 rounded-[22px] border shadow-md transition-all duration-300 focus-within:ring-4">
             {replyTo && (
               <div className="flex items-center gap-2 border-b px-4 py-2 text-sm">
                 <CornerDownRight className="text-muted-foreground size-4 shrink-0" />
@@ -262,7 +262,7 @@ export function Composer({
                     key={f.key}
                     title={f.error}
                     className={cn(
-                      "flex max-w-full items-center gap-1.5 border px-2 py-1 text-xs",
+                      "flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
                       f.error && "border-destructive text-destructive",
                     )}
                   >
@@ -303,7 +303,7 @@ export function Composer({
                 aria-label={t("Attach a file")}
                 title={t("Attach a file")}
                 onClick={() => picker.current?.click()}
-                className="text-muted-foreground hover:text-foreground grid size-[38px] shrink-0 place-items-center"
+                className="text-muted-foreground hover:text-foreground grid size-[42px] shrink-0 place-items-center rounded-full transition-colors"
               >
                 <Paperclip className="size-4" strokeWidth={1.5} />
               </button>
@@ -330,7 +330,7 @@ export function Composer({
                 placeholder={placeholder ?? t("Write a message…")}
                 rows={1}
                 aria-autocomplete="list"
-                className="placeholder:text-muted-foreground field-sizing-content max-h-48 min-h-[38px] flex-1 resize-none bg-transparent py-2 pr-3 pl-0 text-[14.5px] outline-none"
+                className="placeholder:text-muted-foreground field-sizing-content max-h-48 min-h-[42px] flex-1 resize-none bg-transparent py-2.5 pr-4 pl-0 text-[14.5px] outline-none"
               />
             </div>
           </div>
@@ -339,9 +339,9 @@ export function Composer({
             aria-label={t("Send")}
             disabled={(!text.trim() && ready.length === 0) || sending || uploading}
             onClick={() => void send()}
-            className="bg-primary text-primary-foreground hover:bg-primary-hover grid size-[38px] shrink-0 place-items-center transition-colors disabled:opacity-45"
+            className="aura-button grid size-[44px] shrink-0 place-items-center rounded-full disabled:opacity-40 disabled:shadow-none"
           >
-            <SendHorizontal className="size-4" strokeWidth={1.5} />
+            <SendHorizontal className="size-[18px]" strokeWidth={2} />
           </button>
         </div>
         <div className="text-muted-foreground mt-1.5 flex flex-wrap justify-between gap-x-4 px-0.5 text-xs">

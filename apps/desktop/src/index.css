@@ -1,10 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@fontsource/barlow/400.css";
-@import "@fontsource/barlow/500.css";
-@import "@fontsource/barlow/700.css";
-@import "@fontsource/barlow-condensed/400.css";
-@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource-variable/geist";
 @import "@fontsource-variable/geist-mono";
 /* The default look; the user's theme (themes/<name>/theme.css) is applied after it. */
 @import "../../../packages/shared/src/look/default-theme.css";
@@ -26,6 +22,7 @@
   --radius-xl: calc(var(--radius) * 1.25);
   --radius-2xl: calc(var(--radius) * 1.5);
   --radius-3xl: calc(var(--radius) * 2);
+  --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
   --color-background: var(--background);
@@ -51,25 +48,21 @@
   --color-input: var(--input);
   --color-input-bg: var(--input-bg);
   --color-ring: var(--ring);
-  --color-sidebar: var(--sidebar);
-  --color-bar: var(--bar-bg);
-  --color-bar-foreground: var(--bar-fg);
-  --color-bar-active: var(--bar-active-bg);
-  --color-tile: var(--tile-bg);
-  --color-tile-border: var(--tile-border);
-  --color-tile-title: var(--tile-title-bg);
-  --color-tile-title-foreground: var(--tile-title-fg);
-  --color-chat-list: var(--chat-list-bg);
+  --color-sidebar: var(--sidebar-bg);
+  --color-sidebar-foreground: var(--sidebar-fg);
+  --color-sidebar-active: var(--sidebar-active-bg);
+  --color-sidebar-active-foreground: var(--sidebar-active-fg);
+  --color-app-card: var(--app-bg);
+  --color-app-border: var(--app-border);
   --color-menu: var(--menu-bg);
   --color-menu-foreground: var(--menu-fg);
   --color-paper: var(--paper);
   --color-signal: var(--signal);
   --color-signal-text: var(--signal-text);
-  --color-bubble-own: var(--bubble-own);
   --color-bubble-own-foreground: var(--bubble-own-foreground);
 }
 
-/* Chips and small buttons: pills in a soft theme, square in Industry. */
+/* Chips and small buttons: pills in the default theme. */
 @utility rounded-pill {
   border-radius: var(--radius-pill);
 }
@@ -82,6 +75,7 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-size: 14.5px;
     line-height: 1.5;
+    font-feature-settings: "ss01", "cv11";
   }
   h1,
   h2,
@@ -89,7 +83,7 @@
   h4 {
     font-family: var(--font-heading);
     font-weight: 600;
-    letter-spacing: -0.015em;
+    letter-spacing: -0.025em;
     line-height: 1.12;
   }
   :focus-visible {
@@ -110,11 +104,255 @@
   background-color: var(--chat-bg);
 }
 
-/* A faint dot grid behind conversations: the workbench surface. */
-.dot-grid {
-  background-image: radial-gradient(var(--grid-dot) 1px, transparent 1.3px);
-  background-size: 16px 16px;
-  background-position: -8px -8px;
+/*
+ * The aurora (ADR 0042): three soft colours drift behind everything, slowly. The sidebar and the
+ * panels are glass over it.
+ */
+.aura-backdrop {
+  background: var(--background);
+  isolation: isolate;
+}
+.aura-backdrop::before,
+.aura-backdrop::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.55;
+}
+.aura-backdrop::before {
+  width: 55vmax;
+  height: 55vmax;
+  left: -18vmax;
+  top: -22vmax;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--aurora-1) 55%, transparent),
+    transparent 65%
+  );
+  animation: aurora-a 26s ease-in-out infinite alternate;
+}
+.aura-backdrop::after {
+  width: 50vmax;
+  height: 50vmax;
+  right: -20vmax;
+  bottom: -24vmax;
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      color-mix(in srgb, var(--aurora-2) 45%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 70% 70%,
+      color-mix(in srgb, var(--aurora-3) 40%, transparent),
+      transparent 60%
+    );
+  animation: aurora-b 32s ease-in-out infinite alternate;
+}
+.dark .aura-backdrop::before,
+.dark .aura-backdrop::after {
+  opacity: 0.38;
+}
+@keyframes aurora-a {
+  to {
+    transform: translate(14vmax, 10vmax) scale(1.15) rotate(25deg);
+  }
+}
+@keyframes aurora-b {
+  to {
+    transform: translate(-12vmax, -9vmax) scale(1.1) rotate(-20deg);
+  }
+}
+
+/* Frosted glass over the aurora: the sidebar and the app's chat. */
+.glass {
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(22px) saturate(1.6);
+  -webkit-backdrop-filter: blur(22px) saturate(1.6);
+  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
+  box-shadow: var(--shadow-md);
+}
+.glass-strong {
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  border: 1px solid color-mix(in srgb, var(--foreground) 7%, transparent);
+  box-shadow: var(--shadow-md);
+}
+
+/* The aurora as a fill: badges, the main button, the band on dialogs. */
+.aura-fill,
+.aurora-fill {
+  background: linear-gradient(135deg, var(--aurora-1), var(--aurora-3));
+}
+.aurora-band {
+  background: linear-gradient(
+    90deg,
+    var(--aurora-1),
+    var(--aurora-2),
+    var(--aurora-3),
+    var(--aurora-1)
+  );
+  background-size: 300% 100%;
+  animation: aurora-flow 6s linear infinite;
+}
+@keyframes aurora-flow {
+  to {
+    background-position: 300% 0;
+  }
+}
+.aura-button {
+  background: linear-gradient(
+    135deg,
+    var(--aurora-1),
+    color-mix(in oklch, var(--aurora-1), var(--aurora-3) 55%)
+  );
+  color: #fff;
+  box-shadow: 0 6px 20px -6px var(--glow);
+  transition:
+    transform 0.25s var(--spring),
+    box-shadow 0.25s var(--ease),
+    filter 0.25s var(--ease);
+}
+.aura-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 28px -6px var(--glow);
+  filter: brightness(1.06);
+}
+.aura-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+/* An app's icon tile in the sidebar and on its card. */
+.app-icon {
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--aurora-1) 16%, var(--card)),
+    color-mix(in srgb, var(--aurora-2) 12%, var(--card))
+  );
+  color: var(--primary);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 14%, transparent),
+    var(--shadow-sm);
+}
+
+/* What is open in the sidebar glows a little at its left edge. */
+.nav-glow {
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, var(--aurora-1), var(--aurora-3));
+  box-shadow: 0 0 12px var(--glow);
+  animation: nav-glow-in 0.45s var(--spring);
+}
+@keyframes nav-glow-in {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+}
+
+/* The Helper is working. */
+.aura-ping {
+  background: var(--aurora-2);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--aurora-2) 60%, transparent);
+  animation: ping 1.6s var(--ease) infinite;
+}
+@keyframes ping {
+  70% {
+    box-shadow: 0 0 0 7px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* The Helper's orb on an empty chat: a breathing, turning aurora. */
+.aura-orb {
+  width: 88px;
+  height: 88px;
+  border-radius: 9999px;
+  background: conic-gradient(
+    from 0deg,
+    var(--aurora-1),
+    var(--aurora-2),
+    var(--aurora-3),
+    var(--aurora-1)
+  );
+  filter: blur(0.5px) saturate(1.2);
+  box-shadow:
+    0 0 60px -6px var(--glow),
+    inset 0 0 24px rgb(255 255 255 / 0.45);
+  animation:
+    orb-turn 9s linear infinite,
+    orb-breathe 4.5s ease-in-out infinite;
+  position: relative;
+}
+.aura-orb::after {
+  content: "";
+  position: absolute;
+  inset: 16%;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgb(255 255 255 / 0.95),
+    rgb(255 255 255 / 0.15) 60%,
+    transparent 70%
+  );
+}
+@keyframes orb-turn {
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes orb-breathe {
+  50% {
+    scale: 1.07;
+  }
+}
+
+.aura-orb-sm {
+  width: 26px;
+  height: 26px;
+  box-shadow: 0 0 18px -2px var(--glow);
+}
+
+/* A decision that waits for the user: an aurora rim. */
+.approval-pending {
+  border-color: transparent;
+  background:
+    linear-gradient(var(--card), var(--card)) padding-box,
+    linear-gradient(135deg, var(--aurora-1), var(--aurora-2), var(--aurora-3)) border-box;
+  box-shadow: 0 14px 40px -16px var(--glow);
+}
+
+/* An app showing the change that waits for a "yes": a soft moving rim. */
+.draft-glow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--aurora-1) 55%, transparent);
+  animation: draft-pulse 2.4s ease-in-out infinite;
+}
+@keyframes draft-pulse {
+  50% {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--aurora-3) 55%, transparent);
+  }
+}
+
+/* The user's own messages. */
+.bubble-own {
+  background: var(--bubble-own);
+  color: var(--bubble-own-foreground);
+  box-shadow: 0 6px 18px -8px var(--glow);
 }
 
 /* Small monospaced uppercase labels: RUN, APPROVAL, author lines. */
@@ -144,11 +382,11 @@
 @keyframes message-in {
   from {
     opacity: 0;
-    transform: translateY(3px);
+    transform: translateY(8px) scale(0.985);
   }
 }
 .message-in {
-  animation: message-in 0.18s ease-out;
+  animation: message-in 0.42s var(--spring);
 }
 
 /* Markdown inside messages. */
@@ -184,10 +422,15 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .working-bar,
-  .message-in,
-  .flash {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion wins over every animation */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion wins over every animation */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion wins over every animation */
+    transition-duration: 0.01ms !important;
   }
 }
 

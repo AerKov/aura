@@ -1,9 +1,8 @@
-import { openSettings } from "@/features/settings/open";
-import { openAppRef } from "@/features/shell/layout";
+import { openSettings } from "@/features/shell/view";
 import { api, call } from "@/lib/api";
 import { getState, mergeMessages, setState, upsertChat, upsertMessage } from "./store";
 
-/** Loads who the user is and, while Chats is on (ADR 0027), the chat list. */
+/** Loads who the user is and the chats: the Helper's and one per app. */
 export async function loadInitial(): Promise<void> {
   let customize = getState().customize;
   if (!customize) {
@@ -11,12 +10,7 @@ export async function loadInitial(): Promise<void> {
     setState(() => ({ customize }));
   }
   const [me, chats] = await Promise.all([call(() => api.me.get()), call(() => api.chats.get())]);
-  setState((s) => ({
-    me,
-    chats: Object.fromEntries(chats.map((c) => [c.id, c])),
-    activeChatId:
-      s.activeChatId ?? chats.find((c) => c.kind === "direct")?.id ?? chats[0]?.id ?? null,
-  }));
+  setState(() => ({ me, chats: Object.fromEntries(chats.map((c) => [c.id, c])) }));
 }
 
 /** Loads a chat's newest messages. */
@@ -47,16 +41,9 @@ export async function sendMessage(
   upsertMessage(message);
 }
 
-/** A click on a helper's mark: its settings, in the Helpers app beside the chat. */
-export function openAgentSettings(handle: string): void {
-  setState(() => ({ agentFocus: handle }));
-  openSettings("ai", "right");
-}
-
-export function openChat(chatId: string): void {
-  setState(() => ({ activeChatId: chatId, pane: "main" }));
-  openAppRef("messenger");
-  if (!getState().messages[chatId]) void loadMessages(chatId).catch(reportError);
+/** A click on a helper's mark: Settings → AI, where its engine and model are chosen. */
+export function openAgentSettings(): void {
+  openSettings("ai");
 }
 
 export async function loadMembers(chatId: string): Promise<void> {
@@ -86,10 +73,6 @@ export function refreshProjectsSoon(): void {
 }
 
 export { upsertChat };
-
-export function showList(): void {
-  setState(() => ({ pane: "list" }));
-}
 
 export function reportError(error: unknown): void {
   console.error("aura:", error instanceof Error ? error.message : error);

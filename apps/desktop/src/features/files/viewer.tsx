@@ -84,7 +84,7 @@ function ViewerWindow({ view, onClose }: { view: FileView; onClose: () => void }
         role="dialog"
         aria-modal="true"
         aria-label={view.name}
-        className="bg-background relative flex h-[min(92vh,1100px)] w-[min(1000px,96vw)] flex-col border shadow-lg"
+        className="bg-background relative flex h-[min(92vh,1100px)] w-[min(1000px,96vw)] flex-col overflow-hidden rounded-[24px] border shadow-lg"
       >
         <header className="flex shrink-0 items-center gap-2 border-b px-3 py-2">
           <h2 className="min-w-0 flex-1 truncate text-[15px] font-medium" title={view.name}>
@@ -158,9 +158,13 @@ function ViewerWindow({ view, onClose }: { view: FileView; onClose: () => void }
           ) : kind === "pdf" && doc ? (
             <PdfPages doc={doc} scale={ZOOMS[zoom] ?? 1} />
           ) : kind === "image" && imageUrl ? (
-            <img src={imageUrl} alt={view.name} className="mx-auto max-w-full border bg-paper" />
+            <img
+              src={imageUrl}
+              alt={view.name}
+              className="mx-auto max-w-full rounded-xl border bg-paper"
+            />
           ) : kind === "text" ? (
-            <pre className="bg-background mx-auto max-w-4xl overflow-auto border p-4 font-mono text-[13px] whitespace-pre-wrap">
+            <pre className="bg-background mx-auto max-w-4xl overflow-auto rounded-xl border p-4 font-mono text-[13px] whitespace-pre-wrap">
               {text}
             </pre>
           ) : (

@@ -1,10 +1,4 @@
-import {
-  type ExtensionInfo,
-  type ExtensionPermission,
-  type Message,
-  mimeOf,
-  type Placement,
-} from "@aura/shared";
+import { type ExtensionInfo, type ExtensionPermission, type Message, mimeOf } from "@aura/shared";
 import { useEffect, useRef, useState } from "react";
 import { reportError } from "@/features/chat/actions";
 import { getState, useChatStore } from "@/features/chat/store";
@@ -12,7 +6,6 @@ import { askForFiles } from "@/features/files/picker";
 import { tr, useLocale } from "@/features/localization/i18n";
 import { api, call, SERVER_URL } from "@/lib/api";
 import { fetchFile, openFile, saveBlob } from "@/lib/files";
-import { cn } from "@/lib/utils";
 
 const THEME_TOKENS = [
   "--background",
@@ -70,18 +63,8 @@ const METHOD_PERMISSION: Record<string, ExtensionPermission | null> = {
   "actions.run": "storage",
   "apps.call": "apps.call",
   "snapshot.result": null,
-  "bar.state": "ui.bar",
-  "bar.open": "ui.bar",
-  "bar.menu": "ui.bar",
   error: null,
 };
-
-/** What the bar app sees and can do (ADR 0029); the host is the shell's bar. */
-export interface BarHost {
-  state: () => unknown;
-  open: (key: string, where: Placement) => void;
-  menu: (items: { label: string; value: string }[]) => Promise<string | null>;
-}
 
 /** The chat the extension is open next to (side panel), or nothing (a page in the rail). */
 export interface ExtensionContext {
@@ -118,32 +101,22 @@ export function ExtensionFrame({
   context = NO_CONTEXT,
   variant = "page",
   draft = false,
-  bar,
-  barState,
-  onReady,
   onError,
 }: {
   extension: ExtensionInfo;
   context?: ExtensionContext;
-  /** "side": inside a tile, which has its own header; "bar": the shell's bar. */
-  variant?: "page" | "side" | "bar";
+  /** "side": on the app's screen, which has its own header. */
+  variant?: "page" | "side";
   /** An app's changes that wait for approval (ADR 0024). */
   draft?: boolean;
-  /** For the bar app: what it sees and can do, and its state to push on changes. */
-  bar?: BarHost;
-  barState?: unknown;
-  /** The frame asked for its state (the bar is alive). */
-  onReady?: () => void;
   /** The frame reported an error. */
   onError?: (message: string) => void;
 }) {
   const locale = useLocale();
-  const barRef = useRef(bar);
-  barRef.current = bar;
   const draftRef = useRef(draft);
   draftRef.current = draft;
-  const callbacks = useRef({ onReady, onError });
-  callbacks.current = { onReady, onError };
+  const callbacks = useRef({ onError });
+  callbacks.current = { onError };
   const ref = useRef<HTMLIFrameElement>(null);
   const [title, setTitle] = useState(extension.name);
   const subscribed = useRef(new Set<string>());
@@ -353,27 +326,6 @@ export function ExtensionFrame({
               }),
           );
           return;
-        case "bar.state": {
-          const host = barRef.current;
-          if (!host) return reply(req.id, null, "Not the bar");
-          callbacks.current.onReady?.();
-          return reply(req.id, host.state());
-        }
-        case "bar.open": {
-          const where = p.where === "right" || p.where === "below" ? p.where : "here";
-          barRef.current?.open(String(p.key ?? ""), where);
-          return reply(req.id, true);
-        }
-        case "bar.menu": {
-          const items = (Array.isArray(p.items) ? p.items : []).slice(0, 30).map((i: unknown) => {
-            const item = (i ?? {}) as Record<string, unknown>;
-            return {
-              label: String(item.label ?? "").slice(0, 80),
-              value: String(item.value ?? ""),
-            };
-          });
-          return reply(req.id, (await barRef.current?.menu(items)) ?? null);
-        }
         case "error":
           console.warn(`extension ${extension.id} error:`, p.message);
           callbacks.current.onError?.(String(p.message ?? "error"));
@@ -422,15 +374,6 @@ export function ExtensionFrame({
     window.addEventListener("aura:app-data", onData);
     return () => window.removeEventListener("aura:app-data", onData);
   }, [extension.id]);
-
-  // The bar app gets its state again whenever it changes (ADR 0029).
-  useEffect(() => {
-    if (barState === undefined) return;
-    ref.current?.contentWindow?.postMessage(
-      { aura: 1, event: "bar.state", payload: barState },
-      "*",
-    );
-  }, [barState]);
 
   // Tell the extension when the chat next to it changes.
   useEffect(() => {
@@ -481,13 +424,7 @@ export function ExtensionFrame({
   useEffect(sendTheme, [appearance]);
 
   return (
-    <section
-      className={cn(
-        "flex min-h-0 min-w-0 flex-1 flex-col",
-        // The bar's frame is exactly its strip: an iframe is 150 px high by default (BUG-1).
-        variant === "bar" && "h-full w-full overflow-hidden",
-      )}
-    >
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
       {variant === "page" && (
         <header className="flex items-center gap-3 border-b px-4 py-3">
           <h1 className="font-semibold">{title}</h1>
@@ -502,7 +439,7 @@ export function ExtensionFrame({
         sandbox="allow-scripts"
         // A new language reloads the frame: apps read it once as ctx.language (ADR 0033).
         src={`${SERVER_URL}/extensions/${extension.id}/frame?lang=${locale}${draft ? "&draft=1" : ""}`}
-        className={cn("flex-1 border-0", variant === "bar" && "h-full min-h-0 w-full min-w-0")}
+        className="min-h-0 w-full flex-1 border-0 bg-transparent"
         onLoad={sendTheme}
         onError={() => reportError(new Error(`extension ${extension.id} failed to load`))}
       />

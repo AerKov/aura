@@ -1,5 +1,5 @@
 import type { ExtensionInfo } from "@aura/shared";
-import { Database, History, KeyRound, MessageSquare, Trash2 } from "lucide-react";
+import { Database, History, KeyRound, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { reportError } from "@/features/chat/actions";
@@ -11,13 +11,12 @@ import { cn } from "@/lib/utils";
 type Version = { hash: string; author: string; at: string; subject: string };
 
 /**
- * The bar of an app built in Aura (ADR 0024): its chat (a panel inside the tile, ADR 0027), a
- * preview of changes waiting for approval, and its versions.
+ * The controls of an app built in Aura (ADR 0024, ADR 0042): a preview of the change waiting for
+ * approval, its versions, its data and its secrets.
  */
 export function AppControls({ ext }: { ext: ExtensionInfo }) {
   const t = useT();
   const preview = useChatStore((s) => s.previewDraft[ext.id] ?? false);
-  const chatOpen = useChatStore((s) => s.appChat[ext.id] ?? false);
   const app = ext.app;
   if (!app) return null;
   const show = (draft: boolean) =>
@@ -26,14 +25,16 @@ export function AppControls({ ext }: { ext: ExtensionInfo }) {
     <>
       {app.draft && (
         // "Now / After the change" (ADR 0034): the live app or the change waiting for a "Yes".
-        <div className="flex border text-xs @max-[520px]:hidden">
+        <div className="bg-muted flex rounded-full p-0.5 text-xs shadow-inner @max-[520px]:hidden">
           <button
             type="button"
             aria-pressed={!preview}
             onClick={() => show(false)}
             className={cn(
-              "px-2 py-1 transition-colors",
-              !preview ? "bg-primary text-primary-foreground" : "hover:bg-foreground/[0.07]",
+              "rounded-full px-3 py-1 transition-all duration-300",
+              !preview
+                ? "bg-card text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t("Now")}
@@ -44,8 +45,10 @@ export function AppControls({ ext }: { ext: ExtensionInfo }) {
             title={t("Shows the change that waits for your decision")}
             onClick={() => show(true)}
             className={cn(
-              "border-l px-2 py-1 transition-colors",
-              preview ? "bg-primary text-primary-foreground" : "hover:bg-foreground/[0.07]",
+              "rounded-full px-3 py-1 transition-all duration-300",
+              preview
+                ? "aurora-fill text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
             {t("After the change")}
@@ -70,23 +73,8 @@ export function AppControls({ ext }: { ext: ExtensionInfo }) {
       <Versions appId={ext.id} />
       <DataMenu appId={ext.id} />
       {ext.secrets.length > 0 && <AppSecretsMenu appId={ext.id} />}
-      <Button
-        size="sm"
-        variant={chatOpen ? "secondary" : "ghost"}
-        className={cn("h-7 gap-1 px-2 text-xs", chatOpen && "border-ring")}
-        aria-pressed={chatOpen}
-        title={t("The app's chat: use it and change it by asking")}
-        onClick={() => setAppChat(ext.id, !chatOpen)}
-      >
-        <MessageSquare strokeWidth={1.5} /> {t("Chat")}
-      </Button>
     </>
   );
-}
-
-/** Opens or closes an app's chat panel inside its tile. */
-export function setAppChat(appId: string, open: boolean): void {
-  setState((s) => ({ appChat: { ...s.appChat, [appId]: open } }));
 }
 
 export function Versions({ appId }: { appId: string }) {
@@ -118,7 +106,7 @@ export function Versions({ appId }: { appId: string }) {
         <History strokeWidth={1.5} />
       </Button>
       {open && (
-        <div className="bg-popover text-popover-foreground absolute top-8 right-0 z-30 w-80 border p-2 shadow-md">
+        <div className="bg-popover text-popover-foreground animate-in fade-in zoom-in-95 absolute top-9 right-0 z-30 w-80 rounded-2xl border p-2 shadow-lg">
           <p className="text-muted-foreground px-2 pb-1 text-xs font-medium">
             {t("History of changes")}
           </p>

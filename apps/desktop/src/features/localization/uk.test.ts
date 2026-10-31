@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { BUILTIN_APPS, BUILTIN_GROUPS, DEFAULT_APP_GROUP } from "@aura/shared";
 import ts from "typescript";
 import { UK } from "./uk";
 
@@ -17,11 +16,7 @@ function sources(dir: string): string[] {
 
 describe("Ukrainian (ADR 0033)", () => {
   test("every text the shell translates has an entry", () => {
-    const texts = new Set<string>([
-      ...BUILTIN_APPS.flatMap((a) => [a.name, a.description]),
-      ...BUILTIN_GROUPS,
-      DEFAULT_APP_GROUP,
-    ]);
+    const texts = new Set<string>();
     for (const file of sources(SRC)) {
       const text = readFileSync(file, "utf8");
       if (!text.includes("useT") && !text.includes("tr(")) continue;

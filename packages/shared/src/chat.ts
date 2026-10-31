@@ -1,11 +1,9 @@
-import type { ReplaceableApp } from "./apps";
 /**
  * Chat domain types shared by server and client (docs/SPEC.md sections 2, 5 and 6).
  * Ids are the record keys without the table prefix.
  */
 import type { FileRef } from "./files";
 import type { LocalizationState } from "./locale";
-import type { BarEdge, BarMode, WindowStyle } from "./wm";
 
 export type ChatKind = "direct" | "group";
 
@@ -163,8 +161,10 @@ export function addresseesOf(input: {
   }
   const named = namedFirst(body, agentMembers);
   if (named) return { handles: [named], via: "named" };
-  if (!agentMembers.includes(orchestrator)) return { handles: [], via: "routed" };
-  return { handles: [orchestrator], via: "routed" };
+  if (agentMembers.includes(orchestrator)) return { handles: [orchestrator], via: "routed" };
+  // An app's chat has one helper, @builder (ADR 0042): a plain message is for it.
+  const only = agentMembers.length === 1 ? agentMembers[0] : undefined;
+  return only ? { handles: [only], via: "routed" } : { handles: [], via: "routed" };
 }
 
 /** Plain-text one-line preview of a markdown message for chat lists. */
@@ -247,21 +247,6 @@ export interface Appearance {
   availableSnippets: string[];
   /** Sanitized CSS to inject, in order: theme, then snippets. */
   css: { name: string; css: string }[];
-  rail: RailLayout;
-  /** How tiles look and the shortcuts' Mod key (ADR 0028). */
-  wm: WindowStyle;
-}
-
-/** Order and visibility of the navigation rail's items, by key ("skills", "ext:<id>", …). */
-export interface RailLayout {
-  order: string[];
-  hidden: string[];
-  /** The screen edge the bar sits on (ADR 0028). */
-  edge: BarEdge;
-  /** Aura's own bar, the user's bar app (its code, ADR 0029), or no bar. */
-  mode: BarMode;
-  /** Its thickness in px (BAR_SIZE); null: 56 on the sides, 48 on top or bottom. */
-  size: number | null;
 }
 
 /** Rail items that cannot be hidden, so the user can always get back to the settings. */
@@ -272,7 +257,6 @@ export type ExtensionPermission =
   | "chat.write"
   | "ui.panel"
   /** Be Aura's bar (only the app "bar", ADR 0029). */
-  | "ui.bar"
   | "storage"
   | "net"
   | "agents.ask"
@@ -348,8 +332,6 @@ export interface ExtensionInfo {
   secrets: string[];
   /** Set for an app built in Aura (ADR 0024): its chat, live version and unapproved changes. */
   app: { chatId: string; revision: string; draft: boolean } | null;
-  /** The built-in app it takes the place of (ADR 0041), e.g. "chats". */
-  replaces: ReplaceableApp | null;
   enabled: boolean;
   /** Why it cannot run, e.g. an invalid manifest or a newer minAppVersion. */
   problem: string | null;

@@ -5,15 +5,8 @@ import { api, call } from "@/lib/api";
 const PREFIX = "aura-css-";
 const TRY_ID = "aura-try-css";
 
-/**
- * Injects the active theme and snippets as <style> elements after the app's own CSS, and the tile
- * style as CSS variables (ADR 0028) that themes may use too.
- */
+/** Injects the active theme and snippets as <style> elements after the app's own CSS. */
 function apply(appearance: Appearance): void {
-  const root = document.documentElement.style;
-  root.setProperty("--wm-gap", `${appearance.wm.gaps}px`);
-  root.setProperty("--wm-radius", `${appearance.wm.radius}px`);
-  root.setProperty("--wm-border", `${appearance.wm.border}px`);
   for (const el of document.querySelectorAll(`style[id^="${PREFIX}"]`)) el.remove();
   for (const { name, css } of appearance.css) {
     const style = document.createElement("style");

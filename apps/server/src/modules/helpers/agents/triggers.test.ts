@@ -84,9 +84,18 @@ describe("agentsToTrigger", () => {
     expect(
       agentsToTrigger({ ...base, message: msg({ body: "add tests please" }), chat: chat("group") }),
     ).toEqual([{ handle: "orchestrator", reason: "routed" }]);
-    // No orchestrator in the chat: nobody is woken.
+    // No orchestrator in the chat: its only helper answers (an app's @builder, ADR 0042)…
     expect(
       agentsToTrigger({ ...base, agentMembers: ["coder"], message: msg({}), chat: chat("group") }),
+    ).toEqual([{ handle: "coder", reason: "routed" }]);
+    // …and with several, nobody is woken without a mention.
+    expect(
+      agentsToTrigger({
+        ...base,
+        agentMembers: ["coder", "reviewer"],
+        message: msg({}),
+        chat: chat("group"),
+      }),
     ).toEqual([]);
     expect(namedFirst("  reviewer: check it", ["reviewer"])).toBe("reviewer");
     expect(namedFirst("the coder, I think", ["coder"])).toBeNull();
