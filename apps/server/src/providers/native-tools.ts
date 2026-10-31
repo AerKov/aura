@@ -3,6 +3,7 @@ import { dirname, relative, resolve } from "node:path";
 import { z } from "zod";
 import { errorMessage } from "../lib/log";
 import { proxyEnv } from "../lib/proxy";
+import { fetchPublic, PrivateAddressError } from "../lib/public-fetch";
 import { isInside } from "./confine";
 import { SandboxUnavailableError, sandboxedShell } from "./shell-sandbox";
 import type { SandboxPolicy } from "./types";
@@ -77,24 +78,8 @@ function shellEnv(): Record<string, string> {
   return env;
 }
 
-const PRIVATE_V4 = [
-  /^127\./,
-  /^10\./,
-  /^192\.168\./,
-  /^172\.(1[6-9]|2\d|3[01])\./,
-  /^169\.254\./,
-  /^0\./,
-];
-
 /** WebFetch reaches the public web only, not the user's machine or LAN. */
-export function isPrivateHost(hostname: string): boolean {
-  const host = hostname.replace(/^\[|\]$/g, "").toLowerCase();
-  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) return true;
-  if (PRIVATE_V4.some((re) => re.test(host))) return true;
-  return (
-    host === "::1" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80")
-  );
-}
+export { isPrivateHost } from "../lib/public-fetch";
 
 function htmlToText(html: string): string {
   return html
@@ -325,18 +310,17 @@ export function nativeTools(
         } catch {
           return { text: "Invalid URL", isError: true };
         }
-        if (url.protocol !== "https:" && url.protocol !== "http:")
-          return { text: "Only http(s) URLs can be fetched", isError: true };
-        if (isPrivateHost(url.hostname))
-          return { text: "Local and private network addresses cannot be fetched", isError: true };
-        const res = await fetch(url, {
-          signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]),
-          redirect: "follow",
-          headers: { "user-agent": "aura-agent" },
-        });
-        const landed = new URL(res.url || url.href).hostname;
-        if (isPrivateHost(landed))
-          return { text: "The page redirected to a private address", isError: true };
+        let res: Response;
+        try {
+          // Each redirect is checked before it is followed, by name and resolved address.
+          res = await fetchPublic(url, {
+            signal: AbortSignal.any([signal, AbortSignal.timeout(20_000)]),
+            headers: { "user-agent": "aura-agent" },
+          });
+        } catch (error) {
+          if (error instanceof PrivateAddressError) return { text: error.message, isError: true };
+          throw error;
+        }
         const body = (await res.text()).slice(0, MAX_READ_BYTES);
         const type = res.headers.get("content-type") ?? "";
         const text = clip(type.includes("html") ? htmlToText(body) : body, 40_000);

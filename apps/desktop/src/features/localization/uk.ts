@@ -635,4 +635,5 @@ export const UK: Record<string, string> = {
     "Локальні відкриті моделі на вашому комп'ютері: безкоштовно й приватно. Беріть модель з підтримкою інструментів (наприклад qwen3) і довгим контекстом: запускайте Ollama з `OLLAMA_CONTEXT_LENGTH=32768`.",
   "Any OpenAI-compatible server: LM Studio, llama.cpp, vLLM, or a cloud API.":
     "Будь-який OpenAI-сумісний сервер: LM Studio, llama.cpp, vLLM або хмарний API.",
+  Image: "Зображення",
 };

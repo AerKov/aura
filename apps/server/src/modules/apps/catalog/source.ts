@@ -1,5 +1,5 @@
 import { errorMessage } from "../../../lib/log";
-import { isPrivateHost } from "../../../providers/native-tools";
+import { fetchPublic, isPrivateHost } from "../../../lib/public-fetch";
 import {
   MAX_FILE,
   MAX_TOTAL,
@@ -44,12 +44,16 @@ export function packJsonUrl(input: string): URL {
 async function getText(url: URL, fetchFn: typeof fetch, max: number): Promise<string> {
   let res: Response;
   try {
-    res = await fetchFn(url, { redirect: "follow", signal: AbortSignal.timeout(20_000) });
+    // Every redirect is checked before it is followed; names are resolved only for real requests
+    // (a test's own fetch reaches no network).
+    res = await fetchPublic(
+      url,
+      { signal: AbortSignal.timeout(20_000) },
+      { fetch: fetchFn, ...(fetchFn === fetch ? {} : { resolve: async () => ["203.0.113.1"] }) },
+    );
   } catch (error) {
     throw new PackError(`Could not fetch ${url.href}: ${errorMessage(error)}`);
   }
-  if (isPrivateHost(new URL(res.url || url.href).hostname))
-    throw new PackError("The pack redirected to a private address");
   if (!res.ok) throw new PackError(`${url.href} answered HTTP ${res.status}`);
   const text = await res.text();
   if (text.length > max) throw new PackError(`${url.pathname} is too large`);

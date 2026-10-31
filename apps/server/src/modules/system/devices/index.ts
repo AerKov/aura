@@ -1,5 +1,5 @@
 import { existsSync, statSync } from "node:fs";
-import { extname, join, normalize, resolve } from "node:path";
+import { extname, join, normalize, resolve, sep } from "node:path";
 import { Elysia, t } from "elysia";
 import { authGuard } from "../auth";
 import type { LocalSessions } from "../auth/sessions";
@@ -35,7 +35,8 @@ function webResponse(webDir: string | null, path: string | undefined): Response 
     return new Response("The web client is not built (bun run build:web)", { status: 404 });
   const root = resolve(webDir);
   let file = resolve(join(root, normalize(path || "index.html")));
-  if (!file.startsWith(root) || !existsSync(file) || statSync(file).isDirectory()) {
+  // Inside the folder itself, not a sibling whose name starts the same (dist-web-old).
+  if (!file.startsWith(root + sep) || !existsSync(file) || statSync(file).isDirectory()) {
     file = join(root, "index.html");
   }
   const headers: Record<string, string> = {

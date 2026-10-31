@@ -5,6 +5,11 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+- **Security.** Helpers' WebFetch and pack downloads check every redirect before following it and
+  refuse names that resolve to this computer or the local network. Images in messages load only when
+  they are part of the message; a remote one is a link. The phone web client no longer serves files
+  from a folder next to it.
+
 - **Every page follows the language.** The pages that stayed in one language (AI, Helpers, tool
   servers and keys, memory, skills, reminders, history, app data) are translated, and switching the
   language redraws the whole interface. A test fails on any text left out of translation.
