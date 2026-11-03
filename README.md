@@ -7,7 +7,7 @@
 <p align="center">
   <b>Build your own apps by chatting. On your computer.</b><br>
   Local-first and open source. Runs a model on your computer (Aura installs it for you), or Claude
-  Code under your own login.
+  Code or Codex under your own Claude or ChatGPT plan.
 </p>
 
 <p align="center">
@@ -140,11 +140,12 @@ Details and progress: the roadmap in [docs/SPEC.md](docs/SPEC.md#12-roadmap).
    that fits your computer and approve the download. Aura installs llama.cpp and the model, checks
    their checksums, and runs it only on this computer.
 
-   | Source            | Setup                                                      | Cost               |
-   | ----------------- | ---------------------------------------------------------- | ------------------ |
-   | Built-in local AI | Settings → AI: Aura installs llama.cpp and a model         | free and private   |
-   | Ollama, LM Studio | on your computer, then Settings → AI                       | free and private   |
-   | Claude Code       | `npm i -g @anthropic-ai/claude-code`, run `claude`, log in | Claude plan or API |
+   | Source            | Setup                                                             | Cost                      |
+   | ----------------- | ----------------------------------------------------------------- | ------------------------- |
+   | Built-in local AI | Settings → AI: Aura installs llama.cpp and a model                | free and private          |
+   | Ollama, LM Studio | on your computer, then Settings → AI                              | free and private          |
+   | Claude Code       | `npm i -g @anthropic-ai/claude-code`, run `claude`, log in        | Claude plan or API        |
+   | Codex (ChatGPT)   | `npm i -g @openai/codex @zed-industries/codex-acp`, `codex login` | ChatGPT plan (Plus, Pro…) |
 
 3. **Tell your Helper what you want**: _"make me an app to track clients and deals"_. Approve it,
    and the app opens with @builder at work beside it.
@@ -158,7 +159,7 @@ safety, the look, and your data.
 ## Privacy
 
 Aura has no account and no telemetry. Prompts go only to the AI you choose (or nowhere, with a local
-model). Claude Code keeps its own login; Aura never reads it. App secrets stay in `~/.aura/state`,
+model). Claude Code and Codex keep their own logins; Aura never reads them. App secrets stay in `~/.aura/state`,
 outside git, and go only to the hosts the app was allowed to reach.
 
 ## Status

@@ -5,6 +5,7 @@ import { connectDb } from "./db/client";
 import { errorMessage, log } from "./lib/log";
 import { isParentAlive, watchParent } from "./lib/parent-watch";
 import { EngineRegistry } from "./modules/ai/engines/registry";
+import { ToolBridge } from "./modules/ai/engines/tool-bridge";
 import { detectSafeMode, HEALTHY_AFTER_MS } from "./modules/apps/customize/safe-mode";
 import { FileAgentDirectory } from "./modules/helpers/agents/directory";
 import { LocalSessions } from "./modules/system/auth/sessions";
@@ -30,10 +31,14 @@ async function main(): Promise<void> {
     executablePath: claude ?? (isCompiled() ? null : undefined),
     defaultModel: config.defaultModel,
   });
+  // Codex runs on this machine and reaches the app's tools over loopback.
+  const loopbackHost = ["0.0.0.0", "::"].includes(config.host) ? "127.0.0.1" : config.host;
+  const toolBridge = new ToolBridge(() => `http://${loopbackHost}:${config.port}`, SERVER_VERSION);
   const engines = new EngineRegistry({
     dataDir: config.dataDir,
     claude: claudeProvider,
     defaultModel: config.defaultModel,
+    toolBridge,
     appVersion: SERVER_VERSION,
   });
   log.info("default engine", { engine: engines.store.get().default });
@@ -61,6 +66,7 @@ async function main(): Promise<void> {
     sessions,
     hub,
     engines,
+    toolBridge,
     dataDir: config.dataDir,
     agents,
     ...services,

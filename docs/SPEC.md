@@ -57,7 +57,8 @@ CSS for the user's theme (with a try-on) or sets the language.
 │   ├─ the Helper and @builder   ├─ themes and language                   │
 │   ├─ agent runtime + guards    │                                        │
 │   └─ LLMProvider ─┬ Aura loop ── llama.cpp / Ollama / OpenAI-compatible │
-│                   └ Claude Agent SDK ── Claude Code (user's own login) │
+│                   ├ Claude Agent SDK ── Claude Code (user's own login) │
+│                   └ ACP ── Codex (user's own ChatGPT login)            │
 │                │                                                        │
 │  SurrealDB (local, file storage)      ~/.aura/ (user data, git repo)    │
 │                                       ~/.aura/projects/* (app repos)    │
@@ -106,9 +107,10 @@ interface LLMProvider {
   run(input: AgentRunInput, signal: AbortSignal): AsyncIterable<AgentEvent>;
 }
 ```
-Engines (ADR 0011, 0038, 0042): Aura's own agent loop over OpenAI-compatible APIs (the built-in
-llama.cpp, Ollama, LM Studio or any compatible server) and the Claude Agent SDK under the user's
-Claude Code login. Settings → AI picks one for the Helper and one for @builder. If Claude Code is
+Engines (ADR 0011, 0038, 0042, 0043): Aura's own agent loop over OpenAI-compatible APIs (the
+built-in llama.cpp, Ollama, LM Studio or any compatible server), the Claude Agent SDK under the
+user's Claude Code login, and Codex over the Agent Client Protocol under the user's ChatGPT login
+(the app's tools reach it over a per-run MCP address on loopback). Settings → AI picks one for the Helper and one for @builder. If Claude Code is
 not installed or not logged in, Aura says how to fix it; it never handles the login.
 
 **Run lifecycle**
@@ -372,6 +374,9 @@ and schedules, groups, teams, tasks, topics, skills, memory, summaries, restore 
 window manager and the bar are gone. A new default look drawn from the mark: an ink sidebar
 that folds, the mark's blues, a faint breathing aura behind the panels, the living mark on empty
 chats, rounded corners and spring animations.
+
+**Phase 39b: Codex under ChatGPT** (done, ADR 0043)
+Codex comes back as an engine next to Claude Code, so a ChatGPT plan works like a Claude plan.
 
 **Phase 40: Share apps as `.aura` files** (next)
 **Export** in an app's menu saves a `.aura` file: its code and versions as a git bundle and its

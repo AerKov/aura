@@ -10,6 +10,10 @@ part. Reinstall it: `curl -fsSL https://claude.ai/install.sh | bash` (or
 **"Connect Claude Code" panel in the chat.** Claude Code is missing or not logged in. Install it, run
 `claude` in a terminal and log in, then press **Check again**, or pick another AI in Settings → AI.
 
+**Codex: "not installed" or "not logged in".** Install it with
+`npm i -g @openai/codex @zed-industries/codex-acp`, run `codex login` and sign in with ChatGPT, then
+**Check again** in Settings → AI.
+
 **Claude Code says "not installed" although it is.** Apps started from the Dock or Start menu get a
 short `PATH`. Set `AURA_CLAUDE_EXECUTABLE=/path/to/claude`.
 

@@ -29,8 +29,9 @@ Full product and architecture spec: `docs/SPEC.md`. Read the relevant section be
   `@streamdown/code` (shiki). Use `components/markdown.tsx`. Mermaid/KaTeX later.
 - **LLM:** only through the `LLMProvider` interface ("engines", ADR 0011/0012): Aura's own agent
   loop over OpenAI-compatible APIs (the built-in llama.cpp first, ADR 0038, then Ollama, LM Studio
-  or any compatible server), and the Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`) under the
-  user's own Claude Code login.
+  or any compatible server), the Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`) under the
+  user's own Claude Code login, and Codex over ACP (`@agentclientprotocol/sdk`) under the user's own
+  ChatGPT login (ADR 0043).
 - **Lint/format:** Biome. **Tests:** `bun test`.
 
 These libraries change fast. If you are not sure about an API, check the current docs before writing code.

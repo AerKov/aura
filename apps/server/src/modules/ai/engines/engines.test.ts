@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, test } from "bun:test";
 import { readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { AgentSideConnection, ndJsonStream, PROTOCOL_VERSION } from "@agentclientprotocol/sdk";
 import { treaty } from "@elysiajs/eden";
 import { git } from "../../../lib/git";
 import { createTestApp } from "../../../testing";
@@ -50,6 +51,7 @@ describe("agent engines", () => {
       "ollama",
       "openai-compatible",
       "claude-code",
+      "codex",
     ]);
     expect(before.data?.engines.find((e) => e.id === "ollama")?.status).toEqual({
       ok: true,
@@ -181,5 +183,101 @@ describe("agent engines", () => {
       models: { ollama: "qwen3:8b" },
       ollama: { baseUrl: "http://127.0.0.1:11434" },
     });
+  });
+});
+
+describe("Codex in a real run (ADR 0043)", () => {
+  let t: TestApp | undefined;
+  afterEach(async () => {
+    await t?.close();
+    t = undefined;
+  });
+
+  test("the Helper on Codex (faked) answers in chat and uses app tools through the MCP route", async () => {
+    let toolAnswer = "";
+    const spawn: Parameters<typeof createTestApp>[0] extends infer O
+      ? O extends { acpSpawn?: infer S }
+        ? NonNullable<S>
+        : never
+      : never = () => {
+      const toAgent = new TransformStream<Uint8Array, Uint8Array>();
+      const toClient = new TransformStream<Uint8Array, Uint8Array>();
+      new AgentSideConnection(
+        (conn) => ({
+          initialize: async () => ({
+            protocolVersion: PROTOCOL_VERSION,
+            agentCapabilities: { mcpCapabilities: { http: true, sse: false } },
+          }),
+          newSession: async (params) => {
+            const aura = params.mcpServers.find((s) => s.name === "aura");
+            mcpUrl = aura && "url" in aura ? aura.url : "";
+            return { sessionId: "s1" };
+          },
+          authenticate: async () => {},
+          prompt: async ({ sessionId }) => {
+            // The agent calls an app tool over MCP, through the app's own HTTP route.
+            const res = await t?.app.handle(
+              new Request(mcpUrl, {
+                method: "POST",
+                headers: {
+                  "content-type": "application/json",
+                  accept: "application/json, text/event-stream",
+                },
+                body: JSON.stringify({
+                  jsonrpc: "2.0",
+                  id: 1,
+                  method: "tools/call",
+                  params: { name: "aura_docs", arguments: { topic: "apps" } },
+                }),
+              }),
+            );
+            const body = (await res?.json()) as { result?: { content?: { text?: string }[] } };
+            toolAnswer = body.result?.content?.[0]?.text ?? JSON.stringify(body);
+            await conn.sessionUpdate({
+              sessionId,
+              update: {
+                sessionUpdate: "agent_message_chunk",
+                content: { type: "text", text: "Привіт від Codex" },
+              },
+            });
+            return { stopReason: "end_turn" };
+          },
+          cancel: async () => {},
+        }),
+        ndJsonStream(toClient.writable, toAgent.readable),
+      );
+      return {
+        stdin: toAgent.writable,
+        stdout: toClient.readable,
+        kill: () => {},
+        exited: new Promise<number>(() => {}),
+      };
+    };
+    let mcpUrl = "";
+    t = await createTestApp({
+      codexAgent: {
+        id: "codex",
+        label: "Codex",
+        command: () => ({ command: "codex-acp", args: [] }),
+        installHint: "",
+        loginHint: "",
+      },
+      acpSpawn: spawn,
+    });
+    await t.engines.store.update({ default: "codex" });
+    await t.chat.post({
+      chatId: "direct",
+      author: { kind: "user", id: "owner" },
+      body: "хто в команді?",
+    });
+    await Bun.sleep(10);
+    await t.runtime.whenIdle();
+    const reply = (await t.repo.listMessages("direct", { limit: 5 })).at(-1);
+    expect(reply?.body).toBe("Привіт від Codex");
+    expect(reply?.status).toBe("final");
+    expect(toolAnswer).toContain("## Its secrets");
+    // The run's tool endpoint is gone after the run.
+    const after = await t.app.handle(new Request(mcpUrl, { method: "POST", body: "{}" }));
+    expect(after.status).toBe(404);
   });
 });

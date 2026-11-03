@@ -1,10 +1,13 @@
 import { ENGINE_IDS, type EngineId, type EngineModel } from "@aura/shared";
 import { errorMessage, log } from "../../../lib/log";
+import { type AcpAgentSpec, AcpProvider, type AgentProcess } from "../../../providers/acp";
+import { locateExecutable } from "../../../providers/claude-locate";
 import { type Embedder, OpenAICompatEmbedder } from "../../../providers/embeddings";
 import { OpenAICompatProvider } from "../../../providers/openai-compat";
 import type { LLMProvider, ProviderStatus } from "../../../providers/types";
 import { LocalAiService, type SpawnServer } from "../localai/service";
 import { EngineStore, KEYED_ENGINES, type KeyedEngine } from "./settings";
+import type { ToolBridgeLike } from "./tool-bridge";
 
 /** What the runtime needs: the engine and model for an agent. */
 /** How long an engine's status is kept before it is checked again. */
@@ -22,9 +25,10 @@ export interface EngineInfo {
   id: EngineId;
   label: string;
   /**
-   * "official": Claude Code through its SDK; "aura": Aura's own agent loop.
+   * "official": Claude Code through its SDK; "acp": Codex, OpenAI's agent CLI over the Agent Client
+   * Protocol (its own ChatGPT login); "aura": Aura's own agent loop.
    */
-  kind: "official" | "aura";
+  kind: "official" | "acp" | "aura";
   description: string;
   /** There is a way to use it without paying (local models, free router models). */
   free: boolean;
@@ -52,6 +56,12 @@ const DESCRIPTIONS: Record<
     free: false,
     text: "Anthropic's agent under your own Claude login (subscription or API). The strongest coder.",
   },
+  codex: {
+    label: "Codex (ChatGPT)",
+    kind: "acp",
+    free: false,
+    text: "OpenAI's coding agent under your own ChatGPT login (Plus, Pro…), like Claude Code under yours. Aura drives it and decides what it may touch; your login stays with it.",
+  },
   ollama: {
     label: "Ollama",
     kind: "aura",
@@ -66,7 +76,23 @@ const DESCRIPTIONS: Record<
   },
 };
 
-/** How an engine runs agents: Claude Code, or Aura's own loop. */
+/**
+ * Codex over ACP (ADR 0012, 0043), through Zed's `codex-acp` adapter. It uses the user's own
+ * ChatGPT login (`codex login`); Aura never sees it.
+ */
+export const CODEX_AGENT: AcpAgentSpec = {
+  id: "codex",
+  label: "Codex",
+  command: () => {
+    const exe = locateExecutable("codex-acp");
+    return exe ? { command: exe, args: [] } : null;
+  },
+  installHint:
+    "Install Codex and its ACP adapter: `npm install -g @openai/codex @zed-industries/codex-acp`.",
+  loginHint: "Run `codex login` in a terminal and sign in with ChatGPT, then check again.",
+};
+
+/** How an engine runs agents: Claude Code, Codex over ACP, or Aura's own loop. */
 export const engineKind = (engine: EngineId): EngineInfo["kind"] => DESCRIPTIONS[engine].kind;
 export const engineLabel = (engine: EngineId): string => DESCRIPTIONS[engine].label;
 
@@ -92,7 +118,12 @@ export class EngineRegistry implements EngineSelector {
       /** Claude model when neither the agent nor the settings name one (AURA_DEFAULT_MODEL). */
       defaultModel?: string;
       fetch?: typeof fetch;
+      /** Serves the app's tools to Codex over MCP. */
+      toolBridge?: ToolBridgeLike;
       appVersion?: string;
+      /** Replaces the Codex CLI in tests. */
+      acpSpawn?: (cmd: string[], cwd: string, env: Record<string, string>) => AgentProcess;
+      codexAgent?: AcpAgentSpec;
       /** Replaces the llama.cpp server process in tests. */
       llamaSpawn?: SpawnServer;
       llamaSystem?: { platform: string; arch: string; ramBytes: number };
@@ -114,6 +145,11 @@ export class EngineRegistry implements EngineSelector {
     const settings = () => this.store.get();
     this.providers = {
       "claude-code": opts.claude,
+      codex: new AcpProvider(opts.codexAgent ?? CODEX_AGENT, {
+        appVersion: opts.appVersion ?? "0.0.0",
+        toolBridge: opts.toolBridge,
+        spawn: opts.acpSpawn,
+      }),
       "llama-cpp": new OpenAICompatProvider({
         id: "llama-cpp",
         label: "Built-in local AI",
@@ -259,6 +295,8 @@ export class EngineRegistry implements EngineSelector {
         (id) => ({ id, label: id, free: false }),
       );
     }
+    // Codex picks its own default model for the ChatGPT plan; a model can be typed in.
+    if (engine === "codex") return [];
     if (engine === "ollama") {
       const body = await this.getJson(`${settings.ollama.baseUrl}/api/tags`);
       const models = isRecord(body) && Array.isArray(body.models) ? body.models : [];

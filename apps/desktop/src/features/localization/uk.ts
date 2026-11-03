@@ -601,4 +601,9 @@ export const UK: Record<string, string> = {
   "Turn off": "Вимкнути",
   "Chat width": "Ширина чату",
   "Drag to make the chat wider or narrower": "Перетягніть, щоб зробити чат ширшим чи вужчим",
+  "Your subscription": "Ваша підписка",
+  "A coding agent under your own login: Claude Code with your Claude plan, Codex with your ChatGPT plan (Plus, Pro…). Aura drives it and decides what it may touch; your login stays with it.":
+    "Агент для програмування під вашим власним входом: Claude Code з підпискою Claude, Codex з підпискою ChatGPT (Plus, Pro…). Aura керує ним і вирішує, чого він може торкатися; ваш вхід лишається в ньому.",
+  "OpenAI's coding agent under your own ChatGPT login (Plus, Pro…), like Claude Code under yours. Aura drives it and decides what it may touch; your login stays with it.":
+    "Агент для програмування від OpenAI під вашим власним входом у ChatGPT (Plus, Pro…), як Claude Code під вашим. Aura керує ним і вирішує, чого він може торкатися; ваш вхід лишається в ньому.",
 };

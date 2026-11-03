@@ -137,7 +137,7 @@ const en: Copy = {
       },
       {
         title: "A model on your computer",
-        text: "Aura installs llama.cpp and a model that fits your machine. Ollama, LM Studio and Claude Code work too.",
+        text: "Aura installs llama.cpp and a model that fits your machine. Ollama, LM Studio, and Claude Code or Codex under your Claude or ChatGPT plan work too.",
       },
       {
         title: "Safe by default",
@@ -187,7 +187,7 @@ const en: Copy = {
   },
   privacy: {
     title: "Your computer, your data",
-    text: "Aura has no account and no telemetry. Prompts go only to the AI you choose, or nowhere with a local model. Claude Code keeps its own login; Aura never reads it.",
+    text: "Aura has no account and no telemetry. Prompts go only to the AI you choose, or nowhere with a local model. Claude Code and Codex keep their own logins; Aura never reads them.",
   },
   get: {
     title: "Get Aura",
@@ -282,7 +282,7 @@ const uk: Copy = {
       },
       {
         title: "Модель на вашому комп'ютері",
-        text: "Aura сама встановлює llama.cpp і модель, що підходить вашому комп'ютеру. Ollama, LM Studio і Claude Code теж працюють.",
+        text: "Aura сама встановлює llama.cpp і модель, що підходить вашому комп'ютеру. Ollama, LM Studio, а також Claude Code чи Codex за вашою підпискою Claude чи ChatGPT теж працюють.",
       },
       {
         title: "Безпечно від початку",
@@ -332,7 +332,7 @@ const uk: Copy = {
   },
   privacy: {
     title: "Ваш комп'ютер, ваші дані",
-    text: "В Aura немає акаунта й телеметрії. Запити йдуть лише до обраного вами ШІ, а з локальною моделлю — нікуди. Claude Code тримає свій вхід у себе; Aura його не читає.",
+    text: "В Aura немає акаунта й телеметрії. Запити йдуть лише до обраного вами ШІ, а з локальною моделлю — нікуди. Claude Code і Codex тримають свій вхід у себе; Aura його не читає.",
   },
   get: {
     title: "Завантажити Aura",

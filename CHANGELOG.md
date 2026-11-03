@@ -5,6 +5,13 @@ Versions follow the roadmap phases in [docs/SPEC.md](docs/SPEC.md). The format i
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-11-03: Codex under your ChatGPT plan
+
+- **Use your ChatGPT plan** (Plus, Pro…) like a Claude plan (ADR 0043). Codex is back as an AI in
+  Settings → AI, next to Claude Code, under its own ChatGPT login: install it with
+  `npm i -g @openai/codex @zed-industries/codex-acp`, run `codex login`, then pick it for the
+  Helper or @builder. Aura never reads the login and still decides what Codex may touch.
+
 ## [0.43.1] - 2026-10-31: Fixes
 
 - **No more blinking** between screens and when a dialog opens; a chat's history no longer replays

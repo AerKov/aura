@@ -5,12 +5,13 @@
 An **engine** is what runs a helper. Connect them in **Settings → AI**; at the top of that tab,
 choose which one **the Helper** uses and which one **builds your apps** (@builder).
 
-| Engine            | Kind                  | Login or key      | Cost                    |
-| ----------------- | --------------------- | ----------------- | ----------------------- |
-| Built-in local AI | on this computer      | none              | free, installed by Aura |
-| Ollama            | on this computer      | none              | free                    |
-| OpenAI-compatible | local or any API      | optional key      | LM Studio, vLLM: free   |
-| Claude Code       | agent app (Agent SDK) | your Claude login | Claude plan or API      |
+| Engine            | Kind                  | Login or key       | Cost                      |
+| ----------------- | --------------------- | ------------------ | ------------------------- |
+| Built-in local AI | on this computer      | none               | free, installed by Aura   |
+| Ollama            | on this computer      | none               | free                      |
+| OpenAI-compatible | local or any API      | optional key       | LM Studio, vLLM: free     |
+| Claude Code       | agent app (Agent SDK) | your Claude login  | Claude plan or API        |
+| Codex (ChatGPT)   | agent app (ACP)       | your ChatGPT login | ChatGPT plan (Plus, Pro…) |
 
 ## Choosing
 
@@ -39,6 +40,14 @@ and start Ollama with a longer context: `OLLAMA_CONTEXT_LENGTH=32768 ollama serv
 Start the server (LM Studio: _Developer → Start server_), put its URL in the card (LM Studio's
 default is `http://127.0.0.1:1234/v1`), add a key if the server needs one, and pick a model.
 
+### Codex (ChatGPT)
+
+To use your ChatGPT plan (Plus, Pro…) rather than a paid API key: install Codex and its adapter
+(`npm install -g @openai/codex @zed-industries/codex-acp`, Node.js needed), run `codex login` and
+choose **Sign in with ChatGPT**. Then **Check again** on the Codex card in Settings → AI, and pick
+it for the Helper or @builder at the top of that tab. Its login stays with Codex; Aura never reads
+it. Codex uses the plan's default model unless you type one in.
+
 ### Claude Code
 
 Install it (`npm install -g @anthropic-ai/claude-code`), run `claude` in a terminal and log in.
@@ -47,8 +56,9 @@ stays with Claude Code; Aura never reads it.
 
 ## What each engine can do
 
-Every engine gets the helper's instructions, the chat and the app's tools. Claude Code uses its own
-tools and asks before acting; Aura answers according to the tools the helper was granted and keeps
+Every engine gets the helper's instructions, the chat and the app's tools (Codex reaches them over a
+local MCP address that lasts one run). Claude Code and Codex use their own tools and ask before
+acting; Aura answers according to the tools the helper was granted and keeps
 files inside the app's folder. Aura's own agent has Read, Write, Edit, Glob, Grep, Bash and
 WebFetch; file tools cannot leave the folder, and WebFetch cannot reach your machine or network.
 
