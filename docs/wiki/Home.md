@@ -2,7 +2,7 @@
 
 **Build your own apps by chatting, on your computer.**
 
-> **Status:** alpha (version 0.43.1). It works end to end, but expect rough edges.
+> **Status:** alpha (version 0.44). It works end to end, but expect rough edges.
 
 Tell your **Helper** what you need: _"keep track of my clients and deals"_. The Helper makes an app;
 it opens with **its own chat beside it**, where **@builder** changes it whenever you ask. Every
